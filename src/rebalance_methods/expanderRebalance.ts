@@ -1,12 +1,6 @@
 import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
-import {
-  DefaultLowerPercentageBPSDecimal,
-  DefaultUpperPercentageBPSDecimal,
-  FullBPS,
-  FullBPSDecimal,
-} from '../utils/CreationParameters';
-import { getManualRebalanceFieldInfos } from './manualRebalance';
+import { DefaultLowerPercentageBPSDecimal, DefaultUpperPercentageBPSDecimal } from '../utils/CreationParameters';
 import { RebalanceRaw } from '../kamino-client/types';
 import { RebalanceTypeLabelName } from './consts';
 import { Dex, readBigUint128LE } from '../utils';
@@ -32,83 +26,83 @@ export function getExpanderRebalanceFieldInfos(
   swapUnevenAllowed: Decimal,
   enabled: boolean = true
 ): RebalanceFieldInfo[] {
-  let rebalanceType: RebalanceFieldInfo = {
+  const rebalanceType: RebalanceFieldInfo = {
     label: RebalanceTypeLabelName,
     type: 'string',
     value: ExpanderRebalanceTypeName,
     enabled,
   };
-  let lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
     value: lowerPercentageBPS,
     enabled,
   };
-  let upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
     value: upperPercentageBPS,
     enabled,
   };
-  let resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetLowerRangeBps',
     type: 'number',
     value: resetLowerPercentageBPS,
     enabled,
   };
-  let resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetUpperRangeBps',
     type: 'number',
     value: resetUpperPercentageBPS,
     enabled,
   };
-  let expansionBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const expansionBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'expansionBps',
     type: 'number',
     value: expansionBPS,
     enabled,
   };
-  let maxNumberOfExpansionsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const maxNumberOfExpansionsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'maxNumberOfExpansions',
     type: 'number',
     value: maxNumberOfExpansions,
     enabled,
   };
-  let swapUnevenAllowedFieldInfo: RebalanceFieldInfo = {
+  const swapUnevenAllowedFieldInfo: RebalanceFieldInfo = {
     label: 'swapUnevenAllowed',
     type: 'number',
     value: swapUnevenAllowed,
     enabled,
   };
 
-  let { lowerPrice, upperPrice } = getPositionRangeFromExpanderParams(price, lowerPercentageBPS, upperPercentageBPS);
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const { lowerPrice, upperPrice } = getPositionRangeFromExpanderParams(price, lowerPercentageBPS, upperPercentageBPS);
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
     enabled: false,
   };
 
-  let { lowerPrice: resetLowerPrice, upperPrice: resetUpperPrice } = getPositionResetRangeFromExpanderParams(
+  const { lowerPrice: resetLowerPrice, upperPrice: resetUpperPrice } = getPositionResetRangeFromExpanderParams(
     price,
     lowerPercentageBPS,
     upperPercentageBPS,
     resetLowerPercentageBPS,
     resetUpperPercentageBPS
   );
-  let resetLowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetLowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetPriceLower',
     type: 'number',
     value: resetLowerPrice,
     enabled: false,
   };
-  let resetUpperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetUpperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetPriceUpper',
     type: 'number',
     value: resetUpperPrice,
@@ -169,8 +163,8 @@ export function getDefaultExpanderRebalanceFieldInfos(price: Decimal): Rebalance
 }
 
 export function readRawExpanderRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw) {
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
-  let params: RebalanceFieldsDict = {};
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const params: RebalanceFieldsDict = {};
 
   params['lowerRangeBps'] = new Decimal(paramsBuffer.readUInt16LE(0));
   params['upperRangeBps'] = new Decimal(paramsBuffer.readUInt16LE(2));
@@ -184,53 +178,53 @@ export function readRawExpanderRebalanceParamsFromStrategy(rebalanceRaw: Rebalan
 }
 
 export function readExpanderRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldInfo[] {
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
 
-  let lowerRangeBps = new Decimal(paramsBuffer.readUInt16LE(0));
-  let upperRangeBps = new Decimal(paramsBuffer.readUInt16LE(2));
-  let lowerResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(4));
-  let upperResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(6));
-  let expansionBps = new Decimal(paramsBuffer.readUInt16LE(8));
-  let maxNumberOfExpansions = new Decimal(paramsBuffer.readUInt16LE(10));
-  let swapUnevenAllowed = new Decimal(paramsBuffer.readUInt8(12));
+  const lowerRangeBps = new Decimal(paramsBuffer.readUInt16LE(0));
+  const upperRangeBps = new Decimal(paramsBuffer.readUInt16LE(2));
+  const lowerResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(4));
+  const upperResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(6));
+  const expansionBps = new Decimal(paramsBuffer.readUInt16LE(8));
+  const maxNumberOfExpansions = new Decimal(paramsBuffer.readUInt16LE(10));
+  const swapUnevenAllowed = new Decimal(paramsBuffer.readUInt8(12));
 
-  let lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
     value: lowerRangeBps,
     enabled: true,
   };
-  let upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
     value: upperRangeBps,
     enabled: true,
   };
-  let resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetLowerRangeBps',
     type: 'number',
     value: lowerResetRatioBps,
     enabled: true,
   };
-  let resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetUpperRangeBps',
     type: 'number',
     value: upperResetRatioBps,
     enabled: true,
   };
-  let expansionBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const expansionBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'expansionBps',
     type: 'number',
     value: expansionBps,
     enabled: true,
   };
-  let maxNumberOfExpansionsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const maxNumberOfExpansionsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'maxNumberOfExpansions',
     type: 'number',
     value: maxNumberOfExpansions,
     enabled: true,
   };
-  let swapUnevenAllowedFieldInfo: RebalanceFieldInfo = {
+  const swapUnevenAllowedFieldInfo: RebalanceFieldInfo = {
     label: 'swapUnevenAllowed',
     type: 'number',
     value: swapUnevenAllowed,
@@ -249,8 +243,8 @@ export function readExpanderRebalanceParamsFromStrategy(rebalanceRaw: RebalanceR
 }
 
 export function readRawExpanderRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
-  let state: RebalanceFieldsDict = {};
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const state: RebalanceFieldsDict = {};
 
   state['initialPoolPrice'] = new Decimal(readBigUint128LE(stateBuffer, 0).toString());
   state['expansionCount'] = new Decimal(stateBuffer.readUInt16LE(16));
@@ -264,20 +258,18 @@ export function readExpanderRebalanceStateFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
+  const params = readRawExpanderRebalanceParamsFromStrategy(rebalanceRaw);
 
-  let params = readRawExpanderRebalanceParamsFromStrategy(rebalanceRaw);
+  const lowerRangeBps = params['lowerRangeBps'];
+  const upperRangeBps = params['upperRangeBps'];
+  const lowerResetRatioBps = params['lowerResetRatioBps'];
+  const upperResetRatioBps = params['upperResetRatioBps'];
+  const expansionBps = params['expansionBps'];
 
-  let lowerRangeBps = params['lowerRangeBps'];
-  let upperRangeBps = params['upperRangeBps'];
-  let lowerResetRatioBps = params['lowerResetRatioBps'];
-  let upperResetRatioBps = params['upperResetRatioBps'];
-  let expansionBps = params['expansionBps'];
+  const state = readRawExpanderRebalanceStateFromStrategy(rebalanceRaw);
 
-  let state = readRawExpanderRebalanceStateFromStrategy(rebalanceRaw);
-
-  let initialPriceX64 = state['initialPoolPrice'];
-  let expansionCount = state['expansionCount'];
+  const initialPriceX64 = state['initialPoolPrice'];
+  const expansionCount = state['expansionCount'];
 
   let initialPrice: Decimal;
   if (dex == 'ORCA') {
@@ -290,16 +282,16 @@ export function readExpanderRebalanceStateFromStrategy(
     throw new Error(`Unknown DEX ${dex}`);
   }
 
-  let lowerRangeFactorBPS = lowerRangeBps.add(expansionBps.mul(expansionCount));
-  let upperRangeFactorBPS = upperRangeBps.add(expansionBps.mul(expansionCount));
+  const lowerRangeFactorBPS = lowerRangeBps.add(expansionBps.mul(expansionCount));
+  const upperRangeFactorBPS = upperRangeBps.add(expansionBps.mul(expansionCount));
 
-  let { lowerPrice, upperPrice } = getPriceRangeFromPriceAndDiffBPS(
+  const { lowerPrice, upperPrice } = getPriceRangeFromPriceAndDiffBPS(
     initialPrice,
     lowerRangeFactorBPS,
     upperRangeFactorBPS
   );
 
-  let { lowerPrice: lowerResetPrice, upperPrice: upperResetPrice } = getResetRangeFromPriceAndDiffBPS(
+  const { lowerPrice: lowerResetPrice, upperPrice: upperResetPrice } = getResetRangeFromPriceAndDiffBPS(
     initialPrice,
     lowerRangeFactorBPS,
     upperRangeFactorBPS,
@@ -307,26 +299,26 @@ export function readExpanderRebalanceStateFromStrategy(
     upperResetRatioBps
   );
 
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
     enabled: false,
   };
 
-  let resetLowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetLowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetPriceLower',
     type: 'number',
     value: lowerResetPrice,
     enabled: false,
   };
-  let resetUpperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetUpperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetPriceUpper',
     type: 'number',
     value: upperResetPrice,
@@ -342,17 +334,15 @@ export function readExpanderRebalanceStateFromStrategy(
 }
 
 export function readExpanderRebalanceFieldInfosFromStrategy(price: Decimal, rebalanceRaw: RebalanceRaw) {
-  const params = readExpanderRebalanceParamsFromStrategy(rebalanceRaw);
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
 
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
-
-  let lowerRangeBps = new Decimal(paramsBuffer.readUInt16LE(0));
-  let upperRangeBps = new Decimal(paramsBuffer.readUInt16LE(2));
-  let lowerResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(4));
-  let upperResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(6));
-  let expansionBps = new Decimal(paramsBuffer.readUInt16LE(8));
-  let maxNumberOfExpansions = new Decimal(paramsBuffer.readUInt16LE(10));
-  let swapUnevenAllowed = new Decimal(paramsBuffer.readUInt8(12));
+  const lowerRangeBps = new Decimal(paramsBuffer.readUInt16LE(0));
+  const upperRangeBps = new Decimal(paramsBuffer.readUInt16LE(2));
+  const lowerResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(4));
+  const upperResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(6));
+  const expansionBps = new Decimal(paramsBuffer.readUInt16LE(8));
+  const maxNumberOfExpansions = new Decimal(paramsBuffer.readUInt16LE(10));
+  const swapUnevenAllowed = new Decimal(paramsBuffer.readUInt8(12));
 
   return getExpanderRebalanceFieldInfos(
     price,
@@ -375,7 +365,7 @@ export function deserializeExpanderRebalanceWithStateOverride(
 ): RebalanceFieldInfo[] {
   const stateFields = readExpanderRebalanceStateFromStrategy(dex, tokenADecimals, tokenBDecimals, rebalanceRaw);
 
-  let fields = readExpanderRebalanceFieldInfosFromStrategy(price, rebalanceRaw);
+  const fields = readExpanderRebalanceFieldInfosFromStrategy(price, rebalanceRaw);
 
   return upsertManyRebalanceFieldInfos(fields, stateFields);
 }

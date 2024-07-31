@@ -1,5 +1,9 @@
 [![npm](https://img.shields.io/npm/v/@kamino-finance/kliquidity-sdk)](https://www.npmjs.com/package/@kamino-finance/kliquidity-sdk)
 
+# Kamino Liquidity Typescript SDK
+
+Typescript SDK to interact with the Kamino Liquidity smart contract
+
 ## Installation
 
 ```shell
@@ -9,10 +13,6 @@ npm install @kamino-finance/kliquidity-sdk
 # yarn
 yarn add @kamino-finance/kliquidity-sdk
 ```
-
-# Kamino Liquidity Typescript SDK
-
-This is the Kamino Liquidity Typescript SDK to interact with the Kamino Liquidity smart contract
 
 ## Basic usage
 

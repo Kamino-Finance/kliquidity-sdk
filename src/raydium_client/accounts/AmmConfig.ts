@@ -1,86 +1,92 @@
-import { PublicKey, Connection } from '@solana/web3.js';
-import BN from 'bn.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from '@coral-xyz/borsh'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from '../types'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { PROGRAM_ID } from '../programId';
+import { PublicKey, Connection } from "@solana/web3.js"
+import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
+import { PROGRAM_ID } from "../programId"
 
 export interface AmmConfigFields {
-  bump: number;
-  index: number;
-  owner: PublicKey;
-  protocolFeeRate: number;
-  tradeFeeRate: number;
-  tickSpacing: number;
-  fundFeeRate: number;
-  paddingU32: number;
-  fundOwner: PublicKey;
-  padding: Array<BN>;
+  bump: number
+  index: number
+  owner: PublicKey
+  protocolFeeRate: number
+  tradeFeeRate: number
+  tickSpacing: number
+  fundFeeRate: number
+  paddingU32: number
+  fundOwner: PublicKey
+  padding: Array<BN>
 }
 
 export interface AmmConfigJSON {
-  bump: number;
-  index: number;
-  owner: string;
-  protocolFeeRate: number;
-  tradeFeeRate: number;
-  tickSpacing: number;
-  fundFeeRate: number;
-  paddingU32: number;
-  fundOwner: string;
-  padding: Array<string>;
+  bump: number
+  index: number
+  owner: string
+  protocolFeeRate: number
+  tradeFeeRate: number
+  tickSpacing: number
+  fundFeeRate: number
+  paddingU32: number
+  fundOwner: string
+  padding: Array<string>
 }
 
 export class AmmConfig {
-  readonly bump: number;
-  readonly index: number;
-  readonly owner: PublicKey;
-  readonly protocolFeeRate: number;
-  readonly tradeFeeRate: number;
-  readonly tickSpacing: number;
-  readonly fundFeeRate: number;
-  readonly paddingU32: number;
-  readonly fundOwner: PublicKey;
-  readonly padding: Array<BN>;
+  readonly bump: number
+  readonly index: number
+  readonly owner: PublicKey
+  readonly protocolFeeRate: number
+  readonly tradeFeeRate: number
+  readonly tickSpacing: number
+  readonly fundFeeRate: number
+  readonly paddingU32: number
+  readonly fundOwner: PublicKey
+  readonly padding: Array<BN>
 
-  static readonly discriminator = Buffer.from([218, 244, 33, 104, 203, 203, 43, 111]);
+  static readonly discriminator = Buffer.from([
+    218, 244, 33, 104, 203, 203, 43, 111,
+  ])
 
   static readonly layout = borsh.struct([
-    borsh.u8('bump'),
-    borsh.u16('index'),
-    borsh.publicKey('owner'),
-    borsh.u32('protocolFeeRate'),
-    borsh.u32('tradeFeeRate'),
-    borsh.u16('tickSpacing'),
-    borsh.u32('fundFeeRate'),
-    borsh.u32('paddingU32'),
-    borsh.publicKey('fundOwner'),
-    borsh.array(borsh.u64(), 3, 'padding'),
-  ]);
+    borsh.u8("bump"),
+    borsh.u16("index"),
+    borsh.publicKey("owner"),
+    borsh.u32("protocolFeeRate"),
+    borsh.u32("tradeFeeRate"),
+    borsh.u16("tickSpacing"),
+    borsh.u32("fundFeeRate"),
+    borsh.u32("paddingU32"),
+    borsh.publicKey("fundOwner"),
+    borsh.array(borsh.u64(), 3, "padding"),
+  ])
 
   constructor(fields: AmmConfigFields) {
-    this.bump = fields.bump;
-    this.index = fields.index;
-    this.owner = fields.owner;
-    this.protocolFeeRate = fields.protocolFeeRate;
-    this.tradeFeeRate = fields.tradeFeeRate;
-    this.tickSpacing = fields.tickSpacing;
-    this.fundFeeRate = fields.fundFeeRate;
-    this.paddingU32 = fields.paddingU32;
-    this.fundOwner = fields.fundOwner;
-    this.padding = fields.padding;
+    this.bump = fields.bump
+    this.index = fields.index
+    this.owner = fields.owner
+    this.protocolFeeRate = fields.protocolFeeRate
+    this.tradeFeeRate = fields.tradeFeeRate
+    this.tickSpacing = fields.tickSpacing
+    this.fundFeeRate = fields.fundFeeRate
+    this.paddingU32 = fields.paddingU32
+    this.fundOwner = fields.fundOwner
+    this.padding = fields.padding
   }
 
-  static async fetch(c: Connection, address: PublicKey, programId: PublicKey = PROGRAM_ID): Promise<AmmConfig | null> {
-    const info = await c.getAccountInfo(address);
+  static async fetch(
+    c: Connection,
+    address: PublicKey,
+    programId: PublicKey = PROGRAM_ID
+  ): Promise<AmmConfig | null> {
+    const info = await c.getAccountInfo(address)
 
     if (info === null) {
-      return null;
+      return null
     }
     if (!info.owner.equals(programId)) {
-      throw new Error("account doesn't belong to this program");
+      throw new Error("account doesn't belong to this program")
     }
 
-    return this.decode(info.data);
+    return this.decode(info.data)
   }
 
   static async fetchMultiple(
@@ -88,26 +94,26 @@ export class AmmConfig {
     addresses: PublicKey[],
     programId: PublicKey = PROGRAM_ID
   ): Promise<Array<AmmConfig | null>> {
-    const infos = await c.getMultipleAccountsInfo(addresses);
+    const infos = await c.getMultipleAccountsInfo(addresses)
 
     return infos.map((info) => {
       if (info === null) {
-        return null;
+        return null
       }
       if (!info.owner.equals(programId)) {
-        throw new Error("account doesn't belong to this program");
+        throw new Error("account doesn't belong to this program")
       }
 
-      return this.decode(info.data);
-    });
+      return this.decode(info.data)
+    })
   }
 
   static decode(data: Buffer): AmmConfig {
     if (!data.slice(0, 8).equals(AmmConfig.discriminator)) {
-      throw new Error('invalid account discriminator');
+      throw new Error("invalid account discriminator")
     }
 
-    const dec = AmmConfig.layout.decode(data.slice(8));
+    const dec = AmmConfig.layout.decode(data.slice(8))
 
     return new AmmConfig({
       bump: dec.bump,
@@ -120,7 +126,7 @@ export class AmmConfig {
       paddingU32: dec.paddingU32,
       fundOwner: dec.fundOwner,
       padding: dec.padding,
-    });
+    })
   }
 
   toJSON(): AmmConfigJSON {
@@ -135,7 +141,7 @@ export class AmmConfig {
       paddingU32: this.paddingU32,
       fundOwner: this.fundOwner.toString(),
       padding: this.padding.map((item) => item.toString()),
-    };
+    }
   }
 
   static fromJSON(obj: AmmConfigJSON): AmmConfig {
@@ -150,6 +156,6 @@ export class AmmConfig {
       paddingU32: obj.paddingU32,
       fundOwner: new PublicKey(obj.fundOwner),
       padding: obj.padding.map((item) => new BN(item)),
-    });
+    })
   }
 }

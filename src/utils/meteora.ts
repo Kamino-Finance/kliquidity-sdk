@@ -37,12 +37,12 @@ export function getBinIdFromPriceWithDecimals(
   decimalsA: number,
   decimalsB: number
 ): number {
-  let scaledPrice = price.mul(new Decimal(10).pow(decimalsB)).div(new Decimal(10).pow(decimalsA));
+  const scaledPrice = price.mul(new Decimal(10).pow(decimalsB)).div(new Decimal(10).pow(decimalsA));
   return getBinIdFromPrice(scaledPrice, tickSpacing, min);
 }
 
 export function getPriceFromQ64Price(price: Decimal, decimalsA: number, decimalsB: number): Decimal {
-  let scaledPrice = price.mul(new Decimal(10).pow(decimalsA)).div(new Decimal(10).pow(decimalsB));
+  const scaledPrice = price.mul(new Decimal(10).pow(decimalsA)).div(new Decimal(10).pow(decimalsB));
   return scaledPrice.div(new Decimal(U64_MAX));
 }
 
@@ -64,7 +64,7 @@ export function getBinFromBinArray(binIndex: number, binArray: BinArray): Bin | 
 
 export function getBinFromBinArrays(binIndex: number, binArrays: BinArray[]): Bin | null {
   for (let i = 0; i < binArrays.length; i++) {
-    let bin = getBinFromBinArray(binIndex, binArrays[i]);
+    const bin = getBinFromBinArray(binIndex, binArrays[i]);
     if (bin) {
       return bin;
     }

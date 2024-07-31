@@ -1,10 +1,9 @@
-import { ComputeBudgetProgram, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { WhirlpoolStrategy } from '../kamino-client/accounts';
-import { WHIRLPOOL_PROGRAM_ID } from '../whirpools-client/programId';
+import { WHIRLPOOL_PROGRAM_ID } from '../whirlpools-client/programId';
 import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../raydium_client/programId';
 import Decimal from 'decimal.js';
 import {
-  DEX,
   DriftDirection,
   DriftDirectionKind,
   RebalanceAutodriftStep,
@@ -63,7 +62,7 @@ export function numberToDex(num: number): Dex {
 }
 
 export function numberToReferencePriceType(num: number): ReferencePriceType {
-  let referencePriceType = ReferencePriceType[num];
+  const referencePriceType = ReferencePriceType[num];
   if (!referencePriceType) {
     throw new Error(`Strategy has invalid reference price type set: ${num}`);
   }
@@ -83,7 +82,7 @@ export function getDexProgramId(strategyState: WhirlpoolStrategy): PublicKey {
 }
 
 export function getStrategyConfigValue(value: Decimal): number[] {
-  let buffer = Buffer.alloc(128);
+  const buffer = Buffer.alloc(128);
   writeBNUint64LE(buffer, new BN(value.toString()), 0);
   return [...buffer];
 }
@@ -94,7 +93,7 @@ export function buildStrategyRebalanceParams(
   tokenADecimals?: number,
   tokenBDecimals?: number
 ): number[] {
-  let buffer = Buffer.alloc(128);
+  const buffer = Buffer.alloc(128);
   if (rebalance_type.kind == RebalanceType.Manual.kind) {
     // Manual has no params
   } else if (rebalance_type.kind == RebalanceType.PricePercentage.kind) {
@@ -145,7 +144,7 @@ export function buildStrategyRebalanceParams(
 }
 
 export function doesStrategyHaveResetRange(rebalanceTypeNumber: number): boolean {
-  let rebalanceType = numberToRebalanceType(rebalanceTypeNumber);
+  const rebalanceType = numberToRebalanceType(rebalanceTypeNumber);
   return (
     rebalanceType.kind == RebalanceType.PricePercentageWithReset.kind ||
     rebalanceType.kind == RebalanceType.Expander.kind
@@ -212,12 +211,12 @@ export async function getUpdateStrategyConfigIx(
   amount: Decimal,
   newAccount: PublicKey = PublicKey.default
 ): Promise<TransactionInstruction> {
-  let args: UpdateStrategyConfigArgs = {
+  const args: UpdateStrategyConfigArgs = {
     mode: mode.discriminator,
     value: getStrategyConfigValue(amount),
   };
 
-  let accounts: UpdateStrategyConfigAccounts = {
+  const accounts: UpdateStrategyConfigAccounts = {
     adminAuthority: signer,
     newAccount,
     globalConfig,
@@ -229,7 +228,7 @@ export async function getUpdateStrategyConfigIx(
 }
 
 export function collToLamportsDecimal(amount: Decimal, decimals: number): Decimal {
-  let factor = new Decimal(10).pow(decimals);
+  const factor = new Decimal(10).pow(decimals);
   return amount.mul(factor);
 }
 
@@ -246,8 +245,8 @@ export function readPriceOption(buffer: Buffer, offset: number): [number, Decima
   if (buffer.readUint8(offset) == 0) {
     return [offset + 1, new Decimal(0)];
   }
-  let value = buffer.readBigUInt64LE(offset + 1);
-  let exp = buffer.readBigUInt64LE(offset + 9);
+  const value = buffer.readBigUInt64LE(offset + 1);
+  const exp = buffer.readBigUInt64LE(offset + 9);
   return [offset + 17, new Decimal(value.toString()).div(new Decimal(10).pow(exp.toString()))];
 }
 
@@ -264,9 +263,9 @@ function writeBN128LE(buffer: Buffer, value: BN, offset: number) {
 }
 
 export function rebalanceFieldsDictToInfo(rebalanceFields: RebalanceFieldsDict): RebalanceFieldInfo[] {
-  let rebalanceFieldsInfo: RebalanceFieldInfo[] = [];
-  for (let key in rebalanceFields) {
-    let value = rebalanceFields[key];
+  const rebalanceFieldsInfo: RebalanceFieldInfo[] = [];
+  for (const key in rebalanceFields) {
+    const value = rebalanceFields[key];
     rebalanceFieldsInfo.push({
       label: key,
       type: 'number',
@@ -282,7 +281,7 @@ export function isVaultInitialized(vault: PublicKey, decimals: BN): boolean {
 }
 
 export function sqrtPriceToPrice(sqrtPrice: BN, dexNo: number, decimalsA: number, decimalsB: number): Decimal {
-  let dex = numberToDex(dexNo);
+  const dex = numberToDex(dexNo);
   if (dex == 'ORCA') {
     return sqrtPriceX64ToPrice(sqrtPrice, decimalsA, decimalsB);
   }
@@ -290,7 +289,7 @@ export function sqrtPriceToPrice(sqrtPrice: BN, dexNo: number, decimalsA: number
     return SqrtPriceMath.sqrtPriceX64ToPrice(sqrtPrice, decimalsA, decimalsB);
   }
   if (dex == 'METEORA') {
-    let price = new Decimal(sqrtPrice.toString());
+    const price = new Decimal(sqrtPrice.toString());
     return price.div(new Decimal(U64_MAX));
   }
   throw new Error(`Got invalid dex number ${dex}`);
@@ -303,13 +302,6 @@ export function stripTwapZeros(chain: number[]): number[] {
 
 export function percentageToBPS(pct: number): number {
   return pct * 100;
-}
-
-export function createAddExtraComputeUnitsTransaction(units: number, microLamports: number): TransactionInstruction[] {
-  let ix1 = ComputeBudgetProgram.setComputeUnitLimit({ units });
-  let ix2 = ComputeBudgetProgram.setComputeUnitLimit({ units });
-  const ixns = [ix1, ix2];
-  return ixns;
 }
 
 export function keyOrDefault(key: PublicKey, defaultKey: PublicKey): PublicKey {

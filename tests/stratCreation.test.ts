@@ -31,7 +31,7 @@ import {
 } from './utils';
 import { UpdateRebalanceType } from '../src/kamino-client/types/StrategyConfigOption';
 import { expect } from 'chai';
-import { WHIRLPOOL_PROGRAM_ID } from '../src/whirpools-client/programId';
+import { WHIRLPOOL_PROGRAM_ID } from '../src/whirlpools-client/programId';
 import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../src/raydium_client/programId';
 import { Manual, PricePercentage, PricePercentageWithReset } from '../src/kamino-client/types/RebalanceType';
 import { createWsolAtaIfMissing, getComputeBudgetAndPriorityFeeIxns } from '../src/utils/transactions';
@@ -40,19 +40,19 @@ import { STAGING_GLOBAL_CONFIG, STAGING_KAMINO_PROGRAM_ID } from '../src/constan
 import { METEORA_PROGRAM_ID } from '../src/meteora_client/programId';
 
 describe.skip('Kamino strategy creation SDK Tests', () => {
-  let connection: Connection;
   const cluster = 'mainnet-beta';
 
   const clusterUrl: string = 'https://api.mainnet-beta.solana.com';
 
-  connection = new Connection(clusterUrl, 'processed');
+  const connection = new Connection(clusterUrl, 'processed');
 
   // use your private key here
-  const signerPrivateKey = [];
-  const signer = Keypair.fromSecretKey(Uint8Array.from(signerPrivateKey));
+  // const signerPrivateKey = [];
+  // const signer = Keypair.fromSecretKey(Uint8Array.from(signerPrivateKey));
+  const signer = Keypair.generate();
 
   it.skip('withdraw topup vault', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -66,18 +66,18 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new Decimal(U64_MAX)
     );
 
-    let ixs: TransactionInstruction[] = [upkeepIxn];
+    const ixs: TransactionInstruction[] = [upkeepIxn];
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
     createStratTransactionV0.sign([signer]);
     //@ts-ignore
-    let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
+    const txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
   });
 
   it('read generic pool Meteora', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -95,7 +95,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it('read pending fees for Orca strategy', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -105,13 +105,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       METEORA_PROGRAM_ID
     );
 
-    let strategy = new PublicKey('8DRToyNBUTR4MxqkKAP49s9z1JhotQWy3rMQKEw1HHdu');
-    let pendingFees = await kamino.getPendingFees([strategy]);
+    const strategy = new PublicKey('8DRToyNBUTR4MxqkKAP49s9z1JhotQWy3rMQKEw1HHdu');
+    const pendingFees = await kamino.getPendingFees([strategy]);
     console.log('pending fees', pendingFees);
   });
 
   it('read pending fees for Raydium strategy', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -121,13 +121,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       METEORA_PROGRAM_ID
     );
 
-    let strategy = new PublicKey('5QgwaBQzzMAHdxpaVUgb4KrpXELgNTaEYXycUvNvRxr6');
-    let pendingFees = await kamino.getPendingFees([strategy]);
+    const strategy = new PublicKey('5QgwaBQzzMAHdxpaVUgb4KrpXELgNTaEYXycUvNvRxr6');
+    const pendingFees = await kamino.getPendingFees([strategy]);
     console.log('pending fees', pendingFees);
   });
 
   it('read pending fees for Meteora strategy', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -137,13 +137,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       METEORA_PROGRAM_ID
     );
 
-    let strategy = new PublicKey('HBuYwvq67VKnLyKxPzDjzskyRMk7ps39gwHdvaPGwdmQ');
-    let pendingFees = await kamino.getPendingFees([strategy]);
+    const strategy = new PublicKey('HBuYwvq67VKnLyKxPzDjzskyRMk7ps39gwHdvaPGwdmQ');
+    const pendingFees = await kamino.getPendingFees([strategy]);
     console.log('pending fees', pendingFees);
   });
 
   it('read share data', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -162,7 +162,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it('read empty strat Meteora', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigStaging,
@@ -182,10 +182,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     console.log('strat', strategyState);
 
-    let amounts = await kamino.calculateDepostAmountsDollarBased(stratPubkey, new Decimal(0.01));
+    const amounts = await kamino.calculateDepostAmountsDollarBased(stratPubkey, new Decimal(0.01));
     console.log('amounts ', amounts[0].toString(), amounts[1].toString());
 
-    let sharePrice = await kamino.getStrategySharePrice(stratPubkey);
+    const sharePrice = await kamino.getStrategySharePrice(stratPubkey);
     console.log('sharePrice', sharePrice.toString());
 
     const solToDeposit = new Decimal(0.01);
@@ -234,12 +234,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const depositTransactionV0 = new VersionedTransaction(depositTx);
     depositTransactionV0.sign([signer]);
     //@ts-ignore
-    let txHash = await sendAndConfirmTransaction(kamino._connection, depositTransactionV0, { skipPreflight: true });
+    const txHash = await sendAndConfirmTransaction(kamino._connection, depositTransactionV0, { skipPreflight: true });
     console.log('deposit tx hash', txHash);
   });
 
   it('deposit WIF-SOL Meteora', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       STAGING_GLOBAL_CONFIG,
@@ -302,12 +302,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const depositTransactionV0 = new VersionedTransaction(depositTx);
     depositTransactionV0.sign([signer]);
     //@ts-ignore
-    let txHash = await sendAndConfirmTransaction(kamino._connection, depositTransactionV0, { skipPreflight: true });
+    const txHash = await sendAndConfirmTransaction(kamino._connection, depositTransactionV0, { skipPreflight: true });
     console.log('deposit tx hash', txHash);
   });
 
   it('read all pools for tokens Meteora', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -327,7 +327,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it('read pool price Meteora', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -337,12 +337,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       METEORA_PROGRAM_ID
     );
 
-    let price = await kamino.getMeteoraPoolPrice(new PublicKey('FoSDw2L5DmTuQTFe55gWPDXf88euaxAEKFre74CnvQbX'));
+    const price = await kamino.getMeteoraPoolPrice(new PublicKey('FoSDw2L5DmTuQTFe55gWPDXf88euaxAEKFre74CnvQbX'));
     console.log('pool price', price);
   });
 
   it('create Kamino staging', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       STAGING_GLOBAL_CONFIG,
@@ -354,23 +354,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const globalConfig = kamino.getGlobalConfig();
     expect(globalConfig.equals(STAGING_GLOBAL_CONFIG)).to.be.true;
-
-    let kamino2 = new Kamino(
-      cluster,
-      connection,
-      undefined,
-      STAGING_KAMINO_PROGRAM_ID,
-      WHIRLPOOL_PROGRAM_ID,
-      RAYDIUM_PROGRAM_ID,
-      METEORA_PROGRAM_ID
-    );
-
-    const globalConfig2 = kamino.getGlobalConfig();
-    expect(globalConfig2.equals(STAGING_GLOBAL_CONFIG)).to.be.true;
   });
 
   it('both sides deposit in Meteora strategy', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       STAGING_GLOBAL_CONFIG,
@@ -380,16 +367,16 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       METEORA_PROGRAM_ID
     );
 
-    let strategy = new PublicKey('6cM3MGNaJBfpBQy1P9oiZkDDzcWgSxjMaj6iWtz8ydSk');
-    let amountAToDeposit = new Decimal(0.01);
-    let amountBToDeposit = new Decimal(1.0);
+    const strategy = new PublicKey('6cM3MGNaJBfpBQy1P9oiZkDDzcWgSxjMaj6iWtz8ydSk');
+    const amountAToDeposit = new Decimal(0.01);
+    const amountBToDeposit = new Decimal(1.0);
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
-    let depositIx = await kamino.deposit(
+    const depositIx = await kamino.deposit(
       { strategy: strategyState!, address: strategy },
       amountAToDeposit,
       amountBToDeposit,
@@ -413,7 +400,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       signer.publicKey
     );
 
-    let strategyWithAddres = { address: strategy, strategy: strategyState };
+    const strategyWithAddres = { address: strategy, strategy: strategyState };
     const ataInstructions = await kamino.getCreateAssociatedTokenAccountInstructionsIfNotExist(
       signer.publicKey,
       strategyWithAddres,
@@ -434,12 +421,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const depositTransactionV0 = new VersionedTransaction(depositTx);
     depositTransactionV0.sign([signer]);
     //@ts-ignore
-    let txHash = await sendAndConfirmTransaction(kamino._connection, depositTransactionV0, { skipPreflight: true });
+    const txHash = await sendAndConfirmTransaction(kamino._connection, depositTransactionV0, { skipPreflight: true });
     console.log('deposit tx hash', txHash);
   });
 
   it('single sided deposit in Meteora strategy', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       STAGING_GLOBAL_CONFIG,
@@ -449,15 +436,15 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       METEORA_PROGRAM_ID
     );
 
-    let strategy = new PublicKey('6cM3MGNaJBfpBQy1P9oiZkDDzcWgSxjMaj6iWtz8ydSk');
-    let amountToDeposit = new Decimal(5.0);
+    const strategy = new PublicKey('6cM3MGNaJBfpBQy1P9oiZkDDzcWgSxjMaj6iWtz8ydSk');
+    const amountToDeposit = new Decimal(5.0);
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
-    let depositIx = await kamino.singleSidedDepositTokenB(
+    const depositIx = await kamino.singleSidedDepositTokenB(
       { strategy: strategyState!, address: strategy },
       amountToDeposit,
       signer.publicKey,
@@ -480,8 +467,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       signer.publicKey
     );
 
-    let strategyWithAddres = { address: strategy, strategy: strategyState };
-    const ataInstructions = await kamino.getCreateAssociatedTokenAccountInstructionsIfNotExist(
+    const strategyWithAddres = { address: strategy, strategy: strategyState };
+    await kamino.getCreateAssociatedTokenAccountInstructionsIfNotExist(
       signer.publicKey,
       strategyWithAddres,
       tokenAData,
@@ -501,13 +488,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const depositTransactionV0 = new VersionedTransaction(depositTx);
     depositTransactionV0.sign([signer]);
     //@ts-ignore
-    let txHash = await sendAndConfirmTransaction(kamino._connection, depositTransactionV0);
+    const txHash = await sendAndConfirmTransaction(kamino._connection, depositTransactionV0);
     // let txHash = await sendAndConfirmTransaction(kamino._connection, depositTransactionV0, { skipPreflight: true });
     console.log('deposit tx hash', txHash);
   });
 
   it('calculate amounts', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       STAGING_GLOBAL_CONFIG,
@@ -516,13 +503,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID,
       METEORA_PROGRAM_ID
     );
-    let amounts = await kamino.calculateAmountsToBeDepositedWithSwap(
+    const amounts = await kamino.calculateAmountsToBeDepositedWithSwap(
       new PublicKey('Cfuy5T6osdazUeLego5LFycBQebm9PP3H7VNdCndXXEN'),
       new Decimal(0),
       new Decimal(400)
     );
 
-    let holdings = await kamino.getStrategyTokensHoldings(
+    const holdings = await kamino.getStrategyTokensHoldings(
       new PublicKey('Cfuy5T6osdazUeLego5LFycBQebm9PP3H7VNdCndXXEN')
     );
 
@@ -531,7 +518,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('readWhirlpool', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -540,7 +527,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let res = await kamino.getStrategiesShareData([
+    const res = await kamino.getStrategiesShareData([
       new PublicKey('DWkn7bbqAjYeu4U84iQHTbKT9fBEBZwpTSLondcp6dpd'),
       new PublicKey('B8CLmUAErBALZWwD16xUvWWxGDmH6BJBrQRqXUBVEhYN'),
     ]);
@@ -548,7 +535,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get pools for Raydium SOL-USDC pair', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -557,7 +544,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let pool = await kamino.getPoolInitializedForDexPairTier(
+    const pool = await kamino.getPoolInitializedForDexPairTier(
       'RAYDIUM',
       new PublicKey('So11111111111111111111111111111111111111112'),
       new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
@@ -568,7 +555,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get pools for Orca SOL-USDC pair', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -577,7 +564,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let pool = await kamino.getPoolInitializedForDexPairTier(
+    const pool = await kamino.getPoolInitializedForDexPairTier(
       'RAYDIUM',
       new PublicKey('So11111111111111111111111111111111111111112'),
       new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
@@ -588,7 +575,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('getExistentPoolsForPair Raydium for SOL-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -597,7 +584,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let pools = await kamino.getExistentPoolsForPair(
+    const pools = await kamino.getExistentPoolsForPair(
       'RAYDIUM',
       new PublicKey('So11111111111111111111111111111111111111112'),
       new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
@@ -607,7 +594,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('getExistentPoolsForPair ORCA for USDH-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -616,7 +603,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let pools = await kamino.getExistentPoolsForPair(
+    const pools = await kamino.getExistentPoolsForPair(
       'ORCA',
       new PublicKey('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX'),
       new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
@@ -626,7 +613,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('build strategy IX for Raydium SOL-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -640,7 +627,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'RAYDIUM',
       new Decimal('5'),
       newStrategy.publicKey,
@@ -652,7 +639,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -664,7 +651,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -679,10 +666,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -697,7 +684,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('build strategy IX for Raydium SOL-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -711,7 +698,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'RAYDIUM',
       new Decimal('0.0005'),
       newStrategy.publicKey,
@@ -723,7 +710,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -735,7 +722,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -750,10 +737,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(signer.publicKey, [ix[0]]);
       const updateRewardMappingsTransactionV0 = new VersionedTransaction(updateRewardMappingTx);
       updateRewardMappingsTransactionV0.sign([signer, ix[1]]);
@@ -764,7 +751,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('create custom USDC-USDH new manual strategy on existing whirlpool', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -778,7 +765,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal(1),
       newStrategy.publicKey,
@@ -790,7 +777,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
@@ -802,7 +789,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -817,9 +804,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(signer.publicKey, [ix[0]]);
       const updateRewardMappingsTransactionV0 = new VersionedTransaction(updateRewardMappingTx);
       updateRewardMappingsTransactionV0.sign([signer, ix[1]]);
@@ -830,7 +817,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('create new manual strategy on existing whirlpool', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -844,7 +831,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal(5),
       newStrategy.publicKey,
@@ -856,7 +843,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       USDCMintMainnet
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
@@ -867,7 +854,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -882,9 +869,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(signer.publicKey, [ix[0]]);
       const updateRewardMappingsTransactionV0 = new VersionedTransaction(updateRewardMappingTx);
       updateRewardMappingsTransactionV0.sign([signer, ix[1]]);
@@ -895,7 +882,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('create new percentage strategy on existing whirlpool', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -909,7 +896,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal(5),
       newStrategy.publicKey,
@@ -921,7 +908,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       USDCMintMainnet
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
@@ -932,7 +919,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -947,9 +934,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(signer.publicKey, [ix[0]]);
       const updateRewardMappingsTransactionV0 = new VersionedTransaction(updateRewardMappingTx);
       updateRewardMappingsTransactionV0.sign([signer]);
@@ -960,7 +947,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('create custom USDC-USDH new percentage strategy on existing whirlpool', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -974,7 +961,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal(1),
       newStrategy.publicKey,
@@ -986,7 +973,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
@@ -997,7 +984,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -1012,9 +999,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(signer.publicKey, [ix[0]]);
       const updateRewardMappingsTransactionV0 = new VersionedTransaction(updateRewardMappingTx);
       updateRewardMappingsTransactionV0.sign([signer, ix[1]]);
@@ -1025,7 +1012,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('create new percentage strategy on existing whirlpool', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1039,7 +1026,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal(5),
       newStrategy.publicKey,
@@ -1051,7 +1038,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       USDCMintMainnet
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
@@ -1062,7 +1049,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -1077,9 +1064,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(signer.publicKey, [ix[0]]);
       const updateRewardMappingsTransactionV0 = new VersionedTransaction(updateRewardMappingTx);
       updateRewardMappingsTransactionV0.sign([signer, ix[1]]);
@@ -1089,13 +1076,14 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // update rebalance params
-    let updateRebalanceParamsIx = await kamino.getUpdateRebalancingParmsIxns(signer.publicKey, newStrategy.publicKey, [
-      new Decimal(10.0),
-      new Decimal(24.0),
-    ]);
-    let tx = createTransactionWithExtraBudget();
+    const updateRebalanceParamsIx = await kamino.getUpdateRebalancingParmsIxns(
+      signer.publicKey,
+      newStrategy.publicKey,
+      [new Decimal(10.0), new Decimal(24.0)]
+    );
+    const tx = createTransactionWithExtraBudget();
     tx.add(updateRebalanceParamsIx);
-    let updateRebalanceParamsTxHash = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+    const updateRebalanceParamsTxHash = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
     console.log('update Rebalance Params Tx Hash ', updateRebalanceParamsTxHash);
 
     let strategyData = await kamino.getStrategies([newStrategy.publicKey]);
@@ -1116,8 +1104,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium pool liquidity distribution', async () => {
-    let raydiumService = new RaydiumService(connection, cluster);
-    let liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
+    const raydiumService = new RaydiumService(connection, cluster);
+    const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       new PublicKey('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv')
     );
 
@@ -1125,8 +1113,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium pool liquidity distribution with range', async () => {
-    let raydiumService = new RaydiumService(connection, cluster);
-    let liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
+    const raydiumService = new RaydiumService(connection, cluster);
+    const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       new PublicKey('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv'),
       true,
       -39470,
@@ -1137,8 +1125,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium pool liquidity distribution with range inverse order', async () => {
-    let raydiumService = new RaydiumService(connection, cluster);
-    let liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
+    const raydiumService = new RaydiumService(connection, cluster);
+    const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       new PublicKey('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv'),
       false,
       -39470,
@@ -1149,8 +1137,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium positions for live pool', async () => {
-    let raydiumService = new RaydiumService(connection, cluster);
-    let liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
+    const raydiumService = new RaydiumService(connection, cluster);
+    const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       new PublicKey('61R1ndXxvsWXXkWSyNkCxnzwd3zUNB8Q2ibmkiLPC8ht')
     );
 
@@ -1158,8 +1146,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get orca pool liquidity distribution', async () => {
-    let orcaService = new OrcaService(connection, cluster, GlobalConfigMainnet);
-    let liquidityDistribution = await orcaService.getWhirlpoolLiquidityDistribution(
+    const orcaService = new OrcaService(connection, cluster, GlobalConfigMainnet);
+    const liquidityDistribution = await orcaService.getWhirlpoolLiquidityDistribution(
       new PublicKey('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );
 
@@ -1167,8 +1155,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get orca positions for pool', async () => {
-    let orcaService = new OrcaService(connection, cluster, GlobalConfigMainnet);
-    let positionsCount = await orcaService.getPositionsCountByPool(
+    const orcaService = new OrcaService(connection, cluster, GlobalConfigMainnet);
+    const positionsCount = await orcaService.getPositionsCountByPool(
       new PublicKey('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );
 
@@ -1176,8 +1164,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium positions for pool', async () => {
-    let raydiumService = new RaydiumService(connection, cluster);
-    let positionsCount = await raydiumService.getPositionsCountByPool(
+    const raydiumService = new RaydiumService(connection, cluster);
+    const positionsCount = await raydiumService.getPositionsCountByPool(
       new PublicKey('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv')
     );
 
@@ -1185,7 +1173,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('create new custom USDC-USDH percentage strategy on existing whirlpool', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1199,7 +1187,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal(1),
       newStrategy.publicKey,
@@ -1211,7 +1199,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
@@ -1222,7 +1210,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -1237,13 +1225,14 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // update rebalance params
-    let updateRebalanceParamsIx = await kamino.getUpdateRebalancingParmsIxns(signer.publicKey, newStrategy.publicKey, [
-      new Decimal(10.0),
-      new Decimal(24.0),
-    ]);
-    let tx = createTransactionWithExtraBudget();
+    const updateRebalanceParamsIx = await kamino.getUpdateRebalancingParmsIxns(
+      signer.publicKey,
+      newStrategy.publicKey,
+      [new Decimal(10.0), new Decimal(24.0)]
+    );
+    const tx = createTransactionWithExtraBudget();
     tx.add(updateRebalanceParamsIx);
-    let updateRebalanceParamsTxHash = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+    const updateRebalanceParamsTxHash = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
     console.log('update Rebalance Params Tx Hash ', updateRebalanceParamsTxHash);
 
     let strategyData = await kamino.getStrategies([newStrategy.publicKey]);
@@ -1265,7 +1254,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
   //test create as PricePercentageWithreset -> Update to Manual -> move back to PricePercentageWithReset diff range
   it.skip('create new custom USDC-USDH percentage with reset strategy -> change to manual -> change back to reset with range', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1278,12 +1267,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const newPosition = Keypair.generate();
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
 
-    let lowerPriceBpsDifference = new Decimal(10.0);
-    let upperPriceBpsDifference = new Decimal(10.0);
-    let lowerPriceResetRange = new Decimal(5.0);
-    let upperPriceResetRange = new Decimal(30.0);
+    const lowerPriceBpsDifference = new Decimal(10.0);
+    const upperPriceBpsDifference = new Decimal(10.0);
+    const lowerPriceResetRange = new Decimal(5.0);
+    const upperPriceResetRange = new Decimal(30.0);
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal(1),
       newStrategy.publicKey,
@@ -1295,7 +1284,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
@@ -1306,7 +1295,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -1321,7 +1310,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // verify strategy rebalance params
-    let strategyRebalanceParams = await kamino.readRebalancingParams(newStrategy.publicKey);
+    const strategyRebalanceParams = await kamino.readRebalancingParams(newStrategy.publicKey);
     expect(strategyRebalanceParams.find((x) => x.label == 'lowerRangeBps')!.value == lowerPriceBpsDifference);
     expect(strategyRebalanceParams.find((x) => x.label == 'upperRangeBps')!.value == upperPriceBpsDifference);
     expect(strategyRebalanceParams.find((x) => x.label == 'resetLowerRangeBps')!.value == lowerPriceResetRange);
@@ -1341,12 +1330,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('openPositionTxId', openPositionTxId);
 
     // read prices
-    let pricesRebalanceParams = await kamino.readRebalancingParams(newStrategy.publicKey);
+    const pricesRebalanceParams = await kamino.readRebalancingParams(newStrategy.publicKey);
     console.log('pricesRebalanceParams', pricesRebalanceParams);
   });
 
   it.skip('test read rebalance params from existent percentageWithReset strategy', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1355,13 +1344,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let strat = new PublicKey('8RsjvJ9VoLNJb5veXzbyc7DKqvPG296oY2BsPnuxPTQ2');
-    let pricesRebalanceParams = await kamino.readRebalancingParams(strat);
+    const strat = new PublicKey('8RsjvJ9VoLNJb5veXzbyc7DKqvPG296oY2BsPnuxPTQ2');
+    const pricesRebalanceParams = await kamino.readRebalancingParams(strat);
     console.log('pricesRebalanceParams', pricesRebalanceParams);
   });
 
   it.skip('create new custom USDC-USDH percentage strategy on existing whirlpool and open position', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1375,10 +1364,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let lowerPriceBpsDifference = new Decimal(10.0);
-    let upperPriceBpsDifference = new Decimal(11.0);
+    const lowerPriceBpsDifference = new Decimal(10.0);
+    const upperPriceBpsDifference = new Decimal(11.0);
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal(1),
       newStrategy.publicKey,
@@ -1390,18 +1379,18 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
     createStratTransactionV0.sign([newStrategy, signer]);
     //@ts-ignore
-    let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
+    const txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -1412,7 +1401,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     setupStratTransactionV0.sign([signer]);
 
     // verify strategy rebalance params
-    let strategyData = await kamino.getStrategies([newStrategy.publicKey]);
+    const strategyData = await kamino.getStrategies([newStrategy.publicKey]);
     expect(strategyData[0]?.rebalanceRaw.params[0].toString() == lowerPriceBpsDifference.toString());
     expect(strategyData[0]?.rebalanceRaw.params[2].toString() == upperPriceBpsDifference.toString());
 
@@ -1431,7 +1420,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('create new custom SOL-BONK percentage strategy on existing whirlpool and open position', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1445,10 +1434,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let lowerPriceBpsDifference = new Decimal(100.0);
-    let upperPriceBpsDifference = new Decimal(110.0);
+    const lowerPriceBpsDifference = new Decimal(100.0);
+    const upperPriceBpsDifference = new Decimal(110.0);
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal(30),
       newStrategy.publicKey,
@@ -1460,7 +1449,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
@@ -1471,7 +1460,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
     const setupStratTx = await kamino.getTransactionV2Message(
       signer.publicKey,
@@ -1486,7 +1475,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     // verify strategy rebalance params
-    let strategyData = await kamino.getStrategies([newStrategy.publicKey]);
+    const strategyData = await kamino.getStrategies([newStrategy.publicKey]);
     expect(strategyData[0]?.rebalanceRaw.params[0].toString() == lowerPriceBpsDifference.toString());
     expect(strategyData[0]?.rebalanceRaw.params[2].toString() == upperPriceBpsDifference.toString());
 
@@ -1504,7 +1493,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('one click single sided deposit USDC in USDH-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1514,20 +1503,20 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     );
 
     // let strategy = new PublicKey('Cfuy5T6osdazUeLego5LFycBQebm9PP3H7VNdCndXXEN');
-    let strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
+    const strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
-    let amountToDeposit = new Decimal(0.1);
-    let slippageBps = new Decimal(10);
+    const amountToDeposit = new Decimal(0.1);
+    const slippageBps = new Decimal(10);
 
     let singleSidedDepositIxs: TransactionInstruction[] = [];
-    let lookupTables: PublicKey[] = [strategyState.strategyLookupTable];
+    const lookupTables: PublicKey[] = [strategyState.strategyLookupTable];
 
-    const initialTokenBalances = await kamino.getInitialUserTokenBalances(
+    await kamino.getInitialUserTokenBalances(
       signer.publicKey,
       strategyState.tokenAMint,
       strategyState.tokenBMint,
@@ -1536,7 +1525,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint == USDCMintMainnet) {
-      let { instructions, lookupTablesAddresses } = await profiledFunctionExecution(
+      const { instructions, lookupTablesAddresses } = await profiledFunctionExecution(
         kamino.singleSidedDepositTokenA(
           { strategy: strategyState!, address: strategy },
           amountToDeposit,
@@ -1546,13 +1535,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
           undefined,
           undefined // initialTokenBalances
         ),
-        'singleSidedDepositTokenA',
-        []
+        'singleSidedDepositTokenA'
       );
       singleSidedDepositIxs = instructions;
       lookupTables.push(...lookupTablesAddresses);
     } else {
-      let { instructions, lookupTablesAddresses } = await profiledFunctionExecution(
+      const { instructions, lookupTablesAddresses } = await profiledFunctionExecution(
         kamino.singleSidedDepositTokenB(
           { strategy: strategyState!, address: strategy },
           amountToDeposit,
@@ -1562,8 +1550,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
           undefined,
           undefined // initialTokenBalances
         ),
-        'singleSidedDepositTokenB',
-        []
+        'singleSidedDepositTokenB'
       );
       singleSidedDepositIxs = instructions;
       lookupTables.push(...lookupTablesAddresses);
@@ -1593,7 +1580,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('one click single sided deposit USDC in SOL-USDC strat', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1602,21 +1589,21 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
+    const strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
-    let amountToDeposit = new Decimal(1.0);
-    let slippageBps = new Decimal(100);
+    const amountToDeposit = new Decimal(1.0);
+    const slippageBps = new Decimal(100);
 
     let singleSidedDepositIxs: TransactionInstruction[] = [];
     let lookupTables: PublicKey[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === USDCMintMainnet.toString()) {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1625,7 +1612,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       singleSidedDepositIxs = instructions;
       lookupTables = lookupTablesAddresses;
     } else {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1653,7 +1640,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('one click single sided deposit SOL in SOL-USDC strat', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1662,21 +1649,21 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
+    const strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
-    let amountToDeposit = new Decimal(0.01);
-    let slippageBps = new Decimal(50);
+    const amountToDeposit = new Decimal(0.01);
+    const slippageBps = new Decimal(50);
 
     let singleSidedDepositIxs: TransactionInstruction[] = [];
     let lookupTables: PublicKey[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === SOLMintMainnet.toString()) {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1685,7 +1672,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       singleSidedDepositIxs = instructions;
       lookupTables = lookupTablesAddresses;
     } else {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1709,7 +1696,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('one click single sided deposit SOL in RLB-SOL strat', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1718,21 +1705,21 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let strategy = new PublicKey('AepjvYK4QfGhV3UjSRkZviR2AJAkLGtqdyKJFCf9kpz9');
+    const strategy = new PublicKey('AepjvYK4QfGhV3UjSRkZviR2AJAkLGtqdyKJFCf9kpz9');
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
-    let amountToDeposit = new Decimal(0.02);
-    let slippageBps = new Decimal(50);
+    const amountToDeposit = new Decimal(0.02);
+    const slippageBps = new Decimal(50);
 
     let singleSidedDepositIxs: TransactionInstruction[] = [];
     let lookupTables: PublicKey[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === SOLMintMainnet.toString()) {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1741,7 +1728,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       singleSidedDepositIxs = instructions;
       lookupTables = lookupTablesAddresses;
     } else {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1769,7 +1756,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('one click single sided deposit SOL in SOL-USDC strat with existent wSOL ata', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1779,7 +1766,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     );
 
     //@ts-ignore
-    let createWSolAtaIxns = await createWsolAtaIfMissing(kamino._connection, new Decimal(0.02), signer.publicKey);
+    const createWSolAtaIxns = await createWsolAtaIfMissing(kamino._connection, new Decimal(0.02), signer.publicKey);
 
     const createwSolAtaMessage = await kamino.getTransactionV2Message(signer.publicKey, createWSolAtaIxns.createIxns);
     const createwSolAtaTx = new VersionedTransaction(createwSolAtaMessage);
@@ -1789,21 +1776,21 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createwSolAtaTxHash = await sendAndConfirmTransaction(kamino._connection, createwSolAtaTx);
     console.log('createSol tx hash', createwSolAtaTxHash);
 
-    let strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
+    const strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
-    let amountToDeposit = new Decimal(0.1);
-    let slippageBps = new Decimal(50);
+    const amountToDeposit = new Decimal(0.1);
+    const slippageBps = new Decimal(50);
 
     let singleSidedDepositIxs: TransactionInstruction[] = [];
     let lookupTables: PublicKey[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === SOLMintMainnet.toString()) {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1812,7 +1799,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       singleSidedDepositIxs = instructions;
       lookupTables = lookupTablesAddresses;
     } else {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1840,7 +1827,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('one click single sided deposit USDC in SOL-USDC strat with existent wSOL ata', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1850,7 +1837,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     );
 
     //@ts-ignore
-    let createWSolAtaIxns = await createWsolAtaIfMissing(kamino._connection, new Decimal(0.02), signer.publicKey);
+    const createWSolAtaIxns = await createWsolAtaIfMissing(kamino._connection, new Decimal(0.02), signer.publicKey);
 
     const createwSolAtaMessage = await kamino.getTransactionV2Message(signer.publicKey, createWSolAtaIxns.createIxns);
     const createwSolAtaTx = new VersionedTransaction(createwSolAtaMessage);
@@ -1860,21 +1847,21 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createwSolAtaTxHash = await sendAndConfirmTransaction(kamino._connection, createwSolAtaTx);
     console.log('createSol tx hash', createwSolAtaTxHash);
 
-    let strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
+    const strategy = new PublicKey('CEz5keL9hBCUbtVbmcwenthRMwmZLupxJ6YtYAgzp4ex');
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
-    let amountToDeposit = new Decimal(0.1);
-    let slippageBps = new Decimal(50);
+    const amountToDeposit = new Decimal(0.1);
+    const slippageBps = new Decimal(50);
 
     let singleSidedDepositIxs: TransactionInstruction[] = [];
     let lookupTables: PublicKey[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === USDCMintMainnet.toString()) {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1883,7 +1870,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       singleSidedDepositIxs = instructions;
       lookupTables = lookupTablesAddresses;
     } else {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1911,7 +1898,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('one click single sided deposit SOL in SOL-BONK strat with existent wSOL ata', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1921,7 +1908,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     );
 
     //@ts-ignore
-    let createWSolAtaIxns = await createWsolAtaIfMissing(kamino._connection, new Decimal(0.02), signer.publicKey);
+    const createWSolAtaIxns = await createWsolAtaIfMissing(kamino._connection, new Decimal(0.02), signer.publicKey);
 
     const createwSolAtaMessage = await kamino.getTransactionV2Message(signer.publicKey, createWSolAtaIxns.createIxns);
     const createwSolAtaTx = new VersionedTransaction(createwSolAtaMessage);
@@ -1931,21 +1918,21 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createwSolAtaTxHash = await sendAndConfirmTransaction(kamino._connection, createwSolAtaTx);
     console.log('createSol tx hash', createwSolAtaTxHash);
 
-    let strategy = new PublicKey('HWg7yB3C1BnmTKFMU3KGD7E96xx2rUhv4gxrwbZLXHBt');
+    const strategy = new PublicKey('HWg7yB3C1BnmTKFMU3KGD7E96xx2rUhv4gxrwbZLXHBt');
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
-    let amountToDeposit = new Decimal(0.01);
-    let slippageBps = new Decimal(50);
+    const amountToDeposit = new Decimal(0.01);
+    const slippageBps = new Decimal(50);
 
     let singleSidedDepositIxs: TransactionInstruction[] = [];
     let lookupTables: PublicKey[] = [];
     // if SOL is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === SOLMintMainnet.toString()) {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1954,7 +1941,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       singleSidedDepositIxs = instructions;
       lookupTables = lookupTablesAddresses;
     } else {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -1982,7 +1969,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('one click single sided deposit SOL in SOL-USDH strat', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1990,25 +1977,24 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
-    const jupService = new JupService(kamino.getConnection(), cluster);
 
-    let strategy = new PublicKey('CYLt3Bs51QT3WeFhjtYnPGZNDzdd6SY5vfUMa86gT2D8');
+    const strategy = new PublicKey('CYLt3Bs51QT3WeFhjtYnPGZNDzdd6SY5vfUMa86gT2D8');
 
-    let strategyState = (await kamino.getStrategies([strategy]))[0];
+    const strategyState = (await kamino.getStrategies([strategy]))[0];
     if (!strategyState) {
       throw new Error('strategy not found');
     }
 
     const shareDataBefore = await kamino.getStrategyShareData(strategy);
-    let sharesAtaBalanceBefore = await balance(kamino.getConnection(), signer, strategyState.sharesMint);
+    const sharesAtaBalanceBefore = await balance(kamino.getConnection(), signer, strategyState.sharesMint);
     const userSharesMvBefore = sharesAtaBalanceBefore! * shareDataBefore.price.toNumber();
-    let amountToDeposit = new Decimal(0.01);
+    const amountToDeposit = new Decimal(0.01);
     {
-      let aAtaBalance = await balance(kamino.getConnection(), signer, strategyState.tokenAMint);
-      let bAtaBalance = await balance(kamino.getConnection(), signer, strategyState.tokenBMint);
+      const aAtaBalance = await balance(kamino.getConnection(), signer, strategyState.tokenAMint);
+      const bAtaBalance = await balance(kamino.getConnection(), signer, strategyState.tokenBMint);
       console.log('balances ', toJson({ aAtaBalance, bAtaBalance, sharesAtaBalanceBefore }));
 
-      let aPrice = await JupService.getPrice(strategyState.tokenAMint, USDCMintMainnet);
+      const aPrice = await JupService.getPrice(strategyState.tokenAMint, USDCMintMainnet);
 
       console.log('shareData', toJson(shareDataBefore));
       console.log('shares minted', strategyState.sharesIssued.toString());
@@ -2027,7 +2013,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
     // if SOL is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === SOLMintMainnet.toString()) {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenA(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -2036,7 +2022,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       singleSidedDepositIxs = instructions;
       lookupTables = lookupTables.concat(lookupTablesAddresses);
     } else {
-      let { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
+      const { instructions, lookupTablesAddresses } = await kamino.singleSidedDepositTokenB(
         strategy,
         amountToDeposit,
         signer.publicKey,
@@ -2065,17 +2051,14 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     await sleep(5000);
 
-    let sharesAtaBalanceAfter = await balance(kamino.getConnection(), signer, strategyState.sharesMint);
+    const sharesAtaBalanceAfter = await balance(kamino.getConnection(), signer, strategyState.sharesMint);
     const shareDataAfter = await kamino.getStrategyShareData(strategy);
     const userSharesMvAfter = sharesAtaBalanceAfter! * shareDataAfter.price.toNumber();
     {
       console.log('after deposit');
-      let aAtaBalance = await balance(kamino.getConnection(), signer, strategyState.tokenAMint);
-      let bAtaBalance = await balance(kamino.getConnection(), signer, strategyState.tokenBMint);
+      const aAtaBalance = await balance(kamino.getConnection(), signer, strategyState.tokenAMint);
+      const bAtaBalance = await balance(kamino.getConnection(), signer, strategyState.tokenBMint);
       console.log('balances ', toJson({ aAtaBalance, bAtaBalance, sharesAtaBalanceAfter }));
-
-      let aPrice = await JupService.getPrice(strategyState.tokenAMint, USDCMintMainnet);
-      let bPrice = await JupService.getPrice(strategyState.tokenBMint, USDCMintMainnet);
 
       console.log('shareData', toJson(shareDataAfter));
       console.log('shares minted', strategyState.sharesIssued.toString());
@@ -2090,7 +2073,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('create wSOL ata', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -2100,7 +2083,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     );
 
     //@ts-ignore
-    let createWSolAtaIxns = await createWsolAtaIfMissing(kamino._connection, new Decimal(0), signer.publicKey);
+    const createWSolAtaIxns = await createWsolAtaIfMissing(kamino._connection, new Decimal(0), signer.publicKey);
 
     const createwSolAtaMessage = await kamino.getTransactionV2Message(signer.publicKey, createWSolAtaIxns.createIxns);
     const createwSolAtaTx = new VersionedTransaction(createwSolAtaMessage);
@@ -2116,15 +2099,15 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('read strategies share data on devnet', async () => {
-    let devnetConnection = new Connection('https://api.devnet.solana.com', 'processed');
-    let kamino = new Kamino('devnet', devnetConnection);
+    const devnetConnection = new Connection('https://api.devnet.solana.com', 'processed');
+    const kamino = new Kamino('devnet', devnetConnection);
 
     const shareData = await kamino.getStrategiesShareData({});
     console.log('shareData', shareData.length);
   });
 
   it.skip('amounts distribution to be deposited with price range Orca', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -2133,7 +2116,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let [tokenAAmount, tokenBAmount] = await kamino.calculateAmountsDistributionWithPriceRange(
+    const [tokenAAmount, tokenBAmount] = await kamino.calculateAmountsDistributionWithPriceRange(
       'ORCA',
       new PublicKey('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm'),
       new Decimal(22.464697),
@@ -2145,7 +2128,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('amounts distribution to be deposited with price range Raydium', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -2154,7 +2137,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let [tokenAAmount, tokenBAmount] = await kamino.calculateAmountsDistributionWithPriceRange(
+    const [tokenAAmount, tokenBAmount] = await kamino.calculateAmountsDistributionWithPriceRange(
       'RAYDIUM',
       new PublicKey('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv'),
       new Decimal(21.540764564),
@@ -2167,7 +2150,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
   // example of successed tx: 5q5u6buXUVbN2N8heGwecrdWDXJpKRMiuSe9RmXhmS73P3Ex41zYu5XXDBiAP8YWpHErFegpcyijvRDYFjsMUhhb
   it.skip('initialize tick for Orca pool', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -2176,7 +2159,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    let initPoolTickIfNeeded = await kamino.initializeTickForOrcaPool(
+    const initPoolTickIfNeeded = await kamino.initializeTickForOrcaPool(
       signer.publicKey,
       new PublicKey('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm'),
       new Decimal(0.1)
@@ -2193,22 +2176,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 });
 
-export async function profiledFunctionExecution(
-  promise: Promise<any>,
-  transactionName: string,
-  tags: [string, string][] = []
-): Promise<any> {
+export async function profiledFunctionExecution(promise: Promise<any>, transactionName: string): Promise<any> {
   const startTime = Date.now(); // Start time
 
   const prefix = '[PROFILING]';
   console.log(prefix, `function=${transactionName} event=start ts=${new Date(startTime).toISOString()}`);
 
-  let result;
-  try {
-    result = await promise; // Execute the passed function
-  } catch (error) {
-    throw error; // rethrow the error after setting the status
-  }
+  const result = await promise; // Execute the passed function
 
   const endTime = Date.now(); // End time
   const duration = (endTime - startTime) / 1000; // Duration in seconds

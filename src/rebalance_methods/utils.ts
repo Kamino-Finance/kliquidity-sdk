@@ -1,4 +1,3 @@
-import { Price } from '@hubbleprotocol/scope-sdk';
 import Decimal from 'decimal.js';
 import { RebalanceTypeKind } from '../kamino-client/types';
 import {
@@ -33,7 +32,7 @@ import { PricePercentageWithResetRebalanceTypeName } from './pricePercentageWith
 import { TakeProfitRebalanceTypeName } from './takeProfitRebalance';
 
 export function getRebalanceTypeFromRebalanceFields(rebalanceFieldInfos: RebalanceFieldInfo[]): RebalanceTypeKind {
-  let rebalanceTypeField = rebalanceFieldInfos.find((field) => field.label === 'rebalanceType');
+  const rebalanceTypeField = rebalanceFieldInfos.find((field) => field.label === 'rebalanceType');
   if (!rebalanceTypeField) {
     throw new Error('Rebalance type field not found');
   }
@@ -84,7 +83,7 @@ export function rebalanceTypeToRebalanceMethod(rebalanceType: RebalanceTypeKind)
 }
 
 export function getRebalanceMethodFromRebalanceFields(rebalanceFieldInfos: RebalanceFieldInfo[]): RebalanceMethod {
-  let rebalanceType = getRebalanceTypeFromRebalanceFields(rebalanceFieldInfos);
+  const rebalanceType = getRebalanceTypeFromRebalanceFields(rebalanceFieldInfos);
   return rebalanceTypeToRebalanceMethod(rebalanceType);
 }
 
@@ -92,14 +91,16 @@ export function upsertRebalanceFieldInfo(
   rebalanceFieldInfos: RebalanceFieldInfo[],
   newFieldInfo: RebalanceFieldInfo
 ): RebalanceFieldInfo[] {
-  let newRebalanceFieldInfoIndex = rebalanceFieldInfos.findIndex((fieldInfo) => fieldInfo.label === newFieldInfo.label);
+  const newRebalanceFieldInfoIndex = rebalanceFieldInfos.findIndex(
+    (fieldInfo) => fieldInfo.label === newFieldInfo.label
+  );
 
   // if the field is not found, add it
   if (newRebalanceFieldInfoIndex === -1) {
     return [...rebalanceFieldInfos, newFieldInfo];
   } else {
     // if the field is found, update it
-    let newRebalanceFieldInfos = [...rebalanceFieldInfos];
+    const newRebalanceFieldInfos = [...rebalanceFieldInfos];
     newRebalanceFieldInfos[newRebalanceFieldInfoIndex] = newFieldInfo;
     return newRebalanceFieldInfos;
   }
@@ -110,7 +111,7 @@ export function upsertManyRebalanceFieldInfos(
   newFieldInfos: RebalanceFieldInfo[]
 ): RebalanceFieldInfo[] {
   let updatedFieldInfos = [...rebalanceFieldInfos];
-  for (let newFieldInfo of newFieldInfos) {
+  for (const newFieldInfo of newFieldInfos) {
     updatedFieldInfos = upsertRebalanceFieldInfo(updatedFieldInfos, newFieldInfo);
   }
 

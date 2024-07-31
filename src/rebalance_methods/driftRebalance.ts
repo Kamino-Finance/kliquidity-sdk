@@ -26,44 +26,44 @@ export function getDriftRebalanceFieldInfos(
   direction: Decimal,
   enabled: boolean = true
 ): RebalanceFieldInfo[] {
-  let rebalanceType: RebalanceFieldInfo = {
+  const rebalanceType: RebalanceFieldInfo = {
     label: RebalanceTypeLabelName,
     type: 'string',
     value: DriftRebalanceTypeName,
     enabled,
   };
-  let startMidTickRebalanceFieldInfo: RebalanceFieldInfo = {
+  const startMidTickRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'startMidTick',
     type: 'number',
     value: startMidTick,
     enabled,
   };
-  let ticksBelowMidRebalanceFieldInfo: RebalanceFieldInfo = {
+  const ticksBelowMidRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'ticksBelowMid',
     type: 'number',
     value: ticksBelowMid,
     enabled,
   };
-  let ticksAboveMidRebalanceFieldInfo: RebalanceFieldInfo = {
+  const ticksAboveMidRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'ticksAboveMid',
     type: 'number',
     value: ticksAboveMid,
     enabled,
   };
-  let secondsPerTickRebalanceFieldInfo: RebalanceFieldInfo = {
+  const secondsPerTickRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'secondsPerTick',
     type: 'number',
     value: secondsPerTick,
     enabled,
   };
-  let directionRebalanceFieldInfo: RebalanceFieldInfo = {
+  const directionRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'direction',
     type: 'number',
     value: direction,
     enabled,
   };
 
-  let { lowerPrice, upperPrice } = getPositionRangeFromDriftParams(
+  const { lowerPrice, upperPrice } = getPositionRangeFromDriftParams(
     dex,
     tokenADecimals,
     tokenBDecimals,
@@ -73,13 +73,13 @@ export function getDriftRebalanceFieldInfos(
     ticksAboveMid
   );
 
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
@@ -98,9 +98,6 @@ export function getDriftRebalanceFieldInfos(
   ];
 }
 
-// todo(silviu): see if this is needed
-export function getPositionRangeFromTakeProfitFieldInfos(fieldInfos: RebalanceFieldInfo[]) {}
-
 export function getPositionRangeFromDriftParams(
   dex: Dex,
   tickSpacing: number,
@@ -110,21 +107,21 @@ export function getPositionRangeFromDriftParams(
   ticksBelowMid: Decimal,
   ticksAboveMid: Decimal
 ): PositionRange {
-  let lowerTickIndex = startMidTick.sub(ticksBelowMid);
-  let upperTickIndex = startMidTick.add(ticksAboveMid);
+  const lowerTickIndex = startMidTick.sub(ticksBelowMid);
+  const upperTickIndex = startMidTick.add(ticksAboveMid);
 
   if (dex == 'ORCA') {
-    let lowerPrice = tickIndexToPrice(lowerTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
-    let upperPrice = tickIndexToPrice(upperTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
+    const lowerPrice = tickIndexToPrice(lowerTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
+    const upperPrice = tickIndexToPrice(upperTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
     return { lowerPrice, upperPrice };
   } else if (dex == 'RAYDIUM') {
-    let lowerPrice = sqrtPriceX64ToPrice(
+    const lowerPrice = sqrtPriceX64ToPrice(
       SqrtPriceMath.getSqrtPriceX64FromTick(lowerTickIndex.toNumber()),
       tokenADecimals,
       tokenBDecimals
     );
 
-    let upperPrice = sqrtPriceX64ToPrice(
+    const upperPrice = sqrtPriceX64ToPrice(
       SqrtPriceMath.getSqrtPriceX64FromTick(upperTickIndex.toNumber()),
       tokenADecimals,
       tokenBDecimals
@@ -132,14 +129,14 @@ export function getPositionRangeFromDriftParams(
 
     return { lowerPrice, upperPrice };
   } else if (dex == 'METEORA') {
-    let lowerPrice = getPriceOfBinByBinIdWithDecimals(
+    const lowerPrice = getPriceOfBinByBinIdWithDecimals(
       lowerTickIndex.toNumber(),
       tickSpacing,
       tokenADecimals,
       tokenBDecimals
     );
 
-    let upperPrice = getPriceOfBinByBinIdWithDecimals(
+    const upperPrice = getPriceOfBinByBinIdWithDecimals(
       upperTickIndex.toNumber(),
       tickSpacing,
       tokenADecimals,
@@ -160,8 +157,8 @@ export function getDefaultDriftRebalanceFieldInfos(
   tokenADecimals: number,
   tokenBDecimals: number
 ): RebalanceFieldInfo[] {
-  let currentTickIndex = priceToTickIndex(price, tokenADecimals, tokenBDecimals);
-  let startMidTick = new Decimal(currentTickIndex);
+  const currentTickIndex = priceToTickIndex(price, tokenADecimals, tokenBDecimals);
+  const startMidTick = new Decimal(currentTickIndex);
 
   return getDriftRebalanceFieldInfos(
     dex,
@@ -177,8 +174,8 @@ export function getDefaultDriftRebalanceFieldInfos(
 }
 
 export function readDriftRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldsDict {
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
-  let params: RebalanceFieldsDict = {};
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const params: RebalanceFieldsDict = {};
 
   params['startMidTick'] = new Decimal(paramsBuffer.readInt32LE(0));
   params['ticksBelowMid'] = new Decimal(paramsBuffer.readInt32LE(4));
@@ -190,8 +187,8 @@ export function readDriftRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw)
 }
 
 export function readRawDriftRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
-  let state: RebalanceFieldsDict = {};
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const state: RebalanceFieldsDict = {};
 
   state['step'] = new Decimal(stateBuffer.readUInt8(0));
   state['lastDriftTimestamp'] = new Decimal(stateBuffer.readBigUInt64LE(1).toString());
@@ -207,16 +204,16 @@ export function readDriftRebalanceStateFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ) {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
 
-  let lastMidTick = new Decimal(stateBuffer.readInt32LE(9));
+  const lastMidTick = new Decimal(stateBuffer.readInt32LE(9));
 
-  let ticksBelowMid = new Decimal(paramsBuffer.readInt32LE(4));
-  let ticksAboveMid = new Decimal(paramsBuffer.readInt32LE(8));
+  const ticksBelowMid = new Decimal(paramsBuffer.readInt32LE(4));
+  const ticksAboveMid = new Decimal(paramsBuffer.readInt32LE(8));
 
-  let lowerTickIndex = lastMidTick.sub(ticksBelowMid);
-  let upperTickIndex = lastMidTick.add(ticksAboveMid);
+  const lowerTickIndex = lastMidTick.sub(ticksBelowMid);
+  const upperTickIndex = lastMidTick.add(ticksAboveMid);
 
   let lowerPrice: Decimal, upperPrice: Decimal;
   if (dex == 'ORCA') {
@@ -252,13 +249,13 @@ export function readDriftRebalanceStateFromStrategy(
     throw new Error(`Unknown DEX ${dex}`);
   }
 
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
@@ -275,7 +272,7 @@ export function deserializeDriftRebalanceFromOnchainParams(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let params = readDriftRebalanceParamsFromStrategy(rebalanceRaw);
+  const params = readDriftRebalanceParamsFromStrategy(rebalanceRaw);
 
   return getDriftRebalanceFieldInfos(
     dex,
@@ -305,7 +302,7 @@ export function deserializeDriftRebalanceWithStateOverride(
     rebalanceRaw
   );
 
-  let fields = deserializeDriftRebalanceFromOnchainParams(
+  const fields = deserializeDriftRebalanceFromOnchainParams(
     dex,
     tickSpacing,
     tokenADecimals,

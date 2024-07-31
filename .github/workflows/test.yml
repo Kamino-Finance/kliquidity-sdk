@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Build
-        run: yarn codegen && yarn build
+        run: yarn build
       - name: Run tests
         # Add solana binaries to path - todo should not be needed
         run: |

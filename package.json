@@ -1,6 +1,6 @@
 {
   "name": "@kamino-finance/kliquidity-sdk",
-  "version": "3.0.1",
+  "version": "5.2.4",
   "description": "Typescript SDK for interacting with the Kamino Liquidity (kliquidity) protocol",
   "repository": {
     "type": "git",
@@ -38,7 +38,7 @@
     "codegen:kliquidity": "yarn anchor-client-gen src/kamino-client/idl.json ./src/kamino-client/ --program-id 6LtLpnUFNByNXLyCoK9wA2MykKAmQNZKBdY8s47dehDc",
     "codegen:meteora": "yarn anchor-client-gen src/meteora_client/idl.json ./src/meteora_client/ --program-id LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo",
     "codegen:raydium": "yarn anchor-client-gen src/raydium_client/idl.json ./src/raydium_client/ --program-id CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
-    "codegen:whirlpools": "yarn anchor-client-gen src/whirpools-client/idl.json ./src/whirpools-client/ --program-id whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",
+    "codegen:whirlpools": "yarn anchor-client-gen src/whirlpools-client/idl.json ./src/whirlpools-client/ --program-id whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",
     "start-validator": "solana-test-validator $(./deps/test-validator-params.sh)",
     "start-validator-and-test": "yarn start-server-and-test 'yarn start-validator' http://127.0.0.1:8899/health test",
     "dump-programs": "./deps/dump-from-mainnet.sh"
@@ -79,6 +79,7 @@
     "eslint-config-airbnb-typescript": "^16.1.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-react": "^7.27.1",
     "mocha": "^10.2.0",
     "prettier": "^3.3.2",
@@ -89,4 +90,3 @@
     "typescript-eslint": "^0.0.1-alpha.0"
   }
 }
-

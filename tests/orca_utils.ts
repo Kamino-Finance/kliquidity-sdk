@@ -1,13 +1,13 @@
 import { PublicKey, Connection, Transaction, TransactionInstruction, Keypair } from '@solana/web3.js';
 import { DeployedPool, range } from './utils';
-import * as WhirlpoolInstructions from '../src/whirpools-client/instructions';
+import * as WhirlpoolInstructions from '../src/whirlpools-client/instructions';
 import * as anchor from '@coral-xyz/anchor';
 import { sendTransactionWithLogs, TOKEN_PROGRAM_ID } from '../src';
-import { PROGRAM_ID_CLI as WHIRLPOOL_PROGRAM_ID } from '../src/whirpools-client/programId';
+import { PROGRAM_ID_CLI as WHIRLPOOL_PROGRAM_ID } from '../src/whirlpools-client/programId';
 import { orderMints } from './raydium_utils';
 import Decimal from 'decimal.js';
 import { getStartTickIndex, priceToSqrtX64 } from '@orca-so/whirlpool-sdk';
-import { Whirlpool } from '../src/whirpools-client/accounts';
+import { Whirlpool } from '../src/whirlpools-client/accounts';
 
 export async function initializeWhirlpool(
   connection: Connection,
@@ -16,27 +16,27 @@ export async function initializeWhirlpool(
   tokenMintA: PublicKey,
   tokenMintB: PublicKey
 ): Promise<DeployedPool> {
-  let config = Keypair.generate();
+  const config = Keypair.generate();
 
   {
-    let initialiseConfigArgs: WhirlpoolInstructions.InitializeConfigArgs = {
+    const initialiseConfigArgs: WhirlpoolInstructions.InitializeConfigArgs = {
       feeAuthority: signer.publicKey,
       collectProtocolFeesAuthority: signer.publicKey,
       rewardEmissionsSuperAuthority: signer.publicKey,
       defaultProtocolFeeRate: 0,
     };
 
-    let initialiseConfigAccounts: WhirlpoolInstructions.InitializeConfigAccounts = {
+    const initialiseConfigAccounts: WhirlpoolInstructions.InitializeConfigAccounts = {
       config: config.publicKey,
       funder: signer.publicKey,
       systemProgram: anchor.web3.SystemProgram.programId,
     };
 
     const tx = new Transaction();
-    let initializeIx = WhirlpoolInstructions.initializeConfig(initialiseConfigArgs, initialiseConfigAccounts);
+    const initializeIx = WhirlpoolInstructions.initializeConfig(initialiseConfigArgs, initialiseConfigAccounts);
     tx.add(initializeIx);
 
-    let sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer, config]);
+    const sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer, config]);
     console.log('InitializeConfig:', sig);
   }
 
@@ -46,12 +46,12 @@ export async function initializeWhirlpool(
   );
 
   {
-    let initialiseFeeTierArgs: WhirlpoolInstructions.InitializeFeeTierArgs = {
+    const initialiseFeeTierArgs: WhirlpoolInstructions.InitializeFeeTierArgs = {
       tickSpacing: tickSize,
       defaultFeeRate: 0,
     };
 
-    let initialiseFeeTierAccounts: WhirlpoolInstructions.InitializeFeeTierAccounts = {
+    const initialiseFeeTierAccounts: WhirlpoolInstructions.InitializeFeeTierAccounts = {
       config: config.publicKey,
       feeTier: feeTierPk,
       funder: signer.publicKey,
@@ -60,39 +60,33 @@ export async function initializeWhirlpool(
     };
 
     const tx = new Transaction();
-    let initializeIx = WhirlpoolInstructions.initializeFeeTier(initialiseFeeTierArgs, initialiseFeeTierAccounts);
+    const initializeIx = WhirlpoolInstructions.initializeFeeTier(initialiseFeeTierArgs, initialiseFeeTierAccounts);
     tx.add(initializeIx);
 
-    let sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+    const sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
     console.log('InitializeFeeTier:', sig);
   }
 
-  let tokens = orderMints(tokenMintA, tokenMintB);
+  const tokens = orderMints(tokenMintA, tokenMintB);
   tokenMintA = tokens[0];
   tokenMintB = tokens[1];
 
-  const [whirlpool, whirlpoolBump] = await getWhirlpool(
-    WHIRLPOOL_PROGRAM_ID,
-    config.publicKey,
-    tokenMintA,
-    tokenMintB,
-    tickSize
-  );
+  const [whirlpool] = await getWhirlpool(WHIRLPOOL_PROGRAM_ID, config.publicKey, tokenMintA, tokenMintB, tickSize);
 
   const [tokenBadgeA] = getTokenBadge(WHIRLPOOL_PROGRAM_ID, config.publicKey, tokenMintA);
   const [tokenBadgeB] = getTokenBadge(WHIRLPOOL_PROGRAM_ID, config.publicKey, tokenMintB);
 
   {
-    let tokenAVault = Keypair.generate();
-    let tokenBVault = Keypair.generate();
+    const tokenAVault = Keypair.generate();
+    const tokenBVault = Keypair.generate();
 
-    let initialPrice = 1.0;
-    let initialisePoolArgs: WhirlpoolInstructions.InitializePoolV2Args = {
+    const initialPrice = 1.0;
+    const initialisePoolArgs: WhirlpoolInstructions.InitializePoolV2Args = {
       tickSpacing: tickSize,
       initialSqrtPrice: new anchor.BN(priceToSqrtX64(new Decimal(initialPrice), 6, 6)),
     };
 
-    let initializePoolAccounts: WhirlpoolInstructions.InitializePoolV2Accounts = {
+    const initializePoolAccounts: WhirlpoolInstructions.InitializePoolV2Accounts = {
       whirlpoolsConfig: config.publicKey,
       tokenMintA: tokenMintA,
       tokenMintB: tokenMintB,
@@ -110,15 +104,15 @@ export async function initializeWhirlpool(
     };
 
     const tx = new Transaction();
-    let initializeIx = WhirlpoolInstructions.initializePoolV2(initialisePoolArgs, initializePoolAccounts);
+    const initializeIx = WhirlpoolInstructions.initializePoolV2(initialisePoolArgs, initializePoolAccounts);
     tx.add(initializeIx);
 
-    let sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer, tokenAVault, tokenBVault]);
+    const sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer, tokenAVault, tokenBVault]);
     console.log('InitializePoolV2:', sig);
   }
 
   {
-    let tx = await initTickArrayForTicks(
+    const tx = await initTickArrayForTicks(
       connection,
       signer,
       whirlpool,
@@ -127,11 +121,11 @@ export async function initializeWhirlpool(
       WHIRLPOOL_PROGRAM_ID
     );
 
-    let sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+    const sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
     console.log('InitializeTickArray:', sig);
   }
 
-  let pool: DeployedPool = {
+  const pool: DeployedPool = {
     pool: whirlpool,
     tokenMintA,
     tokenMintB,
@@ -177,7 +171,7 @@ export async function initTickArrayForTicks(
       return;
     }
     initializedArrayTicks.push(startTick);
-    let initIx = await initTickArrayInstruction(signer, whirlpool, startTick, programId);
+    const initIx = await initTickArrayInstruction(signer, whirlpool, startTick, programId);
 
     tx.add(initIx);
   });
@@ -192,10 +186,10 @@ export async function initTickArrayInstruction(
 ): Promise<TransactionInstruction> {
   const [tickArrayPda, _tickArrayPdaBump] = getTickArray(programId, whirlpool, startTick);
 
-  let initTickArrayArgs: WhirlpoolInstructions.InitializeTickArrayArgs = {
+  const initTickArrayArgs: WhirlpoolInstructions.InitializeTickArrayArgs = {
     startTickIndex: startTick,
   };
-  let initTickArrayAccounts: WhirlpoolInstructions.InitializeTickArrayAccounts = {
+  const initTickArrayAccounts: WhirlpoolInstructions.InitializeTickArrayAccounts = {
     whirlpool: whirlpool,
     funder: signer.publicKey,
     tickArray: tickArrayPda,
@@ -228,13 +222,13 @@ export async function getTickArrayPubkeysFromRangeOrca(
   tickLowerIndex: number,
   tickUpperIndex: number
 ) {
-  let whirlpoolState = await Whirlpool.fetch(connection, whirlpool);
+  const whirlpoolState = await Whirlpool.fetch(connection, whirlpool);
   if (whirlpoolState == null) {
     throw new Error(`Raydium Pool ${whirlpool} doesn't exist`);
   }
 
-  let startTickIndex = getStartTickIndex(tickLowerIndex, whirlpoolState.tickSpacing, 0);
-  let endTickIndex = getStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing, 0);
+  const startTickIndex = getStartTickIndex(tickLowerIndex, whirlpoolState.tickSpacing, 0);
+  const endTickIndex = getStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing, 0);
 
   const [startTickIndexPk, _startTickIndexBump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from('tick_array'), whirlpool.toBuffer(), Buffer.from(startTickIndex.toString())],

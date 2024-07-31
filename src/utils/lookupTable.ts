@@ -39,7 +39,7 @@ export async function getTransactionV2Message(
   instructions: Array<TransactionInstruction>
 ): Promise<MessageV0> {
   if (cluster == 'mainnet-beta' || cluster == 'devnet') {
-    let lookupTable = await getLookupTable(cluster, connection);
+    const lookupTable = await getLookupTable(cluster, connection);
     const v2Tx = new TransactionMessage({
       payerKey: payer,
       recentBlockhash: blockhash,

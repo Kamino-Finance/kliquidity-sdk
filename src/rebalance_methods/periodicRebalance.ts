@@ -1,7 +1,5 @@
 import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
-import { FullBPSDecimal } from '../utils/CreationParameters';
-import { getManualRebalanceFieldInfos } from './manualRebalance';
 import { RebalanceRaw } from '../kamino-client/types';
 import { RebalanceTypeLabelName } from './consts';
 import { getPriceRangeFromPriceAndDiffBPS } from './math_utils';
@@ -18,40 +16,40 @@ export function getPeriodicRebalanceRebalanceFieldInfos(
   upperRangeBps: Decimal,
   enabled: boolean = true
 ): RebalanceFieldInfo[] {
-  let rebalanceType: RebalanceFieldInfo = {
+  const rebalanceType: RebalanceFieldInfo = {
     label: RebalanceTypeLabelName,
     type: 'string',
     value: PeriodicRebalanceTypeName,
     enabled,
   };
-  let periodRebalanceFieldInfo: RebalanceFieldInfo = {
+  const periodRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'period',
     type: 'number',
     value: period,
     enabled,
   };
-  let lowerRangeBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
     value: lowerRangeBps,
     enabled,
   };
-  let upperRangeBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
     value: upperRangeBps,
     enabled,
   };
 
-  let { lowerPrice, upperPrice } = getPositionRangeFromPeriodicRebalanceParams(price, lowerRangeBps, upperRangeBps);
+  const { lowerPrice, upperPrice } = getPositionRangeFromPeriodicRebalanceParams(price, lowerRangeBps, upperRangeBps);
 
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
@@ -86,8 +84,8 @@ export function getDefaultPeriodicRebalanceFieldInfos(price: Decimal): Rebalance
 }
 
 export function readPeriodicRebalanceRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw) {
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
-  let params: RebalanceFieldsDict = {};
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const params: RebalanceFieldsDict = {};
 
   params['period'] = new Decimal(paramsBuffer.readBigUInt64LE(0).toString());
   params['lowerRangeBps'] = new Decimal(paramsBuffer.readUInt16LE(8));
@@ -97,8 +95,8 @@ export function readPeriodicRebalanceRebalanceParamsFromStrategy(rebalanceRaw: R
 }
 
 export function readPeriodicRebalanceRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
-  let state: RebalanceFieldsDict = {};
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const state: RebalanceFieldsDict = {};
 
   state['lastRebalanceTimestamp'] = new Decimal(stateBuffer.readBigUInt64LE(0).toString());
 
@@ -106,7 +104,7 @@ export function readPeriodicRebalanceRebalanceStateFromStrategy(rebalanceRaw: Re
 }
 
 export function deserializePeriodicRebalanceFromOnchainParams(price: Decimal, rebalanceRaw: RebalanceRaw) {
-  let params = readPeriodicRebalanceRebalanceParamsFromStrategy(rebalanceRaw);
+  const params = readPeriodicRebalanceRebalanceParamsFromStrategy(rebalanceRaw);
 
   return getPeriodicRebalanceRebalanceFieldInfos(
     price,

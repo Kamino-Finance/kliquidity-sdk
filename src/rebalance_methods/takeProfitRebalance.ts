@@ -19,25 +19,25 @@ export function getTakeProfitRebalanceFieldsInfos(
   destinationToken: Decimal,
   enabled: boolean = true
 ): RebalanceFieldInfo[] {
-  let rebalanceType: RebalanceFieldInfo = {
+  const rebalanceType: RebalanceFieldInfo = {
     label: 'rebalanceType',
     type: 'string',
     value: TakeProfitRebalanceTypeName,
     enabled,
   };
-  let lowerRangePriceRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangePriceRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerRangePrice,
     enabled,
   };
-  let upperRangePriceRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangePriceRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperRangePrice,
     enabled,
   };
-  let destinationTokenRebalanceFieldInfo: RebalanceFieldInfo = {
+  const destinationTokenRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'destinationToken',
     type: 'number',
     value: destinationToken,
@@ -60,16 +60,16 @@ export function getPositionRangeFromTakeProfitParams(
   upperSqrtPriceX64: Decimal
 ): PositionRange {
   if (dex == 'ORCA') {
-    let lowerPrice = sqrtPriceX64ToPrice(new BN(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
-    let upperPrice = sqrtPriceX64ToPrice(new BN(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    const lowerPrice = sqrtPriceX64ToPrice(new BN(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    const upperPrice = sqrtPriceX64ToPrice(new BN(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
     return { lowerPrice, upperPrice };
   } else if (dex == 'RAYDIUM') {
-    let lowerPrice = sqrtPriceX64ToPrice(new BN(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
-    let upperPrice = sqrtPriceX64ToPrice(new BN(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    const lowerPrice = sqrtPriceX64ToPrice(new BN(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    const upperPrice = sqrtPriceX64ToPrice(new BN(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
     return { lowerPrice, upperPrice };
   } else if (dex == 'METEORA') {
-    let lowerPrice = getPriceFromQ64Price(new Decimal(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
-    let upperPrice = getPriceFromQ64Price(new Decimal(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    const lowerPrice = getPriceFromQ64Price(new Decimal(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    const upperPrice = getPriceFromQ64Price(new Decimal(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
     return { lowerPrice, upperPrice };
   } else {
     throw new Error(`Unknown DEX ${dex}`);
@@ -77,8 +77,8 @@ export function getPositionRangeFromTakeProfitParams(
 }
 
 export function getDefaultTakeProfitRebalanceFieldsInfos(price: Decimal): RebalanceFieldInfo[] {
-  let lowerPrice = price.mul(FullBPSDecimal.sub(DEFAULT_LOWER_RANGE_PRICE_DIFF_BPS)).div(FullBPSDecimal);
-  let upperPrice = price.mul(FullBPSDecimal.add(DEFAULT_UPPER_RANGE_PRICE_DIFF_BPS)).div(FullBPSDecimal);
+  const lowerPrice = price.mul(FullBPSDecimal.sub(DEFAULT_LOWER_RANGE_PRICE_DIFF_BPS)).div(FullBPSDecimal);
+  const upperPrice = price.mul(FullBPSDecimal.add(DEFAULT_UPPER_RANGE_PRICE_DIFF_BPS)).div(FullBPSDecimal);
 
   return getTakeProfitRebalanceFieldsInfos(lowerPrice, upperPrice, price);
 }
@@ -88,8 +88,8 @@ export function readTakeProfitRebalanceParamsFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ) {
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
-  let params: RebalanceFieldsDict = {};
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const params: RebalanceFieldsDict = {};
 
   params['lowerRangePrice'] = SqrtPriceMath.sqrtPriceX64ToPrice(
     new BN(readBigUint128LE(paramsBuffer, 0).toString()),
@@ -107,8 +107,8 @@ export function readTakeProfitRebalanceParamsFromStrategy(
 }
 
 export function readTakeProfitRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
-  let state: RebalanceFieldsDict = {};
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const state: RebalanceFieldsDict = {};
 
   state['step'] = new Decimal(stateBuffer.readUInt8(0));
 
@@ -120,7 +120,7 @@ export function deserializeTakeProfitRebalanceFromOnchainParams(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let params = readTakeProfitRebalanceParamsFromStrategy(tokenADecimals, tokenBDecimals, rebalanceRaw);
+  const params = readTakeProfitRebalanceParamsFromStrategy(tokenADecimals, tokenBDecimals, rebalanceRaw);
 
   return getTakeProfitRebalanceFieldsInfos(
     params['lowerRangePrice'],

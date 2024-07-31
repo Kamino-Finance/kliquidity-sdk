@@ -219,7 +219,7 @@ export interface ProfiledFunctionExecution {
   <T>(promise: Promise<T>, transactionName: string, tags: [string, string][]): Promise<T>;
 }
 
-export function noopProfiledFunctionExecution(promise: Promise<any>, transactionName: string): Promise<any> {
+export function noopProfiledFunctionExecution(promise: Promise<any>): Promise<any> {
   return promise;
 }
 

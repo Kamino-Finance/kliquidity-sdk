@@ -21,7 +21,7 @@ import {
 import Decimal from 'decimal.js';
 import { GlobalConfigMainnet, KaminoProgramIdMainnet } from './utils';
 import { expect } from 'chai';
-import { WHIRLPOOL_PROGRAM_ID } from '../src/whirpools-client/programId';
+import { WHIRLPOOL_PROGRAM_ID } from '../src/whirlpools-client/programId';
 import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../src/raydium_client/programId';
 import {
   Drift,
@@ -46,19 +46,19 @@ import { priceToTickIndex } from '@orca-so/whirlpool-sdk';
 import { getMintDecimals } from '../src/utils';
 
 describe.skip('Kamino strategy creation SDK Tests', () => {
-  let connection: Connection;
   const cluster = 'mainnet-beta';
 
   const clusterUrl: string = 'https://api.mainnet-beta.solana.com';
 
-  connection = new Connection(clusterUrl, 'processed');
+  const connection: Connection = new Connection(clusterUrl, 'processed');
 
   // use your private key here
-  const signerPrivateKey = [];
-  const signer = Keypair.fromSecretKey(Uint8Array.from(signerPrivateKey));
+  // const signerPrivateKey = [];
+  // const signer = Keypair.fromSecretKey(Uint8Array.from(signerPrivateKey));
+  const signer = Keypair.generate();
 
   it.skip('build manual strategy Orca SOL-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -72,9 +72,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let priceLower = new Decimal(15.0);
-    let priceUpper = new Decimal(21.0);
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const priceLower = new Decimal(15.0);
+    const priceUpper = new Decimal(21.0);
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'ORCA',
       new Decimal('5'),
       newStrategy.publicKey,
@@ -86,7 +86,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs[0]);
     console.log('ixs', ixs.length);
@@ -97,7 +97,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
-    let strategySetupIxs: TransactionInstruction[] = [];
+    const strategySetupIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
@@ -107,7 +107,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, setupStratTransactionV0);
     console.log('setup strategy tx hash', txHash);
 
-    let strategySetupFeesIxs: TransactionInstruction[] = [];
+    const strategySetupFeesIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
@@ -118,13 +118,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy fees tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -160,10 +160,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(stratFields[2]['value'] == priceUpper.toString());
 
     // update the rebalance params with new values; in the UI these should come from the user
-    let newPriceLower = new Decimal(17.3);
-    let newPriceUpper = new Decimal(30.0);
-    let newPriceLowerInput = { label: 'rangePriceLower', value: newPriceLower };
-    let newPriceUpperInput = { label: 'rangePriceUpper', value: newPriceUpper };
+    const newPriceLower = new Decimal(17.3);
+    const newPriceUpper = new Decimal(30.0);
+    const newPriceLowerInput = { label: 'rangePriceLower', value: newPriceLower };
+    const newPriceUpperInput = { label: 'rangePriceUpper', value: newPriceUpper };
     const updateStratFields = kamino.getUpdatedRebalanceFieldInfos(stratFields, [
       newPriceLowerInput,
       newPriceUpperInput,
@@ -177,7 +177,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(updateStratFields[2]['label'] == 'rangePriceUpper');
     expect(updateStratFields[2]['value'] == newPriceUpper.toString());
 
-    let updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       updateStratFields
@@ -221,7 +221,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     // read rebalance state and verify it is fixed in time
     await sleep(10000);
-    let rebalanceState = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
+    const rebalanceState = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
     expect(rebalanceState.length == 3);
     expect(rebalanceState[0]['label'] == 'rebalanceType');
     expect(rebalanceState[0]['value'] == ManualRebalanceTypeName);
@@ -232,7 +232,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('build percentage strategy Orca SOL-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -246,12 +246,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let lowerRangeBPS = new Decimal(200.0);
-    let upperRangeBPS = new Decimal(300.0);
-    let dex: Dex = 'ORCA';
-    let tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
-    let tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const lowerRangeBPS = new Decimal(200.0);
+    const upperRangeBPS = new Decimal(300.0);
+    const dex: Dex = 'ORCA';
+    const tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
+    const tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       dex,
       new Decimal('5'),
       newStrategy.publicKey,
@@ -263,7 +263,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       tokenBMint
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs[0]);
     console.log('ixs', ixs.length);
@@ -274,7 +274,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
-    let strategySetupIxs: TransactionInstruction[] = [];
+    const strategySetupIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
@@ -284,7 +284,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, setupStratTransactionV0);
     console.log('setup strategy tx hash', txHash);
 
-    let strategySetupFeesIxs: TransactionInstruction[] = [];
+    const strategySetupFeesIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
@@ -295,13 +295,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy fees tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -346,10 +346,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(new Decimal(stratFields[4]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
     // update the rebalance params with new values; in the UI these should come from the user
-    let newLowerRangeBPS = new Decimal(800.0);
-    let newUpperRangeBPS = new Decimal(1000.0);
-    let newPriceLowerRangeBPSInput = { label: 'lowerRangeBps', value: newLowerRangeBPS };
-    let newPriceUpperRangeBPSInput = { label: 'upperRangeBps', value: newUpperRangeBPS };
+    const newLowerRangeBPS = new Decimal(800.0);
+    const newUpperRangeBPS = new Decimal(1000.0);
+    const newPriceLowerRangeBPSInput = { label: 'lowerRangeBps', value: newLowerRangeBPS };
+    const newPriceUpperRangeBPSInput = { label: 'upperRangeBps', value: newUpperRangeBPS };
     const updateStratFields = kamino.getUpdatedRebalanceFieldInfos(stratFields, [
       newPriceLowerRangeBPSInput,
       newPriceUpperRangeBPSInput,
@@ -367,7 +367,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(updateStratFields[4]['label'] == 'rangePriceUpper').to.be.true;
     expect(new Decimal(updateStratFields[4]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
-    let updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       updateStratFields
@@ -382,11 +382,11 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     // rebalance with new range; the range is calculated using `getFieldsForRebalanceMethod` as it returns the range for all strategies
     // if `rebalanceMethod` is available it can be used directly, otherwise we can get it from the fields
-    let rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
+    const rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
@@ -395,10 +395,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       poolPrice
     );
 
-    let newPriceLower = new Decimal(
+    const newPriceLower = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceLower')!.value
     );
-    let newPriceUpper = new Decimal(
+    const newPriceUpper = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceUpper')!.value
     );
     console.log('newPriceLower.toString()', newPriceLower.toString());
@@ -459,7 +459,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('build percentage with reset range Orca SOL-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -473,16 +473,16 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let lowerRangeBPS = new Decimal(1000.0);
-    let upperRangeBPS = new Decimal(2000.0);
-    let resetLowerRangeBPS = new Decimal(500.0);
-    let resetUpperRangeBPS = new Decimal(300.0);
+    const lowerRangeBPS = new Decimal(1000.0);
+    const upperRangeBPS = new Decimal(2000.0);
+    const resetLowerRangeBPS = new Decimal(500.0);
+    const resetUpperRangeBPS = new Decimal(300.0);
 
-    let tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
-    let tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
-    let dex: Dex = 'ORCA';
+    const tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
+    const tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+    const dex: Dex = 'ORCA';
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       dex,
       new Decimal('5'),
       newStrategy.publicKey,
@@ -494,7 +494,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       tokenBMint
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs[0]);
     console.log('ixs', ixs.length);
@@ -505,7 +505,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
-    let strategySetupIxs: TransactionInstruction[] = [];
+    const strategySetupIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
@@ -515,7 +515,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, setupStratTransactionV0);
     console.log('setup strategy tx hash', txHash);
 
-    let strategySetupFeesIxs: TransactionInstruction[] = [];
+    const strategySetupFeesIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
@@ -526,13 +526,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy fees tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -594,14 +594,14 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(new Decimal(stratFields[8]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
     // update the rebalance params with new values; in the UI these should come from the user
-    let newLowerRangeBPS = new Decimal(500.0);
-    let newUpperRangeBPS = new Decimal(700.0);
-    let newResetLowerRangeBPS = new Decimal(1000.0);
-    let newResetUpperRangeBPS = new Decimal(2000.0);
-    let newPriceLowerRangeBPSInput = { label: 'lowerRangeBps', value: newLowerRangeBPS };
-    let newPriceUpperRangeBPSInput = { label: 'upperRangeBps', value: newUpperRangeBPS };
-    let newResetPriceLowerRangeBPSInput = { label: 'resetLowerRangeBps', value: newResetLowerRangeBPS };
-    let newResetPriceUpperRangeBPSInput = { label: 'resetUpperRangeBps', value: newResetUpperRangeBPS };
+    const newLowerRangeBPS = new Decimal(500.0);
+    const newUpperRangeBPS = new Decimal(700.0);
+    const newResetLowerRangeBPS = new Decimal(1000.0);
+    const newResetUpperRangeBPS = new Decimal(2000.0);
+    const newPriceLowerRangeBPSInput = { label: 'lowerRangeBps', value: newLowerRangeBPS };
+    const newPriceUpperRangeBPSInput = { label: 'upperRangeBps', value: newUpperRangeBPS };
+    const newResetPriceLowerRangeBPSInput = { label: 'resetLowerRangeBps', value: newResetLowerRangeBPS };
+    const newResetPriceUpperRangeBPSInput = { label: 'resetUpperRangeBps', value: newResetUpperRangeBPS };
 
     const updateStratFields = kamino.getUpdatedRebalanceFieldInfos(stratFields, [
       newPriceLowerRangeBPSInput,
@@ -630,7 +630,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(updateStratFields[8]['label'] == 'resetPriceUpper').to.be.true;
     expect(new Decimal(stratFields[8]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
-    let updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       updateStratFields
@@ -643,10 +643,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, updateStratTransactionV0);
     console.log('update strategy rebalance params tx hash', txHash);
 
-    let rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
+    const rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
@@ -654,10 +654,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       tokenBMint,
       poolPrice
     );
-    let newPriceLower = new Decimal(
+    const newPriceLower = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceLower')!.value
     );
-    let newPriceUpper = new Decimal(
+    const newPriceUpper = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceUpper')!.value
     );
     newPosition = Keypair.generate();
@@ -727,7 +727,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('build percentage with periodic rebalance Orca SOL-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -741,14 +741,14 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let period = new Decimal(600.0);
-    let lowerRangeBPS = new Decimal(345.0);
-    let upperRangeBPS = new Decimal(500.0);
-    let dex: Dex = 'ORCA';
-    let tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
-    let tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+    const period = new Decimal(600.0);
+    const lowerRangeBPS = new Decimal(345.0);
+    const upperRangeBPS = new Decimal(500.0);
+    const dex: Dex = 'ORCA';
+    const tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
+    const tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       dex,
       new Decimal('5'),
       newStrategy.publicKey,
@@ -760,7 +760,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       tokenBMint
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs[0]);
     console.log('ixs', ixs.length);
@@ -771,7 +771,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
-    let strategySetupIxs: TransactionInstruction[] = [];
+    const strategySetupIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
@@ -781,7 +781,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, setupStratTransactionV0);
     console.log('setup strategy tx hash', txHash);
 
-    let strategySetupFeesIxs: TransactionInstruction[] = [];
+    const strategySetupFeesIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
@@ -792,13 +792,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy fees tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -850,12 +850,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(new Decimal(stratFields[5]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
     // update the rebalance params with new values; in the UI these should come from the user
-    let newPeriod = new Decimal(1000.0);
-    let newLowerRangeBPS = new Decimal(400.0);
-    let newUpperRangeBPS = new Decimal(500.0);
-    let newPriceLowerRangeBPSInput = { label: 'lowerRangeBps', value: newLowerRangeBPS };
-    let newPriceUpperRangeBPSInput = { label: 'upperRangeBps', value: newUpperRangeBPS };
-    let newPeriodInput = { label: 'period', value: newPeriod };
+    const newPeriod = new Decimal(1000.0);
+    const newLowerRangeBPS = new Decimal(400.0);
+    const newUpperRangeBPS = new Decimal(500.0);
+    const newPriceLowerRangeBPSInput = { label: 'lowerRangeBps', value: newLowerRangeBPS };
+    const newPriceUpperRangeBPSInput = { label: 'upperRangeBps', value: newUpperRangeBPS };
+    const newPeriodInput = { label: 'period', value: newPeriod };
     const updateStratFields = kamino.getUpdatedRebalanceFieldInfos(stratFields, [
       newPriceLowerRangeBPSInput,
       newPriceUpperRangeBPSInput,
@@ -876,7 +876,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(updateStratFields[5]['label'] == 'rangePriceUpper').to.be.true;
     expect(new Decimal(updateStratFields[5]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
-    let updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       updateStratFields
@@ -891,11 +891,11 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     // rebalance with new range; the range is calculated using `getFieldsForRebalanceMethod` as it returns the range for all strategies
     // if `rebalanceMethod` is available it can be used directly, otherwise we can get it from the fields
-    let rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
+    const rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
@@ -904,10 +904,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       poolPrice
     );
 
-    let newPriceLower = new Decimal(
+    const newPriceLower = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceLower')!.value
     );
-    let newPriceUpper = new Decimal(
+    const newPriceUpper = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceUpper')!.value
     );
     console.log('newPriceLower.toString()', newPriceLower.toString());
@@ -950,7 +950,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('build takeProfit Raydium USDT-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -964,14 +964,14 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let lowerPrice = new Decimal(0.96);
-    let upperPrice = new Decimal(1.03);
-    let destinationToken = new Decimal(0);
-    let dex: Dex = 'ORCA';
-    let tokenAMint = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB');
-    let tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+    const lowerPrice = new Decimal(0.96);
+    const upperPrice = new Decimal(1.03);
+    const destinationToken = new Decimal(0);
+    const dex: Dex = 'ORCA';
+    const tokenAMint = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB');
+    const tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       dex,
       new Decimal('1'),
       newStrategy.publicKey,
@@ -983,7 +983,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       tokenBMint
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs[0]);
     console.log('ixs', ixs.length);
@@ -994,7 +994,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
-    let strategySetupIxs: TransactionInstruction[] = [];
+    const strategySetupIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
@@ -1004,7 +1004,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, setupStratTransactionV0);
     console.log('setup strategy tx hash', txHash);
 
-    let strategySetupFeesIxs: TransactionInstruction[] = [];
+    const strategySetupFeesIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
@@ -1015,13 +1015,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy fees tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -1047,7 +1047,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const openPositionTxId = await sendAndConfirmTransaction(kamino._connection, openPositionTx);
     console.log('openPositionTxId', openPositionTxId);
 
-    let poolPrice = new Decimal(await kamino.getPriceForPair(dex, tokenAMint, tokenBMint));
+    const poolPrice = new Decimal(await kamino.getPriceForPair(dex, tokenAMint, tokenBMint));
 
     let stratFields = await kamino.readRebalancingParams(newStrategy.publicKey);
 
@@ -1065,12 +1065,12 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(stratFields[3]['value'].toString() == destinationToken.toString()).to.be.true;
 
     // update the rebalance params with new values; in the UI these should come from the user
-    let newPriceLower = new Decimal(0.98);
-    let newPriceUpper = new Decimal(1.01);
-    let newDestinationToken = new Decimal(1);
-    let newPriceLowerInput = { label: 'rangePriceLower', value: newPriceLower };
-    let newPriceUpperInput = { label: 'rangePriceUpper', value: newPriceUpper };
-    let newDestinationTokenInput = { label: 'destinationToken', value: newDestinationToken };
+    const newPriceLower = new Decimal(0.98);
+    const newPriceUpper = new Decimal(1.01);
+    const newDestinationToken = new Decimal(1);
+    const newPriceLowerInput = { label: 'rangePriceLower', value: newPriceLower };
+    const newPriceUpperInput = { label: 'rangePriceUpper', value: newPriceUpper };
+    const newDestinationTokenInput = { label: 'destinationToken', value: newDestinationToken };
     const updateStratFields = kamino.getUpdatedRebalanceFieldInfos(stratFields, [
       newPriceLowerInput,
       newPriceUpperInput,
@@ -1087,7 +1087,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(updateStratFields[3]['label'] == 'destinationToken').to.be.true;
     expect(updateStratFields[3]['value'].toString() == newDestinationToken.toString()).to.be.true;
 
-    let updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       updateStratFields
@@ -1157,7 +1157,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('build expander Orca SOL-USDC', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1171,18 +1171,18 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let lowerRangeBPS = new Decimal(300.0);
-    let upperRangeBPS = new Decimal(800.0);
-    let resetLowerRangeBPS = new Decimal(4000.0);
-    let resetUpperRangeBPS = new Decimal(6000.0);
-    let expansionBPS = new Decimal(400.0);
-    let maxNumberOfExpansions = new Decimal(8);
-    let swapUnevenAllowed = new Decimal(1);
-    let dex: Dex = 'ORCA';
-    let tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
-    let tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+    const lowerRangeBPS = new Decimal(300.0);
+    const upperRangeBPS = new Decimal(800.0);
+    const resetLowerRangeBPS = new Decimal(4000.0);
+    const resetUpperRangeBPS = new Decimal(6000.0);
+    const expansionBPS = new Decimal(400.0);
+    const maxNumberOfExpansions = new Decimal(8);
+    const swapUnevenAllowed = new Decimal(1);
+    const dex: Dex = 'ORCA';
+    const tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
+    const tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       dex,
       new Decimal('5'),
       newStrategy.publicKey,
@@ -1202,7 +1202,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       tokenBMint
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs[0]);
     console.log('ixs', ixs.length);
@@ -1213,7 +1213,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
-    let strategySetupIxs: TransactionInstruction[] = [];
+    const strategySetupIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
@@ -1223,7 +1223,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, setupStratTransactionV0);
     console.log('setup strategy tx hash', txHash);
 
-    let strategySetupFeesIxs: TransactionInstruction[] = [];
+    const strategySetupFeesIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
@@ -1238,13 +1238,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -1301,20 +1301,20 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(new Decimal(stratFields[11]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
     // update the rebalance params with new values; in the UI these should come from the user
-    let newLowerRangeBPS = new Decimal(1000.0);
-    let newUpperRangeBPS = new Decimal(1000.0);
-    let newResetLowerRangeBPS = new Decimal(400.0);
-    let newResetUpperRangeBPS = new Decimal(600.0);
-    let newExpansionBPS = new Decimal(200.0);
-    let newMaxNumberOfExpansions = new Decimal(10);
-    let newSwapUnevenAllowed = new Decimal(0);
-    let newPriceLowerRangeBPSInput = { label: 'lowerRangeBps', value: newLowerRangeBPS };
-    let newPriceUpperRangeBPSInput = { label: 'upperRangeBps', value: newUpperRangeBPS };
-    let newResetLowerRangeBPSInput = { label: 'resetLowerRangeBps', value: newResetLowerRangeBPS };
-    let newResetUpperRangeBPSInput = { label: 'resetUpperRangeBps', value: newResetUpperRangeBPS };
-    let newExpansionBPSInput = { label: 'expansionBps', value: newExpansionBPS };
-    let newMaxNumberOfExpansionsInput = { label: 'maxNumberOfExpansions', value: newMaxNumberOfExpansions };
-    let newSwapUnevenAllowedInput = { label: 'swapUnevenAllowed', value: newSwapUnevenAllowed };
+    const newLowerRangeBPS = new Decimal(1000.0);
+    const newUpperRangeBPS = new Decimal(1000.0);
+    const newResetLowerRangeBPS = new Decimal(400.0);
+    const newResetUpperRangeBPS = new Decimal(600.0);
+    const newExpansionBPS = new Decimal(200.0);
+    const newMaxNumberOfExpansions = new Decimal(10);
+    const newSwapUnevenAllowed = new Decimal(0);
+    const newPriceLowerRangeBPSInput = { label: 'lowerRangeBps', value: newLowerRangeBPS };
+    const newPriceUpperRangeBPSInput = { label: 'upperRangeBps', value: newUpperRangeBPS };
+    const newResetLowerRangeBPSInput = { label: 'resetLowerRangeBps', value: newResetLowerRangeBPS };
+    const newResetUpperRangeBPSInput = { label: 'resetUpperRangeBps', value: newResetUpperRangeBPS };
+    const newExpansionBPSInput = { label: 'expansionBps', value: newExpansionBPS };
+    const newMaxNumberOfExpansionsInput = { label: 'maxNumberOfExpansions', value: newMaxNumberOfExpansions };
+    const newSwapUnevenAllowedInput = { label: 'swapUnevenAllowed', value: newSwapUnevenAllowed };
     const updateStratFields = kamino.getUpdatedRebalanceFieldInfos(stratFields, [
       newPriceLowerRangeBPSInput,
       newPriceUpperRangeBPSInput,
@@ -1351,7 +1351,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(stratFields[11]['label'] == 'resetPriceUpper').to.be.true;
     expect(new Decimal(stratFields[11]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
-    let updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       updateStratFields
@@ -1366,11 +1366,11 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     // rebalance with new range; the range is calculated using `getFieldsForRebalanceMethod` as it returns the range for all strategies
     // if `rebalanceMethod` is available it can be used directly, otherwise we can get it from the fields
-    let rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
+    const rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
@@ -1379,10 +1379,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       poolPrice
     );
 
-    let newPriceLower = new Decimal(
+    const newPriceLower = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceLower')!.value
     );
-    let newPriceUpper = new Decimal(
+    const newPriceUpper = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceUpper')!.value
     );
     newPosition = Keypair.generate();
@@ -1435,7 +1435,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(stratFields[11]['label'] == 'resetPriceUpper').to.be.true;
     expect(new Decimal(stratFields[11]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
-    let readFromStateFieldInfos = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
+    const readFromStateFieldInfos = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
 
     await sleep(30000);
 
@@ -1466,7 +1466,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(readFromStateFieldInfos[11]['value'].toString() == stratFields[11]['value'].toString()).to.be.true;
 
     await sleep(30000);
-    let readFromStateFieldInfos2 = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
+    const readFromStateFieldInfos2 = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
 
     expect(readFromStateFieldInfos2.length == 12).to.be.true;
     expect(readFromStateFieldInfos2[0]['label'] == 'rebalanceType').to.be.true;
@@ -1500,7 +1500,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('build drift Orca SOL-MSOL', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1514,22 +1514,22 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let ticksBelowMid = new Decimal(10.0);
-    let ticksAboveMid = new Decimal(5.0);
-    let secondsPerTick = new Decimal(6000.0);
-    let direction = new Decimal(1.0);
-    let dex: Dex = 'ORCA';
-    let tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
-    let tokenBMint = new PublicKey('mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So');
+    const ticksBelowMid = new Decimal(10.0);
+    const ticksAboveMid = new Decimal(5.0);
+    const secondsPerTick = new Decimal(6000.0);
+    const direction = new Decimal(1.0);
+    const dex: Dex = 'ORCA';
+    const tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
+    const tokenBMint = new PublicKey('mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So');
     //@ts-ignore
-    let tokenADecimals = await getMintDecimals(kamino._connection, tokenAMint);
+    const tokenADecimals = await getMintDecimals(kamino._connection, tokenAMint);
     //@ts-ignore
-    let tokenBDecimals = await getMintDecimals(kamino._connection, tokenBMint);
+    const tokenBDecimals = await getMintDecimals(kamino._connection, tokenBMint);
 
-    let poolPrice = new Decimal(await kamino.getPriceForPair(dex, tokenAMint, tokenBMint));
-    let startMidTick = new Decimal(priceToTickIndex(poolPrice, tokenADecimals, tokenBDecimals));
+    const poolPrice = new Decimal(await kamino.getPriceForPair(dex, tokenAMint, tokenBMint));
+    const startMidTick = new Decimal(priceToTickIndex(poolPrice, tokenADecimals, tokenBDecimals));
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       dex,
       new Decimal('1'),
       newStrategy.publicKey,
@@ -1541,7 +1541,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       tokenBMint
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs[0]);
     console.log('ixs', ixs.length);
@@ -1552,7 +1552,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
-    let strategySetupIxs: TransactionInstruction[] = [];
+    const strategySetupIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
@@ -1562,7 +1562,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, setupStratTransactionV0);
     console.log('setup strategy tx hash', txHash);
 
-    let strategySetupFeesIxs: TransactionInstruction[] = [];
+    const strategySetupFeesIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
@@ -1577,13 +1577,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -1633,16 +1633,16 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(new Decimal(stratFields[7]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
     // update the rebalance params with new values; in the UI these should come from the user
-    let newStartMidTick = startMidTick.add(1);
-    let newTicksBelowMid = ticksBelowMid.add(10);
-    let newTicksAboveMid = ticksAboveMid.add(5);
-    let newSecondsPerTick = secondsPerTick.add(6000);
-    let newDirection = new Decimal(0);
-    let newStartMidTickInput = { label: 'startMidTick', value: newStartMidTick };
-    let newTickBelowMidInput = { label: 'ticksBelowMid', value: newTicksBelowMid };
-    let newTickAboveMidInput = { label: 'ticksAboveMid', value: newTicksAboveMid };
-    let newSecondsPerTickInput = { label: 'secondsPerTick', value: newSecondsPerTick };
-    let newDirectionInput = { label: 'direction', value: newDirection };
+    const newStartMidTick = startMidTick.add(1);
+    const newTicksBelowMid = ticksBelowMid.add(10);
+    const newTicksAboveMid = ticksAboveMid.add(5);
+    const newSecondsPerTick = secondsPerTick.add(6000);
+    const newDirection = new Decimal(0);
+    const newStartMidTickInput = { label: 'startMidTick', value: newStartMidTick };
+    const newTickBelowMidInput = { label: 'ticksBelowMid', value: newTicksBelowMid };
+    const newTickAboveMidInput = { label: 'ticksAboveMid', value: newTicksAboveMid };
+    const newSecondsPerTickInput = { label: 'secondsPerTick', value: newSecondsPerTick };
+    const newDirectionInput = { label: 'direction', value: newDirection };
 
     const updateStratFields = kamino.getUpdatedRebalanceFieldInfos(stratFields, [
       newStartMidTickInput,
@@ -1670,7 +1670,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(updateStratFields[7]['label'] == 'rangePriceUpper').to.be.true;
     expect(new Decimal(updateStratFields[7]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
-    let updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       updateStratFields
@@ -1685,8 +1685,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     // rebalance with new range; the range is calculated using `getFieldsForRebalanceMethod` as it returns the range for all strategies
     // if `rebalanceMethod` is available it can be used directly, otherwise we can get it from the fields
-    let rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
-    let updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
+    const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
@@ -1694,10 +1694,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       tokenBMint
     );
 
-    let newPriceLower = new Decimal(
+    const newPriceLower = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceLower')!.value
     );
-    let newPriceUpper = new Decimal(
+    const newPriceUpper = new Decimal(
       updatedAllRebalanceFieldInfos.find((field) => field.label === 'rangePriceUpper')!.value
     );
 
@@ -1741,9 +1741,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(new Decimal(stratFields[7]['value'].toString()).greaterThan(poolPrice)).to.be.true;
 
     await sleep(30000);
-    let readFromStateFieldInfos = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
+    const readFromStateFieldInfos = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
     await sleep(50000);
-    let readFromStateFieldInfos2 = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
+    const readFromStateFieldInfos2 = await kamino.readRebalancingParamsWithState(newStrategy.publicKey);
 
     expect(readFromStateFieldInfos.length == 8).to.be.true;
     expect(readFromStateFieldInfos[0]['label'] == 'rebalanceType').to.be.true;
@@ -1769,7 +1769,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('update price reference type', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1783,9 +1783,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let priceLower = new Decimal(15.0);
-    let priceUpper = new Decimal(21.0);
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const priceLower = new Decimal(15.0);
+    const priceUpper = new Decimal(21.0);
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'RAYDIUM',
       new Decimal('5'),
       newStrategy.publicKey,
@@ -1797,7 +1797,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs[0]);
     console.log('ixs', ixs.length);
@@ -1808,7 +1808,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
-    let strategySetupIxs: TransactionInstruction[] = [];
+    const strategySetupIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
@@ -1818,7 +1818,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, setupStratTransactionV0);
     console.log('setup strategy tx hash', txHash);
 
-    let strategySetupFeesIxs: TransactionInstruction[] = [];
+    const strategySetupFeesIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
@@ -1829,13 +1829,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy fees tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -1904,7 +1904,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('update rebalance strategy types and params', async () => {
-    let kamino = new Kamino(
+    const kamino = new Kamino(
       cluster,
       connection,
       GlobalConfigMainnet,
@@ -1918,13 +1918,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(signer.publicKey, newStrategy.publicKey);
     console.log('newStrategy.publicKey', newStrategy.publicKey.toString());
 
-    let priceLower = new Decimal(15.0);
-    let priceUpper = new Decimal(21.0);
-    let dex: Dex = 'RAYDIUM';
-    let tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
-    let tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+    const priceLower = new Decimal(15.0);
+    const priceUpper = new Decimal(21.0);
+    const dex: Dex = 'RAYDIUM';
+    const tokenAMint = new PublicKey('So11111111111111111111111111111111111111112');
+    const tokenBMint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-    let buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
+    const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       'RAYDIUM',
       new Decimal('5'),
       newStrategy.publicKey,
@@ -1936,7 +1936,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       tokenBMint
     );
 
-    let ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs[0]);
     console.log('ixs', ixs.length);
@@ -1947,7 +1947,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     let txHash = await sendAndConfirmTransaction(kamino._connection, createStratTransactionV0);
     console.log('create strategy tx hash', txHash);
 
-    let strategySetupIxs: TransactionInstruction[] = [];
+    const strategySetupIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
@@ -1957,7 +1957,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     txHash = await sendAndConfirmTransaction(kamino._connection, setupStratTransactionV0);
     console.log('setup strategy tx hash', txHash);
 
-    let strategySetupFeesIxs: TransactionInstruction[] = [];
+    const strategySetupFeesIxs: TransactionInstruction[] = [];
     buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
@@ -1968,13 +1968,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy fees tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
-    let updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
+    const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer.publicKey, newStrategy.publicKey);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy
-    let strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.publicKey);
 
-    for (let ix of updateRewardMappingIxs) {
+    for (const ix of updateRewardMappingIxs) {
       const updateRewardMappingTx = await kamino.getTransactionV2Message(
         signer.publicKey,
         [ix[0]],
@@ -2001,7 +2001,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('openPositionTxId', openPositionTxId);
 
     // read strategy params and assert they were set correctly
-    let stratFields = await kamino.readRebalancingParams(newStrategy.publicKey);
+    const stratFields = await kamino.readRebalancingParams(newStrategy.publicKey);
     expect(stratFields.length == 3);
     expect(stratFields[0]['label'] == 'rebalanceType');
     expect(stratFields[0]['value'] == ManualRebalanceTypeName);
@@ -2011,14 +2011,14 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(stratFields[2]['value'] == priceUpper.toString());
 
     // 2. Update strategy to use percentage strategy
-    let defaultPricePercentageRebalanceFields = await kamino.getDefaultRebalanceFields(
+    const defaultPricePercentageRebalanceFields = await kamino.getDefaultRebalanceFields(
       dex,
       tokenAMint,
       tokenBMint,
       PricePercentageRebalanceMethod
     );
 
-    let updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       defaultPricePercentageRebalanceFields
@@ -2032,9 +2032,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('update strategy to price percentage rebalance params tx hash', txHash);
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
-    let rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultPricePercentageRebalanceFields);
+    const rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultPricePercentageRebalanceFields);
     let poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       defaultPricePercentageRebalanceFields,
@@ -2054,39 +2054,39 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     );
 
     newPosition = Keypair.generate();
-    let rebalanceIxns = await kamino.rebalance(
+    const rebalanceIxns = await kamino.rebalance(
       newStrategy.publicKey,
       newPosition.publicKey,
       newPriceLower,
       newPriceUpper
     );
-    let rebalanceMessage = await kamino.getTransactionV2Message(
+    const rebalanceMessage = await kamino.getTransactionV2Message(
       signer.publicKey,
       [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns],
       [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
     );
-    let rebalanceTx = new VersionedTransaction(rebalanceMessage);
+    const rebalanceTx = new VersionedTransaction(rebalanceMessage);
     rebalanceTx.sign([signer, newPosition]);
 
     //@ts-ignore
-    let rebalanceTxId = await sendAndConfirmTransaction(kamino._connection, rebalanceTx);
+    const rebalanceTxId = await sendAndConfirmTransaction(kamino._connection, rebalanceTx);
     console.log('rebalance to pricePercentage TxId', rebalanceTxId);
 
     // 3. update the rebalance strategy to price percentage with reset
-    let defaultPricePercentageWithResetRebalanceFields = await kamino.getDefaultRebalanceFields(
+    const defaultPricePercentageWithResetRebalanceFields = await kamino.getDefaultRebalanceFields(
       dex,
       tokenAMint,
       tokenBMint,
       PricePercentageWithResetRangeRebalanceMethod
     );
 
-    let updateStratToPricePercentageWithResetIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratToPricePercentageWithResetIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       defaultPricePercentageWithResetRebalanceFields
     );
 
-    let updateStraToPricePercentageWithResetTx = await kamino.getTransactionV2Message(signer.publicKey, [
+    const updateStraToPricePercentageWithResetTx = await kamino.getTransactionV2Message(signer.publicKey, [
       updateStratToPricePercentageWithResetIx,
     ]);
     const updateStratToPricePercentageWithResetTransactionV0 = new VersionedTransaction(
@@ -2098,11 +2098,11 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('update strategy to price percentage with reset rebalance params tx hash', txHash);
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
-    let pricePercentageWithResetRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(
+    const pricePercentageWithResetRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(
       defaultPricePercentageWithResetRebalanceFields
     );
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllPricePercentageWithResetRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllPricePercentageWithResetRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       pricePercentageWithResetRebalanceMethod,
       dex,
       defaultPricePercentageWithResetRebalanceFields,
@@ -2145,20 +2145,20 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('rebalance to pricePercentageWithReset TxId', rebalancePricePercentageWithReseteTxId);
 
     // 4. update the rebalance strategy to drift
-    let defaultDriftRebalanceFields = await kamino.getDefaultRebalanceFields(
+    const defaultDriftRebalanceFields = await kamino.getDefaultRebalanceFields(
       dex,
       tokenAMint,
       tokenBMint,
       DriftRebalanceMethod
     );
 
-    let updateStratToDriftIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratToDriftIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       defaultDriftRebalanceFields
     );
 
-    let updateStraToDriftTx = await kamino.getTransactionV2Message(signer.publicKey, [updateStratToDriftIx]);
+    const updateStraToDriftTx = await kamino.getTransactionV2Message(signer.publicKey, [updateStratToDriftIx]);
     const updateStratToDriftTransactionV0 = new VersionedTransaction(updateStraToDriftTx);
     updateStratToDriftTransactionV0.sign([signer]);
     //@ts-ignore
@@ -2166,9 +2166,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('update strategy to drift params tx hash', txHash);
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
-    let driftRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultDriftRebalanceFields);
+    const driftRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultDriftRebalanceFields);
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllDriftFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllDriftFieldInfos = await kamino.getFieldsForRebalanceMethod(
       driftRebalanceMethod,
       dex,
       defaultDriftRebalanceFields,
@@ -2207,20 +2207,22 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('rebalance to Drift TxId', rebalanceDriftTxId);
 
     // 5. update the rebalance strategy to TakeProfit
-    let defaultTakeProfitRebalanceFields = await kamino.getDefaultRebalanceFields(
+    const defaultTakeProfitRebalanceFields = await kamino.getDefaultRebalanceFields(
       dex,
       tokenAMint,
       tokenBMint,
       TakeProfitMethod
     );
 
-    let updateStratToTakeProfitIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratToTakeProfitIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       defaultTakeProfitRebalanceFields
     );
 
-    let updateStratToTakeProfitTx = await kamino.getTransactionV2Message(signer.publicKey, [updateStratToTakeProfitIx]);
+    const updateStratToTakeProfitTx = await kamino.getTransactionV2Message(signer.publicKey, [
+      updateStratToTakeProfitIx,
+    ]);
     const updateStratToTakeProfitTransactionV0 = new VersionedTransaction(updateStratToTakeProfitTx);
     updateStratToTakeProfitTransactionV0.sign([signer]);
     //@ts-ignore
@@ -2228,9 +2230,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('update strategy to take profit tx hash', txHash);
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
-    let takeProfitRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultTakeProfitRebalanceFields);
+    const takeProfitRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultTakeProfitRebalanceFields);
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllTakeProfitFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllTakeProfitFieldInfos = await kamino.getFieldsForRebalanceMethod(
       takeProfitRebalanceMethod,
       dex,
       defaultTakeProfitRebalanceFields,
@@ -2276,20 +2278,20 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     await sleep(60000);
 
     // 6. update the rebalance strategy to PeriodicRebalance
-    let defaultPeriodicRebalanceRebalanceFields = await kamino.getDefaultRebalanceFields(
+    const defaultPeriodicRebalanceRebalanceFields = await kamino.getDefaultRebalanceFields(
       dex,
       tokenAMint,
       tokenBMint,
       PeriodicRebalanceMethod
     );
 
-    let updateStratToPeriodicRebalanceIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratToPeriodicRebalanceIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       defaultPeriodicRebalanceRebalanceFields
     );
 
-    let updateStratToPeriodicRebalanceTx = await kamino.getTransactionV2Message(signer.publicKey, [
+    const updateStratToPeriodicRebalanceTx = await kamino.getTransactionV2Message(signer.publicKey, [
       updateStratToPeriodicRebalanceIx,
     ]);
     const updateStratToPeriodicRebalanceTransactionV0 = new VersionedTransaction(updateStratToPeriodicRebalanceTx);
@@ -2300,9 +2302,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('update strategy to periodic rebalance tx hash', txHash);
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
-    let periodicRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultPeriodicRebalanceRebalanceFields);
+    // const periodicRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultPeriodicRebalanceRebalanceFields);
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllPeriodicRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllPeriodicRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       takeProfitRebalanceMethod,
       dex,
       defaultPeriodicRebalanceRebalanceFields,
@@ -2347,20 +2349,20 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     await sleep(10000);
 
     // 7. update the rebalance strategy to Expander
-    let defaultExpanderRebalanceFields = await kamino.getDefaultRebalanceFields(
+    const defaultExpanderRebalanceFields = await kamino.getDefaultRebalanceFields(
       dex,
       tokenAMint,
       tokenBMint,
       ExpanderMethod
     );
 
-    let updateStratToExpanderIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
+    const updateStratToExpanderIx = await kamino.getUpdateRebalancingParamsFromRebalanceFieldsIx(
       signer.publicKey,
       newStrategy.publicKey,
       defaultExpanderRebalanceFields
     );
 
-    let updateStratToExpanderTx = await kamino.getTransactionV2Message(signer.publicKey, [updateStratToExpanderIx]);
+    const updateStratToExpanderTx = await kamino.getTransactionV2Message(signer.publicKey, [updateStratToExpanderIx]);
     const updateStratToExpanderTransactionV0 = new VersionedTransaction(updateStratToExpanderTx);
     updateStratToExpanderTransactionV0.sign([signer]);
     //@ts-ignore
@@ -2368,9 +2370,9 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('update strategy to expander tx hash', txHash);
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
-    let expanderRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultExpanderRebalanceFields);
+    const expanderRebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(defaultExpanderRebalanceFields);
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
-    let updatedAllExpanderFieldInfos = await kamino.getFieldsForRebalanceMethod(
+    const updatedAllExpanderFieldInfos = await kamino.getFieldsForRebalanceMethod(
       expanderRebalanceMethod,
       dex,
       defaultExpanderRebalanceFields,

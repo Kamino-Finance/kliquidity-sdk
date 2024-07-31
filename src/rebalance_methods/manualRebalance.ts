@@ -14,19 +14,19 @@ export function getManualRebalanceFieldInfos(
   upperPrice: Decimal,
   enabled: boolean = true
 ): RebalanceFieldInfo[] {
-  let rebalanceType: RebalanceFieldInfo = {
+  const rebalanceType: RebalanceFieldInfo = {
     label: RebalanceTypeLabelName,
     type: 'string',
     value: ManualRebalanceTypeName,
     enabled,
   };
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
@@ -36,8 +36,8 @@ export function getManualRebalanceFieldInfos(
 }
 
 export function getDefaultManualRebalanceFieldInfos(price: Decimal): RebalanceFieldInfo[] {
-  let lowerPrice = price.mul(FullBPSDecimal.sub(DefaultLowerPercentageBPSDecimal)).div(FullBPSDecimal);
-  let upperPrice = price.mul(FullBPSDecimal.add(DefaultUpperPercentageBPSDecimal)).div(FullBPSDecimal);
+  const lowerPrice = price.mul(FullBPSDecimal.sub(DefaultLowerPercentageBPSDecimal)).div(FullBPSDecimal);
+  const upperPrice = price.mul(FullBPSDecimal.add(DefaultUpperPercentageBPSDecimal)).div(FullBPSDecimal);
 
   return getManualRebalanceFieldInfos(lowerPrice, upperPrice);
 }
