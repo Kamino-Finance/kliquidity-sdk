@@ -1,0 +1,90 @@
+name: Publish Release
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, by semver keyword.'
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      # NPM automation token (skips 2FA)
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.HUBBLEPROTOCOLBOT_WRITE_REPO_PAT }} # use bot to avoid branch protection
+
+      - name: Master-branch check
+        run: |
+          echo "Must be on master branch to publish the package."
+          exit 1
+        if: github.ref != 'refs/heads/master'
+
+      - name: Setup .npmrc file for publish
+        uses: actions/setup-node@v3
+        with:
+          node-version: '19'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git User
+        run: |
+          git config --global user.name "Hubble Bot"
+          git config --global user.username "hubbleprotocolbot"
+          git config --global user.email "dev@hubbleprotocol.io"
+
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+
+      - name: Build package
+        run: yarn build
+
+      - name: Get latest version kliquidity-sdk
+        id: get_latest_version
+        run: |
+          latest_version=$(npm view @kamino-finance/kliquidity-sdk version)
+          echo "Latest version: $latest_version"
+          echo "::set-output name=latest_version::$latest_version"
+
+      - name: Bump version
+        uses: anothrNick/github-tag-action@1.55.0
+        id: semver
+        env:
+          GITHUB_TOKEN: ${{ secrets.HUBBLEPROTOCOLBOT_WRITE_REPO_PAT }}
+          DEFAULT_BUMP: ${{ inputs.version }}
+          DEFAULT_BRANCH: master
+          INITIAL_VERSION: ${{ steps.get_latest_version.outputs.latest_version }}
+          WITH_V: false
+          RELEASE_BRANCHES: master
+          TAG_CONTEXT: repo
+          PRERELEASE: false
+          VERBOSE: false
+
+      - name: Publish to npm
+        run: yarn publish --new-version ${{ steps.semver.outputs.new_tag }}
+
+      - name: Create git commit
+        # force push to avoid branch protection
+        run: |
+          yarn config set version-git-message "@kamino-finance/kliquidity-sdk:%s"
+          yarn version --new-version ${{ steps.semver.outputs.new_tag }}
+          git push --force origin master
+
+      - name: Create Git tag
+        if: steps.semver.outputs.tag_created == 'true'
+        run: |
+          git tag "v${{ steps.semver.outputs.new_tag }}"
+          git push origin ${{ steps.semver.outputs.new_tag }}

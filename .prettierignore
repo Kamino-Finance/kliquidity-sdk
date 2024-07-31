@@ -1,0 +1,10 @@
+dist/
+docs/
+node_modules/
+*.md
+src/kamino-client
+src/meteora_client
+src/raydium_client
+src/whirlpools-client
+test-ledger/
+deps/
