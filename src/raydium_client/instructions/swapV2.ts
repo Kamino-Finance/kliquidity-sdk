@@ -1,40 +1,44 @@
-import { TransactionInstruction, PublicKey, AccountMeta } from '@solana/web3.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from 'bn.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from '@coral-xyz/borsh'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from '../types'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { PROGRAM_ID } from '../programId';
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
+import { PROGRAM_ID } from "../programId"
 
 export interface SwapV2Args {
-  amount: BN;
-  otherAmountThreshold: BN;
-  sqrtPriceLimitX64: BN;
-  isBaseInput: boolean;
+  amount: BN
+  otherAmountThreshold: BN
+  sqrtPriceLimitX64: BN
+  isBaseInput: boolean
 }
 
 export interface SwapV2Accounts {
-  payer: PublicKey;
-  ammConfig: PublicKey;
-  poolState: PublicKey;
-  inputTokenAccount: PublicKey;
-  outputTokenAccount: PublicKey;
-  inputVault: PublicKey;
-  outputVault: PublicKey;
-  observationState: PublicKey;
-  tokenProgram: PublicKey;
-  tokenProgram2022: PublicKey;
-  memoProgram: PublicKey;
-  inputVaultMint: PublicKey;
-  outputVaultMint: PublicKey;
+  payer: PublicKey
+  ammConfig: PublicKey
+  poolState: PublicKey
+  inputTokenAccount: PublicKey
+  outputTokenAccount: PublicKey
+  inputVault: PublicKey
+  outputVault: PublicKey
+  observationState: PublicKey
+  tokenProgram: PublicKey
+  tokenProgram2022: PublicKey
+  memoProgram: PublicKey
+  inputVaultMint: PublicKey
+  outputVaultMint: PublicKey
 }
 
 export const layout = borsh.struct([
-  borsh.u64('amount'),
-  borsh.u64('otherAmountThreshold'),
-  borsh.u128('sqrtPriceLimitX64'),
-  borsh.bool('isBaseInput'),
-]);
+  borsh.u64("amount"),
+  borsh.u64("otherAmountThreshold"),
+  borsh.u128("sqrtPriceLimitX64"),
+  borsh.bool("isBaseInput"),
+])
 
-export function swapV2(args: SwapV2Args, accounts: SwapV2Accounts, programId: PublicKey = PROGRAM_ID) {
+export function swapV2(
+  args: SwapV2Args,
+  accounts: SwapV2Accounts,
+  programId: PublicKey = PROGRAM_ID
+) {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.payer, isSigner: true, isWritable: false },
     { pubkey: accounts.ammConfig, isSigner: false, isWritable: false },
@@ -49,9 +53,9 @@ export function swapV2(args: SwapV2Args, accounts: SwapV2Accounts, programId: Pu
     { pubkey: accounts.memoProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.inputVaultMint, isSigner: false, isWritable: false },
     { pubkey: accounts.outputVaultMint, isSigner: false, isWritable: false },
-  ];
-  const identifier = Buffer.from([43, 4, 237, 11, 26, 201, 30, 98]);
-  const buffer = Buffer.alloc(1000);
+  ]
+  const identifier = Buffer.from([43, 4, 237, 11, 26, 201, 30, 98])
+  const buffer = Buffer.alloc(1000)
   const len = layout.encode(
     {
       amount: args.amount,
@@ -60,8 +64,8 @@ export function swapV2(args: SwapV2Args, accounts: SwapV2Accounts, programId: Pu
       isBaseInput: args.isBaseInput,
     },
     buffer
-  );
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len);
-  const ix = new TransactionInstruction({ keys, programId, data });
-  return ix;
+  )
+  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
+  const ix = new TransactionInstruction({ keys, programId, data })
+  return ix
 }

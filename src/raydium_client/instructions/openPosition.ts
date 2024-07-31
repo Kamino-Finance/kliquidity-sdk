@@ -1,50 +1,50 @@
-import { TransactionInstruction, PublicKey, AccountMeta } from '@solana/web3.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from 'bn.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from '@coral-xyz/borsh'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from '../types'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { PROGRAM_ID } from '../programId';
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
+import { PROGRAM_ID } from "../programId"
 
 export interface OpenPositionArgs {
-  tickLowerIndex: number;
-  tickUpperIndex: number;
-  tickArrayLowerStartIndex: number;
-  tickArrayUpperStartIndex: number;
-  liquidity: BN;
-  amount0Max: BN;
-  amount1Max: BN;
+  tickLowerIndex: number
+  tickUpperIndex: number
+  tickArrayLowerStartIndex: number
+  tickArrayUpperStartIndex: number
+  liquidity: BN
+  amount0Max: BN
+  amount1Max: BN
 }
 
 export interface OpenPositionAccounts {
-  payer: PublicKey;
-  positionNftOwner: PublicKey;
-  positionNftMint: PublicKey;
-  positionNftAccount: PublicKey;
-  metadataAccount: PublicKey;
-  poolState: PublicKey;
-  protocolPosition: PublicKey;
-  tickArrayLower: PublicKey;
-  tickArrayUpper: PublicKey;
-  personalPosition: PublicKey;
-  tokenAccount0: PublicKey;
-  tokenAccount1: PublicKey;
-  tokenVault0: PublicKey;
-  tokenVault1: PublicKey;
-  rent: PublicKey;
-  systemProgram: PublicKey;
-  tokenProgram: PublicKey;
-  associatedTokenProgram: PublicKey;
-  metadataProgram: PublicKey;
+  payer: PublicKey
+  positionNftOwner: PublicKey
+  positionNftMint: PublicKey
+  positionNftAccount: PublicKey
+  metadataAccount: PublicKey
+  poolState: PublicKey
+  protocolPosition: PublicKey
+  tickArrayLower: PublicKey
+  tickArrayUpper: PublicKey
+  personalPosition: PublicKey
+  tokenAccount0: PublicKey
+  tokenAccount1: PublicKey
+  tokenVault0: PublicKey
+  tokenVault1: PublicKey
+  rent: PublicKey
+  systemProgram: PublicKey
+  tokenProgram: PublicKey
+  associatedTokenProgram: PublicKey
+  metadataProgram: PublicKey
 }
 
 export const layout = borsh.struct([
-  borsh.i32('tickLowerIndex'),
-  borsh.i32('tickUpperIndex'),
-  borsh.i32('tickArrayLowerStartIndex'),
-  borsh.i32('tickArrayUpperStartIndex'),
-  borsh.u128('liquidity'),
-  borsh.u64('amount0Max'),
-  borsh.u64('amount1Max'),
-]);
+  borsh.i32("tickLowerIndex"),
+  borsh.i32("tickUpperIndex"),
+  borsh.i32("tickArrayLowerStartIndex"),
+  borsh.i32("tickArrayUpperStartIndex"),
+  borsh.u128("liquidity"),
+  borsh.u64("amount0Max"),
+  borsh.u64("amount1Max"),
+])
 
 export function openPosition(
   args: OpenPositionArgs,
@@ -75,9 +75,9 @@ export function openPosition(
       isWritable: false,
     },
     { pubkey: accounts.metadataProgram, isSigner: false, isWritable: false },
-  ];
-  const identifier = Buffer.from([135, 128, 47, 77, 15, 152, 240, 49]);
-  const buffer = Buffer.alloc(1000);
+  ]
+  const identifier = Buffer.from([135, 128, 47, 77, 15, 152, 240, 49])
+  const buffer = Buffer.alloc(1000)
   const len = layout.encode(
     {
       tickLowerIndex: args.tickLowerIndex,
@@ -89,8 +89,8 @@ export function openPosition(
       amount1Max: args.amount1Max,
     },
     buffer
-  );
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len);
-  const ix = new TransactionInstruction({ keys, programId, data });
-  return ix;
+  )
+  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
+  const ix = new TransactionInstruction({ keys, programId, data })
+  return ix
 }

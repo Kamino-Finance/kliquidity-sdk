@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
+import { PositionRange, RebalanceFieldInfo } from '../utils/types';
 import {
   DefaultLowerPercentageBPSDecimal,
   DefaultUpperPercentageBPSDecimal,
@@ -24,56 +24,56 @@ export function getPricePercentageWithResetRebalanceFieldInfos(
   resetUpperPercentageBPS: Decimal,
   enabled: boolean = true
 ): RebalanceFieldInfo[] {
-  let rebalanceType: RebalanceFieldInfo = {
+  const rebalanceType: RebalanceFieldInfo = {
     label: RebalanceTypeLabelName,
     type: 'string',
     value: PricePercentageWithResetRebalanceTypeName,
     enabled,
   };
-  let lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
     value: lowerPercentageBPS,
     enabled,
   };
-  let upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
     value: upperPercentageBPS,
     enabled,
   };
-  let resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetLowerRangeBps',
     type: 'number',
     value: resetLowerPercentageBPS,
     enabled,
   };
-  let resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetUpperRangeBps',
     type: 'number',
     value: resetUpperPercentageBPS,
     enabled,
   };
 
-  let { lowerPrice, upperPrice } = getPositionRangeFromPricePercentageWithResetParams(
+  const { lowerPrice, upperPrice } = getPositionRangeFromPricePercentageWithResetParams(
     price,
     lowerPercentageBPS,
     upperPercentageBPS
   );
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
     enabled: false,
   };
 
-  let { lowerPrice: resetLowerPrice, upperPrice: resetUpperPrice } =
+  const { lowerPrice: resetLowerPrice, upperPrice: resetUpperPrice } =
     getPositionResetRangeFromPricePercentageWithResetParams(
       price,
       lowerPercentageBPS,
@@ -81,13 +81,13 @@ export function getPricePercentageWithResetRebalanceFieldInfos(
       resetLowerPercentageBPS,
       resetUpperPercentageBPS
     );
-  let resetLowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetLowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetPriceLower',
     type: 'number',
     value: resetLowerPrice,
     enabled: false,
   };
-  let resetUpperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetUpperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetPriceUpper',
     type: 'number',
     value: resetUpperPrice,
@@ -132,7 +132,7 @@ export function getPositionResetRangeFromPricePercentageWithResetParams(
 }
 
 export function getDefaultPricePercentageWithResetRebalanceFieldInfos(price: Decimal): RebalanceFieldInfo[] {
-  let fieldInfos = getPricePercentageWithResetRebalanceFieldInfos(
+  const fieldInfos = getPricePercentageWithResetRebalanceFieldInfos(
     price,
     DefaultLowerPercentageBPSDecimal,
     DefaultUpperPercentageBPSDecimal,
@@ -145,27 +145,27 @@ export function getDefaultPricePercentageWithResetRebalanceFieldInfos(price: Dec
 export function readPricePercentageWithResetRebalanceParamsFromStrategy(
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
 
-  let lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
     value: new Decimal(paramsBuffer.readUint16LE(0)),
     enabled: true,
   };
-  let upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
     value: new Decimal(paramsBuffer.readUint16LE(2)),
     enabled: true,
   };
-  let resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetLowerRangeBps',
     type: 'number',
     value: new Decimal(paramsBuffer.readUint16LE(4)),
     enabled: true,
   };
-  let resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetUpperRangeBps',
     type: 'number',
     value: new Decimal(paramsBuffer.readUint16LE(6)),
@@ -183,15 +183,15 @@ export function readPricePercentageWithResetRebalanceParamsFromStrategy(
 export function readRawPricePercentageWithResetRebalanceStateFromStrategy(
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
 
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lastRebalanceLowerResetPoolPrice',
     type: 'number',
     value: new Decimal(readBigUint128LE(stateBuffer, 0).toString()),
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lastRebalanceUpperResetPoolPrice',
     type: 'number',
     value: new Decimal(readBigUint128LE(stateBuffer, 16).toString()),
@@ -206,15 +206,19 @@ export function readPricePercentageWithResetRebalanceStateFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
-  let params = readPricePercentageWithResetRebalanceParamsFromStrategy(rebalanceRaw);
-  let lowerRangeBps = new Decimal(params.find((param) => param.label == 'lowerRangeBps')?.value.toString()!);
-  let upperRangeBps = new Decimal(params.find((param) => param.label == 'upperRangeBps')?.value!.toString()!);
-  let resetLowerRangeBps = new Decimal(params.find((param) => param.label == 'resetLowerRangeBps')?.value.toString()!);
-  let resetUpperRangeBps = new Decimal(params.find((param) => param.label == 'resetUpperRangeBps')?.value!.toString()!);
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const params = readPricePercentageWithResetRebalanceParamsFromStrategy(rebalanceRaw);
+  const lowerRangeBps = new Decimal(params.find((param) => param.label == 'lowerRangeBps')?.value.toString()!);
+  const upperRangeBps = new Decimal(params.find((param) => param.label == 'upperRangeBps')?.value!.toString()!);
+  const resetLowerRangeBps = new Decimal(
+    params.find((param) => param.label == 'resetLowerRangeBps')?.value.toString()!
+  );
+  const resetUpperRangeBps = new Decimal(
+    params.find((param) => param.label == 'resetUpperRangeBps')?.value!.toString()!
+  );
 
-  let lowerResetSqrtPriceX64 = readBigUint128LE(stateBuffer, 0).toString();
-  let upperResetSqrtPriceX64 = readBigUint128LE(stateBuffer, 16).toString();
+  const lowerResetSqrtPriceX64 = readBigUint128LE(stateBuffer, 0).toString();
+  const upperResetSqrtPriceX64 = readBigUint128LE(stateBuffer, 16).toString();
 
   let lowerResetPrice: Decimal, upperResetPrice: Decimal;
 
@@ -239,34 +243,34 @@ export function readPricePercentageWithResetRebalanceStateFromStrategy(
     throw new Error(`Unknown DEX ${dex}`);
   }
 
-  let resetLowerFactor = resetLowerRangeBps.mul(lowerRangeBps).div(FullBPSDecimal);
-  let resetUpperFactor = resetUpperRangeBps.mul(upperRangeBps).div(FullBPSDecimal);
-  let lowerPositionPrice = lowerResetPrice
+  const resetLowerFactor = resetLowerRangeBps.mul(lowerRangeBps).div(FullBPSDecimal);
+  const resetUpperFactor = resetUpperRangeBps.mul(upperRangeBps).div(FullBPSDecimal);
+  const lowerPositionPrice = lowerResetPrice
     .mul(FullBPSDecimal.sub(lowerRangeBps))
     .div(FullBPSDecimal.sub(resetLowerFactor));
-  let upperPositionPrice = upperResetPrice
+  const upperPositionPrice = upperResetPrice
     .mul(FullBPSDecimal.add(upperRangeBps))
     .div(FullBPSDecimal.add(resetUpperFactor));
 
-  let lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPositionPrice,
     enabled: true,
   };
-  let upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPositionPrice,
     enabled: true,
   };
-  let resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetPriceLower',
     type: 'number',
     value: lowerResetPrice,
     enabled: true,
   };
-  let resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetPriceUpper',
     type: 'number',
     value: upperResetPrice,
@@ -285,12 +289,16 @@ export function deserializePricePercentageWithResetRebalanceFromOnchainParams(
   price: Decimal,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let params = readPricePercentageWithResetRebalanceParamsFromStrategy(rebalanceRaw);
+  const params = readPricePercentageWithResetRebalanceParamsFromStrategy(rebalanceRaw);
 
-  let lowerRangeBps = new Decimal(params.find((param) => param.label == 'lowerRangeBps')?.value.toString()!);
-  let upperRangeBps = new Decimal(params.find((param) => param.label == 'upperRangeBps')?.value.toString()!);
-  let lowerResetRangeBps = new Decimal(params.find((param) => param.label == 'resetLowerRangeBps')?.value.toString()!);
-  let upperResetRangeBps = new Decimal(params.find((param) => param.label == 'resetUpperRangeBps')?.value.toString()!);
+  const lowerRangeBps = new Decimal(params.find((param) => param.label == 'lowerRangeBps')?.value.toString()!);
+  const upperRangeBps = new Decimal(params.find((param) => param.label == 'upperRangeBps')?.value.toString()!);
+  const lowerResetRangeBps = new Decimal(
+    params.find((param) => param.label == 'resetLowerRangeBps')?.value.toString()!
+  );
+  const upperResetRangeBps = new Decimal(
+    params.find((param) => param.label == 'resetUpperRangeBps')?.value.toString()!
+  );
 
   return getPricePercentageWithResetRebalanceFieldInfos(
     price,
@@ -315,7 +323,7 @@ export function deserializePricePercentageWithResetRebalanceWithStateOverride(
     rebalanceRaw
   );
 
-  let fields = deserializePricePercentageWithResetRebalanceFromOnchainParams(price, rebalanceRaw);
+  const fields = deserializePricePercentageWithResetRebalanceFromOnchainParams(price, rebalanceRaw);
 
   return upsertManyRebalanceFieldInfos(fields, stateFields);
 }

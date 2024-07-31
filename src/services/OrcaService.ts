@@ -11,8 +11,8 @@ import {
 import axios from 'axios';
 import { OrcaWhirlpoolsResponse, Whirlpool } from './OrcaWhirlpoolsResponse';
 import { SolanaCluster } from '@hubbleprotocol/hubble-config';
-import { CollateralInfos, GlobalConfig, WhirlpoolStrategy } from '../kamino-client/accounts';
-import { Position } from '../whirpools-client';
+import { WhirlpoolStrategy } from '../kamino-client/accounts';
+import { Position } from '../whirlpools-client';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
 import {
   aprToApy,
@@ -22,7 +22,7 @@ import {
   LiquidityForPrice,
   ZERO,
 } from '../utils';
-import { WHIRLPOOL_PROGRAM_ID } from '../whirpools-client/programId';
+import { WHIRLPOOL_PROGRAM_ID } from '../whirlpools-client/programId';
 import { CollateralInfo } from '../kamino-client/types';
 import { KaminoPrices } from '../models';
 import { PROGRAM_ID } from '../kamino-client/programId';
@@ -236,7 +236,7 @@ export class OrcaService {
       highestInitializedTick
     );
 
-    let liqDistribution: LiquidityDistribution = {
+    const liqDistribution: LiquidityDistribution = {
       currentPrice: poolData.price,
       currentTickIndex: poolData.tickCurrentIndex,
       distribution: [],
@@ -304,7 +304,7 @@ export class OrcaService {
     const lpFeeRate = pool.feePercentage;
     const volume24hUsd = whirlpool?.volume?.day ?? new Decimal(0);
     const fee24Usd = new Decimal(volume24hUsd).mul(lpFeeRate).toNumber();
-    let tokensPrices = this.getPoolTokensPrices(pool, prices);
+    const tokensPrices = this.getPoolTokensPrices(pool, prices);
 
     const tickLowerIndex = getNearestValidTickIndexFromTickIndex(
       priceToTickIndex(priceLower, pool.tokenDecimalsA, pool.tokenDecimalsB),
@@ -352,7 +352,7 @@ export class OrcaService {
       throw Error(`Could not get orca pool data for ${poolString}`);
     }
 
-    let poolInfo: GenericPoolInfo = {
+    const poolInfo: GenericPoolInfo = {
       dex: 'ORCA',
       address: new PublicKey(poolPubkey),
       tokenMintA: pool.tokenMintA,

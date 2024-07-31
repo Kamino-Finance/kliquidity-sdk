@@ -42,7 +42,7 @@ export class RaydiumService {
     lowestTick?: number,
     highestTick?: number
   ): Promise<LiquidityDistribution> {
-    let raydiumLiqDistribution = (
+    const raydiumLiqDistribution = (
       await axios.get<RaydiumLiquidityDistribuion>(
         `https://api.hubbleprotocol.io/raydium/positionLine/${pool.toString()}`
       )
@@ -53,20 +53,20 @@ export class RaydiumService {
       throw Error(`Raydium pool state ${pool} does not exist`);
     }
 
-    let poolPrice = SqrtPriceMath.sqrtPriceX64ToPrice(
+    const poolPrice = SqrtPriceMath.sqrtPriceX64ToPrice(
       poolState.sqrtPriceX64,
       poolState.mintDecimals0,
       poolState.mintDecimals1
     );
 
-    let liqDistribution: LiquidityDistribution = {
+    const liqDistribution: LiquidityDistribution = {
       currentPrice: poolPrice,
       currentTickIndex: poolState.tickCurrent,
       distribution: [],
     };
 
     raydiumLiqDistribution.data.forEach((entry) => {
-      let tickIndex = priceToTickIndexWithRounding(entry.price);
+      const tickIndex = priceToTickIndexWithRounding(entry.price);
       if ((lowestTick && tickIndex < lowestTick) || (highestTick && tickIndex > highestTick)) {
         return;
       }
@@ -210,14 +210,14 @@ export class RaydiumService {
       })
     )[poolPubkey.toString()].state;
 
-    let tickLowerIndex = TickMath.getTickWithPriceAndTickspacing(
+    const tickLowerIndex = TickMath.getTickWithPriceAndTickspacing(
       priceLower,
       poolState.tickSpacing,
       poolState.mintDecimals0,
       poolState.mintDecimals1
     );
 
-    let tickUpperIndex = TickMath.getTickWithPriceAndTickspacing(
+    const tickUpperIndex = TickMath.getTickWithPriceAndTickspacing(
       priceUpper,
       poolState.tickSpacing,
       poolState.mintDecimals0,
@@ -290,7 +290,7 @@ export class RaydiumService {
       throw Error(`Could not get find Raydium amm pool ${poolPubkey.toString()} from Raydium API`);
     }
 
-    let poolInfo: GenericPoolInfo = {
+    const poolInfo: GenericPoolInfo = {
       dex: 'RAYDIUM',
       address: new PublicKey(poolPubkey),
       tokenMintA: poolState.tokenMint0,

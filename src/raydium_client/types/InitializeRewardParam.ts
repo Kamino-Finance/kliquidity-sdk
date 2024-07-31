@@ -1,33 +1,40 @@
-import { PublicKey } from '@solana/web3.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from 'bn.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from '../types'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from '@coral-xyz/borsh';
+import { PublicKey } from "@solana/web3.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@coral-xyz/borsh"
 
 export interface InitializeRewardParamFields {
-  openTime: BN;
-  endTime: BN;
-  emissionsPerSecondX64: BN;
+  openTime: BN
+  endTime: BN
+  emissionsPerSecondX64: BN
 }
 
 export interface InitializeRewardParamJSON {
-  openTime: string;
-  endTime: string;
-  emissionsPerSecondX64: string;
+  openTime: string
+  endTime: string
+  emissionsPerSecondX64: string
 }
 
 export class InitializeRewardParam {
-  readonly openTime: BN;
-  readonly endTime: BN;
-  readonly emissionsPerSecondX64: BN;
+  readonly openTime: BN
+  readonly endTime: BN
+  readonly emissionsPerSecondX64: BN
 
   constructor(fields: InitializeRewardParamFields) {
-    this.openTime = fields.openTime;
-    this.endTime = fields.endTime;
-    this.emissionsPerSecondX64 = fields.emissionsPerSecondX64;
+    this.openTime = fields.openTime
+    this.endTime = fields.endTime
+    this.emissionsPerSecondX64 = fields.emissionsPerSecondX64
   }
 
   static layout(property?: string) {
-    return borsh.struct([borsh.u64('openTime'), borsh.u64('endTime'), borsh.u128('emissionsPerSecondX64')], property);
+    return borsh.struct(
+      [
+        borsh.u64("openTime"),
+        borsh.u64("endTime"),
+        borsh.u128("emissionsPerSecondX64"),
+      ],
+      property
+    )
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,7 +43,7 @@ export class InitializeRewardParam {
       openTime: obj.openTime,
       endTime: obj.endTime,
       emissionsPerSecondX64: obj.emissionsPerSecondX64,
-    });
+    })
   }
 
   static toEncodable(fields: InitializeRewardParamFields) {
@@ -44,7 +51,7 @@ export class InitializeRewardParam {
       openTime: fields.openTime,
       endTime: fields.endTime,
       emissionsPerSecondX64: fields.emissionsPerSecondX64,
-    };
+    }
   }
 
   toJSON(): InitializeRewardParamJSON {
@@ -52,7 +59,7 @@ export class InitializeRewardParam {
       openTime: this.openTime.toString(),
       endTime: this.endTime.toString(),
       emissionsPerSecondX64: this.emissionsPerSecondX64.toString(),
-    };
+    }
   }
 
   static fromJSON(obj: InitializeRewardParamJSON): InitializeRewardParam {
@@ -60,10 +67,10 @@ export class InitializeRewardParam {
       openTime: new BN(obj.openTime),
       endTime: new BN(obj.endTime),
       emissionsPerSecondX64: new BN(obj.emissionsPerSecondX64),
-    });
+    })
   }
 
   toEncodable() {
-    return InitializeRewardParam.toEncodable(this);
+    return InitializeRewardParam.toEncodable(this)
   }
 }

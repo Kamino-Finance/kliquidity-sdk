@@ -62,7 +62,7 @@ export const getAtasWithCreateIxnsIfMissing = async (
   owner: PublicKey
 ): Promise<TransactionInstruction[]> => {
   const requests = mints.map(async ([mint, tokenProgram]) => {
-    let createAtaIx = await createAtaIfMissingIx(connection, mint, owner, tokenProgram);
+    const createAtaIx = await createAtaIfMissingIx(connection, mint, owner, tokenProgram);
     if (createAtaIx) {
       return createAtaIx;
     }

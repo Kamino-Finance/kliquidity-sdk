@@ -104,9 +104,9 @@ export async function sendTransactionWithLogs(
   commitment: Commitment = 'processed',
   skipPreflight: boolean = false
 ): Promise<TransactionSignature | null> {
-  let txn = await assignBlockInfoToTransaction(connection, tx, payer);
+  const txn = await assignBlockInfoToTransaction(connection, tx, payer);
   try {
-    let res = await sendAndConfirmTransaction(connection, txn, signers, {
+    const res = await sendAndConfirmTransaction(connection, txn, signers, {
       commitment: commitment,
       skipPreflight: skipPreflight,
     });
@@ -117,7 +117,7 @@ export async function sendTransactionWithLogs(
     await sleep(5000);
     // @ts-ignore
     const sig = e.toString().split(' failed ')[0].split('Transaction ')[1];
-    let res = await connection.getTransaction(sig, { commitment: 'confirmed' });
+    const res = await connection.getTransaction(sig, { commitment: 'confirmed' });
     if (res && res.meta) {
       console.log('Txn', res.meta.logMessages);
     }

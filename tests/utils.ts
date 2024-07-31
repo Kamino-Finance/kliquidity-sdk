@@ -80,12 +80,12 @@ export async function updateStrategyConfig(
   amount: Decimal,
   newAccount: PublicKey = PublicKey.default
 ) {
-  let strategyState = await WhirlpoolStrategy.fetch(connection, strategy);
+  const strategyState = await WhirlpoolStrategy.fetch(connection, strategy);
   if (strategyState == null) {
     throw new Error(`strategy ${strategy} doesn't exist`);
   }
 
-  let updateCapIx = await getUpdateStrategyConfigIx(
+  const updateCapIx = await getUpdateStrategyConfigIx(
     signer.publicKey,
     strategyState.globalConfig,
     strategy,
@@ -97,7 +97,7 @@ export async function updateStrategyConfig(
   const tx = new Transaction();
   tx.add(updateCapIx);
 
-  let sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+  const sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
   console.log('Update Strategy Config ', mode.toJSON(), sig?.toString());
 }
 
@@ -110,16 +110,16 @@ export async function updateTreasuryFeeVault(
   treasuryFeeTokenVault: PublicKey,
   treasuryFeeVaultAuthority: PublicKey
 ): Promise<string> {
-  let args: Instructions.UpdateTreasuryFeeVaultArgs = {
+  const args: Instructions.UpdateTreasuryFeeVaultArgs = {
     collateralId: collateralTokenToNumber(collateralToken),
   };
 
-  let config = await GlobalConfig.fetch(connection, globalConfig);
+  const config = await GlobalConfig.fetch(connection, globalConfig);
   if (!config) {
     throw new Error(`Error retrieving the config ${globalConfig.toString()}`);
   }
 
-  let accounts: Instructions.UpdateTreasuryFeeVaultAccounts = {
+  const accounts: Instructions.UpdateTreasuryFeeVaultAccounts = {
     signer: config.adminAuthority,
     globalConfig: globalConfig,
     feeMint: tokenMint,
@@ -132,10 +132,10 @@ export async function updateTreasuryFeeVault(
   };
 
   const tx = new Transaction();
-  let ix = Instructions.updateTreasuryFeeVault(args, accounts);
+  const ix = Instructions.updateTreasuryFeeVault(args, accounts);
   tx.add(ix);
 
-  let hash = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+  const hash = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
   console.log('updateTreasuryFeeVault ix:', hash);
   if (!hash) {
     throw new Error('Hash for updateTreasuryFeeVault tx not found');
@@ -168,7 +168,7 @@ export async function createUser(
   bAirdropAmount: Decimal,
   user?: Keypair
 ): Promise<User> {
-  let wallet = new anchor.Wallet(signer);
+  const wallet = new anchor.Wallet(signer);
   const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
   if (!user) {
     user = new anchor.web3.Keypair();
@@ -181,7 +181,7 @@ export async function createUser(
     await sleep(1000);
   }
 
-  let whirlpoolStrategyState = await WhirlpoolStrategy.fetch(connection, strategy);
+  const whirlpoolStrategyState = await WhirlpoolStrategy.fetch(connection, strategy);
   if (whirlpoolStrategyState == null) {
     throw new Error(`Strategy ${strategy.toString()} does not exist`);
   }
@@ -190,8 +190,8 @@ export async function createUser(
   const bAta = await setupAta(connection, signer, whirlpoolStrategyState.tokenBMint, user);
   const sharesAta = await setupAta(connection, signer, whirlpoolStrategyState.sharesMint, user);
 
-  let tokenADecimals = await getMintDecimals(connection, whirlpoolStrategyState.tokenAMint);
-  let tokenBDecimals = await getMintDecimals(connection, whirlpoolStrategyState.tokenBMint);
+  const tokenADecimals = await getMintDecimals(connection, whirlpoolStrategyState.tokenAMint);
+  const tokenBDecimals = await getMintDecimals(connection, whirlpoolStrategyState.tokenBMint);
 
   await sleep(3000);
   if (aAirdropAmount.gt(0)) {
@@ -241,11 +241,11 @@ export async function mintTo(
   amount: number
 ) {
   console.log(`mintTo ${tokenAccount.toString()} mint ${mintPubkey.toString()} amount ${amount}`);
-  let mintToIx = getMintToIx(signer.publicKey, mintPubkey, tokenAccount, amount);
+  const mintToIx = getMintToIx(signer.publicKey, mintPubkey, tokenAccount, amount);
 
   const tx = new Transaction().add(mintToIx);
 
-  let res = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+  const res = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
   console.log(`token ${mintPubkey.toString()} mint to ATA ${tokenAccount.toString()} tx hash: ${res}`);
 }
 
@@ -255,7 +255,7 @@ export function getMintToIx(
   tokenAccount: PublicKey,
   amount: number
 ): TransactionInstruction {
-  let ix = Token.createMintToInstruction(
+  const ix = Token.createMintToInstruction(
     TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
     mintPubkey, // mint
     tokenAccount, // receiver (sholud be a token account)
@@ -274,7 +274,7 @@ export function getBurnFromIx(
   amount: number
 ): TransactionInstruction {
   console.log(`burnFrom ${tokenAccount.toString()} mint ${mintPubkey.toString()} amount ${amount}`);
-  let ix = Token.createBurnInstruction(TOKEN_PROGRAM_ID, mintPubkey, tokenAccount, signer, [], amount);
+  const ix = Token.createBurnInstruction(TOKEN_PROGRAM_ID, mintPubkey, tokenAccount, signer, [], amount);
 
   return ix;
 }
@@ -285,11 +285,11 @@ export async function burnFrom(
   mintPubkey: PublicKey,
   tokenAccount: PublicKey,
   amount: number
-) {
+): Promise<string | null> {
   console.log(`burnFrom ${tokenAccount.toString()} mint ${mintPubkey.toString()} amount ${amount}`);
-  let ix = getBurnFromIx(signer.publicKey, mintPubkey, tokenAccount, amount);
-  let tx = new Transaction().add(ix);
-  let res = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+  const ix = getBurnFromIx(signer.publicKey, mintPubkey, tokenAccount, amount);
+  const tx = new Transaction().add(ix);
+  return sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
 }
 
 export async function setupAta(
@@ -302,9 +302,9 @@ export async function setupAta(
   if (!(await checkIfAccountExists(connection, ata))) {
     const ix = await createAtaInstruction(user.publicKey, tokenMintAddress, ata);
     const tx = new Transaction().add(ix);
-    let wallet = new anchor.Wallet(payer);
+    const wallet = new anchor.Wallet(payer);
     const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
-    let res = await provider.connection.sendTransaction(tx, [user]);
+    const res = await provider.connection.sendTransaction(tx, [user]);
     console.log(`setup ATA=${ata.toString()} for ${tokenMintAddress.toString()} tx hash ${res}`);
   }
   return ata;
@@ -340,7 +340,7 @@ export async function getSolBalanceInLamports(provider: anchor.Provider, account
 }
 
 export function lamportsToCollDecimal(amount: Decimal, decimals: number): Decimal {
-  let factor = new Decimal(10).pow(decimals);
+  const factor = new Decimal(10).pow(decimals);
   return amount.div(factor);
 }
 
@@ -397,19 +397,19 @@ export interface User {
 }
 
 export function getCollInfoEncodedName(token: string): Uint8Array {
-  let maxArray = new Uint8Array(32);
-  let s: Uint8Array = new TextEncoder().encode(token);
+  const maxArray = new Uint8Array(32);
+  const s: Uint8Array = new TextEncoder().encode(token);
   maxArray.set(s);
   return maxArray;
 }
 
 export function getCollInfoEncodedChainFromIndexes(indexes: number[]): Uint8Array {
   const u16MAX = 65535;
-  let chain = [u16MAX, u16MAX, u16MAX, u16MAX];
+  const chain = [u16MAX, u16MAX, u16MAX, u16MAX];
   for (let i = 0; i < indexes.length; i++) {
     chain[i] = indexes[i];
   }
-  let encodedChain = u16ArrayToU8Array(Uint16Array.from(chain));
+  const encodedChain = u16ArrayToU8Array(Uint16Array.from(chain));
   return encodedChain;
 }
 
@@ -423,7 +423,7 @@ export async function updateCollateralInfo(
 ) {
   console.log('Mode ', mode.discriminator);
   console.log('value', value);
-  let config: GlobalConfig | null = await GlobalConfig.fetch(connection, globalConfig);
+  const config: GlobalConfig | null = await GlobalConfig.fetch(connection, globalConfig);
   if (config == null) {
     throw new Error('Global config not found');
   }
@@ -432,14 +432,14 @@ export async function updateCollateralInfo(
   if (typeof collateralToken == 'number') {
     collateralNumber = collateralToken;
   } else {
-    let collInfos = await CollateralInfos.fetch(connection, new PublicKey(config.tokenInfos));
+    const collInfos = await CollateralInfos.fetch(connection, new PublicKey(config.tokenInfos));
     if (collInfos == null) {
       throw new Error('CollateralInfos config not found');
     }
 
     collateralNumber = collateralTokenToNumber(collateralToken);
   }
-  let argValue = toCollateralInfoValue(value);
+  const argValue = toCollateralInfoValue(value);
 
   console.log(
     `UpdateCollateralInfo`,
@@ -447,26 +447,26 @@ export async function updateCollateralInfo(
     `for ${collateralToken} with value ${value} encoded as ${argValue}`
   );
 
-  let args: Instructions.UpdateCollateralInfoArgs = {
+  const args: Instructions.UpdateCollateralInfoArgs = {
     index: new anchor.BN(collateralNumber),
     mode: new anchor.BN(mode.discriminator),
     value: argValue,
   };
 
-  let accounts: Instructions.UpdateCollateralInfoAccounts = {
+  const accounts: Instructions.UpdateCollateralInfoAccounts = {
     adminAuthority: config.adminAuthority,
     globalConfig,
     tokenInfos: config.tokenInfos,
   };
 
   const tx = new Transaction();
-  let ix = Instructions.updateCollateralInfo(args, accounts);
-  let { blockhash } = await connection.getLatestBlockhash();
+  const ix = Instructions.updateCollateralInfo(args, accounts);
+  const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = config.adminAuthority;
   tx.add(ix);
 
-  let sig = await sendAndConfirmTransaction(connection, tx, [signer]);
+  const sig = await sendAndConfirmTransaction(connection, tx, [signer]);
   console.log('Update Collateral Info txn: ' + sig.toString());
 }
 
@@ -477,7 +477,7 @@ export function toCollateralInfoValue(value: bigint | PublicKey | Uint16Array | 
     buffer.writeBigUInt64LE(value); // Because we send 32 bytes and a u64 has 8 bytes, we write it in LE
   } else if (value.constructor === Uint16Array) {
     buffer = Buffer.alloc(32);
-    let val = u16ArrayToU8Array(value);
+    const val = u16ArrayToU8Array(value);
     for (let i = 0; i < val.length; i++) {
       buffer[i] = value[i];
     }
@@ -495,23 +495,23 @@ export function toCollateralInfoValue(value: bigint | PublicKey | Uint16Array | 
 }
 
 export function u16ArrayToU8Array(x: Uint16Array): Uint8Array {
-  let arr: number[] = [];
-  for (let v of x) {
+  const arr: number[] = [];
+  for (const v of x) {
     const buffer = Buffer.alloc(2);
     buffer.writeUInt16LE(v);
-    let bytes = Array.from(buffer);
+    const bytes = Array.from(buffer);
     arr.push(...(bytes as number[]));
   }
 
-  let uint8array = new Uint8Array(arr.flat());
+  const uint8array = new Uint8Array(arr.flat());
   return uint8array;
 }
 
 export function getCollInfoEncodedChain(token: number): Uint8Array {
   const u16MAX = 65535;
-  let chain = [token, u16MAX, u16MAX, u16MAX];
+  const chain = [token, u16MAX, u16MAX, u16MAX];
 
-  let encodedChain = u16ArrayToU8Array(Uint16Array.from(chain));
+  const encodedChain = u16ArrayToU8Array(Uint16Array.from(chain));
   return encodedChain;
 }
 
@@ -523,7 +523,7 @@ export async function getLocalSwapIxs(
   slippageBps: Decimal,
   mintAuthority?: PublicKey
 ): Promise<[TransactionInstruction[], PublicKey[]]> {
-  let mintAuth = mintAuthority ? mintAuthority : user;
+  const mintAuth = mintAuthority ? mintAuthority : user;
 
   let swapIxs: TransactionInstruction[] = [];
   if (input.tokenAToSwapAmount.lt(ZERO)) {
@@ -544,14 +544,14 @@ async function getSwapAToBWithSlippageBPSIxs(
   mintAuthority: PublicKey
 ): Promise<TransactionInstruction[]> {
   // multiply the tokens to swap by -1 to get the positive sign because we represent as negative numbers what we have to sell
-  let tokensToBurn = -input.tokenAToSwapAmount.toNumber();
+  const tokensToBurn = -input.tokenAToSwapAmount.toNumber();
 
-  let tokenAAta = getAssociatedTokenAddress(tokenAMint, user);
-  let tokenBAta = getAssociatedTokenAddress(tokenBMint, user);
+  const tokenAAta = getAssociatedTokenAddress(tokenAMint, user);
+  const tokenBAta = getAssociatedTokenAddress(tokenBMint, user);
 
-  let bToRecieve = input.tokenBToSwapAmount.mul(new Decimal(FullBPS).sub(slippageBps)).div(FullBPS);
-  let mintToIx = getMintToIx(mintAuthority, tokenBMint, tokenBAta, bToRecieve.toNumber());
-  let burnFromIx = getBurnFromIx(user, tokenAMint, tokenAAta, tokensToBurn);
+  const bToRecieve = input.tokenBToSwapAmount.mul(new Decimal(FullBPS).sub(slippageBps)).div(FullBPS);
+  const mintToIx = getMintToIx(mintAuthority, tokenBMint, tokenBAta, bToRecieve.toNumber());
+  const burnFromIx = getBurnFromIx(user, tokenAMint, tokenAAta, tokensToBurn);
 
   return [mintToIx, burnFromIx];
 }
@@ -565,14 +565,14 @@ async function getSwapBToAWithSlippageBPSIxs(
   mintAuthority: PublicKey
 ) {
   // multiply the tokens to swap by -1 to get the positive sign because we represent as negative numbers what we have to sell
-  let tokensToBurn = -input.tokenBToSwapAmount.toNumber();
+  const tokensToBurn = -input.tokenBToSwapAmount.toNumber();
 
-  let tokenAAta = getAssociatedTokenAddress(tokenAMint, owner);
-  let tokenBAta = getAssociatedTokenAddress(tokenBMint, owner);
+  const tokenAAta = getAssociatedTokenAddress(tokenAMint, owner);
+  const tokenBAta = getAssociatedTokenAddress(tokenBMint, owner);
 
-  let aToRecieve = input.tokenAToSwapAmount.mul(new Decimal(FullBPS).sub(slippage)).div(FullBPS);
-  let mintToIx = getMintToIx(mintAuthority, tokenAMint, tokenAAta, aToRecieve.toNumber());
-  let burnFromIx = getBurnFromIx(owner, tokenBMint, tokenBAta, tokensToBurn);
+  const aToRecieve = input.tokenAToSwapAmount.mul(new Decimal(FullBPS).sub(slippage)).div(FullBPS);
+  const mintToIx = getMintToIx(mintAuthority, tokenAMint, tokenAAta, aToRecieve.toNumber());
+  const burnFromIx = getBurnFromIx(owner, tokenBMint, tokenBAta, tokensToBurn);
 
   return [mintToIx, burnFromIx];
 }

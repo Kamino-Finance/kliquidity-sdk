@@ -3,7 +3,7 @@ import * as anchor from '@coral-xyz/anchor';
 import { PublicKey, Connection, SystemProgram, Transaction, Keypair } from '@solana/web3.js';
 import * as RaydiumInstructions from '../src/raydium_client/instructions';
 import { sendTransactionWithLogs, TOKEN_PROGRAM_ID } from '../src';
-import { accountExist, DeployedPool, getTickArrayPubkeysFromRange } from './utils';
+import { accountExist, DeployedPool } from './utils';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk';
 import Decimal from 'decimal.js';
 import { PoolState } from '../src/raydium_client';
@@ -30,7 +30,7 @@ export async function initializeRaydiumPool(
   if (configAcc) {
     config = configAcc;
   } else {
-    let [configPk, _] = await getAmmConfigAddress(0, RAYDIUM_PROGRAM_ID);
+    const [configPk, _] = await getAmmConfigAddress(0, RAYDIUM_PROGRAM_ID);
     if (!(await accountExist(connection, configPk))) {
       await createAmmConfig(connection, signer, configPk, 0, tickSize, 100, 200, 400);
     }
@@ -54,7 +54,7 @@ export async function initializeRaydiumPool(
       });
 
       const tx = new Transaction();
-      let { blockhash } = await connection.getLatestBlockhash();
+      const { blockhash } = await connection.getLatestBlockhash();
       tx.recentBlockhash = blockhash;
       tx.add(createObvIx);
 
@@ -63,24 +63,24 @@ export async function initializeRaydiumPool(
     }
   }
 
-  let sqrtPriceX64InitialPrice = SqrtPriceMath.priceToSqrtPriceX64(new Decimal(initialPrice), 6, 6);
+  const sqrtPriceX64InitialPrice = SqrtPriceMath.priceToSqrtPriceX64(new Decimal(initialPrice), 6, 6);
 
-  let tokens = orderMints(tokenMintA, tokenMintB);
+  const tokens = orderMints(tokenMintA, tokenMintB);
   tokenMintA = tokens[0];
   tokenMintB = tokens[1];
 
   const [poolAddress, _bump1] = await getPoolAddress(config, tokenMintA, tokenMintB, RAYDIUM_PROGRAM_ID);
-  let [bitmapPk, _] = await getBitmapAddress(poolAddress, RAYDIUM_PROGRAM_ID);
+  const [bitmapPk, _] = await getBitmapAddress(poolAddress, RAYDIUM_PROGRAM_ID);
 
   const [tokenAVault, _bump2] = await getPoolVaultAddress(poolAddress, tokenMintA, RAYDIUM_PROGRAM_ID);
   const [tokenBVault, _bump3] = await getPoolVaultAddress(poolAddress, tokenMintB, RAYDIUM_PROGRAM_ID);
 
   {
-    let createPoolArgs: RaydiumInstructions.CreatePoolArgs = {
+    const createPoolArgs: RaydiumInstructions.CreatePoolArgs = {
       sqrtPriceX64: sqrtPriceX64InitialPrice,
       openTime: new BN(1684953391), // not relevant, it has to be a timestamp < current timestamp
     };
-    let createPoolAccounts: RaydiumInstructions.CreatePoolAccounts = {
+    const createPoolAccounts: RaydiumInstructions.CreatePoolAccounts = {
       poolCreator: signer.publicKey,
       ammConfig: config,
       poolState: poolAddress,
@@ -97,14 +97,14 @@ export async function initializeRaydiumPool(
     };
 
     const tx = new Transaction();
-    let initializeTx = RaydiumInstructions.createPool(createPoolArgs, createPoolAccounts);
+    const initializeTx = RaydiumInstructions.createPool(createPoolArgs, createPoolAccounts);
     tx.add(initializeTx);
 
-    let sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+    const sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
     console.log('Initialize Raydium pool: ', sig);
   }
 
-  let deployedPool: DeployedPool = {
+  const deployedPool: DeployedPool = {
     pool: poolAddress,
     tokenMintA,
     tokenMintB,
@@ -142,27 +142,27 @@ async function createAmmConfig(
   protocolFeeRate: number,
   fundFeeRate: number
 ) {
-  let initConfigArgs: RaydiumInstructions.CreateAmmConfigArgs = {
+  const initConfigArgs: RaydiumInstructions.CreateAmmConfigArgs = {
     index: index,
     tickSpacing: tickSpacing,
     tradeFeeRate: tradeFeeRate,
     protocolFeeRate: protocolFeeRate,
     fundFeeRate: fundFeeRate,
   };
-  let initConfigAccounts: RaydiumInstructions.CreateAmmConfigAccounts = {
+  const initConfigAccounts: RaydiumInstructions.CreateAmmConfigAccounts = {
     owner: signer.publicKey,
     ammConfig: config,
     systemProgram: anchor.web3.SystemProgram.programId,
   };
 
   const tx = new Transaction();
-  let initializeTx = RaydiumInstructions.createAmmConfig(initConfigArgs, initConfigAccounts);
-  let { blockhash } = await connection.getLatestBlockhash();
+  const initializeTx = RaydiumInstructions.createAmmConfig(initConfigArgs, initConfigAccounts);
+  const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = signer.publicKey;
   tx.add(initializeTx);
 
-  let sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
+  const sig = await sendTransactionWithLogs(connection, tx, signer.publicKey, [signer]);
   console.log('InitializeConfig:', sig);
 }
 
@@ -210,13 +210,13 @@ export async function getTickArrayPubkeysFromRangeRaydium(
   tickLowerIndex: number,
   tickUpperIndex: number
 ) {
-  let poolState = await PoolState.fetch(connection, pool);
+  const poolState = await PoolState.fetch(connection, pool);
   if (poolState == null) {
     throw new Error(`Error fetching ${poolState}`);
   }
 
-  let startTickIndex = TickUtils.getTickArrayStartIndexByTick(tickLowerIndex, poolState.tickSpacing);
-  let endTickIndex = TickUtils.getTickArrayStartIndexByTick(tickUpperIndex, poolState.tickSpacing);
+  const startTickIndex = TickUtils.getTickArrayStartIndexByTick(tickLowerIndex, poolState.tickSpacing);
+  const endTickIndex = TickUtils.getTickArrayStartIndexByTick(tickUpperIndex, poolState.tickSpacing);
 
   const [startTickIndexPk, _startTickIndexBump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from('tick_array'), pool.toBuffer(), i32ToBytes(startTickIndex)],

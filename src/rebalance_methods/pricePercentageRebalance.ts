@@ -1,10 +1,6 @@
 import Decimal from 'decimal.js';
-import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
-import {
-  DefaultLowerPercentageBPSDecimal,
-  DefaultUpperPercentageBPSDecimal,
-  FullBPSDecimal,
-} from '../utils/CreationParameters';
+import { PositionRange, RebalanceFieldInfo } from '../utils/types';
+import { DefaultLowerPercentageBPSDecimal, DefaultUpperPercentageBPSDecimal } from '../utils/CreationParameters';
 import { RebalanceRaw } from '../kamino-client/types';
 import { RebalanceTypeLabelName } from './consts';
 import { Dex, readBigUint128LE } from '../utils';
@@ -22,37 +18,37 @@ export function getPricePercentageRebalanceFieldInfos(
   upperPercentageBPS: Decimal,
   enabled: boolean = true
 ): RebalanceFieldInfo[] {
-  let rebalanceType: RebalanceFieldInfo = {
+  const rebalanceType: RebalanceFieldInfo = {
     label: RebalanceTypeLabelName,
     type: 'string',
     value: PricePercentageRebalanceTypeName,
     enabled,
   };
-  let lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
     value: lowerPercentageBPS,
     enabled,
   };
-  let upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
     value: upperPercentageBPS,
     enabled,
   };
 
-  let { lowerPrice, upperPrice } = getPositionRangeFromPercentageRebalanceParams(
+  const { lowerPrice, upperPrice } = getPositionRangeFromPercentageRebalanceParams(
     poolPrice,
     lowerPercentageBPS,
     upperPercentageBPS
   );
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice!,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice!,
@@ -77,7 +73,7 @@ export function getPositionRangeFromPercentageRebalanceParams(
 }
 
 export function getDefaultPricePercentageRebalanceFieldInfos(price: Decimal): RebalanceFieldInfo[] {
-  let fieldInfos = getPricePercentageRebalanceFieldInfos(
+  const fieldInfos = getPricePercentageRebalanceFieldInfos(
     price,
     DefaultLowerPercentageBPSDecimal,
     DefaultUpperPercentageBPSDecimal
@@ -86,15 +82,15 @@ export function getDefaultPricePercentageRebalanceFieldInfos(price: Decimal): Re
 }
 
 export function readPricePercentageRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldInfo[] {
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
 
-  let lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
     value: new Decimal(paramsBuffer.readUint16LE(0)),
     enabled: true,
   };
-  let upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
     value: new Decimal(paramsBuffer.readUint16LE(2)),
@@ -105,15 +101,15 @@ export function readPricePercentageRebalanceParamsFromStrategy(rebalanceRaw: Reb
 }
 
 export function readRawPricePercentageRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldInfo[] {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
 
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: new Decimal(readBigUint128LE(stateBuffer, 0).toString()),
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: new Decimal(readBigUint128LE(stateBuffer, 16).toString()),
@@ -128,10 +124,10 @@ export function readPricePercentageRebalanceStateFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
 
-  let lowerSqrtPriceX64 = readBigUint128LE(stateBuffer, 0).toString();
-  let upperSqrtPriceX64 = readBigUint128LE(stateBuffer, 16).toString();
+  const lowerSqrtPriceX64 = readBigUint128LE(stateBuffer, 0).toString();
+  const upperSqrtPriceX64 = readBigUint128LE(stateBuffer, 16).toString();
   let lowerPrice: Decimal, upperPrice: Decimal;
 
   if (dex == 'ORCA') {
@@ -147,13 +143,13 @@ export function readPricePercentageRebalanceStateFromStrategy(
     throw new Error(`Unknown DEX ${dex}`);
   }
 
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
@@ -166,10 +162,10 @@ export function deserializePricePercentageRebalanceFromOnchainParams(
   price: Decimal,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let params = readPricePercentageRebalanceParamsFromStrategy(rebalanceRaw);
+  const params = readPricePercentageRebalanceParamsFromStrategy(rebalanceRaw);
 
-  let lowerRangeBPS = new Decimal(params.find((param) => param.label == 'lowerRangeBps')?.value!);
-  let upperRangeBPS = new Decimal(params.find((param) => param.label == 'upperRangeBps')?.value!);
+  const lowerRangeBPS = new Decimal(params.find((param) => param.label == 'lowerRangeBps')?.value!);
+  const upperRangeBPS = new Decimal(params.find((param) => param.label == 'upperRangeBps')?.value!);
   return getPricePercentageRebalanceFieldInfos(price, lowerRangeBPS, upperRangeBPS);
 }
 
@@ -182,7 +178,7 @@ export function deserializePricePercentageRebalanceWithStateOverride(
 ) {
   const stateFields = readPricePercentageRebalanceStateFromStrategy(dex, tokenADecimals, tokenBDecimals, rebalanceRaw);
 
-  let fields = deserializePricePercentageRebalanceFromOnchainParams(price, rebalanceRaw);
+  const fields = deserializePricePercentageRebalanceFromOnchainParams(price, rebalanceRaw);
 
   return upsertManyRebalanceFieldInfos(fields, stateFields);
 }

@@ -32,62 +32,62 @@ export function getAutodriftRebalanceFieldInfos(
   initialDriftDirection: Decimal,
   enabled: boolean = true
 ): RebalanceFieldInfo[] {
-  let rebalanceType: RebalanceFieldInfo = {
+  const rebalanceType: RebalanceFieldInfo = {
     label: RebalanceTypeLabelName,
     type: 'string',
     value: AutodriftRebalanceTypeName,
     enabled,
   };
-  let lastMidTickRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lastMidTickRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lastMidTick',
     type: 'number',
     value: lastMidTick,
     enabled: false,
   };
-  let initDriftTicksPerEpochRebalanceFieldInfo: RebalanceFieldInfo = {
+  const initDriftTicksPerEpochRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'initDriftTicksPerEpoch',
     type: 'number',
     value: initDriftTicksPerEpoch,
     enabled,
   };
-  let ticksBelowMidRebalanceFieldInfo: RebalanceFieldInfo = {
+  const ticksBelowMidRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'ticksBelowMid',
     type: 'number',
     value: ticksBelowMid,
     enabled,
   };
-  let ticksAboveMidRebalanceFieldInfo: RebalanceFieldInfo = {
+  const ticksAboveMidRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'ticksAboveMid',
     type: 'number',
     value: ticksAboveMid,
     enabled,
   };
-  let fronturnMultiplierBpsRebalanceFieldInfo: RebalanceFieldInfo = {
+  const fronturnMultiplierBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'frontrunMultiplierBps',
     type: 'number',
     value: frontrunMultiplierBps,
     enabled,
   };
-  let stakingRateASourceRebalanceFieldInfo: RebalanceFieldInfo = {
+  const stakingRateASourceRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'stakingRateASource',
     type: 'number',
     value: stakingRateASource,
     enabled,
   };
-  let stakingRateBSourceRebalanceFieldInfo: RebalanceFieldInfo = {
+  const stakingRateBSourceRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'stakingRateBSource',
     type: 'number',
     value: stakingRateBSource,
     enabled,
   };
-  let initialDriftDirectionRebalanceFieldInfo: RebalanceFieldInfo = {
+  const initialDriftDirectionRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'initialDriftDirection',
     type: 'number',
     value: initialDriftDirection,
     enabled,
   };
 
-  let { lowerPrice, upperPrice } = getPositionRangeFromAutodriftParams(
+  const { lowerPrice, upperPrice } = getPositionRangeFromAutodriftParams(
     dex,
     tokenADecimals,
     tokenBDecimals,
@@ -97,13 +97,13 @@ export function getAutodriftRebalanceFieldInfos(
     tickSpacing
   );
 
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
@@ -134,21 +134,21 @@ export function getPositionRangeFromAutodriftParams(
   ticksAboveMid: Decimal,
   tickSpacing: number
 ): PositionRange {
-  let lowerTickIndex = startMidTick.sub(ticksBelowMid);
-  let upperTickIndex = startMidTick.add(ticksAboveMid);
+  const lowerTickIndex = startMidTick.sub(ticksBelowMid);
+  const upperTickIndex = startMidTick.add(ticksAboveMid);
 
   if (dex == 'ORCA') {
-    let lowerPrice = tickIndexToPrice(lowerTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
-    let upperPrice = tickIndexToPrice(upperTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
+    const lowerPrice = tickIndexToPrice(lowerTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
+    const upperPrice = tickIndexToPrice(upperTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
     return { lowerPrice, upperPrice };
   } else if (dex == 'RAYDIUM') {
-    let lowerPrice = sqrtPriceX64ToPrice(
+    const lowerPrice = sqrtPriceX64ToPrice(
       SqrtPriceMath.getSqrtPriceX64FromTick(lowerTickIndex.toNumber()),
       tokenADecimals,
       tokenBDecimals
     );
 
-    let upperPrice = sqrtPriceX64ToPrice(
+    const upperPrice = sqrtPriceX64ToPrice(
       SqrtPriceMath.getSqrtPriceX64FromTick(upperTickIndex.toNumber()),
       tokenADecimals,
       tokenBDecimals
@@ -156,14 +156,14 @@ export function getPositionRangeFromAutodriftParams(
 
     return { lowerPrice, upperPrice };
   } else if (dex == 'METEORA') {
-    let lowerPrice = getPriceOfBinByBinIdWithDecimals(
+    const lowerPrice = getPriceOfBinByBinIdWithDecimals(
       lowerTickIndex.toNumber(),
       tickSpacing,
       tokenADecimals,
       tokenBDecimals
     );
 
-    let upperPrice = getPriceOfBinByBinIdWithDecimals(
+    const upperPrice = getPriceOfBinByBinIdWithDecimals(
       upperTickIndex.toNumber(),
       tickSpacing,
       tokenADecimals,
@@ -184,8 +184,8 @@ export function getDefaultAutodriftRebalanceFieldInfos(
   tokenBDecimals: number,
   tickSpacing: number
 ): RebalanceFieldInfo[] {
-  let currentTickIndex = priceToTickIndex(price, tokenADecimals, tokenBDecimals);
-  let startMidTick = new Decimal(currentTickIndex);
+  const currentTickIndex = priceToTickIndex(price, tokenADecimals, tokenBDecimals);
+  const startMidTick = new Decimal(currentTickIndex);
 
   return getAutodriftRebalanceFieldInfos(
     dex,
@@ -204,8 +204,8 @@ export function getDefaultAutodriftRebalanceFieldInfos(
 }
 
 export function readAutodriftRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldsDict {
-  let paramsBuffer = Buffer.from(rebalanceRaw.params);
-  let params: RebalanceFieldsDict = {};
+  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const params: RebalanceFieldsDict = {};
 
   params['initDriftTicksPerEpoch'] = new Decimal(paramsBuffer.readUInt32LE(0));
   params['ticksBelowMid'] = new Decimal(paramsBuffer.readInt32LE(4));
@@ -219,8 +219,8 @@ export function readAutodriftRebalanceParamsFromStrategy(rebalanceRaw: Rebalance
 }
 
 export function readRawAutodriftRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  let stateBuffer = Buffer.from(rebalanceRaw.state);
-  let state: RebalanceFieldsDict = {};
+  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const state: RebalanceFieldsDict = {};
 
   // prettier-ignore
   {
@@ -249,16 +249,16 @@ export function readAutodriftRebalanceStateFromStrategy(
   tickSpacing: number,
   rebalanceRaw: RebalanceRaw
 ) {
-  let params = readAutodriftRebalanceParamsFromStrategy(rebalanceRaw);
-  let state = readRawAutodriftRebalanceStateFromStrategy(rebalanceRaw);
+  const params = readAutodriftRebalanceParamsFromStrategy(rebalanceRaw);
+  const state = readRawAutodriftRebalanceStateFromStrategy(rebalanceRaw);
 
-  let lastMidTick = state['current_window_strat_mid_tick'];
+  const lastMidTick = state['current_window_strat_mid_tick'];
 
-  let ticksBelowMid = params['ticksBelowMid'];
-  let ticksAboveMid = params['ticksAboveMid'];
+  const ticksBelowMid = params['ticksBelowMid'];
+  const ticksAboveMid = params['ticksAboveMid'];
 
-  let lowerTickIndex = lastMidTick.sub(ticksBelowMid);
-  let upperTickIndex = lastMidTick.add(ticksAboveMid);
+  const lowerTickIndex = lastMidTick.sub(ticksBelowMid);
+  const upperTickIndex = lastMidTick.add(ticksAboveMid);
 
   let lowerPrice: Decimal, upperPrice: Decimal;
   if (dex == 'ORCA') {
@@ -294,13 +294,13 @@ export function readAutodriftRebalanceStateFromStrategy(
     throw new Error(`Unknown DEX ${dex}`);
   }
 
-  let lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
     type: 'number',
     value: lowerPrice,
     enabled: false,
   };
-  let upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
+  const upperRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceUpper',
     type: 'number',
     value: upperPrice,
@@ -317,8 +317,8 @@ export function deserializeAutodriftRebalanceFromOnchainParams(
   tickSpacing: number,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  let params = readAutodriftRebalanceParamsFromStrategy(rebalanceRaw);
-  let state = readRawAutodriftRebalanceStateFromStrategy(rebalanceRaw);
+  const params = readAutodriftRebalanceParamsFromStrategy(rebalanceRaw);
+  const state = readRawAutodriftRebalanceStateFromStrategy(rebalanceRaw);
 
   return getAutodriftRebalanceFieldInfos(
     dex,
@@ -351,7 +351,7 @@ export function deserializeAutodriftRebalanceWithStateOverride(
     rebalanceRaw
   );
 
-  let fields = deserializeAutodriftRebalanceFromOnchainParams(
+  const fields = deserializeAutodriftRebalanceFromOnchainParams(
     dex,
     tokenADecimals,
     tokenBDecimals,
