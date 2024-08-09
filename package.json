@@ -49,7 +49,6 @@
     "@hubbleprotocol/hubble-config": "^5.0.0",
     "@hubbleprotocol/scope-sdk": "^5.0.20",
     "@jup-ag/api": "^6.0.24",
-    "@orca-so/sdk": "^1.2.26",
     "@orca-so/whirlpool-client-sdk": "^0.0.8",
     "@orca-so/whirlpool-sdk": "^0.4.2",
     "@raydium-io/raydium-sdk": "=1.3.1-beta.5",

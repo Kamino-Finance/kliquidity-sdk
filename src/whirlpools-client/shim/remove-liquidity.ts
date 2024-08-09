@@ -6,9 +6,11 @@ import { tickIndexToSqrtPriceX64 } from "@orca-so/whirlpool-client-sdk";
 import { BN } from "@coral-xyz/anchor";
 import { u64 } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
-import { Percentage, ZERO } from "@orca-so/sdk";
-import { adjustForSlippage, getTokenAFromLiquidity,
-  getTokenBFromLiquidity, PositionStatus, PositionUtil, RemoveLiquidityQuote } from "@orca-so/whirlpool-sdk";
+import {
+  adjustForSlippage, getTokenAFromLiquidity,
+  getTokenBFromLiquidity, Percentage, PositionStatus, PositionUtil, RemoveLiquidityQuote,
+} from '@orca-so/whirlpool-sdk';
+import { ZERO } from '@raydium-io/raydium-sdk';
 
 export type InternalRemoveLiquidityQuoteParam = {
   positionAddress: PublicKey;
