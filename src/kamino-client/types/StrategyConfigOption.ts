@@ -1176,6 +1176,29 @@ export class UpdateSwapUnevenAuthority {
   }
 }
 
+export interface UpdatePendingStrategyAdminJSON {
+  kind: "UpdatePendingStrategyAdmin"
+}
+
+export class UpdatePendingStrategyAdmin {
+  static readonly discriminator = 51
+  static readonly kind = "UpdatePendingStrategyAdmin"
+  readonly discriminator = 51
+  readonly kind = "UpdatePendingStrategyAdmin"
+
+  toJSON(): UpdatePendingStrategyAdminJSON {
+    return {
+      kind: "UpdatePendingStrategyAdmin",
+    }
+  }
+
+  toEncodable() {
+    return {
+      UpdatePendingStrategyAdmin: {},
+    }
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function fromDecoded(obj: any): types.StrategyConfigOptionKind {
   if (typeof obj !== "object") {
@@ -1334,6 +1357,9 @@ export function fromDecoded(obj: any): types.StrategyConfigOptionKind {
   }
   if ("UpdateSwapUnevenAuthority" in obj) {
     return new UpdateSwapUnevenAuthority()
+  }
+  if ("UpdatePendingStrategyAdmin" in obj) {
+    return new UpdatePendingStrategyAdmin()
   }
 
   throw new Error("Invalid enum object")
@@ -1496,6 +1522,9 @@ export function fromJSON(
     case "UpdateSwapUnevenAuthority": {
       return new UpdateSwapUnevenAuthority()
     }
+    case "UpdatePendingStrategyAdmin": {
+      return new UpdatePendingStrategyAdmin()
+    }
   }
 }
 
@@ -1552,6 +1581,7 @@ export function layout(property?: string) {
     borsh.struct([], "UpdateRebalancesCapInterval"),
     borsh.struct([], "UpdateRebalancesCapCurrentTotal"),
     borsh.struct([], "UpdateSwapUnevenAuthority"),
+    borsh.struct([], "UpdatePendingStrategyAdmin"),
   ])
   if (property !== undefined) {
     return ret.replicate(property)
