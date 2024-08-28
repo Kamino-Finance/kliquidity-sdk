@@ -291,6 +291,7 @@ export type StrategyConfigOptionKind =
   | StrategyConfigOption.UpdateRebalancesCapInterval
   | StrategyConfigOption.UpdateRebalancesCapCurrentTotal
   | StrategyConfigOption.UpdateSwapUnevenAuthority
+  | StrategyConfigOption.UpdatePendingStrategyAdmin
 export type StrategyConfigOptionJSON =
   | StrategyConfigOption.UpdateDepositCapJSON
   | StrategyConfigOption.UpdateDepositCapIxnJSON
@@ -343,6 +344,7 @@ export type StrategyConfigOptionJSON =
   | StrategyConfigOption.UpdateRebalancesCapIntervalJSON
   | StrategyConfigOption.UpdateRebalancesCapCurrentTotalJSON
   | StrategyConfigOption.UpdateSwapUnevenAuthorityJSON
+  | StrategyConfigOption.UpdatePendingStrategyAdminJSON
 
 export { StrategyStatus }
 
