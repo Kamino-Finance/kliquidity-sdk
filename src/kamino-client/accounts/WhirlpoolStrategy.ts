@@ -100,6 +100,7 @@ export interface WhirlpoolStrategyFields {
   swapUnevenAuthority: PublicKey
   tokenATokenProgram: PublicKey
   tokenBTokenProgram: PublicKey
+  pendingAdmin: PublicKey
   padding3: BN
   padding4: Array<BN>
   padding5: Array<BN>
@@ -203,6 +204,7 @@ export interface WhirlpoolStrategyJSON {
   swapUnevenAuthority: string
   tokenATokenProgram: string
   tokenBTokenProgram: string
+  pendingAdmin: string
   padding3: string
   padding4: Array<string>
   padding5: Array<string>
@@ -306,6 +308,7 @@ export class WhirlpoolStrategy {
   readonly swapUnevenAuthority: PublicKey
   readonly tokenATokenProgram: PublicKey
   readonly tokenBTokenProgram: PublicKey
+  readonly pendingAdmin: PublicKey
   readonly padding3: BN
   readonly padding4: Array<BN>
   readonly padding5: Array<BN>
@@ -411,8 +414,9 @@ export class WhirlpoolStrategy {
     borsh.publicKey("swapUnevenAuthority"),
     borsh.publicKey("tokenATokenProgram"),
     borsh.publicKey("tokenBTokenProgram"),
+    borsh.publicKey("pendingAdmin"),
     borsh.u64("padding3"),
-    borsh.array(borsh.u128(), 15, "padding4"),
+    borsh.array(borsh.u128(), 13, "padding4"),
     borsh.array(borsh.u128(), 32, "padding5"),
     borsh.array(borsh.u128(), 32, "padding6"),
     borsh.array(borsh.u128(), 32, "padding7"),
@@ -524,6 +528,7 @@ export class WhirlpoolStrategy {
     this.swapUnevenAuthority = fields.swapUnevenAuthority
     this.tokenATokenProgram = fields.tokenATokenProgram
     this.tokenBTokenProgram = fields.tokenBTokenProgram
+    this.pendingAdmin = fields.pendingAdmin
     this.padding3 = fields.padding3
     this.padding4 = fields.padding4
     this.padding5 = fields.padding5
@@ -676,6 +681,7 @@ export class WhirlpoolStrategy {
       swapUnevenAuthority: dec.swapUnevenAuthority,
       tokenATokenProgram: dec.tokenATokenProgram,
       tokenBTokenProgram: dec.tokenBTokenProgram,
+      pendingAdmin: dec.pendingAdmin,
       padding3: dec.padding3,
       padding4: dec.padding4,
       padding5: dec.padding5,
@@ -785,6 +791,7 @@ export class WhirlpoolStrategy {
       swapUnevenAuthority: this.swapUnevenAuthority.toString(),
       tokenATokenProgram: this.tokenATokenProgram.toString(),
       tokenBTokenProgram: this.tokenBTokenProgram.toString(),
+      pendingAdmin: this.pendingAdmin.toString(),
       padding3: this.padding3.toString(),
       padding4: this.padding4.map((item) => item.toString()),
       padding5: this.padding5.map((item) => item.toString()),
@@ -900,6 +907,7 @@ export class WhirlpoolStrategy {
       swapUnevenAuthority: new PublicKey(obj.swapUnevenAuthority),
       tokenATokenProgram: new PublicKey(obj.tokenATokenProgram),
       tokenBTokenProgram: new PublicKey(obj.tokenBTokenProgram),
+      pendingAdmin: new PublicKey(obj.pendingAdmin),
       padding3: new BN(obj.padding3),
       padding4: obj.padding4.map((item) => new BN(item)),
       padding5: obj.padding5.map((item) => new BN(item)),
