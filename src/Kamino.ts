@@ -2689,7 +2689,6 @@ export class Kamino {
           tokenAAta,
           owner,
           strategyState.strategy.tokenAMint,
-          tokenAData!.owner
         )
       );
     }
@@ -2700,7 +2699,6 @@ export class Kamino {
           tokenBAta,
           owner,
           strategyState.strategy.tokenBMint,
-          tokenBData!.owner
         )
       );
     }
