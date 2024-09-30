@@ -232,7 +232,7 @@ import {
   TakeProfitMethod,
 } from './utils/CreationParameters';
 import { DOLAR_BASED, PROPORTION_BASED } from './constants/deposit_method';
-import { JupService } from './services/JupService';
+import { JupService } from './services';
 import {
   simulateManualPool,
   simulatePercentagePool,
@@ -363,6 +363,7 @@ export class Kamino {
    * @param programId override kamino program id
    * @param whirlpoolProgramId override whirlpool program id
    * @param raydiumProgramId override raydium program id
+   * @param meteoraProgramId
    */
   constructor(
     cluster: SolanaCluster,
@@ -940,8 +941,11 @@ export class Kamino {
 
   /**
    * Get the price for a given pair of tokens in a given dex; The price comes from any pool having those tokens, not a specific one, so the price may not be exactly the same between different pools with the same tokens. For a specific pool price use getPoolPrice
-   * @param strategy
-   * @param amountA
+   * @param poolTokenA
+   * @param poolTokenB
+   * @param dex
+   * @param poolTokenA
+   * @param poolTokenB
    */
   getPriceForPair = async (dex: Dex, poolTokenA: PublicKey, poolTokenB: PublicKey): Promise<number> => {
     if (dex == 'ORCA') {
@@ -1355,6 +1359,10 @@ export class Kamino {
   /**
    * Batch fetch share data for all or a filtered list of strategies
    * @param strategyFilters strategy filters or a list of strategy public keys
+   * @param stratsWithAddresses
+   * @param collateralInfos
+   * @param stratsWithAddresses
+   * @param collateralInfos
    */
   getStrategiesShareData = async (
     strategyFilters: StrategiesFilters | PublicKey[],
@@ -2102,7 +2110,7 @@ export class Kamino {
     const twaps: MintToPriceMap = {};
     ({ oraclePrices, collateralInfos } = await this.getOraclePricesAndCollateralInfos(oraclePrices, collateralInfos));
     for (const collateralInfo of collateralInfos) {
-      if (collateralInfo.scopePriceChain && Scope.isScopeChainValid(collateralInfo.scopePriceChain)) {
+      if (collateralInfo.scopePriceChain && Scope.isScopeChainValid(collateralInfo.scopePriceChain) && collateralInfo.disabled === 0) {
         const collInfoMintString = collateralInfo.mint.toString();
         const spotPrice = await this._scope.getPriceFromChain(collateralInfo.scopePriceChain, oraclePrices);
         spotPrices[collInfoMintString] = {
@@ -2529,6 +2537,7 @@ export class Kamino {
    * @param strategy strategy public key
    * @param sharesAmount amount of shares (decimal representation), NOT in lamports
    * @param owner shares owner (wallet with shares)
+   * @param sharesAtaBalance
    * @returns transaction instruction
    */
   withdrawShares = async (
@@ -4455,10 +4464,235 @@ export class Kamino {
 
   /**
    * Get a transaction to open liquidity position for a Kamino strategy
+   * @param adminAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
    * @param strategy strategy you want to open liquidity position for
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
    * @param positionMint new liquidity position account pubkey
    * @param priceLower new position's lower price of the range
    * @param priceUpper new position's upper price of the range
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
    * @param status strategy status
    */
   openPositionOrca = async (
@@ -4571,11 +4805,372 @@ export class Kamino {
 
   /**
    * Get a transaction to open liquidity position for a Kamino strategy
+   * @param adminAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param adminAuthority
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
    * @param strategy strategy you want to open liquidity position for
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
    * @param positionMint new liquidity position account pubkey
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
    * @param priceLower new position's lower price of the range
    * @param priceUpper new position's upper price of the range
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldProtocolPositionOrBaseVaultAuthority
+   * @param eventAuthority
    * @param status strategy status
+   * @param strategyRewardOVault
+   * @param strategyReward1Vault
+   * @param strategyReward2Vault
    */
   openPositionRaydium = async (
     adminAuthority: PublicKey,
@@ -4733,10 +5328,251 @@ export class Kamino {
 
   /**
    * Get a transaction to open liquidity position for a Kamino strategy
-   * @param strategy strategy you want to open liquidity position for
-   * @param positionMint new liquidity position account pubkey
+   * @param adminAuthority
+   * @param adminAuthority
+   * @param baseVaultAuthority
+   * @param pool
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param strategy
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
+   * @param baseVaultAuthority
+   * @param pool
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
+   * @param position
    * @param priceLower new position's lower price of the range
    * @param priceUpper new position's upper price of the range
+   * @param tokenAVault
+   * @param tokenBVault
+   * @param tokenAMint
+   * @param tokenBMint
+   * @param tokenATokenProgram
+   * @param tokenBTokenProgram
+   * @param oldPositionOrBaseVaultAuthority
+   * @param oldPositionMintOrBaseVaultAuthority
+   * @param oldPositionTokenAccountOrBaseVaultAuthority
+   * @param oldTickArrayLowerOrBaseVaultAuthority
+   * @param oldTickArrayUpperOrBaseVaultAuthority
+   * @param eventAuthority
    * @param status strategy status
    */
   openPositionMeteora = async (
@@ -5016,7 +5852,7 @@ export class Kamino {
 
   /**
    * Get a the pending fees in lamports of a strategy.
-   * @param strategy strategy pubkey or object
+   * @param strategies
    */
   getPendingFees = async (strategies: PublicKey[]): Promise<StrategyWithPendingFees[]> => {
     const strategiesWithAddresses = await this.getStrategiesWithAddresses(strategies);
@@ -5216,10 +6052,74 @@ export class Kamino {
    * Get a list of instructions to initialize and set up a strategy
    * @param dex the dex to use (Orca or Raydium)
    * @param feeTierBps which fee tier for that specific pair should be used (in BPS)
+   * @param strategy
+   * @param positionMint
+   * @param strategyAdmin
+   * @param rebalanceType
+   * @param rebalanceParams
+   * @param strategy
+   * @param positionMint
+   * @param strategyAdmin
+   * @param rebalanceType
+   * @param withdrawFeeBps
+   * @param depositFeeBps
+   * @param performanceFeeBps
+   * @param rebalanceParams
+   * @param strategy
+   * @param positionMint
+   * @param strategyAdmin
+   * @param rebalanceType
+   * @param withdrawFeeBps
+   * @param depositFeeBps
+   * @param performanceFeeBps
+   * @param rebalanceParams
+   * @param strategy
+   * @param positionMint
+   * @param strategyAdmin
+   * @param rebalanceType
+   * @param withdrawFeeBps
+   * @param depositFeeBps
+   * @param performanceFeeBps
+   * @param rebalanceParams
+   * @param strategy
+   * @param positionMint
+   * @param strategyAdmin
+   * @param rebalanceType
+   * @param withdrawFeeBps
+   * @param depositFeeBps
+   * @param performanceFeeBps
+   * @param rebalanceParams
+   * @param strategy
+   * @param positionMint
+   * @param strategyAdmin
+   * @param rebalanceType
+   * @param withdrawFeeBps
+   * @param depositFeeBps
+   * @param performanceFeeBps
+   * @param rebalanceParams
+   * @param strategy
+   * @param positionMint
+   * @param strategyAdmin
+   * @param rebalanceType
+   * @param withdrawFeeBps
+   * @param depositFeeBps
+   * @param performanceFeeBps
+   * @param rebalanceParams
+   * @param strategy
+   * @param positionMint
+   * @param strategyAdmin
+   * @param rebalanceType
+   * @param withdrawFeeBps
+   * @param depositFeeBps
+   * @param performanceFeeBps
+   * @param rebalanceParams
    * @param tokenAMint the mint of TokenA in the pool
    * @param tokenBMint the mint of TokenB in the pool
    * @param depositCap the maximum amount in USD in lamports (6 decimals) that can be deposited into the strategy
    * @param depositCapPerIx the maximum amount in USD in lamports (6 decimals) that can be deposited into the strategy per instruction
+   * @param withdrawFeeBps
+   * @param depositFeeBps
+   * @param performanceFeeBps
    */
   getBuildStrategyIxns = async (
     dex: Dex,
@@ -6307,6 +7207,10 @@ export class Kamino {
   /**
    * Get a list of user's Kamino strategy positions
    * @param wallet user wallet address
+   * @param strategiesWithShareMintsMap
+   * @param strategiesWithAddressMap
+   * @param strategiesWithShareMintsMap
+   * @param strategiesWithAddressMap
    * @returns list of kamino strategy positions
    */
   getUserPositionsByStrategiesMap = async (
@@ -6526,7 +7430,6 @@ export class Kamino {
   /**
    * Get ratio of total_a_in_strategy/total_b_in_strategy; if the total_b_in_strategy is 0 throws;
    * @param strategy
-   * @param amountA
    */
   getStrategyTokensRatio = async (strategy: PublicKey | StrategyWithAddress): Promise<Decimal> => {
     const totalHoldings = await this.getStrategyTokensHoldings(strategy);
