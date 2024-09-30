@@ -2102,7 +2102,7 @@ export class Kamino {
     const twaps: MintToPriceMap = {};
     ({ oraclePrices, collateralInfos } = await this.getOraclePricesAndCollateralInfos(oraclePrices, collateralInfos));
     for (const collateralInfo of collateralInfos) {
-      if (collateralInfo.scopePriceChain && Scope.isScopeChainValid(collateralInfo.scopePriceChain)) {
+      if (collateralInfo.scopePriceChain && Scope.isScopeChainValid(collateralInfo.scopePriceChain) && collateralInfo.disabled === 0) {
         const collInfoMintString = collateralInfo.mint.toString();
         const spotPrice = await this._scope.getPriceFromChain(collateralInfo.scopePriceChain, oraclePrices);
         spotPrices[collInfoMintString] = {
