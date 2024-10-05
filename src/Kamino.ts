@@ -2102,7 +2102,11 @@ export class Kamino {
     const twaps: MintToPriceMap = {};
     ({ oraclePrices, collateralInfos } = await this.getOraclePricesAndCollateralInfos(oraclePrices, collateralInfos));
     for (const collateralInfo of collateralInfos) {
-      if (collateralInfo.scopePriceChain && Scope.isScopeChainValid(collateralInfo.scopePriceChain) && collateralInfo.disabled === 0) {
+      if (
+        collateralInfo.scopePriceChain &&
+        Scope.isScopeChainValid(collateralInfo.scopePriceChain) &&
+        collateralInfo.disabled === 0
+      ) {
         const collInfoMintString = collateralInfo.mint.toString();
         const spotPrice = await this._scope.getPriceFromChain(collateralInfo.scopePriceChain, oraclePrices);
         spotPrices[collInfoMintString] = {
@@ -2683,24 +2687,32 @@ export class Kamino {
   ): Promise<TransactionInstruction[]> => {
     const instructions: TransactionInstruction[] = [];
     if (!tokenAData) {
+      let tokenProgramA =
+        strategyState.strategy.tokenATokenProgram == PublicKey.default
+          ? TOKEN_PROGRAM_ID
+          : strategyState.strategy.tokenATokenProgram;
       instructions.push(
         createAssociatedTokenAccountInstruction(
           owner,
           tokenAAta,
           owner,
           strategyState.strategy.tokenAMint,
-          tokenAData!.owner
+          tokenProgramA
         )
       );
     }
     if (!tokenBData) {
+      let tokenProgramB =
+        strategyState.strategy.tokenBTokenProgram == PublicKey.default
+          ? TOKEN_PROGRAM_ID
+          : strategyState.strategy.tokenBTokenProgram;
       instructions.push(
         createAssociatedTokenAccountInstruction(
           owner,
           tokenBAta,
           owner,
           strategyState.strategy.tokenBMint,
-          tokenBData!.owner
+          tokenProgramB
         )
       );
     }
