@@ -2687,7 +2687,7 @@ export class Kamino {
   ): Promise<TransactionInstruction[]> => {
     const instructions: TransactionInstruction[] = [];
     if (!tokenAData) {
-      let tokenProgramA =
+      const tokenProgramA =
         strategyState.strategy.tokenATokenProgram == PublicKey.default
           ? TOKEN_PROGRAM_ID
           : strategyState.strategy.tokenATokenProgram;
@@ -2702,7 +2702,7 @@ export class Kamino {
       );
     }
     if (!tokenBData) {
-      let tokenProgramB =
+      const tokenProgramB =
         strategyState.strategy.tokenBTokenProgram == PublicKey.default
           ? TOKEN_PROGRAM_ID
           : strategyState.strategy.tokenBTokenProgram;
