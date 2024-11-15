@@ -6092,7 +6092,7 @@ export class Kamino {
     const [createLookupTableIx, lookupTable] = await this.getInitLookupTableIx(authority.publicKey, slot);
     const populateLookupTableIx = await this.getPopulateLookupTableIxs(authority.publicKey, lookupTable, strategy);
 
-    const strategyPk = strategy instanceof PublicKey ? strategy : strategy.address;
+    const strategyPk = "address" in strategy ? strategy.address : strategy;
     const getUpdateStrategyLookupTableIx = await getUpdateStrategyConfigIx(
       authority.publicKey,
       this._globalConfig,
