@@ -74,27 +74,27 @@ export class OrcaService {
     const rewardToken1 = collateralInfos[strategy.reward1CollateralId.toNumber()];
     const rewardToken2 = collateralInfos[strategy.reward2CollateralId.toNumber()];
 
-    const aPrice = prices[tokenA.mint.toString()];
-    const bPrice = prices[tokenB.mint.toString()];
-    const reward0Price = strategy.reward0Decimals.toNumber() !== 0 ? prices[rewardToken0.mint.toString()] : null;
-    const reward1Price = strategy.reward1Decimals.toNumber() !== 0 ? prices[rewardToken1.mint.toString()] : null;
-    const reward2Price = strategy.reward2Decimals.toNumber() !== 0 ? prices[rewardToken2.mint.toString()] : null;
+    const aPrice = prices.spot[tokenA.mint.toString()];
+    const bPrice = prices.spot[tokenB.mint.toString()];
+    const reward0Price = strategy.reward0Decimals.toNumber() !== 0 ? prices.spot[rewardToken0.mint.toString()] : null;
+    const reward1Price = strategy.reward1Decimals.toNumber() !== 0 ? prices.spot[rewardToken1.mint.toString()] : null;
+    const reward2Price = strategy.reward2Decimals.toNumber() !== 0 ? prices.spot[rewardToken2.mint.toString()] : null;
 
     const [mintA, mintB] = [strategy.tokenAMint.toString(), strategy.tokenBMint.toString()];
     const reward0 = collateralInfos[strategy.reward0CollateralId.toNumber()]?.mint?.toString();
     const reward1 = collateralInfos[strategy.reward1CollateralId.toNumber()]?.mint?.toString();
     const reward2 = collateralInfos[strategy.reward2CollateralId.toNumber()]?.mint?.toString();
 
-    tokensPrices[mintA] = aPrice;
-    tokensPrices[mintB] = bPrice;
+    tokensPrices[mintA] = aPrice.price;
+    tokensPrices[mintB] = bPrice.price;
     if (reward0Price !== null) {
-      tokensPrices[reward0] = reward0Price;
+      tokensPrices[reward0] = reward0Price.price;
     }
     if (reward1Price !== null) {
-      tokensPrices[reward1] = reward1Price;
+      tokensPrices[reward1] = reward1Price.price;
     }
     if (reward2Price !== null) {
-      tokensPrices[reward2] = reward2Price;
+      tokensPrices[reward2] = reward2Price.price;
     }
 
     return tokensPrices;

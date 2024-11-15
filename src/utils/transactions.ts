@@ -66,6 +66,7 @@ export const getAtasWithCreateIxnsIfMissing = async (
     if (createAtaIx) {
       return createAtaIx;
     }
+    return undefined;
   });
   const result = (await Promise.all(requests.filter((x) => x !== undefined))).filter(
     (ix) => ix !== undefined

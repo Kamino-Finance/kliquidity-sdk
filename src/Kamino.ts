@@ -1370,10 +1370,13 @@ export class Kamino {
     const fetchBalances: Promise<StrategyBalanceWithAddress>[] = [];
     const allScopePrices = strategiesWithAddresses.map((x) => x.strategy.scopePrices);
     const scopePrices = await this._scope.getMultipleOraclePrices(allScopePrices);
-    const scopePricesMap: Record<string, OraclePrices> = scopePrices.reduce((map, [address, price]) => {
-      map[address.toBase58()] = price;
-      return map;
-    }, {});
+    const scopePricesMap: Record<string, OraclePrices> = scopePrices.reduce(
+      (map: Record<string, OraclePrices>, [address, price]) => {
+        map[address.toBase58()] = price;
+        return map;
+      },
+      {}
+    );
 
     const raydiumStrategies = strategiesWithAddresses.filter(
       (x) =>
@@ -2412,7 +2415,7 @@ export class Kamino {
       return whirlpoolMap;
     }
     const fetched = await batchFetch(uniqueWhirlpools, (chunk) => Whirlpool.fetchMultiple(this._connection, chunk));
-    fetched.reduce((map, whirlpool, i) => {
+    fetched.reduce((map: Record<string, Whirlpool | null>, whirlpool, i) => {
       whirlpoolMap.set(uniqueWhirlpools[i], whirlpool);
       map[uniqueWhirlpools[i].toBase58()] = whirlpool;
       return map;
@@ -2427,10 +2430,13 @@ export class Kamino {
   getOrcaPositions = async (positions: PublicKey[]): Promise<(Position | null)[]> => {
     const nonDefaults = positions.filter((value) => value.toBase58() !== PublicKey.default.toBase58());
     const fetched = await batchFetch(nonDefaults, (chunk) => Position.fetchMultiple(this._connection, chunk));
-    const fetchedMap: Record<string, Position | null> = fetched.reduce((map, position, i) => {
-      map[nonDefaults[i].toBase58()] = position;
-      return map;
-    }, {});
+    const fetchedMap: Record<string, Position | null> = fetched.reduce(
+      (map: Record<string, Position | null>, position, i) => {
+        map[nonDefaults[i].toBase58()] = position;
+        return map;
+      },
+      {}
+    );
     return positions.map((position) => fetchedMap[position.toBase58()] || null);
   };
 
@@ -2443,20 +2449,26 @@ export class Kamino {
     const fetched = await batchFetch(nonDefaults, (chunk) =>
       PersonalPositionState.fetchMultiple(this._connection, chunk)
     );
-    const fetchedMap: Record<string, PersonalPositionState | null> = fetched.reduce((map, position, i) => {
-      map[nonDefaults[i].toBase58()] = position;
-      return map;
-    }, {});
+    const fetchedMap: Record<string, PersonalPositionState | null> = fetched.reduce(
+      (map: Record<string, PersonalPositionState | null>, position, i) => {
+        map[nonDefaults[i].toBase58()] = position;
+        return map;
+      },
+      {}
+    );
     return positions.map((position) => fetchedMap[position.toBase58()] || null);
   };
 
   getMeteoraPositions = async (positions: PublicKey[]): Promise<(PositionV2 | null)[]> => {
     const nonDefaults = positions.filter((value) => !value.equals(PublicKey.default));
     const fetched = await batchFetch(nonDefaults, (chunk) => PositionV2.fetchMultiple(this._connection, chunk));
-    const fetchedMap: Record<string, PositionV2 | null> = fetched.reduce((map, position, i) => {
-      map[nonDefaults[i].toBase58()] = position;
-      return map;
-    }, {});
+    const fetchedMap: Record<string, PositionV2 | null> = fetched.reduce(
+      (map: Record<string, PositionV2 | null>, position, i) => {
+        map[nonDefaults[i].toBase58()] = position;
+        return map;
+      },
+      {}
+    );
     return positions.map((position) => fetchedMap[position.toBase58()] || null);
   };
 
@@ -3410,7 +3422,7 @@ export class Kamino {
     }
 
     // get all unique accounts in the tx so we can use the remaining space (MAX_ACCOUNTS_PER_TRANSACTION - accounts_used) for the swap
-    const extractKeys = (ixs: any[]) => ixs.flatMap((ix) => ix.keys?.map((key) => key.pubkey) || []);
+    const extractKeys = (ixs: TransactionInstruction[]) => ixs.flatMap((ix) => ix.keys?.map((key) => key.pubkey) || []);
 
     const allKeys = [
       ...extractKeys(result),
