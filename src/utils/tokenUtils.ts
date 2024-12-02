@@ -17,7 +17,7 @@ import { tickIndexToPrice } from '@orca-so/whirlpool-sdk';
 import Decimal from 'decimal.js';
 import { CollateralInfo } from '../kamino-client/types';
 import { getPriceOfBinByBinIdWithDecimals } from './meteora';
-import { MintInfo, MintLayout, u64 } from '@solana/spl-token';
+import { getAssociatedTokenAddress as getAta, unpackMint } from '@solana/spl-token';
 
 export const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
@@ -34,7 +34,7 @@ export async function getAssociatedTokenAddressAndData(
   owner: PublicKey,
   programId = TOKEN_PROGRAM_ID
 ): Promise<[PublicKey, AccountInfo<Buffer> | null]> {
-  const ata = getAssociatedTokenAddress(mint, owner, true, programId);
+  const ata = await getAssociatedTokenAddress(mint, owner, true, programId);
   const data = await connection.getAccountInfo(ata);
   return [ata, data];
 }
@@ -45,15 +45,8 @@ export function getAssociatedTokenAddress(
   allowOwnerOffCurve = true,
   programId = TOKEN_PROGRAM_ID,
   associatedTokenProgramId = ASSOCIATED_TOKEN_PROGRAM_ID
-): PublicKey {
-  if (!allowOwnerOffCurve && !PublicKey.isOnCurve(owner.toBuffer())) throw new Error('Token owner off curve');
-
-  const [address] = PublicKey.findProgramAddressSync(
-    [owner.toBuffer(), programId.toBuffer(), mint.toBuffer()],
-    associatedTokenProgramId
-  );
-
-  return address;
+): Promise<PublicKey> {
+  return getAta(mint, owner, allowOwnerOffCurve, programId, associatedTokenProgramId);
 }
 
 export function createAssociatedTokenAccountInstruction(
@@ -214,30 +207,8 @@ export async function getMintDecimals(connection: Connection, mint: PublicKey): 
   if (!acc) {
     throw new Error(`Mint ${mint.toBase58()} not found`);
   }
-  const mintInfo = decodeMint(acc);
+  const mintInfo = unpackMint(mint, acc, acc.owner);
   return mintInfo.decimals;
-}
-
-export function decodeMint(acc: AccountInfo<Buffer>): MintInfo {
-  const data = Buffer.from(acc.data);
-  const mintInfo = MintLayout.decode(data);
-
-  if (mintInfo.mintAuthorityOption === 0) {
-    mintInfo.mintAuthority = null;
-  } else {
-    mintInfo.mintAuthority = new PublicKey(mintInfo.mintAuthority);
-  }
-
-  mintInfo.supply = u64.fromBuffer(mintInfo.supply);
-  mintInfo.isInitialized = mintInfo.isInitialized != 0;
-
-  if (mintInfo.freezeAuthorityOption === 0) {
-    mintInfo.freezeAuthority = null;
-  } else {
-    mintInfo.freezeAuthority = new PublicKey(mintInfo.freezeAuthority);
-  }
-
-  return mintInfo;
 }
 
 export function removeBudgetAndAtaIxns(ixns: TransactionInstruction[], mints: PublicKey[]): TransactionInstruction[] {

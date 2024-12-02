@@ -3,13 +3,11 @@ import * as anchor from '@coral-xyz/anchor';
 import { StrategyConfigOptionKind, UpdateCollateralInfoModeKind } from '../src/kamino-client/types';
 import * as Instructions from '../src/kamino-client/instructions';
 import { Transaction, TransactionInstruction } from '@solana/web3.js';
-import { Token } from '@solana/spl-token';
 import { getMintDecimals } from '../src/utils';
 
 import Decimal from 'decimal.js';
 import { CollateralInfos, GlobalConfig, WhirlpoolStrategy } from '../src/kamino-client/accounts';
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   collToLamportsDecimal,
   DepositAmountsForSwap,
   Dex,
@@ -26,6 +24,12 @@ import { getTickArrayPubkeysFromRangeOrca } from './orca_utils';
 import { collateralTokenToNumber, CollateralToken } from './token_utils';
 import { checkIfAccountExists } from '../src/utils/transactions';
 import { FullBPS } from '../src/utils/CreationParameters';
+import {
+  createAssociatedTokenAccountInstruction,
+  createBurnInstruction,
+  createInitializeMint2Instruction,
+  createMintToInstruction,
+} from '@solana/spl-token';
 
 export const GlobalConfigMainnet = new PublicKey('GKnHiWh3RRrE1zsNzWxRkomymHc374TvJPSTv2wPeYdB');
 export const GlobalConfigStaging = new PublicKey('7D9KE8xxqvsSsPbpTK9DbvkYaodda1wVevPvZJbLGJ71');
@@ -255,13 +259,13 @@ export function getMintToIx(
   tokenAccount: PublicKey,
   amount: number
 ): TransactionInstruction {
-  const ix = Token.createMintToInstruction(
-    TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+  const ix = createMintToInstruction(
     mintPubkey, // mint
     tokenAccount, // receiver (sholud be a token account)
     signer, // mint authority
+    amount, // amount. if your decimals is 8, you mint 10^8 for 1 token.
     [], // only multisig account will use. leave it empty now.
-    amount // amount. if your decimals is 8, you mint 10^8 for 1 token.
+    TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
   );
 
   return ix;
@@ -274,7 +278,7 @@ export function getBurnFromIx(
   amount: number
 ): TransactionInstruction {
   console.log(`burnFrom ${tokenAccount.toString()} mint ${mintPubkey.toString()} amount ${amount}`);
-  const ix = Token.createBurnInstruction(TOKEN_PROGRAM_ID, mintPubkey, tokenAccount, signer, [], amount);
+  const ix = createBurnInstruction(tokenAccount, mintPubkey, signer, amount, [], TOKEN_PROGRAM_ID);
 
   return ix;
 }
@@ -298,7 +302,7 @@ export async function setupAta(
   tokenMintAddress: PublicKey,
   user: Keypair
 ): Promise<PublicKey> {
-  const ata = getAssociatedTokenAddress(tokenMintAddress, user.publicKey);
+  const ata = await getAssociatedTokenAddress(tokenMintAddress, user.publicKey);
   if (!(await checkIfAccountExists(connection, ata))) {
     const ix = await createAtaInstruction(user.publicKey, tokenMintAddress, ata);
     const tx = new Transaction().add(ix);
@@ -315,13 +319,12 @@ export async function createAtaInstruction(
   tokenMintAddress: PublicKey,
   ata: PublicKey
 ): Promise<TransactionInstruction> {
-  return Token.createAssociatedTokenAccountInstruction(
-    ASSOCIATED_TOKEN_PROGRAM_ID, // always ASSOCIATED_TOKEN_PROGRAM_ID
-    TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-    tokenMintAddress, // mint
+  return createAssociatedTokenAccountInstruction(
+    owner, // fee payer
     ata, // ata
     owner, // owner of token account
-    owner // fee payer
+    tokenMintAddress, // mint
+    TOKEN_PROGRAM_ID // always TOKEN_PROGRAM_ID
   );
 }
 
@@ -378,7 +381,7 @@ async function createMintInstructions(
       lamports: await connection.getMinimumBalanceForRentExemption(82),
       programId: TOKEN_PROGRAM_ID,
     }),
-    Token.createInitMintInstruction(TOKEN_PROGRAM_ID, mint, decimals, signer.publicKey, null),
+    createInitializeMint2Instruction(mint, decimals, signer.publicKey, null, TOKEN_PROGRAM_ID),
   ];
 }
 
@@ -546,12 +549,14 @@ async function getSwapAToBWithSlippageBPSIxs(
   // multiply the tokens to swap by -1 to get the positive sign because we represent as negative numbers what we have to sell
   const tokensToBurn = -input.tokenAToSwapAmount.toNumber();
 
-  const tokenAAta = getAssociatedTokenAddress(tokenAMint, user);
-  const tokenBAta = getAssociatedTokenAddress(tokenBMint, user);
+  const [tokenAAta, tokenBAta] = await Promise.all([
+    getAssociatedTokenAddress(tokenAMint, user),
+    getAssociatedTokenAddress(tokenBMint, user),
+  ]);
 
   const bToRecieve = input.tokenBToSwapAmount.mul(new Decimal(FullBPS).sub(slippageBps)).div(FullBPS);
-  const mintToIx = getMintToIx(mintAuthority, tokenBMint, tokenBAta, bToRecieve.toNumber());
-  const burnFromIx = getBurnFromIx(user, tokenAMint, tokenAAta, tokensToBurn);
+  const mintToIx = getMintToIx(mintAuthority, tokenBMint, tokenBAta, bToRecieve.floor().toNumber());
+  const burnFromIx = getBurnFromIx(user, tokenAMint, tokenAAta, Math.ceil(tokensToBurn));
 
   return [mintToIx, burnFromIx];
 }
@@ -567,8 +572,10 @@ async function getSwapBToAWithSlippageBPSIxs(
   // multiply the tokens to swap by -1 to get the positive sign because we represent as negative numbers what we have to sell
   const tokensToBurn = -input.tokenBToSwapAmount.toNumber();
 
-  const tokenAAta = getAssociatedTokenAddress(tokenAMint, owner);
-  const tokenBAta = getAssociatedTokenAddress(tokenBMint, owner);
+  const [tokenAAta, tokenBAta] = await Promise.all([
+    getAssociatedTokenAddress(tokenAMint, owner),
+    getAssociatedTokenAddress(tokenBMint, owner),
+  ]);
 
   const aToRecieve = input.tokenAToSwapAmount.mul(new Decimal(FullBPS).sub(slippage)).div(FullBPS);
   const mintToIx = getMintToIx(mintAuthority, tokenAMint, tokenAAta, aToRecieve.toNumber());
@@ -588,7 +595,7 @@ export const balance = async (
     return balance;
   }
 
-  const ata = getAssociatedTokenAddress(mint, user.publicKey);
+  const ata = await getAssociatedTokenAddress(mint, user.publicKey);
   if (await checkIfAccountExists(connection, ata)) {
     const balance = await connection.getTokenAccountBalance(ata);
     return balance.value.uiAmount;
