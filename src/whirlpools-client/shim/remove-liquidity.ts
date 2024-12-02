@@ -4,7 +4,6 @@
  */
 import { tickIndexToSqrtPriceX64 } from "@orca-so/whirlpool-client-sdk";
 import { BN } from "@coral-xyz/anchor";
-import { u64 } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import {
   adjustForSlippage, getTokenAFromLiquidity,
@@ -18,7 +17,7 @@ export type InternalRemoveLiquidityQuoteParam = {
   sqrtPrice: BN;
   tickLowerIndex: number;
   tickUpperIndex: number;
-  liquidity: u64;
+  liquidity: BN;
   slippageTolerance: Percentage;
 };
 

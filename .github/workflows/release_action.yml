@@ -36,7 +36,7 @@ jobs:
       - name: Setup .npmrc file for publish
         uses: actions/setup-node@v3
         with:
-          node-version: '19'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Configure Git User

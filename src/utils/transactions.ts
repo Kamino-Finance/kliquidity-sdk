@@ -14,7 +14,7 @@ import {
   createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddress,
 } from './tokenUtils';
-import { NATIVE_MINT, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { createCloseAccountInstruction, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { collToLamportsDecimal } from './utils';
 import { CreateAta } from './types';
 
@@ -48,7 +48,7 @@ export const createAtaIfMissingIx = async (
   owner: PublicKey,
   programId: PublicKey
 ): Promise<TransactionInstruction | undefined> => {
-  const ata = getAssociatedTokenAddress(mint, owner, true, programId);
+  const ata = await getAssociatedTokenAddress(mint, owner, true, programId);
   const doesAtaExist = Boolean(await checkIfAccountExists(connection, ata));
   const createIxn = !doesAtaExist
     ? createAssociatedTokenAccountInstruction(owner, ata, owner, mint, programId)
@@ -84,28 +84,14 @@ export const createWsolAtaIfMissing = async (
   const createIxns: TransactionInstruction[] = [];
   const closeIxns: TransactionInstruction[] = [];
 
-  const wsolAta: PublicKey = await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    NATIVE_MINT,
-    owner
-  );
+  const wsolAta: PublicKey = await getAssociatedTokenAddress(NATIVE_MINT, owner, true, TOKEN_PROGRAM_ID);
 
   const solDeposit = amount.toNumber();
   const wsolAtaAccountInfo: AccountInfo<Buffer> | null = await connection.getAccountInfo(wsolAta);
 
   // This checks if we need to create it
   if (isWsolInfoInvalid(wsolAtaAccountInfo)) {
-    createIxns.push(
-      Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        NATIVE_MINT,
-        wsolAta,
-        owner,
-        owner
-      )
-    );
+    createIxns.push(createAssociatedTokenAccountInstruction(owner, wsolAta, owner, NATIVE_MINT, TOKEN_PROGRAM_ID));
   }
 
   let uiAmount = 0;
@@ -149,9 +135,7 @@ export const createWsolAtaIfMissing = async (
     );
   }
 
-  closeIxns.push(
-    Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, wsolAta, new PublicKey(owner), new PublicKey(owner), [])
-  );
+  closeIxns.push(createCloseAccountInstruction(wsolAta, owner, owner, [], TOKEN_PROGRAM_ID));
 
   return {
     ata: wsolAta,

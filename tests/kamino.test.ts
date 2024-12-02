@@ -3,6 +3,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  sendAndConfirmRawTransaction,
   sendAndConfirmTransaction,
   SystemProgram,
   Transaction,
@@ -107,9 +108,9 @@ describe('Kamino SDK Tests', () => {
       LOCAL_RAYDIUM_PROGRAM_ID
     );
     // @ts-ignore
-    kamino._scope._config.scope.oraclePrices = fixtures.scopePrices;
+    kamino._scope._config.oraclePrices = fixtures.scopePrices;
     // @ts-ignore
-    kamino._scope._config.scope.programId = fixtures.scopeProgram;
+    kamino._scope._config.programId = fixtures.scopeProgram;
 
     let tokenAMint = await createMint(connection, signer, 6);
     let tokenBMint = await createMint(connection, signer, 6);
@@ -725,7 +726,6 @@ describe('Kamino SDK Tests', () => {
     );
 
     const { instructions: singleSidedDepositIxs, lookupTablesAddresses: _lookupTables } =
-      // @ts-ignore
       await kamino.singleSidedDepositTokenA(
         fixtures.newOrcaStrategy,
         usdcDeposit,
@@ -2138,7 +2138,11 @@ export async function openPosition(
     const openPositionTxV0 = new VersionedTransaction(openPositionTx);
     openPositionTxV0.sign([owner, positionMint]);
 
-    const myHash = await sendAndConfirmTransaction(kamino.getConnection(), openPositionTxV0);
+    const myHash = await sendAndConfirmRawTransaction(
+      kamino.getConnection(),
+      Buffer.from(openPositionTxV0.serialize()),
+      { commitment: 'processed' }
+    );
     console.log('open ray position th hash', myHash);
     console.log('new position has been opened', positionMint.publicKey.toString());
   }

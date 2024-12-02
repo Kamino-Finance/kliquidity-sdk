@@ -5,7 +5,7 @@
     "lib": ["es2022"],
     "rootDir": "src",
     "outDir": "dist",
-    "typeRoots": ["mocha", "node", "node_modules/@types", "@types"],
+    "typeRoots": ["node", "node_modules/@types"],
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
@@ -27,5 +27,5 @@
   },
   "compileOnSave": true,
   "include": ["src/**/*"],
-  "exclude": ["tests", "dist", "node_modules"]
+  "exclude": ["dist", "node_modules", "tests"]
 }
