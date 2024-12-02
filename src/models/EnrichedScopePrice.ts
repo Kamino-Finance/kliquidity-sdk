@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { OraclePrices } from '@hubbleprotocol/scope-sdk';
+import { OraclePrices } from '@kamino-finance/scope-sdk';
 import { CollateralInfo } from '../kamino-client/types';
 
 export interface EnrichedScopePrice {

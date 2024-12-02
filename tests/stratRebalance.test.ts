@@ -88,7 +88,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
-    ixs.push(buildNewStrategyIxs[0]);
+    ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
@@ -98,7 +98,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
     setupStratTransactionV0.sign([signer]);
@@ -108,8 +108,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
-    strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
+    strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
     const setupStratFeesTransactionV0 = new VersionedTransaction(setupStratFeesTx);
     setupStratFeesTransactionV0.sign([signer]);
@@ -138,10 +138,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // open position
-    const openPositionIxn = buildNewStrategyIxs[3];
+    const openPositionIxn = buildNewStrategyIxs.openPositionIxs;
     const openPositionMessage = await kamino.getTransactionV2Message(signer.publicKey, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
-      openPositionIxn,
+      ...openPositionIxn,
     ]);
     const openPositionTx = new VersionedTransaction(openPositionMessage);
     openPositionTx.sign([signer, newPosition]);
@@ -265,7 +265,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
-    ixs.push(buildNewStrategyIxs[0]);
+    ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
@@ -275,7 +275,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
     setupStratTransactionV0.sign([signer]);
@@ -285,8 +285,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
-    strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
+    strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
     const setupStratFeesTransactionV0 = new VersionedTransaction(setupStratFeesTx);
     setupStratFeesTransactionV0.sign([signer]);
@@ -315,10 +315,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // open position
-    const openPositionIxn = buildNewStrategyIxs[3];
+    const openPositionIxn = buildNewStrategyIxs.openPositionIxs;
     const openPositionMessage = await kamino.getTransactionV2Message(signer.publicKey, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
-      openPositionIxn,
+      ...openPositionIxn,
     ]);
     const openPositionTx = new VersionedTransaction(openPositionMessage);
     openPositionTx.sign([signer, newPosition]);
@@ -386,12 +386,15 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
+    const strat = (await kamino.getStrategyByAddress(newStrategy.publicKey))!;
+    const tickSpacing = await kamino.getPoolTickSpacing(dex, strat!.pool);
     const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
 
@@ -496,7 +499,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
-    ixs.push(buildNewStrategyIxs[0]);
+    ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
@@ -506,7 +509,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
     setupStratTransactionV0.sign([signer]);
@@ -516,8 +519,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
-    strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
+    strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
     const setupStratFeesTransactionV0 = new VersionedTransaction(setupStratFeesTx);
     setupStratFeesTransactionV0.sign([signer]);
@@ -546,10 +549,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // open position
-    const openPositionIxn = buildNewStrategyIxs[3];
+    const openPositionIxn = buildNewStrategyIxs.openPositionIxs;
     const openPositionMessage = await kamino.getTransactionV2Message(signer.publicKey, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
-      openPositionIxn,
+      ...openPositionIxn,
     ]);
     const openPositionTx = new VersionedTransaction(openPositionMessage);
     openPositionTx.sign([signer, newPosition]);
@@ -646,12 +649,15 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     const rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
+    const strat = (await kamino.getStrategyByAddress(newStrategy.publicKey))!;
+    const tickSpacing = await kamino.getPoolTickSpacing(dex, strat!.pool);
     const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
     const newPriceLower = new Decimal(
@@ -762,7 +768,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
-    ixs.push(buildNewStrategyIxs[0]);
+    ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
@@ -772,7 +778,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
     setupStratTransactionV0.sign([signer]);
@@ -782,8 +788,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
-    strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
+    strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
     const setupStratFeesTransactionV0 = new VersionedTransaction(setupStratFeesTx);
     setupStratFeesTransactionV0.sign([signer]);
@@ -812,10 +818,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // open position
-    const openPositionIxn = buildNewStrategyIxs[3];
+    const openPositionIxn = buildNewStrategyIxs.openPositionIxs;
     const openPositionMessage = await kamino.getTransactionV2Message(signer.publicKey, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
-      openPositionIxn,
+      ...openPositionIxn,
     ]);
     const openPositionTx = new VersionedTransaction(openPositionMessage);
     openPositionTx.sign([signer, newPosition]);
@@ -895,12 +901,15 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
+    const strat = (await kamino.getStrategyByAddress(newStrategy.publicKey))!;
+    const tickSpacing = await kamino.getPoolTickSpacing(dex, strat!.pool);
     const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
 
@@ -985,7 +994,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
-    ixs.push(buildNewStrategyIxs[0]);
+    ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
@@ -995,7 +1004,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
     setupStratTransactionV0.sign([signer]);
@@ -1005,8 +1014,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
-    strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
+    strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
     const setupStratFeesTransactionV0 = new VersionedTransaction(setupStratFeesTx);
     setupStratFeesTransactionV0.sign([signer]);
@@ -1035,10 +1044,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // open position
-    const openPositionIxn = buildNewStrategyIxs[3];
+    const openPositionIxn = buildNewStrategyIxs.openPositionIxs;
     const openPositionMessage = await kamino.getTransactionV2Message(signer.publicKey, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
-      openPositionIxn,
+      ...openPositionIxn,
     ]);
     const openPositionTx = new VersionedTransaction(openPositionMessage);
     openPositionTx.sign([signer, newPosition]);
@@ -1204,7 +1213,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
-    ixs.push(buildNewStrategyIxs[0]);
+    ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
@@ -1214,7 +1223,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
     setupStratTransactionV0.sign([signer]);
@@ -1224,8 +1233,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
-    strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
+    strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
     const setupStratFeesTransactionV0 = new VersionedTransaction(setupStratFeesTx);
     setupStratFeesTransactionV0.sign([signer]);
@@ -1258,10 +1267,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // open position
-    const openPositionIxn = buildNewStrategyIxs[3];
+    const openPositionIxn = buildNewStrategyIxs.openPositionIxs;
     const openPositionMessage = await kamino.getTransactionV2Message(signer.publicKey, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
-      openPositionIxn,
+      ...openPositionIxn,
     ]);
     const openPositionTx = new VersionedTransaction(openPositionMessage);
     openPositionTx.sign([signer, newPosition]);
@@ -1370,12 +1379,15 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     // read the pool price so we calculate the position based on the exact pool price; this is needed when the rebalance strategy relies on pool price
     poolPrice = await kamino.getCurrentPrice(newStrategy.publicKey);
+    const strat = (await kamino.getStrategyByAddress(newStrategy.publicKey))!;
+    const tickSpacing = await kamino.getPoolTickSpacing(dex, strat!.pool);
     const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
 
@@ -1543,7 +1555,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const ixs: TransactionInstruction[] = [];
     ixs.push(createStrategyAccountIx);
-    ixs.push(buildNewStrategyIxs[0]);
+    ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
@@ -1553,7 +1565,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
     setupStratTransactionV0.sign([signer]);
@@ -1563,8 +1575,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
-    strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
+    strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
     const setupStratFeesTransactionV0 = new VersionedTransaction(setupStratFeesTx);
     setupStratFeesTransactionV0.sign([signer]);
@@ -1597,10 +1609,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // open position
-    const openPositionIxn = buildNewStrategyIxs[3];
+    const openPositionIxn = buildNewStrategyIxs.openPositionIxs;
     const openPositionMessage = await kamino.getTransactionV2Message(signer.publicKey, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
-      openPositionIxn,
+      ...openPositionIxn,
     ]);
     const openPositionTx = new VersionedTransaction(openPositionMessage);
     openPositionTx.sign([signer, newPosition]);
@@ -1686,12 +1698,15 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     // rebalance with new range; the range is calculated using `getFieldsForRebalanceMethod` as it returns the range for all strategies
     // if `rebalanceMethod` is available it can be used directly, otherwise we can get it from the fields
     const rebalanceMethod = kamino.getRebalanceMethodFromRebalanceFields(updateStratFields);
+    const strat = (await kamino.getStrategyByAddress(newStrategy.publicKey))!;
+    const tickSpacing = await kamino.getPoolTickSpacing(dex, strat!.pool);
     const updatedAllRebalanceFieldInfos = await kamino.getFieldsForRebalanceMethod(
       rebalanceMethod,
       dex,
       updateStratFields,
       tokenAMint,
-      tokenBMint
+      tokenBMint,
+      tickSpacing
     );
 
     const newPriceLower = new Decimal(
@@ -1799,7 +1814,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
-    ixs.push(buildNewStrategyIxs[0]);
+    ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
@@ -1809,7 +1824,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
     setupStratTransactionV0.sign([signer]);
@@ -1819,8 +1834,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
-    strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
+    strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
     const setupStratFeesTransactionV0 = new VersionedTransaction(setupStratFeesTx);
     setupStratFeesTransactionV0.sign([signer]);
@@ -1849,10 +1864,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // open position
-    const openPositionIxn = buildNewStrategyIxs[3];
+    const openPositionIxn = buildNewStrategyIxs.openPositionIxs;
     const openPositionMessage = await kamino.getTransactionV2Message(signer.publicKey, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
-      openPositionIxn,
+      ...openPositionIxn,
     ]);
     const openPositionTx = new VersionedTransaction(openPositionMessage);
     openPositionTx.sign([signer, newPosition]);
@@ -1938,7 +1953,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const ixs: TransactionInstruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
-    ixs.push(buildNewStrategyIxs[0]);
+    ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     const createStratTx = await kamino.getTransactionV2Message(signer.publicKey, ixs);
     const createStratTransactionV0 = new VersionedTransaction(createStratTx);
@@ -1948,7 +1963,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(0, 4).map((ix) => strategySetupIxs.push(ix));
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     const setupStratTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupIxs);
     const setupStratTransactionV0 = new VersionedTransaction(setupStratTx);
     setupStratTransactionV0.sign([signer]);
@@ -1958,8 +1973,8 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: TransactionInstruction[] = [];
-    buildNewStrategyIxs[1].slice(4).map((ix) => strategySetupFeesIxs.push(ix));
-    strategySetupFeesIxs.push(buildNewStrategyIxs[2]);
+    buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
+    strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     const setupStratFeesTx = await kamino.getTransactionV2Message(signer.publicKey, strategySetupFeesIxs);
     const setupStratFeesTransactionV0 = new VersionedTransaction(setupStratFeesTx);
     setupStratFeesTransactionV0.sign([signer]);
@@ -1988,10 +2003,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
 
     // open position
-    const openPositionIxn = buildNewStrategyIxs[3];
+    const openPositionIxn = buildNewStrategyIxs.openPositionIxs;
     const openPositionMessage = await kamino.getTransactionV2Message(signer.publicKey, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
-      openPositionIxn,
+      ...openPositionIxn,
     ]);
     const openPositionTx = new VersionedTransaction(openPositionMessage);
     openPositionTx.sign([signer, newPosition]);
@@ -2011,10 +2026,13 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     expect(stratFields[2]['value'] == priceUpper.toString());
 
     // 2. Update strategy to use percentage strategy
+    const strat = (await kamino.getStrategyByAddress(newStrategy.publicKey))!;
+    const tickSpacing = await kamino.getPoolTickSpacing(dex, strat!.pool);
     const defaultPricePercentageRebalanceFields = await kamino.getDefaultRebalanceFields(
       dex,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       PricePercentageRebalanceMethod
     );
 
@@ -2040,6 +2058,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       defaultPricePercentageRebalanceFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
 
@@ -2077,6 +2096,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       dex,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       PricePercentageWithResetRangeRebalanceMethod
     );
 
@@ -2108,6 +2128,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       defaultPricePercentageWithResetRebalanceFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
 
@@ -2149,6 +2170,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       dex,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       DriftRebalanceMethod
     );
 
@@ -2174,6 +2196,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       defaultDriftRebalanceFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
 
@@ -2211,6 +2234,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       dex,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       TakeProfitMethod
     );
 
@@ -2238,6 +2262,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       defaultTakeProfitRebalanceFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
 
@@ -2282,6 +2307,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       dex,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       PeriodicRebalanceMethod
     );
 
@@ -2310,6 +2336,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       defaultPeriodicRebalanceRebalanceFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
 
@@ -2353,6 +2380,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       dex,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       ExpanderMethod
     );
 
@@ -2378,6 +2406,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       defaultExpanderRebalanceFields,
       tokenAMint,
       tokenBMint,
+      tickSpacing,
       poolPrice
     );
 
