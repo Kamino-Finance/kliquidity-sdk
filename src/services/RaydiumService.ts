@@ -33,7 +33,7 @@ export class RaydiumService {
   }
 
   async getRaydiumWhirlpools(): Promise<RaydiumPoolsResponse> {
-    return (await axios.get<RaydiumPoolsResponse>(`https://api.hubbleprotocol.io/raydium/ammPools`)).data;
+    return (await axios.get<RaydiumPoolsResponse>(`https://api.kamino.finance/v2/raydium/ammPools`)).data;
   }
 
   async getRaydiumPoolLiquidityDistribution(
@@ -44,7 +44,7 @@ export class RaydiumService {
   ): Promise<LiquidityDistribution> {
     const raydiumLiqDistribution = (
       await axios.get<RaydiumLiquidityDistribuion>(
-        `https://api.hubbleprotocol.io/raydium/positionLine/${pool.toString()}`
+        `https://api.kamino.finance/v2/raydium/positionLine/${pool.toString()}`
       )
     ).data;
 
