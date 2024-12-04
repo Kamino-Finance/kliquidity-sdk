@@ -3,34 +3,23 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
-      stage:
-        description: "Choose the stage to run (build or publish)"
-        required: true
-        type: choice
-        options:
-          - build
-          - publish
       version:
-        description: 'Version to publish, by semver keyword (only for build stage)'
-        required: false
+        description: 'Version to publish, by semver keyword.'
+        required: true
         default: patch
         type: choice
         options:
           - patch
           - minor
           - major
-      npm_2fa_code:
-        description: "Enter the npm 2FA code (only for publish stage)"
-        required: false
-        type: string
 
 jobs:
-  # First Stage: Build and Await Approval
-  build:
-    if: ${{ github.event.inputs.stage == 'build' }}
+  release:
     runs-on: ubuntu-latest
+    env:
+      # NPM automation token (skips 2FA)
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -84,27 +73,8 @@ jobs:
           PRERELEASE: false
           VERBOSE: false
 
-      - name: Manual approval for 2FA
-        uses: hmarr/auto-approve-action@v2
-        with:
-          label: 'awaiting-2fa'
-
-  # Second Stage: Publish
-  publish:
-    if: ${{ github.event.inputs.stage == 'publish' }}
-    needs: build # Wait for the first stage to complete
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          echo "npm config set //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}"
-          npm publish --otp=${{ github.event.inputs.npm_2fa_code }}
+        run: yarn publish --new-version ${{ steps.semver.outputs.new_tag }}
 
       - name: Create git commit
         # force push to avoid branch protection
