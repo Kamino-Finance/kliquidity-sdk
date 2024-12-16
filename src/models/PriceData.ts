@@ -1,8 +1,8 @@
 import Decimal from 'decimal.js';
 
 export type PriceData = {
-  aPrice: Decimal;
-  bPrice: Decimal;
+  aPrice: Decimal | null;
+  bPrice: Decimal | null;
   reward0Price: Decimal | null;
   reward1Price: Decimal | null;
   reward2Price: Decimal | null;
