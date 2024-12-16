@@ -2070,8 +2070,8 @@ export class Kamino {
     bInvested: Decimal,
     decimalsA: Decimal,
     decimalsB: Decimal,
-    aPrice: Decimal,
-    bPrice: Decimal
+    aPrice: Decimal | null,
+    bPrice: Decimal | null
   ): Holdings => {
     const aAvailableScaled = aAvailable.div(Decimal.pow(10, decimalsA));
     const bAvailableScaled = bAvailable.div(Decimal.pow(10, decimalsB));
@@ -2079,8 +2079,8 @@ export class Kamino {
     const aInvestedScaled = aInvested.div(Decimal.pow(10, decimalsA));
     const bInvestedScaled = bInvested.div(Decimal.pow(10, decimalsB));
 
-    const availableUsd = aAvailableScaled.mul(aPrice).add(bAvailableScaled.mul(bPrice));
-    const investedUsd = aInvestedScaled.mul(aPrice).add(bInvestedScaled.mul(bPrice));
+    const availableUsd = aPrice && bPrice ? aAvailableScaled.mul(aPrice).add(bAvailableScaled.mul(bPrice)) : new Decimal(0);
+    const investedUsd = aPrice && bPrice ? aInvestedScaled.mul(aPrice).add(bInvestedScaled.mul(bPrice)): new Decimal(0);
 
     return {
       available: {
@@ -2171,8 +2171,8 @@ export class Kamino {
     } else {
       prices = await this._scope.getOraclePrices({ prices: strategy.scopePrices });
     }
-    const aPrice = await this._scope.getPriceFromChain(tokenA.scopePriceChain, prices);
-    const bPrice = await this._scope.getPriceFromChain(tokenB.scopePriceChain, prices);
+    const aPrice = Scope.isScopeChainValid(tokenA.scopePriceChain) ? await this._scope.getPriceFromChain(tokenA.scopePriceChain, prices) : null;
+    const bPrice = Scope.isScopeChainValid(tokenB.scopePriceChain) ? await this._scope.getPriceFromChain(tokenB.scopePriceChain, prices) : null;
     const tokenATwap = stripTwapZeros(tokenA.scopeTwapPriceChain);
     const tokenBTwap = stripTwapZeros(tokenB.scopeTwapPriceChain);
     const aTwapPrice = Scope.isScopeChainValid(tokenATwap)
@@ -2196,8 +2196,8 @@ export class Kamino {
         : null;
 
     return {
-      aPrice: aPrice.price,
-      bPrice: bPrice.price,
+      aPrice: aPrice?.price ?? null,
+      bPrice: bPrice?.price ?? null,
       aTwapPrice: aTwapPrice?.price ?? null,
       bTwapPrice: bTwapPrice?.price ?? null,
       reward0Price: reward0Price?.price ?? null,
