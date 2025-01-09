@@ -2079,8 +2079,10 @@ export class Kamino {
     const aInvestedScaled = aInvested.div(Decimal.pow(10, decimalsA));
     const bInvestedScaled = bInvested.div(Decimal.pow(10, decimalsB));
 
-    const availableUsd = aPrice && bPrice ? aAvailableScaled.mul(aPrice).add(bAvailableScaled.mul(bPrice)) : new Decimal(0);
-    const investedUsd = aPrice && bPrice ? aInvestedScaled.mul(aPrice).add(bInvestedScaled.mul(bPrice)): new Decimal(0);
+    const availableUsd =
+      aPrice && bPrice ? aAvailableScaled.mul(aPrice).add(bAvailableScaled.mul(bPrice)) : new Decimal(0);
+    const investedUsd =
+      aPrice && bPrice ? aInvestedScaled.mul(aPrice).add(bInvestedScaled.mul(bPrice)) : new Decimal(0);
 
     return {
       available: {
@@ -2171,8 +2173,12 @@ export class Kamino {
     } else {
       prices = await this._scope.getOraclePrices({ prices: strategy.scopePrices });
     }
-    const aPrice = Scope.isScopeChainValid(tokenA.scopePriceChain) ? await this._scope.getPriceFromChain(tokenA.scopePriceChain, prices) : null;
-    const bPrice = Scope.isScopeChainValid(tokenB.scopePriceChain) ? await this._scope.getPriceFromChain(tokenB.scopePriceChain, prices) : null;
+    const aPrice = Scope.isScopeChainValid(tokenA.scopePriceChain)
+      ? (await this._scope.getPriceFromChain(tokenA.scopePriceChain, prices)).price
+      : new Decimal(await JupService.getDollarPrice(tokenA.mint));
+    const bPrice = Scope.isScopeChainValid(tokenB.scopePriceChain)
+      ? (await this._scope.getPriceFromChain(tokenB.scopePriceChain, prices)).price
+      : new Decimal(await JupService.getDollarPrice(tokenB.mint));
     const tokenATwap = stripTwapZeros(tokenA.scopeTwapPriceChain);
     const tokenBTwap = stripTwapZeros(tokenB.scopeTwapPriceChain);
     const aTwapPrice = Scope.isScopeChainValid(tokenATwap)
@@ -2182,27 +2188,33 @@ export class Kamino {
       ? await this._scope.getPriceFromChain(tokenBTwap, prices)
       : null;
 
-    const reward0Price =
-      strategy.reward0Decimals.toNumber() !== 0 && Scope.isScopeChainValid(rewardToken0.scopePriceChain)
-        ? await this._scope.getPriceFromChain(rewardToken0.scopePriceChain, prices)
-        : null;
-    const reward1Price =
-      strategy.reward1Decimals.toNumber() !== 0 && Scope.isScopeChainValid(rewardToken1.scopePriceChain)
-        ? await this._scope.getPriceFromChain(rewardToken1.scopePriceChain, prices)
-        : null;
-    const reward2Price =
-      strategy.reward2Decimals.toNumber() !== 0 && Scope.isScopeChainValid(rewardToken2.scopePriceChain)
-        ? await this._scope.getPriceFromChain(rewardToken2.scopePriceChain, prices)
-        : null;
+    let reward0Price = null;
+    if (strategy.reward0Decimals.toNumber() !== 0) {
+      reward0Price = Scope.isScopeChainValid(rewardToken0.scopePriceChain)
+        ? (await this._scope.getPriceFromChain(rewardToken0.scopePriceChain, prices)).price
+        : new Decimal(await JupService.getDollarPrice(rewardToken0.mint));
+    }
+    let reward1Price = null;
+    if (strategy.reward1Decimals.toNumber() !== 0) {
+      reward1Price = Scope.isScopeChainValid(rewardToken1.scopePriceChain)
+        ? (await this._scope.getPriceFromChain(rewardToken1.scopePriceChain, prices)).price
+        : new Decimal(await JupService.getDollarPrice(rewardToken1.mint));
+    }
+    let reward2Price = null;
+    if (strategy.reward2Decimals.toNumber() !== 0) {
+      reward2Price = Scope.isScopeChainValid(rewardToken2.scopePriceChain)
+        ? (await this._scope.getPriceFromChain(rewardToken2.scopePriceChain, prices)).price
+        : new Decimal(await JupService.getDollarPrice(rewardToken2.mint));
+    }
 
     return {
-      aPrice: aPrice?.price ?? null,
-      bPrice: bPrice?.price ?? null,
+      aPrice: aPrice ?? null,
+      bPrice: bPrice ?? null,
       aTwapPrice: aTwapPrice?.price ?? null,
       bTwapPrice: bTwapPrice?.price ?? null,
-      reward0Price: reward0Price?.price ?? null,
-      reward1Price: reward1Price?.price ?? null,
-      reward2Price: reward2Price?.price ?? null,
+      reward0Price: reward0Price ?? null,
+      reward1Price: reward1Price ?? null,
+      reward2Price: reward2Price ?? null,
     };
   };
 

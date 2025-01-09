@@ -129,6 +129,11 @@ export class JupService {
     return res.data.data[inputMint.toString()].price;
   };
 
+  static getDollarPrice = async (inputMint: PublicKey | string): Promise<number> => {
+    const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+    return this.getPrice(inputMint, USDC_MINT);
+  };
+
   static buildTransactionsFromSerialized = (serializedTransactions: Array<string | undefined>): Transaction[] => {
     return serializedTransactions.filter(Boolean).map((tx) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
