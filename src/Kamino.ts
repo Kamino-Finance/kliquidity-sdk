@@ -4211,6 +4211,16 @@ export class Kamino {
         ixn.keys.push({ pubkey: tokenProgram, isSigner: false, isWritable: false });
       }
     }
+
+    if (strategyState.strategyDex.toNumber() == dexToNumber('RAYDIUM')) {
+      const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = PublicKey.findProgramAddressSync(
+        [Buffer.from('pool_tick_array_bitmap_extension'), strategyState.pool.toBuffer()],
+        RAYDIUM_PROGRAM_ID
+      );
+
+      ixn.keys.push({ pubkey: poolTickArrayBitmap, isSigner: false, isWritable: true });
+    }
+
     return ixn;
   };
 
