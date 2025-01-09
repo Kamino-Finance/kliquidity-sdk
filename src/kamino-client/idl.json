@@ -6246,17 +6246,6 @@
           }
         ]
       }
-    },
-    {
-      "name": "ScopeConversionChain",
-      "type": {
-        "kind": "alias",
-        "value": {
-          "vec": {
-            "defined": "ScopePriceId"
-          }
-        }
-      }
     }
   ],
   "errors": [
