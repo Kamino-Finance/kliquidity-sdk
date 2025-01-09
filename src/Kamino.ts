@@ -4213,12 +4213,15 @@ export class Kamino {
       }
     }
 
-    const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from('pool_tick_array_bitmap_extension'), strategyState.pool.toBuffer()],
-      RAYDIUM_PROGRAM_ID
-    );
+    if (strategyState.strategyDex.toNumber() == dexToNumber('RAYDIUM')) {
+      const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = PublicKey.findProgramAddressSync(
+        [Buffer.from('pool_tick_array_bitmap_extension'), strategyState.pool.toBuffer()],
+        RAYDIUM_PROGRAM_ID
+      );
 
-    ixn.keys.push({ pubkey: poolTickArrayBitmap, isSigner: false, isWritable: true });
+      ixn.keys.push({ pubkey: poolTickArrayBitmap, isSigner: false, isWritable: true });
+    }
+
     return ixn;
   };
 
