@@ -181,6 +181,7 @@ import {
 import { AmmConfig, PersonalPositionState, PoolState } from './raydium_client';
 import { PROGRAM_ID as RAYDIUM_PROGRAM_ID, setRaydiumProgramId } from './raydium_client/programId';
 import {
+  findProgramAddress,
   getPdaProtocolPositionAddress,
   i32ToBytes,
   LiquidityMath,
@@ -4211,6 +4212,13 @@ export class Kamino {
         ixn.keys.push({ pubkey: tokenProgram, isSigner: false, isWritable: false });
       }
     }
+
+    const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from('pool_tick_array_bitmap_extension'), strategyState.pool.toBuffer()],
+      RAYDIUM_PROGRAM_ID
+    );
+
+    ixn.keys.push({ pubkey: poolTickArrayBitmap, isSigner: false, isWritable: true });
     return ixn;
   };
 
