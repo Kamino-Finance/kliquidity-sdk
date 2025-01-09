@@ -181,7 +181,6 @@ import {
 import { AmmConfig, PersonalPositionState, PoolState } from './raydium_client';
 import { PROGRAM_ID as RAYDIUM_PROGRAM_ID, setRaydiumProgramId } from './raydium_client/programId';
 import {
-  findProgramAddress,
   getPdaProtocolPositionAddress,
   i32ToBytes,
   LiquidityMath,
