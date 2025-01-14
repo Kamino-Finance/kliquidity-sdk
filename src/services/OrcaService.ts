@@ -25,28 +25,22 @@ import {
 import { WHIRLPOOL_PROGRAM_ID } from '../whirlpools-client/programId';
 import { CollateralInfo } from '../kamino-client/types';
 import { KaminoPrices } from '../models';
-import { PROGRAM_ID } from '../kamino-client/programId';
 
 export class OrcaService {
   private readonly _connection: Connection;
-  private readonly _cluster: SolanaCluster;
+  private readonly _whirilpoolProgramId: PublicKey;
   private readonly _orcaNetwork: OrcaNetwork;
   private readonly _orcaApiUrl: string;
-  private readonly _globalConfig: PublicKey;
-  private readonly _kaminoProgramId: PublicKey;
 
-  constructor(
-    connection: Connection,
-    cluster: SolanaCluster,
-    globalConfig: PublicKey,
-    kaminoProgramId: PublicKey = PROGRAM_ID
-  ) {
+  constructor(connection: Connection, cluster: SolanaCluster, whirlpoolProgramId: PublicKey = WHIRLPOOL_PROGRAM_ID) {
     this._connection = connection;
-    this._cluster = cluster;
-    this._globalConfig = globalConfig;
+    this._whirilpoolProgramId = whirlpoolProgramId;
     this._orcaNetwork = cluster === 'mainnet-beta' ? OrcaNetwork.MAINNET : OrcaNetwork.DEVNET;
     this._orcaApiUrl = `https://api.${cluster === 'mainnet-beta' ? 'mainnet' : 'devnet'}.orca.so`;
-    this._kaminoProgramId = kaminoProgramId;
+  }
+
+  getWhirlpoolProgramId(): PublicKey {
+    return this._whirilpoolProgramId;
   }
 
   async getOrcaWhirlpools() {
