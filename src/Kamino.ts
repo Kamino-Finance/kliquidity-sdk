@@ -64,7 +64,7 @@ import {
   TotalStrategyVaultTokens,
   TreasuryFeeVault,
 } from './models';
-import { PROGRAM_ID_CLI as WHIRLPOOL_PROGRAM_ID, setWhirlpoolsProgramId } from './whirlpools-client/programId';
+import { setWhirlpoolsProgramId } from './whirlpools-client/programId';
 import { OraclePrices, Scope } from '@kamino-finance/scope-sdk';
 import {
   batchFetch,
@@ -179,7 +179,7 @@ import {
   StrategyStatusKind,
 } from './kamino-client/types';
 import { AmmConfig, PersonalPositionState, PoolState } from './raydium_client';
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID, setRaydiumProgramId } from './raydium_client/programId';
+import { setRaydiumProgramId } from './raydium_client/programId';
 import {
   getPdaProtocolPositionAddress,
   i32ToBytes,
@@ -330,7 +330,7 @@ import {
 } from './rebalance_methods/autodriftRebalance';
 import { KaminoPrices, OraclePricesAndCollateralInfos } from './models';
 import { getRemoveLiquidityQuote } from './whirlpools-client/shim/remove-liquidity';
-import { METEORA_PROGRAM_ID, setMeteoraProgramId } from './meteora_client/programId';
+import { setMeteoraProgramId } from './meteora_client/programId';
 import { computeMeteoraFee, MeteoraPool, MeteoraService } from './services/MeteoraService';
 import {
   binIdToBinArrayIndex,
@@ -401,19 +401,17 @@ export class Kamino {
       setWhirlpoolsProgramId(whirlpoolProgramId);
     }
 
-    if (cluster === 'localnet') {
-      if (raydiumProgramId) {
-        setRaydiumProgramId(raydiumProgramId);
-      }
+    if (raydiumProgramId) {
+      setRaydiumProgramId(raydiumProgramId);
     }
 
     if (meteoraProgramId) {
       setMeteoraProgramId(meteoraProgramId);
     }
 
-    this._orcaService = new OrcaService(connection, cluster, this._globalConfig, this._kaminoProgramId);
-    this._raydiumService = new RaydiumService(connection, cluster);
-    this._meteoraService = new MeteoraService(connection, this._globalConfig);
+    this._orcaService = new OrcaService(connection, cluster, whirlpoolProgramId);
+    this._raydiumService = new RaydiumService(connection, raydiumProgramId);
+    this._meteoraService = new MeteoraService(connection, meteoraProgramId);
   }
 
   getConnection = () => this._connection;
@@ -2551,7 +2549,10 @@ export class Kamino {
     }
 
     if (dex.toNumber() == dexToNumber('METEORA')) {
-      const [key, _] = PublicKey.findProgramAddressSync([Buffer.from('__event_authority')], METEORA_PROGRAM_ID);
+      const [key, _] = PublicKey.findProgramAddressSync(
+        [Buffer.from('__event_authority')],
+        this._meteoraService.getMeteoraProgramId()
+      );
       return key;
     }
     throw new Error('Invalid dex');
@@ -4111,7 +4112,7 @@ export class Kamino {
       strategyState.tokenBMint
     );
 
-    let programId = WHIRLPOOL_PROGRAM_ID;
+    let programId = this._orcaService.getWhirlpoolProgramId();
 
     let poolRewardVault0 = PublicKey.default;
     let poolRewardVault1 = PublicKey.default;
@@ -4132,7 +4133,7 @@ export class Kamino {
       rewardMint1 = whirlpool.rewardInfos[1].mint;
       rewardMint2 = whirlpool.rewardInfos[2].mint;
     } else if (strategyState.strategyDex.toNumber() == dexToNumber('RAYDIUM')) {
-      programId = RAYDIUM_PROGRAM_ID;
+      programId = this._raydiumService.getRaydiumProgramId();
 
       const poolState = await PoolState.fetch(this._connection, strategyState.pool);
       if (!poolState) {
@@ -4145,7 +4146,7 @@ export class Kamino {
       rewardMint1 = poolState.rewardInfos[1].tokenMint;
       rewardMint2 = poolState.rewardInfos[2].tokenMint;
     } else if (strategyState.strategyDex.toNumber() == dexToNumber('METEORA')) {
-      programId = METEORA_PROGRAM_ID;
+      programId = this._meteoraService.getMeteoraProgramId();
 
       const poolState = await LbPair.fetch(this._connection, strategyState.pool);
       if (!poolState) {
@@ -4215,7 +4216,7 @@ export class Kamino {
     if (strategyState.strategyDex.toNumber() == dexToNumber('RAYDIUM')) {
       const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = PublicKey.findProgramAddressSync(
         [Buffer.from('pool_tick_array_bitmap_extension'), strategyState.pool.toBuffer()],
-        RAYDIUM_PROGRAM_ID
+        this._raydiumService.getRaydiumProgramId()
       );
 
       ixn.keys.push({ pubkey: poolTickArrayBitmap, isSigner: false, isWritable: true });
@@ -4231,7 +4232,7 @@ export class Kamino {
   getMetadataProgramAddressesOrca = (positionMint: PublicKey): MetadataProgramAddressesOrca => {
     const [position, positionBump] = PublicKey.findProgramAddressSync(
       [Buffer.from('position'), positionMint.toBuffer()],
-      WHIRLPOOL_PROGRAM_ID
+      this._orcaService.getWhirlpoolProgramId()
     );
 
     const [positionMetadata, positionMetadataBump] = PublicKey.findProgramAddressSync(
@@ -4254,7 +4255,7 @@ export class Kamino {
     tickUpperIndex: number
   ): MetadataProgramAddressesRaydium => {
     const { publicKey: protocolPosition, nonce: protocolPositionBump } = getPdaProtocolPositionAddress(
-      RAYDIUM_PROGRAM_ID,
+      this._raydiumService.getRaydiumProgramId(),
       pool,
       tickLowerIndex,
       tickUpperIndex
@@ -4262,7 +4263,7 @@ export class Kamino {
 
     const [position, positionBump] = PublicKey.findProgramAddressSync(
       [Buffer.from('position'), positionMint.toBuffer()],
-      RAYDIUM_PROGRAM_ID
+      this._raydiumService.getRaydiumProgramId()
     );
 
     const [positionMetadata, positionMetadataBump] = PublicKey.findProgramAddressSync(
@@ -4291,11 +4292,11 @@ export class Kamino {
 
     const [lowerTickPubkey, lowerTickBump] = PublicKey.findProgramAddressSync(
       [Buffer.from('tick_array'), whirlpool.toBuffer(), Buffer.from(startTickIndex.toString())],
-      WHIRLPOOL_PROGRAM_ID
+      this._orcaService.getWhirlpoolProgramId()
     );
     const [upperTickPubkey, upperTickBump] = PublicKey.findProgramAddressSync(
       [Buffer.from('tick_array'), whirlpool.toBuffer(), Buffer.from(endTickIndex.toString())],
-      WHIRLPOOL_PROGRAM_ID
+      this._orcaService.getWhirlpoolProgramId()
     );
     return {
       lowerTick: lowerTickPubkey,
@@ -4316,11 +4317,11 @@ export class Kamino {
 
     const [lowerTickPubkey, lowerTickBump] = PublicKey.findProgramAddressSync(
       [Buffer.from('tick_array'), pool.toBuffer(), i32ToBytes(startTickIndex)],
-      RAYDIUM_PROGRAM_ID
+      this._raydiumService.getRaydiumProgramId()
     );
     const [upperTickPubkey, upperTickBump] = PublicKey.findProgramAddressSync(
       [Buffer.from('tick_array'), pool.toBuffer(), i32ToBytes(endTickIndex)],
-      RAYDIUM_PROGRAM_ID
+      this._raydiumService.getRaydiumProgramId()
     );
     return {
       lowerTick: lowerTickPubkey,
@@ -4385,7 +4386,7 @@ export class Kamino {
     pool: PublicKey,
     tickLowerIndex: number
   ): LowerAndUpperTickPubkeys => {
-    const meteoraProgramId = METEORA_PROGRAM_ID;
+    const meteoraProgramId = this._meteoraService.getMeteoraProgramId();
 
     const lowerBinArrayIndex = binIdToBinArrayIndex(new BN(tickLowerIndex));
     const [lowerTick, lowerTickBump] = deriveBinArray(pool, lowerBinArrayIndex, meteoraProgramId);
@@ -4599,7 +4600,7 @@ export class Kamino {
       tokenProgram: TOKEN_PROGRAM_ID,
       tokenProgram2022: TOKEN_2022_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      poolProgram: WHIRLPOOL_PROGRAM_ID,
+      poolProgram: this._orcaService.getWhirlpoolProgramId(),
       oldPositionOrBaseVaultAuthority: isRebalancing ? oldPositionOrBaseVaultAuthority : baseVaultAuthority,
       oldPositionMintOrBaseVaultAuthority: isRebalancing ? oldPositionMintOrBaseVaultAuthority : positionMint,
       oldPositionTokenAccountOrBaseVaultAuthority: isRebalancing
@@ -4729,7 +4730,7 @@ export class Kamino {
       tokenProgram: TOKEN_PROGRAM_ID,
       tokenProgram2022: TOKEN_2022_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      poolProgram: RAYDIUM_PROGRAM_ID,
+      poolProgram: this._raydiumService.getRaydiumProgramId(),
       oldPositionOrBaseVaultAuthority: isRebalancing ? oldPositionOrBaseVaultAuthority : baseVaultAuthority,
       oldPositionMintOrBaseVaultAuthority: isRebalancing ? oldPositionMintOrBaseVaultAuthority : positionMint,
       oldPositionTokenAccountOrBaseVaultAuthority: isRebalancing
@@ -4754,7 +4755,7 @@ export class Kamino {
     };
     const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = PublicKey.findProgramAddressSync(
       [Buffer.from('pool_tick_array_bitmap_extension'), pool.toBuffer()],
-      RAYDIUM_PROGRAM_ID
+      this._raydiumService.getRaydiumProgramId()
     );
 
     const ix = openLiquidityPosition(args, accounts);
@@ -4869,7 +4870,7 @@ export class Kamino {
       tokenProgram: TOKEN_PROGRAM_ID,
       tokenProgram2022: TOKEN_2022_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      poolProgram: WHIRLPOOL_PROGRAM_ID,
+      poolProgram: this._orcaService.getWhirlpoolProgramId(),
       oldPositionOrBaseVaultAuthority: isRebalancing ? oldPositionOrBaseVaultAuthority : baseVaultAuthority,
       oldPositionMintOrBaseVaultAuthority: isRebalancing ? oldPositionMintOrBaseVaultAuthority : positionMint,
       oldPositionTokenAccountOrBaseVaultAuthority: isRebalancing
@@ -6881,7 +6882,7 @@ export class Kamino {
       return [new Decimal(0), new Decimal(0)];
     }
     // Given A in ATA, calc how much A and B
-    const accessor = new OrcaDAL(whirlpoolConfig, WHIRLPOOL_PROGRAM_ID, this._connection);
+    const accessor = new OrcaDAL(whirlpoolConfig, this._orcaService.getWhirlpoolProgramId(), this._connection);
     const orcaPosition = new OrcaPosition(accessor);
     const defaultSlippagePercentage = Percentage.fromFraction(1, 1000); // 0.1%
 
@@ -7018,7 +7019,11 @@ export class Kamino {
       return [tokenAAmount, tokenBAmount];
     } else {
       const binArrayIndex = binIdToBinArrayIndex(new BN(poolState.activeId));
-      const [binArrayPk] = deriveBinArray(strategyState.pool, binArrayIndex, METEORA_PROGRAM_ID);
+      const [binArrayPk] = deriveBinArray(
+        strategyState.pool,
+        binArrayIndex,
+        this._meteoraService.getMeteoraProgramId()
+      );
       const binArray = await BinArray.fetch(this._connection, binArrayPk);
       if (!binArray) {
         throw new Error(`bin array ${binArrayPk.toString()} is not found`);
@@ -7567,7 +7572,11 @@ export class Kamino {
     const tickIndex = getNextValidTickIndex(priceToTickIndex(price, decimalsA, decimalsB), whilrpoolState.tickSpacing);
     const startTickIndex = getStartTickIndex(tickIndex, whilrpoolState.tickSpacing);
 
-    const [startTickIndexPk, _startTickIndexBump] = getTickArray(WHIRLPOOL_PROGRAM_ID, poolAddress, startTickIndex);
+    const [startTickIndexPk, _startTickIndexBump] = getTickArray(
+      this._orcaService.getWhirlpoolProgramId(),
+      poolAddress,
+      startTickIndex
+    );
     const tick = await TickArray.fetch(this._connection, startTickIndexPk);
     // initialize tick if it doesn't exist
     if (!tick) {
@@ -7603,7 +7612,11 @@ export class Kamino {
     const binArray = getBinIdFromPriceWithDecimals(price, poolState.binStep, true, decimalsA, decimalsB);
     const binArrayIndex = binIdToBinArrayIndex(new BN(binArray));
 
-    const [startTickIndexPk, _startTickIndexBump] = deriveBinArray(poolAddress, binArrayIndex, METEORA_PROGRAM_ID);
+    const [startTickIndexPk, _startTickIndexBump] = deriveBinArray(
+      poolAddress,
+      binArrayIndex,
+      this._meteoraService.getMeteoraProgramId()
+    );
     const tick = await TickArray.fetch(this._connection, startTickIndexPk);
     // initialize tick if it doesn't exist
     if (!tick) {

@@ -1,5 +1,4 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { SolanaCluster } from '@hubbleprotocol/hubble-config';
 import {
   LiquidityDistribution as RaydiumLiquidityDistribuion,
   Pool,
@@ -25,11 +24,15 @@ import { priceToTickIndexWithRounding } from '../utils/raydium';
 
 export class RaydiumService {
   private readonly _connection: Connection;
-  private readonly _cluster: SolanaCluster;
+  private readonly _raydiumProgramId: PublicKey;
 
-  constructor(connection: Connection, cluster: SolanaCluster) {
+  constructor(connection: Connection, raydiumProgramId: PublicKey = RAYDIUM_PROGRAM_ID) {
+    this._raydiumProgramId = raydiumProgramId;
     this._connection = connection;
-    this._cluster = cluster;
+  }
+
+  getRaydiumProgramId(): PublicKey {
+    return this._raydiumProgramId;
   }
 
   async getRaydiumWhirlpools(): Promise<RaydiumPoolsResponse> {
@@ -307,7 +310,7 @@ export class RaydiumService {
   }
 
   async getPositionsCountByPool(pool: PublicKey): Promise<number> {
-    const positions = await this._connection.getProgramAccounts(RAYDIUM_PROGRAM_ID, {
+    const positions = await this._connection.getProgramAccounts(this._raydiumProgramId, {
       commitment: 'confirmed',
       filters: [
         { dataSize: PositionInfoLayout.span },
