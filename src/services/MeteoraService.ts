@@ -22,11 +22,15 @@ export interface MeteoraPool {
 
 export class MeteoraService {
   private readonly _connection: Connection;
-  private readonly _globalConfig: PublicKey;
+  private readonly _meteoraProgramId: PublicKey;
 
-  constructor(connection: Connection, globalConfig: PublicKey) {
+  constructor(connection: Connection, meteoraProgramId: PublicKey = METEORA_PROGRAM_ID) {
     this._connection = connection;
-    this._globalConfig = globalConfig;
+    this._meteoraProgramId = meteoraProgramId;
+  }
+
+  getMeteoraProgramId(): PublicKey {
+    return this._meteoraProgramId;
   }
 
   async getPool(poolAddress: PublicKey): Promise<LbPair | null> {

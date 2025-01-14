@@ -1104,7 +1104,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium pool liquidity distribution', async () => {
-    const raydiumService = new RaydiumService(connection, cluster);
+    const raydiumService = new RaydiumService(connection);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       new PublicKey('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv')
     );
@@ -1113,7 +1113,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium pool liquidity distribution with range', async () => {
-    const raydiumService = new RaydiumService(connection, cluster);
+    const raydiumService = new RaydiumService(connection);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       new PublicKey('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv'),
       true,
@@ -1125,7 +1125,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium pool liquidity distribution with range inverse order', async () => {
-    const raydiumService = new RaydiumService(connection, cluster);
+    const raydiumService = new RaydiumService(connection);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       new PublicKey('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv'),
       false,
@@ -1137,7 +1137,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium positions for live pool', async () => {
-    const raydiumService = new RaydiumService(connection, cluster);
+    const raydiumService = new RaydiumService(connection);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       new PublicKey('61R1ndXxvsWXXkWSyNkCxnzwd3zUNB8Q2ibmkiLPC8ht')
     );
@@ -1146,7 +1146,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get orca pool liquidity distribution', async () => {
-    const orcaService = new OrcaService(connection, cluster, GlobalConfigMainnet);
+    const orcaService = new OrcaService(connection, cluster);
     const liquidityDistribution = await orcaService.getWhirlpoolLiquidityDistribution(
       new PublicKey('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );
@@ -1155,7 +1155,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get orca positions for pool', async () => {
-    const orcaService = new OrcaService(connection, cluster, GlobalConfigMainnet);
+    const orcaService = new OrcaService(connection, cluster);
     const positionsCount = await orcaService.getPositionsCountByPool(
       new PublicKey('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );
@@ -1164,7 +1164,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   });
 
   it.skip('get raydium positions for pool', async () => {
-    const raydiumService = new RaydiumService(connection, cluster);
+    const raydiumService = new RaydiumService(connection);
     const positionsCount = await raydiumService.getPositionsCountByPool(
       new PublicKey('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv')
     );
