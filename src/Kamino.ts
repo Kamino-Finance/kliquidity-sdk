@@ -2330,7 +2330,7 @@ export class Kamino {
     if (positionPk.equals(PublicKey.default)) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
-    const position = await Position.fetch(this._connection, positionPk);
+    const position = await Position.fetch(this._connection, positionPk, this._orcaService.getWhirlpoolProgramId());
     if (!position) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
@@ -2350,7 +2350,11 @@ export class Kamino {
     if (positionPk.equals(PublicKey.default)) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
-    const position = await PersonalPositionState.fetch(this._connection, positionPk);
+    const position = await PersonalPositionState.fetch(
+      this._connection,
+      positionPk,
+      this._raydiumService.getRaydiumProgramId()
+    );
     if (!position) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
@@ -2379,7 +2383,7 @@ export class Kamino {
     if (positionPk.equals(PublicKey.default)) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
-    const position = await PositionV2.fetch(this._connection, positionPk);
+    const position = await PositionV2.fetch(this._connection, positionPk, this._meteoraService.getMeteoraProgramId());
     if (!position) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
@@ -2429,7 +2433,9 @@ export class Kamino {
       whirlpoolMap.set(whirlpools[0], whirlpool);
       return whirlpoolMap;
     }
-    const fetched = await batchFetch(uniqueWhirlpools, (chunk) => Whirlpool.fetchMultiple(this._connection, chunk));
+    const fetched = await batchFetch(uniqueWhirlpools, (chunk) =>
+      Whirlpool.fetchMultiple(this._connection, chunk, this._orcaService.getWhirlpoolProgramId())
+    );
     fetched.reduce((map: Record<string, Whirlpool | null>, whirlpool, i) => {
       whirlpoolMap.set(uniqueWhirlpools[i], whirlpool);
       map[uniqueWhirlpools[i].toBase58()] = whirlpool;
@@ -2444,7 +2450,9 @@ export class Kamino {
    */
   getOrcaPositions = async (positions: PublicKey[]): Promise<(Position | null)[]> => {
     const nonDefaults = positions.filter((value) => value.toBase58() !== PublicKey.default.toBase58());
-    const fetched = await batchFetch(nonDefaults, (chunk) => Position.fetchMultiple(this._connection, chunk));
+    const fetched = await batchFetch(nonDefaults, (chunk) =>
+      Position.fetchMultiple(this._connection, chunk, this._orcaService.getWhirlpoolProgramId())
+    );
     const fetchedMap: Record<string, Position | null> = fetched.reduce(
       (map: Record<string, Position | null>, position, i) => {
         map[nonDefaults[i].toBase58()] = position;
@@ -2462,7 +2470,7 @@ export class Kamino {
   getRaydiumPositions = async (positions: PublicKey[]): Promise<(PersonalPositionState | null)[]> => {
     const nonDefaults = positions.filter((value) => value.toBase58() !== PublicKey.default.toBase58());
     const fetched = await batchFetch(nonDefaults, (chunk) =>
-      PersonalPositionState.fetchMultiple(this._connection, chunk)
+      PersonalPositionState.fetchMultiple(this._connection, chunk, this._raydiumService.getRaydiumProgramId())
     );
     const fetchedMap: Record<string, PersonalPositionState | null> = fetched.reduce(
       (map: Record<string, PersonalPositionState | null>, position, i) => {
@@ -2476,7 +2484,9 @@ export class Kamino {
 
   getMeteoraPositions = async (positions: PublicKey[]): Promise<(PositionV2 | null)[]> => {
     const nonDefaults = positions.filter((value) => !value.equals(PublicKey.default));
-    const fetched = await batchFetch(nonDefaults, (chunk) => PositionV2.fetchMultiple(this._connection, chunk));
+    const fetched = await batchFetch(nonDefaults, (chunk) =>
+      PositionV2.fetchMultiple(this._connection, chunk, this._meteoraService.getMeteoraProgramId())
+    );
     const fetchedMap: Record<string, PositionV2 | null> = fetched.reduce(
       (map: Record<string, PositionV2 | null>, position, i) => {
         map[nonDefaults[i].toBase58()] = position;
@@ -2491,7 +2501,8 @@ export class Kamino {
    * Get whirlpool from public key
    * @param whirlpool pubkey of the orca whirlpool
    */
-  getWhirlpoolByAddress = (whirlpool: PublicKey) => Whirlpool.fetch(this._connection, whirlpool);
+  getWhirlpoolByAddress = (whirlpool: PublicKey) =>
+    Whirlpool.fetch(this._connection, whirlpool, this._orcaService.getWhirlpoolProgramId());
 
   /**
    * Get a list of Raydium pools from public keys
@@ -2507,7 +2518,9 @@ export class Kamino {
       const pool = await this.getRaydiumPoolByAddress(pools[0]);
       poolsMap.set(pools[0], pool);
     }
-    const fetched = await batchFetch(uniquePools, (chunk) => PoolState.fetchMultiple(this._connection, chunk));
+    const fetched = await batchFetch(uniquePools, (chunk) =>
+      PoolState.fetchMultiple(this._connection, chunk, this._raydiumService.getRaydiumProgramId())
+    );
     fetched.reduce((map, whirlpool, i) => {
       poolsMap.set(uniquePools[i], whirlpool);
       return map;
@@ -2525,7 +2538,9 @@ export class Kamino {
       const pool = await this.getMeteoraPoolByAddress(pools[0]);
       poolsMap.set(pools[0], pool);
     }
-    const fetched = await batchFetch(uniquePools, (chunk) => LbPair.fetchMultiple(this._connection, chunk));
+    const fetched = await batchFetch(uniquePools, (chunk) =>
+      LbPair.fetchMultiple(this._connection, chunk, this._meteoraService.getMeteoraProgramId())
+    );
     fetched.reduce((map, whirlpool, i) => {
       poolsMap.set(uniquePools[i], whirlpool);
       return map;
@@ -2533,15 +2548,18 @@ export class Kamino {
     return poolsMap;
   };
 
-  getRaydiumAmmConfig = (config: PublicKey) => AmmConfig.fetch(this._connection, config);
+  getRaydiumAmmConfig = (config: PublicKey) =>
+    AmmConfig.fetch(this._connection, config, this._raydiumService.getRaydiumProgramId());
 
   /**
    * Get Raydium pool from public key
    * @param pool pubkey of the orca whirlpool
    */
-  getRaydiumPoolByAddress = (pool: PublicKey) => PoolState.fetch(this._connection, pool);
+  getRaydiumPoolByAddress = (pool: PublicKey) =>
+    PoolState.fetch(this._connection, pool, this._raydiumService.getRaydiumProgramId());
 
-  getMeteoraPoolByAddress = (pool: PublicKey) => LbPair.fetch(this._connection, pool);
+  getMeteoraPoolByAddress = (pool: PublicKey) =>
+    LbPair.fetch(this._connection, pool, this._raydiumService.getRaydiumProgramId());
 
   getEventAuthorityPDA = (dex: BN): PublicKey => {
     if (dex.toNumber() == dexToNumber('ORCA') || dex.toNumber() == dexToNumber('RAYDIUM')) {
@@ -2644,7 +2662,11 @@ export class Kamino {
     //  add rewards vaults accounts to withdraw
     const isRaydium = strategyState.strategy.strategyDex.toNumber() == dexToNumber('RAYDIUM');
     if (isRaydium) {
-      const raydiumPosition = await PersonalPositionState.fetch(this._connection, strategyState.strategy.position);
+      const raydiumPosition = await PersonalPositionState.fetch(
+        this._connection,
+        strategyState.strategy.position,
+        this._raydiumService.getRaydiumProgramId()
+      );
       if (!raydiumPosition) {
         throw new Error('Position is not found');
       }
@@ -2871,7 +2893,11 @@ export class Kamino {
   getAllDepositAccounts = async (strategy: PublicKey | StrategyWithAddress, owner: PublicKey): Promise<PublicKey[]> => {
     const strategyState = await this.getStrategyStateIfNotFetched(strategy);
 
-    const globalConfig = await GlobalConfig.fetch(this._connection, strategyState.strategy.globalConfig);
+    const globalConfig = await GlobalConfig.fetch(
+      this._connection,
+      strategyState.strategy.globalConfig,
+      this._kaminoProgram.programId
+    );
     if (!globalConfig) {
       throw Error(`Could not fetch global config with pubkey ${strategyState.strategy.globalConfig.toString()}`);
     }
@@ -3752,21 +3778,25 @@ export class Kamino {
     let tokenAMint = PublicKey.default;
     let tokenBMint = PublicKey.default;
     if (dex == 'ORCA') {
-      const whirlpoolState = await Whirlpool.fetch(this._connection, pool);
+      const whirlpoolState = await Whirlpool.fetch(this._connection, pool, this._orcaService.getWhirlpoolProgramId());
       if (!whirlpoolState) {
         throw Error(`Could not fetch whirlpool state with pubkey ${pool.toString()}`);
       }
       tokenAMint = whirlpoolState.tokenMintA;
       tokenBMint = whirlpoolState.tokenMintB;
     } else if (dex == 'RAYDIUM') {
-      const raydiumPoolState = await PoolState.fetch(this._connection, pool);
+      const raydiumPoolState = await PoolState.fetch(
+        this._connection,
+        pool,
+        this._raydiumService.getRaydiumProgramId()
+      );
       if (!raydiumPoolState) {
         throw Error(`Could not fetch Raydium pool state with pubkey ${pool.toString()}`);
       }
       tokenAMint = raydiumPoolState.tokenMint0;
       tokenBMint = raydiumPoolState.tokenMint1;
     } else if (dex == 'METEORA') {
-      const meteoraPoolState = await LbPair.fetch(this._connection, pool);
+      const meteoraPoolState = await LbPair.fetch(this._connection, pool, this._meteoraService.getMeteoraProgramId());
       if (!meteoraPoolState) {
         throw Error(`Could not fetch Meteora pool state with pubkey ${pool.toString()}`);
       }
@@ -4120,8 +4150,12 @@ export class Kamino {
     let rewardMint0 = PublicKey.default;
     let rewardMint1 = PublicKey.default;
     let rewardMint2 = PublicKey.default;
-    if (strategyState.strategyDex.toNumber() == dexToNumber('ORCA')) {
-      const whirlpool = await Whirlpool.fetch(this._connection, strategyState.pool);
+    if (strategyState.strategyDex.toNumber() === dexToNumber('ORCA')) {
+      const whirlpool = await Whirlpool.fetch(
+        this._connection,
+        strategyState.pool,
+        this._orcaService.getWhirlpoolProgramId()
+      );
       if (!whirlpool) {
         throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
       }
@@ -4132,10 +4166,14 @@ export class Kamino {
       rewardMint0 = whirlpool.rewardInfos[0].mint;
       rewardMint1 = whirlpool.rewardInfos[1].mint;
       rewardMint2 = whirlpool.rewardInfos[2].mint;
-    } else if (strategyState.strategyDex.toNumber() == dexToNumber('RAYDIUM')) {
+    } else if (strategyState.strategyDex.toNumber() === dexToNumber('RAYDIUM')) {
       programId = this._raydiumService.getRaydiumProgramId();
 
-      const poolState = await PoolState.fetch(this._connection, strategyState.pool);
+      const poolState = await PoolState.fetch(
+        this._connection,
+        strategyState.pool,
+        this._raydiumService.getRaydiumProgramId()
+      );
       if (!poolState) {
         throw Error(`Could not fetch Raydium pool state with pubkey ${strategyState.pool.toString()}`);
       }
@@ -4148,7 +4186,11 @@ export class Kamino {
     } else if (strategyState.strategyDex.toNumber() == dexToNumber('METEORA')) {
       programId = this._meteoraService.getMeteoraProgramId();
 
-      const poolState = await LbPair.fetch(this._connection, strategyState.pool);
+      const poolState = await LbPair.fetch(
+        this._connection,
+        strategyState.pool,
+        this._meteoraService.getMeteoraProgramId()
+      );
       if (!poolState) {
         throw Error(`Could not fetch Meteora pool state with pubkey ${strategyState.pool.toString()}`);
       }
@@ -4332,8 +4374,8 @@ export class Kamino {
   };
 
   private readMeteoraPosition = async (poolPk: PublicKey, positionPk: PublicKey): Promise<MeteoraPosition> => {
-    const pool = await LbPair.fetch(this._connection, poolPk);
-    const position = await PositionV2.fetch(this._connection, positionPk);
+    const pool = await LbPair.fetch(this._connection, poolPk, this._meteoraService.getMeteoraProgramId());
+    const position = await PositionV2.fetch(this._connection, positionPk, this._meteoraService.getMeteoraProgramId());
     if (!pool || !position) {
       return {
         publicKey: positionPk,
@@ -4346,8 +4388,16 @@ export class Kamino {
       poolPk,
       position.lowerBinId
     );
-    const lowerBinArray = await BinArray.fetch(this._connection, lowerTickPk);
-    const upperBinArray = await BinArray.fetch(this._connection, upperTickPk);
+    const lowerBinArray = await BinArray.fetch(
+      this._connection,
+      lowerTickPk,
+      this._meteoraService.getMeteoraProgramId()
+    );
+    const upperBinArray = await BinArray.fetch(
+      this._connection,
+      upperTickPk,
+      this._meteoraService.getMeteoraProgramId()
+    );
     if (!lowerBinArray || !upperBinArray) {
       return {
         publicKey: positionPk,
@@ -4544,7 +4594,7 @@ export class Kamino {
     eventAuthority: PublicKey,
     status: StrategyStatusKind = new Uninitialized()
   ): Promise<TransactionInstruction> => {
-    const whirlpool = await Whirlpool.fetch(this._connection, pool);
+    const whirlpool = await Whirlpool.fetch(this._connection, pool, this._orcaService.getWhirlpoolProgramId());
     if (!whirlpool) {
       throw Error(`Could not fetch whirlpool state with pubkey ${pool.toString()}`);
     }
@@ -4664,7 +4714,7 @@ export class Kamino {
     strategyReward1Vault?: PublicKey,
     strategyReward2Vault?: PublicKey
   ): Promise<TransactionInstruction> => {
-    const poolState = await PoolState.fetch(this._connection, pool);
+    const poolState = await PoolState.fetch(this._connection, pool, this._raydiumService.getRaydiumProgramId());
     if (!poolState) {
       throw Error(`Could not fetch Raydium pool state with pubkey ${pool.toString()}`);
     }
@@ -4822,7 +4872,7 @@ export class Kamino {
     eventAuthority: PublicKey,
     status: StrategyStatusKind = new Uninitialized()
   ): Promise<TransactionInstruction> => {
-    const lbPair = await LbPair.fetch(this._connection, pool);
+    const lbPair = await LbPair.fetch(this._connection, pool, this._meteoraService.getMeteoraProgramId());
     if (!lbPair) {
       throw Error(`Could not fetch meteora lbpair state with pubkey ${pool.toString()}`);
     }
@@ -5324,7 +5374,7 @@ export class Kamino {
     let tokenMintB: PublicKey;
     let tickSpacing: number;
     if (dex == 'ORCA') {
-      const whirlpoolState = await Whirlpool.fetch(this._connection, pool);
+      const whirlpoolState = await Whirlpool.fetch(this._connection, pool, this._orcaService.getWhirlpoolProgramId());
       if (!whirlpoolState) {
         throw Error(`Could not fetch whirlpool state with pubkey ${pool.toString()}`);
       }
@@ -5332,7 +5382,11 @@ export class Kamino {
       tokenMintB = whirlpoolState.tokenMintB;
       tickSpacing = whirlpoolState.tickSpacing;
     } else if (dex == 'RAYDIUM') {
-      const raydiumPoolState = await PoolState.fetch(this._connection, pool);
+      const raydiumPoolState = await PoolState.fetch(
+        this._connection,
+        pool,
+        this._raydiumService.getRaydiumProgramId()
+      );
       if (!raydiumPoolState) {
         throw Error(`Could not fetch Raydium pool state with pubkey ${pool.toString()}`);
       }
@@ -5340,7 +5394,7 @@ export class Kamino {
       tokenMintB = raydiumPoolState.tokenMint1;
       tickSpacing = raydiumPoolState.tickSpacing;
     } else if (dex == 'METEORA') {
-      const meteoraPoolState = await LbPair.fetch(this._connection, pool);
+      const meteoraPoolState = await LbPair.fetch(this._connection, pool, this._meteoraService.getMeteoraProgramId());
       if (!meteoraPoolState) {
         throw Error(`Could not fetch Meteora pool state with pubkey ${pool.toString()}`);
       }
@@ -5605,19 +5659,23 @@ export class Kamino {
 
   async getPoolTickSpacing(dex: Dex, pool: PublicKey): Promise<number> {
     if (dex == 'ORCA') {
-      const whirlpoolState = await Whirlpool.fetch(this._connection, pool);
+      const whirlpoolState = await Whirlpool.fetch(this._connection, pool, this._orcaService.getWhirlpoolProgramId());
       if (!whirlpoolState) {
         throw Error(`Could not fetch whirlpool state with pubkey ${pool.toString()}`);
       }
       return whirlpoolState.tickSpacing;
     } else if (dex == 'RAYDIUM') {
-      const raydiumPoolState = await PoolState.fetch(this._connection, pool);
+      const raydiumPoolState = await PoolState.fetch(
+        this._connection,
+        pool,
+        this._raydiumService.getRaydiumProgramId()
+      );
       if (!raydiumPoolState) {
         throw Error(`Could not fetch Raydium pool state with pubkey ${pool.toString()}`);
       }
       return raydiumPoolState.tickSpacing;
     } else if (dex == 'METEORA') {
-      const meteoraPoolState = await LbPair.fetch(this._connection, pool);
+      const meteoraPoolState = await LbPair.fetch(this._connection, pool, this._meteoraService.getMeteoraProgramId());
       if (!meteoraPoolState) {
         throw Error(`Could not fetch Meteora pool state with pubkey ${pool.toString()}`);
       }
@@ -5940,7 +5998,7 @@ export class Kamino {
   }
 
   async getRaydiumPoolPrice(pool: PublicKey): Promise<Decimal> {
-    const poolState = await PoolState.fetch(this._connection, pool);
+    const poolState = await PoolState.fetch(this._connection, pool, this._raydiumService.getRaydiumProgramId());
     if (!poolState) {
       throw new Error(`Raydium poolState ${pool.toString()} is not found`);
     }
@@ -5954,7 +6012,7 @@ export class Kamino {
   }
 
   async getMeteoraPoolPrice(pool: PublicKey): Promise<Decimal> {
-    const poolState = await LbPair.fetch(this._connection, pool);
+    const poolState = await LbPair.fetch(this._connection, pool, this._meteoraService.getMeteoraProgramId());
     if (!poolState) {
       throw new Error(`Meteora poolState ${pool.toString()} is not found`);
     }
@@ -6673,7 +6731,7 @@ export class Kamino {
     const tokenAAmountToDeposit = new Decimal(100.0);
 
     if (dex == 'RAYDIUM') {
-      const poolState = await PoolState.fetch(this._connection, pool);
+      const poolState = await PoolState.fetch(this._connection, pool, this._raydiumService.getRaydiumProgramId());
       if (!poolState) {
         throw new Error(`Raydium poolState ${pool.toString()} is not found`);
       }
@@ -6692,7 +6750,7 @@ export class Kamino {
       const amountBDecimal = new Decimal(amountB.toString());
       return [lamportsToNumberDecimal(amountADecimal, decimalsA), lamportsToNumberDecimal(amountBDecimal, decimalsB)];
     } else if (dex == 'ORCA') {
-      const whirlpoolState = await Whirlpool.fetch(this._connection, pool);
+      const whirlpoolState = await Whirlpool.fetch(this._connection, pool, this._orcaService.getWhirlpoolProgramId());
       if (!whirlpoolState) {
         throw new Error(`Raydium poolState ${pool.toString()} is not found`);
       }
@@ -6728,7 +6786,7 @@ export class Kamino {
         lamportsToNumberDecimal(addLiqResult.estTokenB.toNumber(), decimalsB),
       ];
     } else if (dex == 'METEORA') {
-      const poolState = await LbPair.fetch(this._connection, pool);
+      const poolState = await LbPair.fetch(this._connection, pool, this._meteoraService.getMeteoraProgramId());
       if (!poolState) {
         throw new Error(`Meteora poolState ${pool.toString()} is not found`);
       }
@@ -6841,7 +6899,11 @@ export class Kamino {
     const isRaydium = dexToNumber('RAYDIUM') === dex;
     const isMeteora = dexToNumber('METEORA') === dex;
     if (isOrca) {
-      const whirlpool = await Whirlpool.fetch(this._connection, strategyState.pool);
+      const whirlpool = await Whirlpool.fetch(
+        this._connection,
+        strategyState.pool,
+        this._orcaService.getWhirlpoolProgramId()
+      );
       if (!whirlpool) {
         throw new Error(`Unable to get Orca whirlpool for pubkey ${strategyState.pool}`);
       }
@@ -6937,8 +6999,16 @@ export class Kamino {
       return [new Decimal(0), new Decimal(0)];
     }
 
-    const poolState = await PoolState.fetch(this._connection, strategyState.pool);
-    const position = await PersonalPositionState.fetch(this._connection, strategyState.position);
+    const poolState = await PoolState.fetch(
+      this._connection,
+      strategyState.pool,
+      this._raydiumService.getRaydiumProgramId()
+    );
+    const position = await PersonalPositionState.fetch(
+      this._connection,
+      strategyState.position,
+      this._raydiumService.getRaydiumProgramId()
+    );
 
     if (!position) {
       throw new Error(`position ${strategyState.position.toString()} is not found`);
@@ -7008,7 +7078,11 @@ export class Kamino {
       return [new Decimal(0), new Decimal(0)];
     }
 
-    const poolState = await LbPair.fetch(this._connection, strategyState.pool);
+    const poolState = await LbPair.fetch(
+      this._connection,
+      strategyState.pool,
+      this._meteoraService.getMeteoraProgramId()
+    );
     if (!poolState) {
       throw new Error(`poolState ${strategyState.pool.toString()} is not found`);
     }
@@ -7024,7 +7098,7 @@ export class Kamino {
         binArrayIndex,
         this._meteoraService.getMeteoraProgramId()
       );
-      const binArray = await BinArray.fetch(this._connection, binArrayPk);
+      const binArray = await BinArray.fetch(this._connection, binArrayPk, this._meteoraService.getMeteoraProgramId());
       if (!binArray) {
         throw new Error(`bin array ${binArrayPk.toString()} is not found`);
       }
@@ -7165,12 +7239,20 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const whirlpool = await Whirlpool.fetch(this._connection, strategyState.pool);
+    const whirlpool = await Whirlpool.fetch(
+      this._connection,
+      strategyState.pool,
+      this._orcaService.getWhirlpoolProgramId()
+    );
     if (!whirlpool) {
       throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    const position = await Position.fetch(this._connection, strategyState.position);
+    const position = await Position.fetch(
+      this._connection,
+      strategyState.position,
+      this._orcaService.getWhirlpoolProgramId()
+    );
     if (!position) {
       throw new Error(`Whirlpool position ${strategyState.position} does not exist`);
     }
@@ -7197,8 +7279,16 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const poolStatePromise = LbPair.fetch(this._connection, strategyState.pool);
-    const positionPromise = PositionV2.fetch(this._connection, strategyState.position);
+    const poolStatePromise = LbPair.fetch(
+      this._connection,
+      strategyState.pool,
+      this._meteoraService.getMeteoraProgramId()
+    );
+    const positionPromise = PositionV2.fetch(
+      this._connection,
+      strategyState.position,
+      this._meteoraService.getMeteoraProgramId()
+    );
 
     const [poolState, _position] = await Promise.all([poolStatePromise, positionPromise]);
     if (!poolState) {
@@ -7213,9 +7303,10 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const poolStatePromise = await LbPair.fetch(this._connection, strategyState.pool);
-    const positionPromise = await PositionV2.fetch(this._connection, strategyState.position);
-    const [poolState, _position] = await Promise.all([poolStatePromise, positionPromise]);
+    const [poolState, _position] = await Promise.all([
+      LbPair.fetch(this._connection, strategyState.pool, this._meteoraService.getMeteoraProgramId()),
+      PositionV2.fetch(this._connection, strategyState.position, this._meteoraService.getMeteoraProgramId()),
+    ]);
 
     if (!poolState) {
       throw Error(`Could not fetch lb pair state with pubkey ${strategyState.pool.toString()}`);
@@ -7230,12 +7321,20 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> => {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const whirlpool = await Whirlpool.fetch(this._connection, strategyState.pool);
+    const whirlpool = await Whirlpool.fetch(
+      this._connection,
+      strategyState.pool,
+      this._orcaService.getWhirlpoolProgramId()
+    );
     if (!whirlpool) {
       throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    const position = await Position.fetch(this._connection, strategyState.position);
+    const position = await Position.fetch(
+      this._connection,
+      strategyState.position,
+      this._orcaService.getWhirlpoolProgramId()
+    );
     if (!position) {
       throw new Error(`Whirlpool position ${strategyState.position} does not exist`);
     }
@@ -7263,8 +7362,16 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> => {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const poolState = await PoolState.fetch(this._connection, strategyState.pool);
-    const positionState = await PersonalPositionState.fetch(this._connection, strategyState.position);
+    const poolState = await PoolState.fetch(
+      this._connection,
+      strategyState.pool,
+      this._raydiumService.getRaydiumProgramId()
+    );
+    const positionState = await PersonalPositionState.fetch(
+      this._connection,
+      strategyState.position,
+      this._raydiumService.getRaydiumProgramId()
+    );
 
     if (!positionState) {
       throw new Error(`Raydium position ${strategyState.position.toString()} could not be found.`);
@@ -7296,8 +7403,16 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> => {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const poolState = await PoolState.fetch(this._connection, strategyState.pool);
-    const positionState = await PersonalPositionState.fetch(this._connection, strategyState.position);
+    const poolState = await PoolState.fetch(
+      this._connection,
+      strategyState.pool,
+      this._raydiumService.getRaydiumProgramId()
+    );
+    const positionState = await PersonalPositionState.fetch(
+      this._connection,
+      strategyState.position,
+      this._raydiumService.getRaydiumProgramId()
+    );
 
     if (!positionState) {
       throw new Error(`Raydium position ${strategyState.position.toString()} could not be found.`);
@@ -7435,7 +7550,11 @@ export class Kamino {
     const collateralInfos = await this.getCollateralInfo(globalConfig.tokenInfos);
     const result: [TransactionInstruction, Keypair][] = [];
     if (strategyState.strategyDex.toNumber() == dexToNumber('ORCA')) {
-      const whirlpool = await Whirlpool.fetch(this._connection, strategyState.pool);
+      const whirlpool = await Whirlpool.fetch(
+        this._connection,
+        strategyState.pool,
+        this._orcaService.getWhirlpoolProgramId()
+      );
       if (!whirlpool) {
         throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
       }
@@ -7473,7 +7592,11 @@ export class Kamino {
       }
       return result;
     } else if (strategyState.strategyDex.toNumber() == dexToNumber('RAYDIUM')) {
-      const poolState = await PoolState.fetch(this._connection, strategyState.pool);
+      const poolState = await PoolState.fetch(
+        this._connection,
+        strategyState.pool,
+        this._raydiumService.getRaydiumProgramId()
+      );
       if (!poolState) {
         throw new Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
       }
@@ -7511,7 +7634,11 @@ export class Kamino {
       }
       return result;
     } else if (strategyState.strategyDex.toNumber() == dexToNumber('METEORA')) {
-      const poolState = await LbPair.fetch(this._connection, strategyState.pool);
+      const poolState = await LbPair.fetch(
+        this._connection,
+        strategyState.pool,
+        this._meteoraService.getMeteoraProgramId()
+      );
       if (!poolState) {
         throw new Error(`Could not fetch meteora state with pubkey ${strategyState.pool.toString()}`);
       }
@@ -7577,7 +7704,7 @@ export class Kamino {
       poolAddress,
       startTickIndex
     );
-    const tick = await TickArray.fetch(this._connection, startTickIndexPk);
+    const tick = await TickArray.fetch(this._connection, startTickIndexPk, this._orcaService.getWhirlpoolProgramId());
     // initialize tick if it doesn't exist
     if (!tick) {
       const initTickArrayArgs: InitializeTickArrayArgs = {
@@ -7617,7 +7744,7 @@ export class Kamino {
       binArrayIndex,
       this._meteoraService.getMeteoraProgramId()
     );
-    const tick = await TickArray.fetch(this._connection, startTickIndexPk);
+    const tick = await TickArray.fetch(this._connection, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
     // initialize tick if it doesn't exist
     if (!tick) {
       const initTickArrayArgs: InitializeBinArrayArgs = {
