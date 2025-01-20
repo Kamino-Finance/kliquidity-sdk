@@ -1,6 +1,6 @@
 {
   "name": "@kamino-finance/kliquidity-sdk",
-  "version": "7.0.2",
+  "version": "7.0.3",
   "description": "Typescript SDK for interacting with the Kamino Liquidity (kliquidity) protocol",
   "repository": {
     "type": "git",
