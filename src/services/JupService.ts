@@ -125,7 +125,7 @@ export class JupService {
       params.vsAmount = 100;
     }
 
-    const res = await axios.get('https://quote-api.jup.ag/v6/price', { params });
+    const res = await axios.get('https://api.jup.ag/price/v2', { params });
     return res.data.data[inputMint.toString()].price;
   };
 
