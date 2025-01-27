@@ -2559,7 +2559,7 @@ export class Kamino {
     PoolState.fetch(this._connection, pool, this._raydiumService.getRaydiumProgramId());
 
   getMeteoraPoolByAddress = (pool: PublicKey) =>
-    LbPair.fetch(this._connection, pool, this._raydiumService.getRaydiumProgramId());
+    LbPair.fetch(this._connection, pool, this._meteoraService.getMeteoraProgramId());
 
   getEventAuthorityPDA = (dex: BN): PublicKey => {
     if (dex.toNumber() == dexToNumber('ORCA') || dex.toNumber() == dexToNumber('RAYDIUM')) {
