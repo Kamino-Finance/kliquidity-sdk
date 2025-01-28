@@ -4,6 +4,9 @@ import axios from 'axios';
 import Decimal from 'decimal.js';
 import { DeserializedVersionedTransaction } from '../utils';
 import { QuoteResponse, SwapInstructionsResponse, SwapResponse, createJupiterApiClient } from '@jup-ag/api';
+import { PubkeyHashMap } from '../utils/pubkey';
+
+const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
 export type SwapTransactionsResponse = {
   setupTransaction: string | undefined;
@@ -129,8 +132,42 @@ export class JupService {
     return res.data.data[inputMint.toString()].price;
   };
 
+  static getPrices = async (
+    inputMints: (PublicKey | string)[],
+    outputMint: PublicKey | string
+  ): Promise<PubkeyHashMap<PublicKey, Decimal>> => {
+    let mintsCommaSeparated = inputMints.map((mint) => mint.toString()).join(',');
+    console.log(mintsCommaSeparated);
+    const params = {
+      ids: mintsCommaSeparated,
+      vsToken: outputMint.toString(),
+      vsAmount: 1,
+    };
+
+    // BONK token
+    if (outputMint.toString() === 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263') {
+      params.vsAmount = 100;
+    }
+
+    const res = await axios.get('https://api.jup.ag/price/v2', { params });
+    const prices: PubkeyHashMap<PublicKey, Decimal> = new PubkeyHashMap();
+    for (let mint of inputMints) {
+      try {
+        prices.set(new PublicKey(mint), new Decimal(res.data.data[mint.toString()].price));
+      } catch (e) {
+        console.log('Error getting price for mint', mint);
+        prices.set(new PublicKey(mint), new Decimal(0));
+      }
+    }
+
+    return prices;
+  };
+
+  static getDollarPrices(inputMints: (PublicKey | string)[]): Promise<PubkeyHashMap<PublicKey, Decimal>> {
+    return this.getPrices(inputMints, USDC_MINT);
+  }
+
   static getDollarPrice = async (inputMint: PublicKey | string): Promise<number> => {
-    const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
     return this.getPrice(inputMint, USDC_MINT);
   };
 

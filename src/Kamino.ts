@@ -439,6 +439,12 @@ export class Kamino {
     return this.getCollateralInfo(config.tokenInfos);
   };
 
+  getDisabledTokensPrices = async (collateralInfos?: CollateralInfo[]) => {
+    const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
+    const disabledTokens = collInfos.filter((x) => x.disabled && !x.mint.equals(PublicKey.default));
+    return JupService.getDollarPrices(disabledTokens.map((x) => x.mint));
+  };
+
   getSupportedDexes = (): Dex[] => ['ORCA', 'RAYDIUM', 'METEORA'];
 
   // todo: see if we can read this dynamically
@@ -1411,6 +1417,13 @@ export class Kamino {
 
     const inactiveStrategies = strategiesWithAddresses.filter((x) => x.strategy.position.equals(PublicKey.default));
     const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
+    const disabledTokens: PublicKey[] = [];
+    for (const collInfo of collInfos) {
+      if (collInfo.disabled && !collInfo.mint.equals(PublicKey.default)) {
+        disabledTokens.push(collInfo.mint);
+      }
+    }
+    const disabledTokensPrices = await JupService.getDollarPrices(disabledTokens);
     for (const { strategy, address } of inactiveStrategies) {
       const strategyPrices = await this.getStrategyPrices(
         strategy,
@@ -1536,9 +1549,10 @@ export class Kamino {
     pool: PoolState,
     position: PersonalPositionState,
     collateralInfos: CollateralInfo[],
-    prices?: OraclePrices
+    prices?: OraclePrices,
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyBalances> => {
-    const strategyPrices = await this.getStrategyPrices(strategy, collateralInfos, prices);
+    const strategyPrices = await this.getStrategyPrices(strategy, collateralInfos, prices, disabledTokensPrices);
     const rebalanceKind = numberToRebalanceType(strategy.rebalanceType);
     const tokenHoldings = this.getRaydiumTokensBalances(strategy, pool, position);
 
@@ -1608,9 +1622,10 @@ export class Kamino {
     pool: LbPair,
     position: PositionV2 | undefined, // the undefined is for scenarios where the position is not initialised yet
     collateralInfos: CollateralInfo[],
-    prices?: OraclePrices
+    prices?: OraclePrices,
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyBalances> => {
-    const strategyPricesPromise = this.getStrategyPrices(strategy, collateralInfos, prices);
+    const strategyPricesPromise = this.getStrategyPrices(strategy, collateralInfos, prices, disabledTokensPrices);
     const rebalanceKind = numberToRebalanceType(strategy.rebalanceType);
     const tokenHoldingsPromise = this.getMeteoraTokensBalances(strategy);
     const [strategyPrices, tokenHoldings] = await Promise.all([strategyPricesPromise, tokenHoldingsPromise]);
@@ -1746,9 +1761,10 @@ export class Kamino {
     position: Position,
     collateralInfos: CollateralInfo[],
     prices?: OraclePrices,
-    mode: 'DEPOSIT' | 'WITHDRAW' = 'WITHDRAW'
+    mode: 'DEPOSIT' | 'WITHDRAW' = 'WITHDRAW',
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyBalances> => {
-    const strategyPrices = await this.getStrategyPrices(strategy, collateralInfos, prices);
+    const strategyPrices = await this.getStrategyPrices(strategy, collateralInfos, prices, disabledTokensPrices);
     const rebalanceKind = numberToRebalanceType(strategy.rebalanceType);
 
     const tokenHoldings = this.getOrcaTokensBalances(strategy, pool, position, mode);
@@ -1892,15 +1908,21 @@ export class Kamino {
 
   private getStrategyBalances = async (
     strategy: WhirlpoolStrategy,
-    scopePrices?: OraclePrices
+    scopePrices?: OraclePrices,
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyBalances> => {
     const collateralInfos = await this.getCollateralInfos();
+    let disabledPrices = disabledTokensPrices;
+    if (!disabledPrices) {
+      disabledPrices = await this.getDisabledTokensPrices(collateralInfos);
+    }
+
     if (strategy.strategyDex.toNumber() == dexToNumber('ORCA')) {
-      return this.getStrategyBalancesOrca(strategy, collateralInfos, scopePrices);
+      return this.getStrategyBalancesOrca(strategy, collateralInfos, scopePrices, disabledPrices);
     } else if (strategy.strategyDex.toNumber() == dexToNumber('RAYDIUM')) {
-      return this.getStrategyBalancesRaydium(strategy, collateralInfos, scopePrices);
+      return this.getStrategyBalancesRaydium(strategy, collateralInfos, scopePrices, disabledPrices);
     } else if (strategy.strategyDex.toNumber() == dexToNumber('METEORA')) {
-      return this.getStrategyBalancesMeteora(strategy, collateralInfos, scopePrices);
+      return this.getStrategyBalancesMeteora(strategy, collateralInfos, scopePrices, disabledPrices);
     } else {
       throw new Error(`Invalid dex ${strategy.strategyDex.toString()}`);
     }
@@ -1989,7 +2011,8 @@ export class Kamino {
   private getStrategyBalancesOrca = async (
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    scopePrices?: OraclePrices
+    scopePrices?: OraclePrices,
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyBalances> => {
     const [whirlpoolAcc, positionAcc] = await this.getConnection().getMultipleAccountsInfo([
       strategy.pool,
@@ -2006,13 +2029,22 @@ export class Kamino {
       Position.decode(positionAcc.data),
     ]);
 
-    return this.getOrcaBalances(strategy, whirlpool, position, collateralInfos, scopePrices);
+    return this.getOrcaBalances(
+      strategy,
+      whirlpool,
+      position,
+      collateralInfos,
+      scopePrices,
+      undefined,
+      disabledTokensPrices
+    );
   };
 
   private getStrategyBalancesRaydium = async (
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    scopePrices?: OraclePrices
+    scopePrices?: OraclePrices,
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyBalances> => {
     const [poolStateAcc, positionAcc] = await this.getConnection().getMultipleAccountsInfo([
       strategy.pool,
@@ -2029,13 +2061,14 @@ export class Kamino {
       PersonalPositionState.decode(positionAcc.data),
     ]);
 
-    return this.getRaydiumBalances(strategy, poolState, position, collateralInfos, scopePrices);
+    return this.getRaydiumBalances(strategy, poolState, position, collateralInfos, scopePrices, disabledTokensPrices);
   };
 
   private getStrategyBalancesMeteora = async (
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    scopePrices?: OraclePrices
+    scopePrices?: OraclePrices,
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyBalances> => {
     const [poolStateAcc, positionAcc] = await this.getConnection().getMultipleAccountsInfo([
       strategy.pool,
@@ -2108,6 +2141,8 @@ export class Kamino {
     // todo: make MintToPriceMap have Pubkey as key
     const spotPrices: MintToPriceMap = {};
     const twaps: MintToPriceMap = {};
+
+    const disabledTokens: PublicKey[] = [];
     ({ oraclePrices, collateralInfos } = await this.getOraclePricesAndCollateralInfos(oraclePrices, collateralInfos));
     for (const collateralInfo of collateralInfos) {
       if (
@@ -2131,17 +2166,30 @@ export class Kamino {
           };
         }
       } else {
-        try {
-          const jupPrice = JupService.getDollarPrice(collateralInfo.mint);
-          spotPrices[collateralInfo.mint.toString()] = {
-            price: new Decimal(await jupPrice),
-            name: getTokenNameFromCollateralInfo(collateralInfo),
-          };
-        } catch (e) {
-          console.error(`Could not get JUP price for ${collateralInfo.mint.toString()}`);
+        if (collateralInfo.mint.equals(PublicKey.default)) {
+          continue;
         }
+        disabledTokens.push(collateralInfo.mint);
       }
     }
+
+    try {
+      const tokensPrices = await JupService.getDollarPrices(disabledTokens);
+      for (const [token, price] of tokensPrices) {
+        const collInfo = collateralInfos.find((x) => x.mint.equals(token));
+        if (!collInfo) {
+          console.log(`Could not find collateral info for token ${token.toString()}`);
+          continue;
+        }
+        spotPrices[token.toString()] = {
+          price: new Decimal(price),
+          name: getTokenNameFromCollateralInfo(collInfo),
+        };
+      }
+    } catch (e) {
+      console.error('Failed to get prices for disabled tokens from Jup', e);
+    }
+
     return { spot: spotPrices, twap: twaps };
   };
 
@@ -2167,7 +2215,8 @@ export class Kamino {
   getStrategyPrices = async (
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    scopePrices?: OraclePrices
+    scopePrices?: OraclePrices,
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyPrices> => {
     const tokenA = collateralInfos[strategy.tokenACollateralId.toNumber()];
     const tokenB = collateralInfos[strategy.tokenBCollateralId.toNumber()];
@@ -2181,12 +2230,27 @@ export class Kamino {
     } else {
       prices = await this._scope.getOraclePrices({ prices: strategy.scopePrices });
     }
+
+    const validTokens = [tokenA, tokenB, rewardToken0, rewardToken1, rewardToken2].filter(
+      (x) => x.mint.equals(PublicKey.default) === false
+    );
+    let jupPrices: PubkeyHashMap<PublicKey, Decimal> = new PubkeyHashMap();
+
+    if (!disabledTokensPrices) {
+      jupPrices = await JupService.getDollarPrices(validTokens.map((x) => x.mint));
+    }
+    const fallbackTokenAPrice = jupPrices.get(tokenA.mint) ?? new Decimal(0);
+    const fallbackTokenBPrice = jupPrices.get(tokenB.mint) ?? new Decimal(0);
+    const fallbackReward0Price = jupPrices.get(rewardToken0.mint) ?? new Decimal(0);
+    const fallbackReward1Price = jupPrices.get(rewardToken1.mint) ?? new Decimal(0);
+    const fallbackReward2Price = jupPrices.get(rewardToken2.mint) ?? new Decimal(0);
+
     const aPrice = Scope.isScopeChainValid(tokenA.scopePriceChain)
       ? (await this._scope.getPriceFromChain(tokenA.scopePriceChain, prices)).price
-      : new Decimal(await JupService.getDollarPrice(tokenA.mint));
+      : fallbackTokenAPrice;
     const bPrice = Scope.isScopeChainValid(tokenB.scopePriceChain)
       ? (await this._scope.getPriceFromChain(tokenB.scopePriceChain, prices)).price
-      : new Decimal(await JupService.getDollarPrice(tokenB.mint));
+      : fallbackTokenBPrice;
     const tokenATwap = stripTwapZeros(tokenA.scopeTwapPriceChain);
     const tokenBTwap = stripTwapZeros(tokenB.scopeTwapPriceChain);
     const aTwapPrice = Scope.isScopeChainValid(tokenATwap)
@@ -2200,19 +2264,19 @@ export class Kamino {
     if (strategy.reward0Decimals.toNumber() !== 0) {
       reward0Price = Scope.isScopeChainValid(rewardToken0.scopePriceChain)
         ? (await this._scope.getPriceFromChain(rewardToken0.scopePriceChain, prices)).price
-        : new Decimal(await JupService.getDollarPrice(rewardToken0.mint));
+        : fallbackReward0Price;
     }
     let reward1Price = null;
     if (strategy.reward1Decimals.toNumber() !== 0) {
       reward1Price = Scope.isScopeChainValid(rewardToken1.scopePriceChain)
         ? (await this._scope.getPriceFromChain(rewardToken1.scopePriceChain, prices)).price
-        : new Decimal(await JupService.getDollarPrice(rewardToken1.mint));
+        : fallbackReward1Price;
     }
     let reward2Price = null;
     if (strategy.reward2Decimals.toNumber() !== 0) {
       reward2Price = Scope.isScopeChainValid(rewardToken2.scopePriceChain)
         ? (await this._scope.getPriceFromChain(rewardToken2.scopePriceChain, prices)).price
-        : new Decimal(await JupService.getDollarPrice(rewardToken2.mint));
+        : fallbackReward2Price;
     }
 
     return {
