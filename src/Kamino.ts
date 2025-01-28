@@ -2130,6 +2130,16 @@ export class Kamino {
             name: getTokenNameFromCollateralInfo(collateralInfo),
           };
         }
+      } else {
+        try {
+          const jupPrice = JupService.getDollarPrice(collateralInfo.mint);
+          spotPrices[collateralInfo.mint.toString()] = {
+            price: new Decimal(await jupPrice),
+            name: getTokenNameFromCollateralInfo(collateralInfo),
+          };
+        } catch (e) {
+          console.error(`Could not get JUP price for ${collateralInfo.mint.toString()}`);
+        }
       }
     }
     return { spot: spotPrices, twap: twaps };
