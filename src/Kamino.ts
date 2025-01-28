@@ -1418,7 +1418,7 @@ export class Kamino {
 
     const inactiveStrategies = strategiesWithAddresses.filter((x) => x.strategy.position.equals(PublicKey.default));
     const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
-    const disabledPrices = disabledTokensPrices ? disabledTokensPrices : await this.getDisabledTokensPrices();
+    const disabledPrices = disabledTokensPrices ? disabledTokensPrices : await this.getDisabledTokensPrices(collInfos);
     for (const { strategy, address } of inactiveStrategies) {
       const strategyPrices = await this.getStrategyPrices(
         strategy,
