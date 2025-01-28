@@ -154,7 +154,6 @@ export class JupService {
       try {
         prices.set(new PublicKey(mint), new Decimal(res.data.data[mint.toString()].price));
       } catch (e) {
-        console.log('Error getting price for mint', mint);
         prices.set(new PublicKey(mint), new Decimal(0));
       }
     }

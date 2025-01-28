@@ -1448,7 +1448,8 @@ export class Kamino {
         raydiumPositions,
         this.getRaydiumBalances,
         collInfos,
-        scopePricesMap
+        scopePricesMap,
+        disabledTokensPrices
       )
     );
 
@@ -1459,7 +1460,8 @@ export class Kamino {
         orcaPositions,
         this.getOrcaBalances,
         collInfos,
-        scopePricesMap
+        scopePricesMap,
+        disabledTokensPrices
       )
     );
 
@@ -1470,7 +1472,8 @@ export class Kamino {
         meteoraPositions,
         this.getMeteoraBalances,
         collInfos,
-        scopePricesMap
+        scopePricesMap,
+        disabledTokensPrices
       )
     );
 
@@ -1506,10 +1509,12 @@ export class Kamino {
       pool: PoolT,
       position: PositionT,
       collateralInfos: CollateralInfo[],
-      prices?: OraclePrices
+      prices?: OraclePrices,
+      disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
     ) => Promise<StrategyBalances>,
     collateralInfos: CollateralInfo[],
-    prices?: Record<string, OraclePrices>
+    prices?: Record<string, OraclePrices>,
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyBalanceWithAddress>[] => {
     const fetchBalances: Promise<StrategyBalanceWithAddress>[] = [];
 
@@ -1531,7 +1536,8 @@ export class Kamino {
           pool as PoolT,
           position as PositionT,
           collateralInfos,
-          prices ? prices[strategy.scopePrices.toBase58()] : undefined
+          prices ? prices[strategy.scopePrices.toBase58()] : undefined,
+          disabledTokensPrices
         ).then((balance) => {
           return { balance, strategyWithAddress: { strategy, address } };
         })
@@ -1757,8 +1763,8 @@ export class Kamino {
     position: Position,
     collateralInfos: CollateralInfo[],
     prices?: OraclePrices,
-    mode: 'DEPOSIT' | 'WITHDRAW' = 'WITHDRAW',
-    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>,
+    mode: 'DEPOSIT' | 'WITHDRAW' = 'WITHDRAW'
   ): Promise<StrategyBalances> => {
     const strategyPrices = await this.getStrategyPrices(strategy, collateralInfos, prices, disabledTokensPrices);
     const rebalanceKind = numberToRebalanceType(strategy.rebalanceType);
@@ -2031,8 +2037,8 @@ export class Kamino {
       position,
       collateralInfos,
       scopePrices,
-      undefined,
-      disabledTokensPrices
+      disabledTokensPrices,
+      undefined
     );
   };
 
