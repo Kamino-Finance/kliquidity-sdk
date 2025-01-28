@@ -1449,7 +1449,7 @@ export class Kamino {
         this.getRaydiumBalances,
         collInfos,
         scopePricesMap,
-        disabledTokensPrices
+        disabledPrices
       )
     );
 
@@ -1461,7 +1461,7 @@ export class Kamino {
         this.getOrcaBalances,
         collInfos,
         scopePricesMap,
-        disabledTokensPrices
+        disabledPrices
       )
     );
 
@@ -1473,7 +1473,7 @@ export class Kamino {
         this.getMeteoraBalances,
         collInfos,
         scopePricesMap,
-        disabledTokensPrices
+        disabledPrices
       )
     );
 
@@ -2246,13 +2246,11 @@ export class Kamino {
       prices = await this._scope.getOraclePrices({ prices: strategy.scopePrices });
     }
 
-    const validTokens = [tokenA, tokenB, rewardToken0, rewardToken1, rewardToken2].filter(
-      (x) => x.mint.equals(PublicKey.default) === false
-    );
     let jupPrices: PubkeyHashMap<PublicKey, Decimal> = new PubkeyHashMap();
-
-    if (!disabledTokensPrices) {
-      jupPrices = await JupService.getDollarPrices(validTokens.map((x) => x.mint));
+    if (disabledTokensPrices) {
+      jupPrices = disabledTokensPrices;
+    } else {
+      jupPrices = await this.getDisabledTokensPrices(collateralInfos);
     }
     const fallbackTokenAPrice = jupPrices.get(tokenA.mint) ?? new Decimal(0);
     const fallbackTokenBPrice = jupPrices.get(tokenB.mint) ?? new Decimal(0);
