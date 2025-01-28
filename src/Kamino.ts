@@ -1448,8 +1448,7 @@ export class Kamino {
         raydiumPositions,
         this.getRaydiumBalances,
         collInfos,
-        scopePricesMap,
-        disabledPrices
+        scopePricesMap
       )
     );
 
@@ -1460,8 +1459,7 @@ export class Kamino {
         orcaPositions,
         this.getOrcaBalances,
         collInfos,
-        scopePricesMap,
-        disabledPrices
+        scopePricesMap
       )
     );
 
@@ -1472,8 +1470,7 @@ export class Kamino {
         meteoraPositions,
         this.getMeteoraBalances,
         collInfos,
-        scopePricesMap,
-        disabledPrices
+        scopePricesMap
       )
     );
 
@@ -1512,8 +1509,7 @@ export class Kamino {
       prices?: OraclePrices
     ) => Promise<StrategyBalances>,
     collateralInfos: CollateralInfo[],
-    prices?: Record<string, OraclePrices>,
-    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
+    prices?: Record<string, OraclePrices>
   ): Promise<StrategyBalanceWithAddress>[] => {
     const fetchBalances: Promise<StrategyBalanceWithAddress>[] = [];
 
@@ -2087,10 +2083,17 @@ export class Kamino {
         PositionV2.decode(positionAcc.data),
       ]);
 
-      return this.getMeteoraBalances(strategy, poolState, position, collateralInfos, scopePrices);
+      return this.getMeteoraBalances(strategy, poolState, position, collateralInfos, scopePrices, disabledTokensPrices);
     } catch (e) {
       const poolState = LbPair.decode(poolStateAcc.data);
-      return this.getMeteoraBalances(strategy, poolState, undefined, collateralInfos, scopePrices);
+      return this.getMeteoraBalances(
+        strategy,
+        poolState,
+        undefined,
+        collateralInfos,
+        scopePrices,
+        disabledTokensPrices
+      );
     }
   };
 
@@ -2137,7 +2140,11 @@ export class Kamino {
    * @param oraclePrices (optional) Scope Oracle prices
    * @param collateralInfos (optional) Kamino Collateral Infos
    */
-  getAllPrices = async (oraclePrices?: OraclePrices, collateralInfos?: CollateralInfo[]): Promise<KaminoPrices> => {
+  getAllPrices = async (
+    oraclePrices?: OraclePrices,
+    collateralInfos?: CollateralInfo[],
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
+  ): Promise<KaminoPrices> => {
     // todo: make MintToPriceMap have Pubkey as key
     const spotPrices: MintToPriceMap = {};
     const twaps: MintToPriceMap = {};
@@ -2174,7 +2181,9 @@ export class Kamino {
     }
 
     try {
-      const tokensPrices = await JupService.getDollarPrices(disabledTokens);
+      const tokensPrices = disabledTokensPrices
+        ? disabledTokensPrices
+        : await JupService.getDollarPrices(disabledTokens);
       for (const [token, price] of tokensPrices) {
         const collInfo = collateralInfos.find((x) => x.mint.equals(token));
         if (!collInfo) {

@@ -136,8 +136,7 @@ export class JupService {
     inputMints: (PublicKey | string)[],
     outputMint: PublicKey | string
   ): Promise<PubkeyHashMap<PublicKey, Decimal>> => {
-    let mintsCommaSeparated = inputMints.map((mint) => mint.toString()).join(',');
-    console.log(mintsCommaSeparated);
+    const mintsCommaSeparated = inputMints.map((mint) => mint.toString()).join(',');
     const params = {
       ids: mintsCommaSeparated,
       vsToken: outputMint.toString(),
@@ -151,7 +150,7 @@ export class JupService {
 
     const res = await axios.get('https://api.jup.ag/price/v2', { params });
     const prices: PubkeyHashMap<PublicKey, Decimal> = new PubkeyHashMap();
-    for (let mint of inputMints) {
+    for (const mint of inputMints) {
       try {
         prices.set(new PublicKey(mint), new Decimal(res.data.data[mint.toString()].price));
       } catch (e) {
