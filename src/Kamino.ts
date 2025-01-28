@@ -1368,7 +1368,8 @@ export class Kamino {
   getStrategiesShareData = async (
     strategyFilters: StrategiesFilters | PublicKey[],
     stratsWithAddresses?: StrategyWithAddress[],
-    collateralInfos?: CollateralInfo[]
+    collateralInfos?: CollateralInfo[],
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<Array<ShareDataWithAddress>> => {
     const result: Array<ShareDataWithAddress> = [];
     const strategiesWithAddresses = stratsWithAddresses
@@ -1417,18 +1418,13 @@ export class Kamino {
 
     const inactiveStrategies = strategiesWithAddresses.filter((x) => x.strategy.position.equals(PublicKey.default));
     const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
-    const disabledTokens: PublicKey[] = [];
-    for (const collInfo of collInfos) {
-      if (collInfo.disabled && !collInfo.mint.equals(PublicKey.default)) {
-        disabledTokens.push(collInfo.mint);
-      }
-    }
-    const disabledTokensPrices = await JupService.getDollarPrices(disabledTokens);
+    const disabledPrices = disabledTokensPrices ? disabledTokensPrices : await this.getDisabledTokensPrices(collInfos);
     for (const { strategy, address } of inactiveStrategies) {
       const strategyPrices = await this.getStrategyPrices(
         strategy,
         collInfos,
-        scopePricesMap[strategy.scopePrices.toBase58()]
+        scopePricesMap[strategy.scopePrices.toBase58()],
+        disabledPrices
       );
       result.push({
         address,
@@ -1452,7 +1448,8 @@ export class Kamino {
         raydiumPositions,
         this.getRaydiumBalances,
         collInfos,
-        scopePricesMap
+        scopePricesMap,
+        disabledPrices
       )
     );
 
@@ -1463,7 +1460,8 @@ export class Kamino {
         orcaPositions,
         this.getOrcaBalances,
         collInfos,
-        scopePricesMap
+        scopePricesMap,
+        disabledPrices
       )
     );
 
@@ -1474,7 +1472,8 @@ export class Kamino {
         meteoraPositions,
         this.getMeteoraBalances,
         collInfos,
-        scopePricesMap
+        scopePricesMap,
+        disabledPrices
       )
     );
 
@@ -1513,7 +1512,8 @@ export class Kamino {
       prices?: OraclePrices
     ) => Promise<StrategyBalances>,
     collateralInfos: CollateralInfo[],
-    prices?: Record<string, OraclePrices>
+    prices?: Record<string, OraclePrices>,
+    disabledTokensPrices?: PubkeyHashMap<PublicKey, Decimal>
   ): Promise<StrategyBalanceWithAddress>[] => {
     const fetchBalances: Promise<StrategyBalanceWithAddress>[] = [];
 
