@@ -51,6 +51,22 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   // const signer = Keypair.fromSecretKey(Uint8Array.from(signerPrivateKey));
   const signer = Keypair.generate();
 
+  it('read multiple prices', async () => {
+    const prices = await JupService.getPrices(
+      [
+        'So11111111111111111111111111111111111111112',
+        'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',
+        'J39SiMc21133mMNZ5K46Z4ZwFa2oQrKHBh8iujqckdxN',
+      ],
+      'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+    );
+
+    const keys = prices.keys();
+    for (const key of keys) {
+      console.log('price', key.toString(), prices.get(key));
+    }
+  });
+
   it.skip('withdraw topup vault', async () => {
     const kamino = new Kamino(
       cluster,
