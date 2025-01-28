@@ -14,6 +14,7 @@ import {
   RaydiumService,
   sendTransactionWithLogs,
   sleep,
+  StrategiesFilters,
   U64_MAX,
 } from '../src';
 import Decimal from 'decimal.js';
@@ -65,6 +66,34 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     for (const key of keys) {
       console.log('price', key.toString(), prices.get(key));
     }
+  });
+
+  it.skip('read all strat', async () => {
+    const kamino = new Kamino(
+      cluster,
+      connection,
+      GlobalConfigMainnet,
+      KaminoProgramIdMainnet,
+      WHIRLPOOL_PROGRAM_ID,
+      RAYDIUM_PROGRAM_ID
+    );
+
+    const filters: StrategiesFilters = {isCommunity: false};
+    await kamino.getStrategiesShareData(filters);
+  });
+
+  it.skip('read prices', async () => {
+    const kamino = new Kamino(
+      cluster,
+      connection,
+      GlobalConfigMainnet,
+      KaminoProgramIdMainnet,
+      WHIRLPOOL_PROGRAM_ID,
+      RAYDIUM_PROGRAM_ID
+    );
+
+    const res = await kamino.getDisabledTokensPrices();
+    console.log('res', res);
   });
 
   it.skip('withdraw topup vault', async () => {
