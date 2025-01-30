@@ -237,7 +237,7 @@ import {
   TakeProfitMethod,
 } from './utils/CreationParameters';
 import { DOLAR_BASED, PROPORTION_BASED } from './constants/deposit_method';
-import { JupService } from './services/JupService';
+import { DEFAULT_JUP_API_ENDPOINT, JupService } from './services/JupService';
 import {
   simulateManualPool,
   simulatePercentagePool,
@@ -359,6 +359,7 @@ export class Kamino {
   private readonly _orcaService: OrcaService;
   private readonly _raydiumService: RaydiumService;
   private readonly _meteoraService: MeteoraService;
+  private readonly _jupBaseAPI: string = DEFAULT_JUP_API_ENDPOINT;
 
   /**
    * Create a new instance of the Kamino SDK class.
@@ -376,7 +377,8 @@ export class Kamino {
     programId?: PublicKey,
     whirlpoolProgramId?: PublicKey,
     raydiumProgramId?: PublicKey,
-    meteoraProgramId?: PublicKey
+    meteoraProgramId?: PublicKey,
+    jupBaseAPI?: string
   ) {
     this._cluster = cluster;
     this._connection = connection;
@@ -412,6 +414,10 @@ export class Kamino {
     this._orcaService = new OrcaService(connection, cluster, whirlpoolProgramId);
     this._raydiumService = new RaydiumService(connection, raydiumProgramId);
     this._meteoraService = new MeteoraService(connection, meteoraProgramId);
+
+    if (jupBaseAPI) {
+      this._jupBaseAPI = jupBaseAPI;
+    }
   }
 
   getConnection = () => this._connection;
@@ -442,7 +448,10 @@ export class Kamino {
   getDisabledTokensPrices = async (collateralInfos?: CollateralInfo[]) => {
     const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
     const disabledTokens = collInfos.filter((x) => x.disabled && !x.mint.equals(PublicKey.default));
-    return JupService.getDollarPrices(disabledTokens.map((x) => x.mint));
+    return JupService.getDollarPrices(
+      disabledTokens.map((x) => x.mint),
+      this._jupBaseAPI
+    );
   };
 
   getSupportedDexes = (): Dex[] => ['ORCA', 'RAYDIUM', 'METEORA'];
@@ -2189,7 +2198,7 @@ export class Kamino {
     try {
       const tokensPrices = disabledTokensPrices
         ? disabledTokensPrices
-        : await JupService.getDollarPrices(disabledTokens);
+        : await JupService.getDollarPrices(disabledTokens, this._jupBaseAPI);
       for (const [token, price] of tokensPrices) {
         const collInfo = collateralInfos.find((x) => x.mint.equals(token));
         if (!collInfo) {
