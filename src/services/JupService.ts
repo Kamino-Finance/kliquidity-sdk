@@ -8,7 +8,7 @@ import { PubkeyHashMap } from '../utils/pubkey';
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-const DEFAULT_JUP_API_ENDPOINT = 'https://api.jup.ag';
+export const DEFAULT_JUP_API_ENDPOINT = 'https://api.jup.ag';
 
 export type SwapTransactionsResponse = {
   setupTransaction: string | undefined;
