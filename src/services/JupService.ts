@@ -3,10 +3,18 @@ import { SolanaCluster } from '@hubbleprotocol/hubble-config';
 import axios from 'axios';
 import Decimal from 'decimal.js';
 import { DeserializedVersionedTransaction } from '../utils';
-import { QuoteResponse, SwapInstructionsResponse, SwapResponse, createJupiterApiClient } from '@jup-ag/api';
+import {
+  ConfigurationParameters,
+  QuoteResponse,
+  SwapInstructionsResponse,
+  SwapResponse,
+  createJupiterApiClient,
+} from '@jup-ag/api';
 import { PubkeyHashMap } from '../utils/pubkey';
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+
+const DEFAULT_JUP_API_ENDPOINT = 'https://api.jup.ag';
 
 export type SwapTransactionsResponse = {
   setupTransaction: string | undefined;
@@ -71,11 +79,10 @@ export class JupService {
     slippageBps: number,
     asLegacyTransaction?: boolean,
     maxAccounts?: number,
-    onlyDirectRoutes?: boolean
+    onlyDirectRoutes?: boolean,
+    jupEndpoint?: string
   ): Promise<QuoteResponse> => {
     try {
-      const jupiterQuoteApi = createJupiterApiClient(); // config is optional
-
       const params = {
         inputMint: inputMint.toString(),
         outputMint: outputMint.toString(),
@@ -86,7 +93,9 @@ export class JupService {
         maxAccounts,
       };
 
-      return await jupiterQuoteApi.quoteGet(params);
+      const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
+      const res = await axios.get(`${baseURL}/swap/v1/quote`, { params });
+      return res.data as QuoteResponse;
     } catch (error) {
       console.log('getBestRouteQuoteV6 error', error);
       throw error;
@@ -116,7 +125,11 @@ export class JupService {
     }
   };
 
-  static getPrice = async (inputMint: PublicKey | string, outputMint: PublicKey | string): Promise<number> => {
+  static getPrice = async (
+    inputMint: PublicKey | string,
+    outputMint: PublicKey | string,
+    jupEndpoint?: string
+  ): Promise<number> => {
     const params = {
       ids: inputMint.toString(),
       vsToken: outputMint.toString(),
@@ -128,13 +141,15 @@ export class JupService {
       params.vsAmount = 100;
     }
 
-    const res = await axios.get('https://api.jup.ag/price/v2', { params });
+    const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
+    const res = await axios.get(`${baseURL}/price/v2`, { params });
     return res.data.data[inputMint.toString()].price;
   };
 
   static getPrices = async (
     inputMints: (PublicKey | string)[],
-    outputMint: PublicKey | string
+    outputMint: PublicKey | string,
+    jupEndpoint?: string
   ): Promise<PubkeyHashMap<PublicKey, Decimal>> => {
     const mintsCommaSeparated = inputMints.map((mint) => mint.toString()).join(',');
     const params = {
@@ -148,7 +163,8 @@ export class JupService {
       params.vsAmount = 100;
     }
 
-    const res = await axios.get('https://api.jup.ag/price/v2', { params });
+    const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
+    const res = await axios.get(`${baseURL}/price/v2`, { params });
     const prices: PubkeyHashMap<PublicKey, Decimal> = new PubkeyHashMap();
     for (const mint of inputMints) {
       try {
@@ -161,12 +177,15 @@ export class JupService {
     return prices;
   };
 
-  static getDollarPrices(inputMints: (PublicKey | string)[]): Promise<PubkeyHashMap<PublicKey, Decimal>> {
-    return this.getPrices(inputMints, USDC_MINT);
+  static getDollarPrices(
+    inputMints: (PublicKey | string)[],
+    jupEndpoint?: string
+  ): Promise<PubkeyHashMap<PublicKey, Decimal>> {
+    return this.getPrices(inputMints, USDC_MINT, jupEndpoint);
   }
 
-  static getDollarPrice = async (inputMint: PublicKey | string): Promise<number> => {
-    return this.getPrice(inputMint, USDC_MINT);
+  static getDollarPrice = async (inputMint: PublicKey | string, jupEndpoint?: string): Promise<number> => {
+    return this.getPrice(inputMint, USDC_MINT, jupEndpoint);
   };
 
   static buildTransactionsFromSerialized = (serializedTransactions: Array<string | undefined>): Transaction[] => {
