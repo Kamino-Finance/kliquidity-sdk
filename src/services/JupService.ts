@@ -3,13 +3,7 @@ import { SolanaCluster } from '@hubbleprotocol/hubble-config';
 import axios from 'axios';
 import Decimal from 'decimal.js';
 import { DeserializedVersionedTransaction } from '../utils';
-import {
-  ConfigurationParameters,
-  QuoteResponse,
-  SwapInstructionsResponse,
-  SwapResponse,
-  createJupiterApiClient,
-} from '@jup-ag/api';
+import { QuoteResponse, SwapInstructionsResponse, SwapResponse, createJupiterApiClient } from '@jup-ag/api';
 import { PubkeyHashMap } from '../utils/pubkey';
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
