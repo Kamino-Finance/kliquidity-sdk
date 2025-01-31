@@ -26,7 +26,6 @@ import {
   PoolUtils,
   PositionInfoLayout,
   Raydium,
-  RaydiumConstructorParams,
   RaydiumLoadParams,
   SqrtPriceMath,
   TickMath,
@@ -49,10 +48,10 @@ export class RaydiumService {
     return (await axios.get<RaydiumPoolsResponse>(`https://api.kamino.finance/v2/raydium/ammPools`)).data;
   }
   async getRaydiumPoolInfo(poolPubkey: PublicKey): Promise<ApiV3PoolInfoConcentratedItem> {
-    let raydiumLoadParams: RaydiumLoadParams = { connection: this._connection };
-    let raydium = await Raydium.load(raydiumLoadParams);
-    let rayClmm = new Clmm({ scope: raydium, moduleName: 'clmm' });
-    let otherPoolInfo = await rayClmm.getPoolInfoFromRpc(poolPubkey.toString());
+    const raydiumLoadParams: RaydiumLoadParams = { connection: this._connection };
+    const raydium = await Raydium.load(raydiumLoadParams);
+    const rayClmm = new Clmm({ scope: raydium, moduleName: 'clmm' });
+    const otherPoolInfo = await rayClmm.getPoolInfoFromRpc(poolPubkey.toString());
     return otherPoolInfo.poolInfo;
   }
 

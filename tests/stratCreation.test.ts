@@ -52,7 +52,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   // const signer = Keypair.fromSecretKey(Uint8Array.from(signerPrivateKey));
   const signer = Keypair.generate();
 
-  it('read multiple prices', async () => {
+  it.skip('read multiple prices', async () => {
     const prices = await JupService.getPrices(
       [
         'So11111111111111111111111111111111111111112',
@@ -68,6 +68,15 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
     }
   });
 
+  it.skip('get quote', async () => {
+    const solQuote = await JupService.getBestRouteQuoteV6(new Decimal(100000.0), SOLMintMainnet, USDCMintMainnet, 50);
+    console.log('solQuote', solQuote);
+
+    const testMint = new PublicKey('DVYcTNFVGxePLgK8rUjViJvurRmTnD1FZUBR7puADymT');
+    const testQuote = await JupService.getBestRouteQuoteV6(new Decimal(100.0), testMint, USDCMintMainnet, 50);
+    console.log('testQuote', testQuote);
+  });
+
   it.skip('read all strat', async () => {
     const kamino = new Kamino(
       cluster,
@@ -78,7 +87,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    const filters: StrategiesFilters = {isCommunity: false};
+    const filters: StrategiesFilters = { isCommunity: false };
     await kamino.getStrategiesShareData(filters);
   });
 
