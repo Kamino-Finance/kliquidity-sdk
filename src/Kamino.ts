@@ -119,6 +119,7 @@ import {
   getTokenNameFromCollateralInfo,
   keyOrDefault,
   getMintDecimals,
+  ZERO_BN,
 } from './utils';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -180,14 +181,6 @@ import {
 } from './kamino-client/types';
 import { AmmConfig, PersonalPositionState, PoolState } from './raydium_client';
 import { setRaydiumProgramId } from './raydium_client/programId';
-import {
-  getPdaProtocolPositionAddress,
-  i32ToBytes,
-  LiquidityMath,
-  SqrtPriceMath,
-  TickMath,
-  TickUtils,
-} from '@raydium-io/raydium-sdk';
 
 import KaminoIdl from './kamino-client/idl.json';
 import { OrcaService, RaydiumService, Whirlpool as OrcaPool, WhirlpoolAprApy } from './services';
@@ -345,6 +338,15 @@ import { BinArray, LbPair, PositionV2 } from './meteora_client/accounts';
 import LbPairWithAddress from './models/LbPairWithAddress';
 import { initializeBinArray, InitializeBinArrayAccounts, InitializeBinArrayArgs } from './meteora_client/instructions';
 import { PubkeyHashMap } from './utils/pubkey';
+import {
+  LiquidityMath,
+  SqrtPriceMath,
+  TickMath,
+  getPdaProtocolPositionAddress,
+  i32ToBytes,
+  TickUtils,
+} from '@raydium-io/raydium-sdk-v2/lib';
+
 export const KAMINO_IDL = KaminoIdl;
 
 export class Kamino {
@@ -7391,7 +7393,7 @@ export class Kamino {
       throw Error(`Could not fetch lb pair state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    return { amountSlippageA: new BN(0), amountSlippageB: new BN(0) };
+    return { amountSlippageA: ZERO_BN, amountSlippageB: ZERO_BN };
   }
 
   private async getDepositRatioFromBMeteora(
@@ -7408,7 +7410,7 @@ export class Kamino {
       throw Error(`Could not fetch lb pair state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    return { amountSlippageA: new BN(0), amountSlippageB: new BN(0) };
+    return { amountSlippageA: ZERO_BN, amountSlippageB: ZERO_BN };
   }
 
   private getDepositRatioFromBOrca = async (
