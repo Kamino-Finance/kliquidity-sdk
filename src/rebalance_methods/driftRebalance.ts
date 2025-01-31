@@ -2,11 +2,11 @@ import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
 import { Dex } from '../utils';
 import { priceToTickIndex, sqrtPriceX64ToPrice, tickIndexToPrice } from '@orca-so/whirlpool-sdk';
-import { SqrtPriceMath } from '@raydium-io/raydium-sdk';
 import { RebalanceRaw } from '../kamino-client/types';
 import { RebalanceTypeLabelName } from './consts';
 import { upsertManyRebalanceFieldInfos } from './utils';
 import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';
+import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
 
 export const DEFAULT_TICKS_BELOW_MID = new Decimal(10);
 export const DEFAULT_TICKS_ABOVE_MID = new Decimal(10);

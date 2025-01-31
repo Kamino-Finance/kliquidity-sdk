@@ -6,7 +6,6 @@ import {
 } from './RaydiumPoolsResponse';
 import { PersonalPositionState, PoolState } from '../raydium_client';
 import Decimal from 'decimal.js';
-import { AmmV3, AmmV3PoolInfo, PositionInfoLayout, TickMath, SqrtPriceMath } from '@raydium-io/raydium-sdk';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
 import { WhirlpoolStrategy } from '../kamino-client/accounts';
 import {
@@ -21,6 +20,16 @@ import axios from 'axios';
 import { FullPercentage } from '../utils/CreationParameters';
 import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../raydium_client/programId';
 import { priceToTickIndexWithRounding } from '../utils/raydium';
+import {
+  ApiV3PoolInfoConcentratedItem,
+  Clmm,
+  PoolUtils,
+  PositionInfoLayout,
+  Raydium,
+  RaydiumLoadParams,
+  SqrtPriceMath,
+  TickMath,
+} from '@raydium-io/raydium-sdk-v2/lib';
 
 export class RaydiumService {
   private readonly _connection: Connection;
@@ -37,6 +46,15 @@ export class RaydiumService {
 
   async getRaydiumWhirlpools(): Promise<RaydiumPoolsResponse> {
     return (await axios.get<RaydiumPoolsResponse>(`https://api.kamino.finance/v2/raydium/ammPools`)).data;
+  }
+  
+  async getRaydiumPoolInfo(poolPubkey: PublicKey): Promise<ApiV3PoolInfoConcentratedItem> {
+    const raydiumLoadParams: RaydiumLoadParams = { connection: this._connection };
+    const raydium = await Raydium.load(raydiumLoadParams);
+    const rayClmm = new Clmm({ scope: raydium, moduleName: '' });
+    const otherPoolInfo = await rayClmm.getPoolInfoFromRpc(poolPubkey.toString());
+    console.log('otherPoolInfo', otherPoolInfo);
+    return otherPoolInfo.poolInfo;
   }
 
   async getRaydiumPoolLiquidityDistribution(
@@ -122,16 +140,6 @@ export class RaydiumService {
       throw Error(`Could not get find Raydium amm pool ${strategy.pool} from Raydium API`);
     }
 
-    const poolInfo = (
-      await AmmV3.fetchMultiplePoolInfos({
-        connection: this._connection,
-        // @ts-ignore
-        poolKeys: [raydiumPool],
-        batchRequest: true,
-        chainTime: new Date().getTime() / 1000,
-      })
-    )[strategy.pool.toString()].state;
-
     const priceRange = getStrategyPriceRangeRaydium(
       position.tickLowerIndex,
       position.tickUpperIndex,
@@ -151,19 +159,21 @@ export class RaydiumService {
       };
     }
 
+    const raydiumPoolInfo = await this.getRaydiumPoolInfo(strategy.pool);
+    console.log('raydiumPoolInfo', raydiumPoolInfo);
     const params: {
-      poolInfo: AmmV3PoolInfo;
+      poolInfo: ApiV3PoolInfoConcentratedItem;
       aprType: 'day' | 'week' | 'month';
       positionTickLowerIndex: number;
       positionTickUpperIndex: number;
     } = {
-      poolInfo,
+      poolInfo: raydiumPoolInfo,
       aprType: 'day',
       positionTickLowerIndex: position.tickLowerIndex,
       positionTickUpperIndex: position.tickUpperIndex,
     };
 
-    const { apr, feeApr, rewardsApr } = AmmV3.estimateAprsForPriceRangeMultiplier(params);
+    const { apr, feeApr, rewardsApr } = PoolUtils.estimateAprsForPriceRangeMultiplier(params);
     const totalApr = new Decimal(apr).div(100);
     const fee = new Decimal(feeApr).div(100);
     const rewards = rewardsApr.map((reward) => new Decimal(reward).div(100));
@@ -203,16 +213,6 @@ export class RaydiumService {
       throw Error(`Could not get find Raydium amm pool ${poolPubkey.toString()} from Raydium API`);
     }
 
-    const poolInfo = (
-      await AmmV3.fetchMultiplePoolInfos({
-        connection: this._connection,
-        // @ts-ignore
-        poolKeys: [raydiumPool],
-        batchRequest: true,
-        chainTime: new Date().getTime() / 1000,
-      })
-    )[poolPubkey.toString()].state;
-
     const tickLowerIndex = TickMath.getTickWithPriceAndTickspacing(
       priceLower,
       poolState.tickSpacing,
@@ -246,8 +246,9 @@ export class RaydiumService {
       };
     }
 
+    const poolInfo = await this.getRaydiumPoolInfo(poolPubkey);
     const params: {
-      poolInfo: AmmV3PoolInfo;
+      poolInfo: ApiV3PoolInfoConcentratedItem;
       aprType: 'day' | 'week' | 'month';
       positionTickLowerIndex: number;
       positionTickUpperIndex: number;
@@ -258,7 +259,7 @@ export class RaydiumService {
       positionTickUpperIndex: tickUpperIndex,
     };
 
-    const { apr, feeApr, rewardsApr } = AmmV3.estimateAprsForPriceRangeMultiplier(params);
+    const { apr, feeApr, rewardsApr } = PoolUtils.estimateAprsForPriceRangeMultiplier(params);
     const totalApr = new Decimal(apr).div(100);
     const fee = new Decimal(feeApr).div(100);
     const rewards = rewardsApr.map((reward) => new Decimal(reward).div(100));

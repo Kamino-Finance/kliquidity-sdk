@@ -19,18 +19,20 @@ import {
   UpdateStrategyConfigArgs,
   updateStrategyConfig,
 } from '../kamino-client/instructions';
-import { SqrtPriceMath } from '@raydium-io/raydium-sdk';
 import { RebalanceFieldInfo, RebalanceFieldsDict } from './types';
 import BN from 'bn.js';
 import { PoolPriceReferenceType, TwapPriceReferenceType } from './priceReferenceTypes';
 import { sqrtPriceX64ToPrice } from '@orca-so/whirlpool-sdk';
 import { METEORA_PROGRAM_ID } from '../meteora_client/programId';
 import { U64_MAX } from '../constants/numericalValues';
+import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib/raydium/clmm/utils/math';
 
 export const DolarBasedMintingMethod = new Decimal(0);
 export const ProportionalMintingMethod = new Decimal(1);
 
 export const RebalanceParamOffset = new Decimal(256);
+
+export const ZERO_BN = new BN(0);
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
