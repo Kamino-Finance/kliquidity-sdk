@@ -52,6 +52,27 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   // const signer = Keypair.fromSecretKey(Uint8Array.from(signerPrivateKey));
   const signer = Keypair.generate();
 
+  it.skip('read raydium clmm APY', async () => {
+    const kamino = new Kamino(
+      cluster,
+      connection,
+      GlobalConfigMainnet,
+      KaminoProgramIdMainnet,
+      WHIRLPOOL_PROGRAM_ID,
+      RAYDIUM_PROGRAM_ID
+    );
+
+    const strategyState = await kamino.getStrategyByAddress(
+      new PublicKey('4TQ1DZtibQuy5ux33fcZprUmLcLoAdSNfwaUukc9kdXP')
+    );
+    const raydiumService = new RaydiumService(connection);
+    const aprApy = await raydiumService.getStrategyWhirlpoolPoolAprApy(strategyState!);
+    console.log('aprApy', aprApy);
+
+    const second = await raydiumService.getRaydiumPositionAprApy(new PublicKey('8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj'), new Decimal(180.0), new Decimal(250.0));
+    console.log('second', second);
+  });
+
   it.skip('read multiple prices', async () => {
     const prices = await JupService.getPrices(
       [

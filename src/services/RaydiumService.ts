@@ -47,11 +47,13 @@ export class RaydiumService {
   async getRaydiumWhirlpools(): Promise<RaydiumPoolsResponse> {
     return (await axios.get<RaydiumPoolsResponse>(`https://api.kamino.finance/v2/raydium/ammPools`)).data;
   }
+  
   async getRaydiumPoolInfo(poolPubkey: PublicKey): Promise<ApiV3PoolInfoConcentratedItem> {
     const raydiumLoadParams: RaydiumLoadParams = { connection: this._connection };
     const raydium = await Raydium.load(raydiumLoadParams);
-    const rayClmm = new Clmm({ scope: raydium, moduleName: 'clmm' });
+    const rayClmm = new Clmm({ scope: raydium, moduleName: '' });
     const otherPoolInfo = await rayClmm.getPoolInfoFromRpc(poolPubkey.toString());
+    console.log('otherPoolInfo', otherPoolInfo);
     return otherPoolInfo.poolInfo;
   }
 
@@ -158,6 +160,7 @@ export class RaydiumService {
     }
 
     const raydiumPoolInfo = await this.getRaydiumPoolInfo(strategy.pool);
+    console.log('raydiumPoolInfo', raydiumPoolInfo);
     const params: {
       poolInfo: ApiV3PoolInfoConcentratedItem;
       aprType: 'day' | 'week' | 'month';

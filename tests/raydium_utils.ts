@@ -4,11 +4,10 @@ import { PublicKey, Connection, SystemProgram, Transaction, Keypair } from '@sol
 import * as RaydiumInstructions from '../src/raydium_client/instructions';
 import { sendTransactionWithLogs, TOKEN_PROGRAM_ID } from '../src';
 import { accountExist, DeployedPool } from './utils';
-import { SqrtPriceMath } from '@raydium-io/raydium-sdk';
 import Decimal from 'decimal.js';
 import { PoolState } from '../src/raydium_client';
-import { i32ToBytes, TickUtils } from '@raydium-io/raydium-sdk';
 import { BN } from 'bn.js';
+import { i32ToBytes, SqrtPriceMath, TickUtils } from '@raydium-io/raydium-sdk-v2/lib';
 
 export const OBSERVATION_STATE_LEN = 52121;
 export const AMM_CONFIG_SEED = Buffer.from(anchor.utils.bytes.utf8.encode('amm_config'));

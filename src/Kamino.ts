@@ -338,8 +338,15 @@ import { BinArray, LbPair, PositionV2 } from './meteora_client/accounts';
 import LbPairWithAddress from './models/LbPairWithAddress';
 import { initializeBinArray, InitializeBinArrayAccounts, InitializeBinArrayArgs } from './meteora_client/instructions';
 import { PubkeyHashMap } from './utils/pubkey';
-import { LiquidityMath, SqrtPriceMath, TickMath } from '@raydium-io/raydium-sdk-v2/lib/raydium/clmm/utils/math';
-import { getPdaProtocolPositionAddress, i32ToBytes, TickUtils } from '@raydium-io/raydium-sdk-v2/lib';
+import {
+  LiquidityMath,
+  SqrtPriceMath,
+  TickMath,
+  getPdaProtocolPositionAddress,
+  i32ToBytes,
+  TickUtils,
+} from '@raydium-io/raydium-sdk-v2/lib';
+
 export const KAMINO_IDL = KaminoIdl;
 
 export class Kamino {
