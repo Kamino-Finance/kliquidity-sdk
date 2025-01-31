@@ -9,7 +9,6 @@ import {
   adjustForSlippage, getTokenAFromLiquidity,
   getTokenBFromLiquidity, Percentage, PositionStatus, PositionUtil, RemoveLiquidityQuote,
 } from '@orca-so/whirlpool-sdk';
-import { ZERO } from '@raydium-io/raydium-sdk';
 
 export type InternalRemoveLiquidityQuoteParam = {
   positionAddress: PublicKey;
@@ -58,9 +57,9 @@ function getRemoveLiquidityQuoteWhenPositionIsBelowRange(
   return {
     positionAddress,
     minTokenA,
-    minTokenB: ZERO,
+    minTokenB: new BN(0),
     estTokenA,
-    estTokenB: ZERO,
+    estTokenB: new BN(0),
     liquidity,
   };
 }
@@ -119,9 +118,9 @@ function getRemoveLiquidityQuoteWhenPositionIsAboveRange(
 
   return {
     positionAddress,
-    minTokenA: ZERO,
+    minTokenA: new BN(0),
     minTokenB,
-    estTokenA: ZERO,
+    estTokenA: new BN(0),
     estTokenB,
     liquidity,
   };

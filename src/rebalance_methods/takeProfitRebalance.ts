@@ -5,8 +5,8 @@ import { Dex, readBigUint128LE } from '../utils';
 import { sqrtPriceX64ToPrice } from '@orca-so/whirlpool-sdk';
 import BN from 'bn.js';
 import { RebalanceRaw } from '../kamino-client/types';
-import { SqrtPriceMath } from '@raydium-io/raydium-sdk';
 import { getPriceFromQ64Price } from '../utils/meteora';
+import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
 
 export const DEFAULT_LOWER_RANGE_PRICE_DIFF_BPS = new Decimal(500);
 export const DEFAULT_UPPER_RANGE_PRICE_DIFF_BPS = new Decimal(500);
