@@ -9,6 +9,7 @@ import {
   adjustForSlippage, getTokenAFromLiquidity,
   getTokenBFromLiquidity, Percentage, PositionStatus, PositionUtil, RemoveLiquidityQuote,
 } from '@orca-so/whirlpool-sdk';
+import { ZERO_BN } from "../../utils";
 
 export type InternalRemoveLiquidityQuoteParam = {
   positionAddress: PublicKey;
@@ -57,9 +58,9 @@ function getRemoveLiquidityQuoteWhenPositionIsBelowRange(
   return {
     positionAddress,
     minTokenA,
-    minTokenB: new BN(0),
+    minTokenB: ZERO_BN,
     estTokenA,
-    estTokenB: new BN(0),
+    estTokenB: ZERO_BN,
     liquidity,
   };
 }
@@ -118,9 +119,9 @@ function getRemoveLiquidityQuoteWhenPositionIsAboveRange(
 
   return {
     positionAddress,
-    minTokenA: new BN(0),
+    minTokenA: ZERO_BN,
     minTokenB,
-    estTokenA: new BN(0),
+    estTokenA: ZERO_BN,
     estTokenB,
     liquidity,
   };

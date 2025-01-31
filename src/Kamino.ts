@@ -119,6 +119,7 @@ import {
   getTokenNameFromCollateralInfo,
   keyOrDefault,
   getMintDecimals,
+  ZERO_BN,
 } from './utils';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -7376,7 +7377,7 @@ export class Kamino {
       throw Error(`Could not fetch lb pair state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    return { amountSlippageA: new BN(0), amountSlippageB: new BN(0) };
+    return { amountSlippageA: ZERO_BN, amountSlippageB: ZERO_BN };
   }
 
   private async getDepositRatioFromBMeteora(
@@ -7393,7 +7394,7 @@ export class Kamino {
       throw Error(`Could not fetch lb pair state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    return { amountSlippageA: new BN(0), amountSlippageB: new BN(0) };
+    return { amountSlippageA: ZERO_BN, amountSlippageB: ZERO_BN };
   }
 
   private getDepositRatioFromBOrca = async (

@@ -32,6 +32,8 @@ export const ProportionalMintingMethod = new Decimal(1);
 
 export const RebalanceParamOffset = new Decimal(256);
 
+export const ZERO_BN = new BN(0);
+
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
