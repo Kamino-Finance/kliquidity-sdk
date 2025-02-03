@@ -2207,6 +2207,10 @@ export class Kamino {
           console.log(`Could not find collateral info for token ${token.toString()}`);
           continue;
         }
+        // if there already is a spot price for this token, skip it
+        if (spotPrices[token.toString()]) {
+          continue;
+        }
         spotPrices[token.toString()] = {
           price: new Decimal(price),
           name: getTokenNameFromCollateralInfo(collInfo),
