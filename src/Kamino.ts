@@ -2808,6 +2808,12 @@ export class Kamino {
           { pubkey: poolState.rewardInfos[2].tokenMint, isSigner: false, isWritable: true },
         ]);
       }
+
+      const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = PublicKey.findProgramAddressSync(
+        [Buffer.from('pool_tick_array_bitmap_extension'), strategyState.strategy.pool.toBuffer()],
+        this._raydiumService.getRaydiumProgramId()
+      );
+      withdrawIx.keys.push({ pubkey: poolTickArrayBitmap, isSigner: false, isWritable: true });
     }
 
     const res: WithdrawShares = { prerequisiteIxs: collectFeesAndRewardsIxns, withdrawIx };
