@@ -158,14 +158,18 @@ export class JupService {
     }
 
     const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
-    const res = await axios.get(`${baseURL}/price/v2`, { params });
     const prices: PubkeyHashMap<PublicKey, Decimal> = new PubkeyHashMap();
-    for (const mint of inputMints) {
-      try {
-        prices.set(new PublicKey(mint), new Decimal(res.data.data[mint.toString()].price));
-      } catch (e) {
-        prices.set(new PublicKey(mint), new Decimal(0));
+    try {
+      const res = await axios.get(`${baseURL}/price/v2`, { params });
+      for (const mint of inputMints) {
+        try {
+          prices.set(new PublicKey(mint), new Decimal(res.data.data[mint.toString()].price));
+        } catch (e) {
+          prices.set(new PublicKey(mint), new Decimal(0));
+        }
       }
+    } catch (e) {
+      // ignore
     }
 
     return prices;
