@@ -5,7 +5,7 @@
     "lib": ["es2022"],
     "rootDir": "src",
     "outDir": "dist",
-    "typeRoots": ["node", "node_modules/@types"],
+    "typeRoots": ["node", "node_modules/@types", "node_modules/@coral-xyz/anchor/types"],
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,

@@ -1,7 +1,7 @@
-import { PublicKey } from '@solana/web3.js';
+import { Address } from '@solana/kit';
 import Decimal from 'decimal.js';
 import { StrategyBalances } from './StrategyBalances';
-import { WhirlpoolStrategy } from '../kamino-client/accounts';
+import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import PriceData from './PriceData';
 
 export type ShareData = {
@@ -11,7 +11,7 @@ export type ShareData = {
 
 export type ShareDataWithAddress = {
   shareData: ShareData;
-  address: PublicKey;
+  address: Address;
   strategy: WhirlpoolStrategy;
 };
 

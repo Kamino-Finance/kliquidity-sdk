@@ -1,33 +1,37 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { address } from '@solana/kit';
 import { Kamino, noopProfiledFunctionExecution, StrategiesFilters, ZERO } from '../src';
-import {
-  GlobalConfigMainnet,
-  KaminoProgramIdMainnet,
-  SolUsdcShadowStrategyMainnet,
-  UsdcUsdhShadowStrategyMainnet,
-} from './utils';
-import { WHIRLPOOL_PROGRAM_ID } from '../src/whirlpools-client/programId';
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../src/raydium_client/programId';
+import { GlobalConfigMainnet, SolUsdcShadowStrategyMainnet, UsdcUsdhShadowStrategyMainnet } from './runner/utils';
+import { PROGRAM_ID as KLIQUIDITY_PROGRAM_ID } from '../src/@codegen/kliquidity/programId';
+import { PROGRAM_ID as WHIRLPOOL_PROGRAM_ID } from '../src/@codegen/whirlpools/programId';
+import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programId';
 import { expect } from 'chai';
 import Decimal from 'decimal.js';
+import { initEnv } from './runner/env';
 
-describe.skip('Kamino strategy creation SDK Tests', () => {
+describe.skip('Kamino strategy creation SDK Tests', async () => {
   const cluster = 'mainnet-beta';
-  const clusterUrl: string = 'https://api.mainnet-beta.solana.com';
-  const connection = new Connection(clusterUrl, 'processed');
+  const rpcUrl: string = 'https://api.mainnet-beta.solana.com';
+  const wsUrl: string = 'wss://api.mainnet-beta.solana.com';
+  const env = await initEnv({
+    rpcUrl,
+    wsUrl,
+    kliquidityProgramId: KLIQUIDITY_PROGRAM_ID,
+    raydiumProgramId: RAYDIUM_PROGRAM_ID,
+  });
 
   it.skip('Calculate Mainnet Raydium ratio', async () => {
     const kamino = new Kamino(
       cluster,
-      connection,
+      env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
 
     const res = await kamino.calculateAmountsToBeDeposited(
-      new PublicKey('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
+      address('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
       new Decimal('19737586503'),
       new Decimal('60624622')
     );
@@ -38,30 +42,31 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   it.skip('Calculate Raydium ratios', async () => {
     const kamino = new Kamino(
       cluster,
-      connection,
+      env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
 
     console.log(
       await kamino.calculateAmountsToBeDeposited(
-        new PublicKey('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
+        address('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
         new Decimal('19737586503'),
         new Decimal('0')
       )
     );
     console.log(
       await kamino.calculateAmountsToBeDeposited(
-        new PublicKey('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
+        address('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
         new Decimal('19737586503')
       )
     );
 
     console.log(
       await kamino.calculateAmountsToBeDeposited(
-        new PublicKey('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
+        address('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
         new Decimal('0'),
         new Decimal('61127955')
       )
@@ -69,7 +74,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     console.log(
       await kamino.calculateAmountsToBeDeposited(
-        new PublicKey('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
+        address('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
         undefined,
         new Decimal('61127955')
       )
@@ -77,7 +82,7 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     console.log(
       await kamino.calculateAmountsToBeDeposited(
-        new PublicKey('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
+        address('6satrFEw7p382wkJPcS1U3AWi25YcGiJuHkt7NyJa9vi'),
         new Decimal('19737580863'),
         new Decimal('61127955')
       )
@@ -89,9 +94,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
 
     const kamino = new Kamino(
       cluster,
-      connection,
+      env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -112,9 +118,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   it('calculateAmountsToBeDepositedWithSwap for USDC-USDH pair, USDC provided only', async () => {
     const kamino = new Kamino(
       cluster,
-      connection,
+      env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -151,9 +158,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   it('calculateAmountsToBeDepositedWithSwap for USDC-USDH pair, too much USDH provided', async () => {
     const kamino = new Kamino(
       cluster,
-      connection,
+      env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -188,9 +196,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   it('calculateAmountsToBeDepositedWithSwap for SOL-USDC pair, SOL provided only', async () => {
     const kamino = new Kamino(
       cluster,
-      connection,
+      env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -208,9 +217,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   it('calculateAmountsToBeDepositedWithSwap for SOL-USDC pair, USDC provided only', async () => {
     const kamino = new Kamino(
       cluster,
-      connection,
+      env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -228,9 +238,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   it('calculateAmountsToBeDepositedWithSwap for SOL-USDC pair, Price SOL/USDC 19', async () => {
     const kamino = new Kamino(
       cluster,
-      connection,
+      env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -257,9 +268,10 @@ describe.skip('Kamino strategy creation SDK Tests', () => {
   it('calculateAmountsToBeDepositedWithSwap for SOL-USDC pair, Price SOL/USDC 185.34, deposit both tokens in low amounts', async () => {
     const kamino = new Kamino(
       cluster,
-      connection,
+      env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );

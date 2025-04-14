@@ -4,7 +4,7 @@ import { FullBPSDecimal } from '../utils/CreationParameters';
 import { Dex, readBigUint128LE } from '../utils';
 import { sqrtPriceX64ToPrice } from '@orca-so/whirlpool-sdk';
 import BN from 'bn.js';
-import { RebalanceRaw } from '../kamino-client/types';
+import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { getPriceFromQ64Price } from '../utils/meteora';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
 

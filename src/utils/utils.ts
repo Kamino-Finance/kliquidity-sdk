@@ -1,7 +1,4 @@
-import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
-import { WhirlpoolStrategy } from '../kamino-client/accounts';
-import { WHIRLPOOL_PROGRAM_ID } from '../whirlpools-client/programId';
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../raydium_client/programId';
+import { Address, IInstruction, TransactionSigner } from '@solana/kit';
 import Decimal from 'decimal.js';
 import {
   DriftDirection,
@@ -13,21 +10,22 @@ import {
   StakingRateSource,
   StakingRateSourceKind,
   StrategyConfigOptionKind,
-} from '../kamino-client/types';
+} from '../@codegen/kliquidity/types';
 import {
   UpdateStrategyConfigAccounts,
   UpdateStrategyConfigArgs,
   updateStrategyConfig,
-} from '../kamino-client/instructions';
+} from '../@codegen/kliquidity/instructions';
 import { RebalanceFieldInfo, RebalanceFieldsDict } from './types';
 import BN from 'bn.js';
 import { PoolPriceReferenceType, TwapPriceReferenceType } from './priceReferenceTypes';
 import { sqrtPriceX64ToPrice } from '@orca-so/whirlpool-sdk';
-import { METEORA_PROGRAM_ID } from '../meteora_client/programId';
 import { U64_MAX } from '../constants/numericalValues';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib/raydium/clmm/utils/math';
+import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
+import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 
-export const DolarBasedMintingMethod = new Decimal(0);
+export const DollarBasedMintingMethod = new Decimal(0);
 export const ProportionalMintingMethod = new Decimal(1);
 
 export const RebalanceParamOffset = new Decimal(256);
@@ -69,18 +67,6 @@ export function numberToReferencePriceType(num: number): ReferencePriceType {
     throw new Error(`Strategy has invalid reference price type set: ${num}`);
   }
   return referencePriceType;
-}
-
-export function getDexProgramId(strategyState: WhirlpoolStrategy): PublicKey {
-  if (strategyState.strategyDex.toNumber() == dexToNumber('ORCA')) {
-    return WHIRLPOOL_PROGRAM_ID;
-  } else if (strategyState.strategyDex.toNumber() == dexToNumber('RAYDIUM')) {
-    return RAYDIUM_PROGRAM_ID;
-  } else if (strategyState.strategyDex.toNumber() == dexToNumber('METEORA')) {
-    return METEORA_PROGRAM_ID;
-  } else {
-    throw Error(`Invalid DEX ${strategyState.strategyDex.toString()}`);
-  }
 }
 
 export function getStrategyConfigValue(value: Decimal): number[] {
@@ -206,13 +192,14 @@ export function numberToRebalanceType(rebalance_type: number): RebalanceTypeKind
 }
 
 export async function getUpdateStrategyConfigIx(
-  signer: PublicKey,
-  globalConfig: PublicKey,
-  strategy: PublicKey,
+  signer: TransactionSigner,
+  globalConfig: Address,
+  strategy: Address,
   mode: StrategyConfigOptionKind,
   amount: Decimal,
-  newAccount: PublicKey = PublicKey.default
-): Promise<TransactionInstruction> {
+  programId: Address,
+  newAccount: Address = DEFAULT_PUBLIC_KEY
+): Promise<IInstruction> {
   const args: UpdateStrategyConfigArgs = {
     mode: mode.discriminator,
     value: getStrategyConfigValue(amount),
@@ -223,10 +210,10 @@ export async function getUpdateStrategyConfigIx(
     newAccount,
     globalConfig,
     strategy,
-    systemProgram: SystemProgram.programId,
+    systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  return updateStrategyConfig(args, accounts);
+  return updateStrategyConfig(args, accounts, programId);
 }
 
 export function collToLamportsDecimal(amount: Decimal, decimals: number): Decimal {
@@ -278,8 +265,8 @@ export function rebalanceFieldsDictToInfo(rebalanceFields: RebalanceFieldsDict):
   return rebalanceFieldsInfo;
 }
 
-export function isVaultInitialized(vault: PublicKey, decimals: BN): boolean {
-  return !vault.equals(PublicKey.default) && decimals.toNumber() > 0;
+export function isVaultInitialized(vault: Address, decimals: BN): boolean {
+  return vault !== DEFAULT_PUBLIC_KEY && decimals.toNumber() > 0;
 }
 
 export function sqrtPriceToPrice(sqrtPrice: BN, dexNo: number, decimalsA: number, decimalsB: number): Decimal {
@@ -306,8 +293,8 @@ export function percentageToBPS(pct: number): number {
   return pct * 100;
 }
 
-export function keyOrDefault(key: PublicKey, defaultKey: PublicKey): PublicKey {
-  if (key.equals(PublicKey.default)) {
+export function keyOrDefault(key: Address, defaultKey: Address): Address {
+  if (key === DEFAULT_PUBLIC_KEY) {
     return defaultKey;
   }
   return key;

@@ -1,9 +1,9 @@
-import { WhirlpoolStrategy } from '../kamino-client/accounts';
-import { PublicKey } from '@solana/web3.js';
+import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
+import { Address } from '@solana/kit';
 
 export interface StrategyWithAddress {
   strategy: WhirlpoolStrategy;
-  address: PublicKey;
+  address: Address;
 }
 
 export default StrategyWithAddress;
