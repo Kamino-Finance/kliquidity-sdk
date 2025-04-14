@@ -14,7 +14,7 @@ import {
   Token,
 } from '@solana-program/token-2022';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
-import { getSetComputeUnitLimitInstruction, getSetComputeUnitPriceInstruction } from '@solana-program/compute-budget';
+import { getSetComputeUnitLimitInstruction } from '@solana-program/compute-budget';
 
 export const SOL_MINTS = [
   address('So11111111111111111111111111111111111111111'),
@@ -71,12 +71,8 @@ export function createAssociatedTokenAccountInstruction(
   );
 }
 
-export function createAddExtraComputeUnitsIx(units: number): IInstruction {
-  return getSetComputeUnitPriceInstruction({ microLamports: units });
-}
-
-export function createComputeUnitLimitIx(extraUnits: number = 400000): IInstruction {
-  return getSetComputeUnitLimitInstruction({ units: extraUnits });
+export function createComputeUnitLimitIx(units: number = 400000): IInstruction {
+  return getSetComputeUnitLimitInstruction({ units });
 }
 
 export function getStrategyPriceRangeOrca(

@@ -1,14 +1,5 @@
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../../src/@codegen/raydium/programId';
 import * as anchor from '@coral-xyz/anchor';
-import {
-  Address,
-  generateKeyPairSigner,
-  GetAccountInfoApi,
-  getAddressEncoder,
-  getProgramDerivedAddress,
-  Rpc,
-  Signature,
-} from '@solana/kit';
+import { Address, generateKeyPairSigner, getAddressEncoder, getProgramDerivedAddress, Signature } from '@solana/kit';
 import * as RaydiumInstructions from '../../src/@codegen/raydium/instructions';
 import { accountExist, DeployedPool } from './utils';
 import Decimal from 'decimal.js';
@@ -43,7 +34,7 @@ export async function initializeRaydiumPool(
   if (configAcc) {
     config = configAcc;
   } else {
-    const [configPk, _] = await getAmmConfigAddress(0, RAYDIUM_PROGRAM_ID);
+    const [configPk, _] = await getAmmConfigAddress(0, env.raydiumProgramId);
     if (!(await accountExist(env.c.rpc, configPk))) {
       await createAmmConfig(env, configPk, 0, tickSize, 100, 200, 400);
     }
@@ -62,7 +53,7 @@ export async function initializeRaydiumPool(
         newAccount: observationPk,
         lamports: await env.c.rpc.getMinimumBalanceForRentExemption(OBSERVATION_STATE_LEN).send(),
         space: OBSERVATION_STATE_LEN,
-        programAddress: RAYDIUM_PROGRAM_ID,
+        programAddress: env.raydiumProgramId,
       });
       const txHash = await sendAndConfirmTx(env.c, env.admin, [createObvIx]);
       console.log('Initialize Observer:', txHash);
@@ -75,11 +66,11 @@ export async function initializeRaydiumPool(
   tokenMintA = tokens[0];
   tokenMintB = tokens[1];
 
-  const [poolAddress, _bump1] = await getPoolAddress(config, tokenMintA, tokenMintB, RAYDIUM_PROGRAM_ID);
-  const [bitmapPk, _] = await getBitmapAddress(poolAddress, RAYDIUM_PROGRAM_ID);
+  const [poolAddress, _bump1] = await getPoolAddress(config, tokenMintA, tokenMintB, env.raydiumProgramId);
+  const [bitmapPk, _] = await getBitmapAddress(poolAddress, env.raydiumProgramId);
 
-  const [tokenAVault, _bump2] = await getPoolVaultAddress(poolAddress, tokenMintA, RAYDIUM_PROGRAM_ID);
-  const [tokenBVault, _bump3] = await getPoolVaultAddress(poolAddress, tokenMintB, RAYDIUM_PROGRAM_ID);
+  const [tokenAVault, _bump2] = await getPoolVaultAddress(poolAddress, tokenMintA, env.raydiumProgramId);
+  const [tokenBVault, _bump3] = await getPoolVaultAddress(poolAddress, tokenMintB, env.raydiumProgramId);
 
   {
     const createPoolArgs: RaydiumInstructions.CreatePoolArgs = {
@@ -102,7 +93,7 @@ export async function initializeRaydiumPool(
       tokenProgram1: TOKEN_PROGRAM_ADDRESS,
     };
 
-    const initializeTx = RaydiumInstructions.createPool(createPoolArgs, createPoolAccounts);
+    const initializeTx = RaydiumInstructions.createPool(createPoolArgs, createPoolAccounts, env.raydiumProgramId);
     const sig = await sendAndConfirmTx(env.c, env.admin, [initializeTx]);
     console.log('Initialize Raydium pool: ', sig);
   }
@@ -163,7 +154,7 @@ async function createAmmConfig(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  const initializeTx = RaydiumInstructions.createAmmConfig(initConfigArgs, initConfigAccounts);
+  const initializeTx = RaydiumInstructions.createAmmConfig(initConfigArgs, initConfigAccounts, env.raydiumProgramId);
   const sig = await sendAndConfirmTx(env.c, env.admin, [initializeTx]);
   console.log('InitializeConfig:', sig);
   return sig;
@@ -211,12 +202,12 @@ export async function getPoolVaultAddress(
 }
 
 export async function getTickArrayPubkeysFromRangeRaydium(
-  connection: Rpc<GetAccountInfoApi>,
+  env: Env,
   pool: Address,
   tickLowerIndex: number,
   tickUpperIndex: number
 ): Promise<[Address, Address]> {
-  const poolState = await PoolState.fetch(connection, pool);
+  const poolState = await PoolState.fetch(env.c.rpc, pool, env.raydiumProgramId);
   if (poolState == null) {
     throw new Error(`Error fetching ${poolState}`);
   }
@@ -226,11 +217,11 @@ export async function getTickArrayPubkeysFromRangeRaydium(
 
   const [startTickIndexPk] = await getProgramDerivedAddress({
     seeds: [Buffer.from('tick_array'), addressEncoder.encode(pool), i32ToBytes(startTickIndex)],
-    programAddress: RAYDIUM_PROGRAM_ID,
+    programAddress: env.raydiumProgramId,
   });
   const [endTickIndexPk] = await getProgramDerivedAddress({
     seeds: [Buffer.from('tick_array'), addressEncoder.encode(pool), i32ToBytes(endTickIndex)],
-    programAddress: RAYDIUM_PROGRAM_ID,
+    programAddress: env.raydiumProgramId,
   });
 
   return [startTickIndexPk, endTickIndexPk];

@@ -1,7 +1,4 @@
 import { Address, IInstruction, TransactionSigner } from '@solana/kit';
-import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
-import { PROGRAM_ID as WHIRLPOOL_PROGRAM_ID } from '../@codegen/whirlpools/programId';
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../@codegen/raydium/programId';
 import Decimal from 'decimal.js';
 import {
   DriftDirection,
@@ -23,7 +20,6 @@ import { RebalanceFieldInfo, RebalanceFieldsDict } from './types';
 import BN from 'bn.js';
 import { PoolPriceReferenceType, TwapPriceReferenceType } from './priceReferenceTypes';
 import { sqrtPriceX64ToPrice } from '@orca-so/whirlpool-sdk';
-import { PROGRAM_ID as METEORA_PROGRAM_ID } from '../@codegen/meteora/programId';
 import { U64_MAX } from '../constants/numericalValues';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib/raydium/clmm/utils/math';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
@@ -71,18 +67,6 @@ export function numberToReferencePriceType(num: number): ReferencePriceType {
     throw new Error(`Strategy has invalid reference price type set: ${num}`);
   }
   return referencePriceType;
-}
-
-export function getDexProgramId(strategyState: WhirlpoolStrategy): Address {
-  if (strategyState.strategyDex.toNumber() == dexToNumber('ORCA')) {
-    return WHIRLPOOL_PROGRAM_ID;
-  } else if (strategyState.strategyDex.toNumber() == dexToNumber('RAYDIUM')) {
-    return RAYDIUM_PROGRAM_ID;
-  } else if (strategyState.strategyDex.toNumber() == dexToNumber('METEORA')) {
-    return METEORA_PROGRAM_ID;
-  } else {
-    throw Error(`Invalid DEX ${strategyState.strategyDex.toString()}`);
-  }
 }
 
 export function getStrategyConfigValue(value: Decimal): number[] {
@@ -213,6 +197,7 @@ export async function getUpdateStrategyConfigIx(
   strategy: Address,
   mode: StrategyConfigOptionKind,
   amount: Decimal,
+  programId: Address,
   newAccount: Address = DEFAULT_PUBLIC_KEY
 ): Promise<IInstruction> {
   const args: UpdateStrategyConfigArgs = {
@@ -228,7 +213,7 @@ export async function getUpdateStrategyConfigIx(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  return updateStrategyConfig(args, accounts);
+  return updateStrategyConfig(args, accounts, programId);
 }
 
 export function collToLamportsDecimal(amount: Decimal, decimals: number): Decimal {

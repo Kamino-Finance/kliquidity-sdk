@@ -52,7 +52,6 @@ import { SYSVAR_RENT_ADDRESS } from '@solana/sysvars';
 
 export const GlobalConfigMainnet: Address = address('GKnHiWh3RRrE1zsNzWxRkomymHc374TvJPSTv2wPeYdB');
 export const GlobalConfigStaging: Address = address('7D9KE8xxqvsSsPbpTK9DbvkYaodda1wVevPvZJbLGJ71');
-export const KaminoProgramIdMainnet: Address = address('6LtLpnUFNByNXLyCoK9wA2MykKAmQNZKBdY8s47dehDc');
 export const KaminoProgramIdStaging: Address = address('SKY3EZaE5p8iXG1ed4kiandK1wnwwqxmWBhjEFykaHB');
 export const SOLMintMainnet: Address = address('So11111111111111111111111111111111111111112');
 export const USDCMintMainnet: Address = address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
@@ -104,7 +103,7 @@ export async function updateStrategyConfig(
   amount: Decimal,
   newAccount: Address = DEFAULT_PUBLIC_KEY
 ) {
-  const strategyState = await WhirlpoolStrategy.fetch(env.c.rpc, strategy);
+  const strategyState = await WhirlpoolStrategy.fetch(env.c.rpc, strategy, env.kliquidityProgramId);
   if (strategyState == null) {
     throw new Error(`strategy ${strategy} doesn't exist`);
   }
@@ -115,6 +114,7 @@ export async function updateStrategyConfig(
     strategy,
     mode,
     amount,
+    env.kliquidityProgramId,
     newAccount
   );
 
@@ -134,7 +134,7 @@ export async function updateTreasuryFeeVault(
     collateralId: collateralTokenToNumber(collateralToken),
   };
 
-  const config = await GlobalConfig.fetch(env.c.rpc, globalConfig);
+  const config = await GlobalConfig.fetch(env.c.rpc, globalConfig, env.kliquidityProgramId);
   if (!config) {
     throw new Error(`Error retrieving the config ${globalConfig.toString()}`);
   }
@@ -151,7 +151,7 @@ export async function updateTreasuryFeeVault(
     tokenProgram: TOKEN_PROGRAM_ADDRESS,
   };
 
-  const ix = Instructions.updateTreasuryFeeVault(args, accounts);
+  const ix = Instructions.updateTreasuryFeeVault(args, accounts, env.kliquidityProgramId);
   const hash = await sendAndConfirmTx(env.c, env.admin, [ix]);
   console.log('updateTreasuryFeeVault ix:', hash);
   if (!hash) {
@@ -161,16 +161,16 @@ export async function updateTreasuryFeeVault(
 }
 
 export async function getTickArrayPubkeysFromRange(
-  rpc: Rpc<GetAccountInfoApi>,
+  env: Env,
   dex: Dex,
   pool: Address,
   tickLowerIndex: number,
   tickUpperIndex: number
 ): Promise<[Address, Address]> {
   if (dex == 'ORCA') {
-    return getTickArrayPubkeysFromRangeOrca(rpc, pool, tickLowerIndex, tickUpperIndex);
+    return getTickArrayPubkeysFromRangeOrca(env.c.rpc, pool, tickLowerIndex, tickUpperIndex);
   } else if (dex == 'RAYDIUM') {
-    return getTickArrayPubkeysFromRangeRaydium(rpc, pool, tickLowerIndex, tickUpperIndex);
+    return getTickArrayPubkeysFromRangeRaydium(env, pool, tickLowerIndex, tickUpperIndex);
   } else {
     throw new Error('Invalid dex');
   }
@@ -190,7 +190,7 @@ export async function createUser(
     await sleep(1000);
   }
 
-  const whirlpoolStrategyState = await WhirlpoolStrategy.fetch(env.c.rpc, strategy);
+  const whirlpoolStrategyState = await WhirlpoolStrategy.fetch(env.c.rpc, strategy, env.kliquidityProgramId);
   if (whirlpoolStrategyState == null) {
     throw new Error(`Strategy ${strategy.toString()} does not exist`);
   }
@@ -300,7 +300,7 @@ export async function setupAta(
   const ata = await getAssociatedTokenAddress(tokenMintAddress, user.address);
   if (!(await checkIfAccountExists(connection.rpc, ata))) {
     const ix = createAtaInstruction(user, tokenMintAddress, ata);
-    const sig = sendAndConfirmTx(connection, payer, [ix]);
+    const sig = await sendAndConfirmTx(connection, payer, [ix]);
     console.log(`setup ATA=${ata} for ${tokenMintAddress} tx hash ${sig}`);
   }
   return ata;
@@ -415,7 +415,7 @@ export async function updateCollateralInfo(
 ): Promise<Signature> {
   console.log('Mode ', mode.discriminator);
   console.log('value', value);
-  const config: GlobalConfig | null = await GlobalConfig.fetch(env.c.rpc, globalConfig);
+  const config: GlobalConfig | null = await GlobalConfig.fetch(env.c.rpc, globalConfig, env.kliquidityProgramId);
   if (config == null) {
     throw new Error(`Global config ${globalConfig} not found`);
   }
@@ -424,7 +424,7 @@ export async function updateCollateralInfo(
   if (typeof collateralToken == 'number') {
     collateralNumber = collateralToken;
   } else {
-    const collInfos = await CollateralInfos.fetch(env.c.rpc, config.tokenInfos);
+    const collInfos = await CollateralInfos.fetch(env.c.rpc, config.tokenInfos, env.kliquidityProgramId);
     if (collInfos == null) {
       throw new Error('CollateralInfos config not found');
     }
@@ -451,7 +451,7 @@ export async function updateCollateralInfo(
     tokenInfos: config.tokenInfos,
   };
 
-  const ix = Instructions.updateCollateralInfo(args, accounts);
+  const ix = Instructions.updateCollateralInfo(args, accounts, env.kliquidityProgramId);
   const sig = await sendAndConfirmTx(env.c, env.admin, [ix]);
   console.log('Update Collateral Info txn: ' + sig.toString());
   return sig;

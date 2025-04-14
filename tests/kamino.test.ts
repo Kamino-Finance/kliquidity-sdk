@@ -10,8 +10,9 @@ import {
 } from '@solana/kit';
 import {
   collToLamportsDecimal,
-  createAddExtraComputeUnitsIx,
+  createComputeUnitLimitIx,
   DepositAmountsForSwap,
+  getAssociatedTokenAddressAndAccount,
   Kamino,
   sleep,
   StrategiesFilters,
@@ -20,7 +21,6 @@ import {
   ZERO,
 } from '../src';
 import Decimal from 'decimal.js';
-import { createComputeUnitLimitIx, getAssociatedTokenAddressAndAccount } from '../src';
 import * as Instructions from '../src/@codegen/kliquidity/instructions';
 import { GlobalConfigOption, GlobalConfigOptionKind, UpdateCollateralInfoMode } from '../src/@codegen/kliquidity/types';
 import { initializeRaydiumPool, orderMints } from './runner/raydium_utils';
@@ -52,7 +52,9 @@ import {
   UpdateStrategyType,
 } from '../src/@codegen/kliquidity/types/StrategyConfigOption';
 import { expect } from 'chai';
+import { PROGRAM_ID as KLIQUIDITY_PROGRAM_ID } from '../src/@codegen/kliquidity/programId';
 import { PROGRAM_ID as WHIRLPOOL_PROGRAM_ID } from '../src/@codegen/whirlpools/programId';
+import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programId';
 import { createWsolAtaIfMissing } from '../src/utils/transactions';
 import { getMintDecimals } from '../src/utils';
 import { setupStrategyLookupTable } from './runner/lut';
@@ -61,15 +63,12 @@ import { CollateralInfos, GlobalConfig } from '../src/@codegen/kliquidity/accoun
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { sendAndConfirmTx } from './runner/tx';
 
-export const LOCAL_RAYDIUM_PROGRAM_ID = address('devi51mZmdwUJGU9hjN27vEz64Gps7uUefqxg27EAtH');
 export const USDH_SCOPE_CHAIN_ID = BigInt(12);
 export const USDC_SCOPE_CHAIN_ID = BigInt(20);
 
-describe('Kamino SDK Tests', async () => {
-  const env = await initEnv();
-
+describe('Kamino SDK Tests', () => {
+  let env: Env;
   const fixtures: Record<string, Address> = {
-    kaminoProgramId: address('E6qbhrt4pFmCotNUSSEh6E5cRQCEJpMcd79Z56EG9KY'),
     globalConfig: address('GKnHiWh3RRrE1zsNzWxRkomymHc374TvJPSTv2wPeYdB'),
     newWhirlpool: address('Fvtf8VCjnkqbETA6KtyHYqHm26ut6w184Jqm4MQjPvv7'),
     newOrcaStrategy: address('Cfuy5T6osdazUeLego5LFycBQebm9PP3H7VNdCndXXEN'),
@@ -83,14 +82,16 @@ describe('Kamino SDK Tests', async () => {
   };
 
   before(async () => {
+    env = await initEnv();
+
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     // @ts-ignore
     kamino._scope._config.oraclePrices = fixtures.scopePrices;
@@ -223,9 +224,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     const prices = await kamino.getAllPrices();
     expect(prices).not.to.be.undefined;
@@ -256,9 +257,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     const allStrategies = await kamino.getStrategies([fixtures.newOrcaStrategy]);
     expect(allStrategies.length).to.be.greaterThan(0);
@@ -267,15 +268,16 @@ describe('Kamino SDK Tests', async () => {
       console.log(strat?.pool.toString());
     }
   });
+
   it('should get strategy by address', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     const strategy = await kamino.getStrategyByAddress(fixtures.newOrcaStrategy);
     expect(strategy).not.to.be.null;
@@ -288,9 +290,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategy = await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy);
@@ -306,9 +308,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategyState = await kamino.getStrategyByAddress(fixtures.newOrcaStrategy);
@@ -328,9 +330,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const sharesPricesWithAddress = await kamino.getStrategyShareDataForStrategies({});
@@ -344,9 +346,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const solAirdropAmount = new Decimal(1);
@@ -382,9 +384,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     console.log(await kamino.getWhirlpools([fixtures.newWhirlpool]));
   });
@@ -395,9 +397,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     console.log(await kamino.getRaydiumPools([fixtures.newRaydiumPool]));
   });
@@ -408,9 +410,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     const strategyState = await kamino.getStrategyByAddress(fixtures.newOrcaStrategy);
     expect(strategyState).not.to.be.null;
@@ -482,9 +484,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const solAirdropAmount = new Decimal(1);
@@ -518,9 +520,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const solAirdropAmount = new Decimal(1);
@@ -550,9 +552,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategyState = (await kamino.getStrategyByAddress(fixtures.newOrcaStrategy))!;
@@ -600,7 +602,7 @@ describe('Kamino SDK Tests', async () => {
         swapper
       );
 
-    const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
+    const increaseBudgetIx = createComputeUnitLimitIx(1_000_000);
     await sendAndConfirmTx(
       env.c,
       env.admin,
@@ -630,9 +632,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategyState = await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy);
@@ -690,9 +692,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategy = (await kamino.getStrategyByAddress(fixtures.newOrcaStrategy))!;
@@ -735,9 +737,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategy = (await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy))!;
@@ -781,9 +783,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategy = (await kamino.getStrategyByAddress(fixtures.newOrcaStrategy))!;
@@ -814,9 +816,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategy = (await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy))!;
@@ -847,9 +849,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategy = (await kamino.getStrategyByAddress(fixtures.newOrcaStrategy))!;
@@ -884,9 +886,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategy = (await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy))!;
@@ -921,7 +923,7 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId
+      env.kliquidityProgramId
     );
 
     // New position to rebalance into
@@ -936,7 +938,7 @@ describe('Kamino SDK Tests', async () => {
     );
 
     {
-      const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
+      const increaseBudgetIx = createComputeUnitLimitIx(1_000_000);
       const tx = [increaseBudgetIx, collectFeesIx];
       const sig = await sendAndConfirmTx(env.c, env.admin, tx);
       expect(sig).to.not.be.null;
@@ -944,7 +946,7 @@ describe('Kamino SDK Tests', async () => {
     }
     {
       const strategy = (await kamino.getStrategyByAddress(fixtures.newOrcaStrategy))!;
-      const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
+      const increaseBudgetIx = createComputeUnitLimitIx(1_000_000);
 
       console.log('opening raydium position in rebalancing');
       const sig = await sendAndConfirmTx(
@@ -966,9 +968,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategy = (await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy))!;
@@ -1017,7 +1019,7 @@ describe('Kamino SDK Tests', async () => {
     }
 
     {
-      const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
+      const increaseBudgetIx = createComputeUnitLimitIx(1_000_000);
       console.log('opening raydium position in rebalancing');
       const myHash = await sendAndConfirmTx(
         env.c,
@@ -1043,9 +1045,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const createRaydiumTx = [createComputeUnitLimitIx()];
@@ -1065,8 +1067,8 @@ describe('Kamino SDK Tests', async () => {
 
     // setup strategy lookup table
     await setupStrategyLookupTable(env, kamino, newRaydiumStrategy.address);
-    await openPosition(env, kamino, env.admin, newRaydiumStrategy.address, new Decimal(0.97), new Decimal(1.03));
     await sleep(1000);
+    await openPosition(env, kamino, env.admin, newRaydiumStrategy.address, new Decimal(0.97), new Decimal(1.03));
 
     const strategy = (await kamino.getStrategyByAddress(newRaydiumStrategy.address))!;
 
@@ -1082,7 +1084,7 @@ describe('Kamino SDK Tests', async () => {
     );
 
     {
-      const increaseBudgetIx = createAddExtraComputeUnitsIx(1_400_000);
+      const increaseBudgetIx = createComputeUnitLimitIx(1_400_000);
 
       console.log('rebalancing raydium strategy in rebalancing');
       const myHash = await sendAndConfirmTx(
@@ -1102,9 +1104,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const filters: StrategiesFilters = {
@@ -1121,9 +1123,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategyByAddress = await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy);
@@ -1140,9 +1142,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const filters: StrategiesFilters = {
@@ -1160,9 +1162,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const filters: StrategiesFilters = {
@@ -1179,9 +1181,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const filters: StrategiesFilters = {
@@ -1198,9 +1200,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const filters: StrategiesFilters = {
@@ -1229,9 +1231,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const filters: StrategiesFilters = {
@@ -1264,9 +1266,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     // generate signature for a basic message
@@ -1288,9 +1290,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const depositableTokens = await kamino.getDepositableTokens();
@@ -1306,9 +1308,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const totalTokens: TokenAmounts = { a: ZERO, b: new Decimal(489_454) };
@@ -1330,9 +1332,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const totalTokens: TokenAmounts = { a: new Decimal(5678), b: ZERO };
@@ -1353,9 +1355,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const totalTokens: TokenAmounts = { a: new Decimal(3000), b: new Decimal(1000) };
@@ -1376,9 +1378,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const totalTokens: TokenAmounts = { a: new Decimal(3000), b: new Decimal(1000) };
@@ -1399,9 +1401,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const totalTokens: TokenAmounts = { a: new Decimal(111), b: new Decimal(444) };
@@ -1422,9 +1424,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const totalTokens: TokenAmounts = { a: new Decimal(2000), b: new Decimal(5000) };
@@ -1445,9 +1447,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     let performanceFees = await kamino.getStrategyPerformanceFees(fixtures.newOrcaStrategy);
@@ -1489,9 +1491,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     await updateGlobalConfig(
@@ -1549,9 +1551,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategyState = (await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy))!;
@@ -1581,9 +1583,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategyState = (await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy))!;
@@ -1613,9 +1615,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategyState = (await kamino.getStrategyByAddress(fixtures.newOrcaStrategy))!;
@@ -1645,9 +1647,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
 
     const strategyState = (await kamino.getStrategyByAddress(fixtures.newOrcaStrategy))!;
@@ -1677,9 +1679,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     // Create a new strategy
     const txStrategyCreate: IInstruction[] = [createComputeUnitLimitIx()];
@@ -1722,9 +1724,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     // Create a new strategy
     const txStrategyCreate = [createComputeUnitLimitIx()];
@@ -1741,8 +1743,8 @@ describe('Kamino SDK Tests', async () => {
     await sendAndConfirmTx(env.c, env.admin, txStrategyCreate);
     // setup strategy lookup table
     await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address);
-    await openPosition(env, kamino, env.admin, newOrcaStrategy.address, new Decimal(0.97), new Decimal(1.03));
     await sleep(1000);
+    await openPosition(env, kamino, env.admin, newOrcaStrategy.address, new Decimal(0.97), new Decimal(1.03));
     const strategyState = (await kamino.getStrategyByAddress(newOrcaStrategy.address))!;
 
     // Close it right after
@@ -1771,9 +1773,9 @@ describe('Kamino SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       fixtures.globalConfig,
-      fixtures.kaminoProgramId,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
-      LOCAL_RAYDIUM_PROGRAM_ID
+      env.raydiumProgramId
     );
     // Create a new strategy
     const txStrategyCreate = [createComputeUnitLimitIx()];
@@ -1794,8 +1796,8 @@ describe('Kamino SDK Tests', async () => {
 
     // Create lookup table and open new position
     await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address);
-    await openPosition(env, kamino, env.admin, newOrcaStrategy.address, new Decimal(0.97), new Decimal(1.03));
     await sleep(1000);
+    await openPosition(env, kamino, env.admin, newOrcaStrategy.address, new Decimal(0.97), new Decimal(1.03));
 
     // Deposit some funds
     await setupAta(env.c, env.admin, strategyState.sharesMint);
@@ -1831,7 +1833,12 @@ describe('Kamino SDK Tests', async () => {
   it.skip('should get all mainnet Kamino prices', async () => {
     const rpcUrl: string = 'https://api.mainnet-beta.solana.com';
     const wsUrl: string = 'wss://api.mainnet-beta.solana.com';
-    const env = await initEnv({ rpcUrl, wsUrl });
+    const env = await initEnv({
+      rpcUrl,
+      wsUrl,
+      kliquidityProgramId: KLIQUIDITY_PROGRAM_ID,
+      raydiumProgramId: RAYDIUM_PROGRAM_ID,
+    });
     const kamino = new Kamino('mainnet-beta', env.c.rpc, env.legacyConnection);
     const prices = await kamino.getAllPrices();
     expect(prices).not.to.be.undefined;
@@ -1860,7 +1867,7 @@ export async function openPosition(
   {
     const strategyState = await kamino.getWhirlpoolStrategy(strategy);
     const openPositionIx = await kamino.openPosition(owner, strategy, positionMint, priceLower, priceUpper);
-    const increaseBudgetIx = createAddExtraComputeUnitsIx(1_400_000);
+    const increaseBudgetIx = createComputeUnitLimitIx(1_400_000);
 
     const sig = await sendAndConfirmTx(
       env.c,
@@ -1895,7 +1902,7 @@ export async function setUpGlobalConfig(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  const initializeGlobalConfigIx = Instructions.initializeGlobalConfig(accounts);
+  const initializeGlobalConfigIx = Instructions.initializeGlobalConfig(accounts, kamino.getProgramID());
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createGlobalConfigIx, initializeGlobalConfigIx]);
 
@@ -1944,7 +1951,7 @@ export async function setUpCollateralInfo(env: Env, kamino: Kamino): Promise<Add
     collInfo: collInfo.address,
   };
 
-  const initializeCollateralInfosIx = Instructions.initializeCollateralInfo(accounts);
+  const initializeCollateralInfosIx = Instructions.initializeCollateralInfo(accounts, kamino.getProgramID());
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createCollateralInfoIx, initializeCollateralInfosIx]);
 
@@ -2005,7 +2012,7 @@ export async function updateGlobalConfig(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  const updateConfigIx = Instructions.updateGlobalConfig(args, accounts);
+  const updateConfigIx = Instructions.updateGlobalConfig(args, accounts, kamino.getProgramID());
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateConfigIx]);
 
   console.log('Update Global Config ', globalConfigOption.toJSON(), sig);

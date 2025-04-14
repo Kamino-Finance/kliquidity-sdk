@@ -1,6 +1,6 @@
 import { address, Address, generateKeyPairSigner, IInstruction } from '@solana/kit';
 import {
-  createAddExtraComputeUnitsIx,
+  createComputeUnitLimitIx,
   getAssociatedTokenAddressAndAccount,
   Kamino,
   OrcaService,
@@ -10,12 +10,10 @@ import {
   U64_MAX,
 } from '../src';
 import Decimal from 'decimal.js';
-import { createComputeUnitLimitIx } from '../src';
 import {
   balance,
   GlobalConfigMainnet,
   GlobalConfigStaging,
-  KaminoProgramIdMainnet,
   KaminoProgramIdStaging,
   SOLMintMainnet,
   toJson,
@@ -24,6 +22,7 @@ import {
 } from './runner/utils';
 import { UpdateRebalanceType } from '../src/@codegen/kliquidity/types/StrategyConfigOption';
 import { expect } from 'chai';
+import { PROGRAM_ID as KLIQUIDITY_PROGRAM_ID } from '../src/@codegen/kliquidity/programId';
 import { PROGRAM_ID as WHIRLPOOL_PROGRAM_ID } from '../src/@codegen/whirlpools/programId';
 import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programId';
 import { Manual, PricePercentage, PricePercentageWithReset } from '../src/@codegen/kliquidity/types/RebalanceType';
@@ -44,7 +43,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   // const signerPrivateKey = [];
   // const signer = Keypair.fromSecretKey(Uint8Array.from(signerPrivateKey));
   const signer = await generateKeyPairSigner();
-  const env = await initEnv({ rpcUrl, wsUrl, admin: signer });
+  const env = await initEnv({
+    rpcUrl,
+    wsUrl,
+    admin: signer,
+    kliquidityProgramId: KLIQUIDITY_PROGRAM_ID,
+    raydiumProgramId: RAYDIUM_PROGRAM_ID,
+  });
 
   it.skip('read raydium clmm APY', async () => {
     const kamino = new Kamino(
@@ -52,7 +57,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -101,7 +106,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -116,7 +121,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -131,7 +136,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -150,7 +155,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID,
       METEORA_PROGRAM_ID
@@ -169,7 +174,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID,
       METEORA_PROGRAM_ID
@@ -186,7 +191,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID,
       METEORA_PROGRAM_ID
@@ -203,7 +208,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID,
       METEORA_PROGRAM_ID
@@ -220,7 +225,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID,
       METEORA_PROGRAM_ID
@@ -299,7 +304,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       sharesAta
     );
 
-    const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
+    const increaseBudgetIx = createComputeUnitLimitIx(1_000_000);
     const txHash = await sendAndConfirmTx(
       env.c,
       signer,
@@ -366,7 +371,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       sharesAta
     );
 
-    const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
+    const increaseBudgetIx = createComputeUnitLimitIx(1_000_000);
     const txHash = await sendAndConfirmTx(
       env.c,
       signer,
@@ -383,7 +388,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID,
       METEORA_PROGRAM_ID
@@ -404,7 +409,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID,
       METEORA_PROGRAM_ID
@@ -487,7 +492,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       sharesAta
     );
 
-    const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
+    const increaseBudgetIx = createComputeUnitLimitIx(1_000_000);
     const txHash = await sendAndConfirmTx(
       env.c,
       signer,
@@ -553,7 +558,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       sharesAta
     );
 
-    const increaseBudgetIx = createAddExtraComputeUnitsIx(1_400_000);
+    const increaseBudgetIx = createComputeUnitLimitIx(1_400_000);
     const txHash = await sendAndConfirmTx(
       env.c,
       signer,
@@ -593,7 +598,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -611,7 +616,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -632,7 +637,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -653,7 +658,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -673,7 +678,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -693,7 +698,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -750,7 +755,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -807,7 +812,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -863,7 +868,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -919,7 +924,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -974,7 +979,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1030,7 +1035,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1174,7 +1179,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1242,7 +1247,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1316,7 +1321,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1332,7 +1337,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1396,7 +1401,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1454,7 +1459,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1539,7 +1544,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1593,7 +1598,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1647,7 +1652,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1705,7 +1710,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1768,7 +1773,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1827,7 +1832,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1890,7 +1895,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -1989,7 +1994,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -2022,7 +2027,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -2044,7 +2049,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );
@@ -2067,7 +2072,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env.c.rpc,
       env.legacyConnection,
       GlobalConfigMainnet,
-      KaminoProgramIdMainnet,
+      env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       RAYDIUM_PROGRAM_ID
     );

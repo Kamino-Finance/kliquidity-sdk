@@ -57,10 +57,29 @@ export async function sendAndConfirmTx(
 
   const sig = getSignatureFromTransaction(tx);
 
-  await sendAndConfirmTransactionFactory({ rpc, rpcSubscriptions: wsRpc })(tx, {
-    commitment: 'processed',
-    preflightCommitment: 'processed',
-  });
+  try {
+    await sendAndConfirmTransactionFactory({ rpc, rpcSubscriptions: wsRpc })(tx, {
+      commitment: 'processed',
+      preflightCommitment: 'processed',
+      skipPreflight: false,
+    });
+  } catch (e) {
+    console.error(`Transaction ${sig} failed:`, e);
+    // await sleep(500);
+    let tx;
+    try {
+      tx = await rpc.getTransaction(sig, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' }).send();
+    } catch (e2) {
+      console.error('Error fetching transaction logs:', e2);
+      throw e;
+    }
+    if (tx && tx.meta?.logMessages) {
+      console.log('Transaction logs:', tx.meta.logMessages);
+    } else {
+      console.log('Transaction logs not found');
+    }
+    throw e;
+  }
 
   return sig;
 }

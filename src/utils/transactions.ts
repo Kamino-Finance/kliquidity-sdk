@@ -154,7 +154,7 @@ export const isWsolInfoInvalid = (wsolAtaAccountInfo: any): boolean => {
 };
 
 export async function checkIfAccountExists(connection: Rpc<GetAccountInfoApi>, account: Address): Promise<boolean> {
-  return (await connection.getAccountInfo(account).send()).value != null;
+  return (await connection.getAccountInfo(account, { encoding: 'base64' }).send()).value != null;
 }
 
 export function removeBudgetAndAtaIxns(ixns: IInstruction[], mints: Address[]): IInstruction[] {
