@@ -1,9 +1,9 @@
-import { PublicKey } from '@solana/web3.js';
-import { Whirlpool } from '../whirlpools-client/accounts';
+import { Address } from '@solana/kit';
+import { Whirlpool } from '../@codegen/whirlpools/accounts';
 
 export interface WhirlpoolWithAddress {
   whirlpool: Whirlpool;
-  address: PublicKey;
+  address: Address;
 }
 
 export default WhirlpoolWithAddress;

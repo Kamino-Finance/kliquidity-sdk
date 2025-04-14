@@ -5,7 +5,7 @@ import {
   DefaultUpperPercentageBPSDecimal,
   FullBPSDecimal,
 } from '../utils/CreationParameters';
-import { RebalanceRaw } from '../kamino-client/types';
+import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { Dex, readBigUint128LE } from '../utils';
 import { sqrtPriceX64ToPrice } from '@orca-so/whirlpool-sdk';

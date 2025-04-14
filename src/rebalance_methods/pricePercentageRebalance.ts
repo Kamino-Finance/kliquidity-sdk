@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo } from '../utils/types';
 import { DefaultLowerPercentageBPSDecimal, DefaultUpperPercentageBPSDecimal } from '../utils/CreationParameters';
-import { RebalanceRaw } from '../kamino-client/types';
+import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { Dex, readBigUint128LE } from '../utils';
 import { upsertManyRebalanceFieldInfos } from './utils';

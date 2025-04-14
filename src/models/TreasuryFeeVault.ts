@@ -1,9 +1,9 @@
-import { PublicKey } from '@solana/web3.js';
+import { Address } from '@solana/kit';
 
 export type TreasuryFeeVault = {
-  treasuryFeeTokenAVault: PublicKey;
-  treasuryFeeTokenBVault: PublicKey;
-  treasuryFeeVaultAuthority: PublicKey;
+  treasuryFeeTokenAVault: Address;
+  treasuryFeeTokenBVault: Address;
+  treasuryFeeVaultAuthority: Address;
 };
 
 export default TreasuryFeeVault;

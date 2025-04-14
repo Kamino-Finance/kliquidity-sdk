@@ -1,12 +1,15 @@
-import { PublicKey } from '@solana/web3.js';
+import { Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/kit';
 import Decimal from 'decimal.js';
 import { U64_MAX } from '../constants/numericalValues';
-import { BinArray } from '../meteora_client/accounts';
-import { Bin } from '../meteora_client/types';
+import { BinArray } from '../@codegen/meteora/accounts';
+import { Bin } from '../@codegen/meteora/types';
 import { BN } from '@coral-xyz/anchor';
+import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-derived-address';
 
 const BASIS_POINT_MAX = 10000;
 const MAX_BIN_ARRAY_SIZE = 70;
+
+const addressEncoder = getAddressEncoder();
 
 export function getPriceOfBinByBinId(binId: number, tickSpacing: number): Decimal {
   const binStepNum = new Decimal(tickSpacing).div(new Decimal(BASIS_POINT_MAX));
@@ -77,18 +80,22 @@ export function binIdToBinArrayIndex(binId: BN): BN {
   return binId.isNeg() && !mod.isZero() ? idx.sub(new BN(1)) : idx;
 }
 
-export function deriveBinArray(lbPair: PublicKey, index: BN, programId: PublicKey) {
+export async function deriveBinArray(lbPair: Address, index: BN, programId: Address): Promise<ProgramDerivedAddress> {
   let binArrayBytes: Uint8Array;
   if (index.isNeg()) {
     binArrayBytes = new Uint8Array(index.toTwos(64).toBuffer('le', 8));
   } else {
     binArrayBytes = new Uint8Array(index.toBuffer('le', 8));
   }
-  return PublicKey.findProgramAddressSync([Buffer.from('bin_array'), lbPair.toBytes(), binArrayBytes], programId);
+  const pda = await getProgramDerivedAddress({
+    seeds: [Buffer.from('bin_array'), addressEncoder.encode(lbPair), binArrayBytes],
+    programAddress: programId,
+  });
+  return pda;
 }
 
 export type MeteoraPosition = {
-  publicKey: PublicKey;
+  Address: Address;
   amountX: Decimal;
   amountY: Decimal;
 };

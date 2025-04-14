@@ -1,10 +1,10 @@
 import axios, { AxiosResponse } from 'axios';
 import { PoolSimulationResponse } from '../models/PoolSimulationResponseData';
 import Decimal from 'decimal.js';
-import { PublicKey } from '@solana/web3.js';
+import { Address } from '@solana/kit';
 
 export type SimulationParameters = {
-  poolAddress: PublicKey;
+  poolAddress: Address;
   depositDate: string;
   endDate: string;
 };

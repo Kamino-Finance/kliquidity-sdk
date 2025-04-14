@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
-import { RebalanceRaw } from '../kamino-client/types';
+import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { getPriceRangeFromPriceAndDiffBPS } from './math_utils';
 

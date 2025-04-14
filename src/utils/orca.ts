@@ -1,12 +1,15 @@
-import { PublicKey } from '@solana/web3.js';
+import { Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/kit';
+import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-derived-address';
 
-export function getTickArray(
-  programId: PublicKey,
-  whirlpoolAddress: PublicKey,
+const addressEncoder = getAddressEncoder();
+
+export async function getTickArray(
+  programId: Address,
+  whirlpoolAddress: Address,
   startTick: number
-): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from('tick_array'), whirlpoolAddress.toBuffer(), Buffer.from(startTick.toString())],
-    programId
-  );
+): Promise<ProgramDerivedAddress> {
+  return await getProgramDerivedAddress({
+    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpoolAddress), Buffer.from(startTick.toString())],
+    programAddress: programId,
+  });
 }

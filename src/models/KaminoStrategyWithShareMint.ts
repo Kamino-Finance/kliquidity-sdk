@@ -1,8 +1,10 @@
+import { Address } from '@solana/kit';
+
 export interface KaminoStrategyWithShareMint {
-  address: string;
+  address: Address;
   type: string;
-  shareMint: string;
+  shareMint: Address;
   status: string;
-  tokenAMint: string;
-  tokenBMint: string;
+  tokenAMint: Address;
+  tokenBMint: Address;
 }

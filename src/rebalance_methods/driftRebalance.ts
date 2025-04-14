@@ -2,7 +2,7 @@ import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
 import { Dex } from '../utils';
 import { priceToTickIndex, sqrtPriceX64ToPrice, tickIndexToPrice } from '@orca-so/whirlpool-sdk';
-import { RebalanceRaw } from '../kamino-client/types';
+import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { upsertManyRebalanceFieldInfos } from './utils';
 import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';

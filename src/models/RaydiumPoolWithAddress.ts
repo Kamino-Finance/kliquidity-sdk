@@ -1,9 +1,9 @@
-import { PublicKey } from '@solana/web3.js';
-import { PoolState } from '../raydium_client/accounts';
+import { Address } from '@solana/kit';
+import { PoolState } from '../@codegen/raydium/accounts';
 
 export interface RaydiumPoolWithAddress {
   poolState: PoolState;
-  address: PublicKey;
+  address: Address;
 }
 
 export default RaydiumPoolWithAddress;

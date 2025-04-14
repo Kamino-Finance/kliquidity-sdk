@@ -1,10 +1,10 @@
-import { PublicKey, TransactionInstruction, TransactionMessage } from '@solana/web3.js';
-import { WhirlpoolStrategy } from '../kamino-client/accounts';
+import { address, Address, IInstruction, TransactionMessage, TransactionSigner } from '@solana/kit';
+import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import { Dex, collToLamportsDecimal } from './utils';
 import Decimal from 'decimal.js';
-import { RebalanceTypeKind } from '../kamino-client/types';
+import { RebalanceTypeKind } from '../@codegen/kliquidity/types';
 
-export const RAYDIUM_DEVNET_PROGRAM_ID = new PublicKey('devi51mZmdwUJGU9hjN27vEz64Gps7uUefqxg27EAtH');
+export const RAYDIUM_DEVNET_PROGRAM_ID = address('devi51mZmdwUJGU9hjN27vEz64Gps7uUefqxg27EAtH');
 
 export type StrategyType = 'NON_PEGGED' | 'PEGGED' | 'STABLE';
 export type StrategyCreationStatus = 'IGNORED' | 'SHADOW' | 'LIVE' | 'DEPRECATED' | 'STAGING';
@@ -13,7 +13,7 @@ export type StrategiesFilters = {
   strategyType?: StrategyType;
   strategyCreationStatus?: StrategyCreationStatus;
   isCommunity?: boolean;
-  owner?: PublicKey;
+  owner?: Address;
 };
 
 export function strategyTypeToBase58(strategyType: StrategyType): string {
@@ -108,9 +108,9 @@ export function getStrategyCreationStatusFromStrategy(strategy: WhirlpoolStrateg
 
 export interface GenericPoolInfo {
   dex: Dex;
-  address: PublicKey;
-  tokenMintA: PublicKey;
-  tokenMintB: PublicKey;
+  address: Address;
+  tokenMintA: Address;
+  tokenMintB: Address;
   price: Decimal;
   feeRate: Decimal;
   volumeOnLast7d: Decimal | undefined;
@@ -125,8 +125,8 @@ export interface GenericPositionRangeInfo {
 }
 
 export interface VaultParameters {
-  tokenMintA: PublicKey;
-  tokenMintB: PublicKey;
+  tokenMintA: Address;
+  tokenMintB: Address;
   dex: Dex;
   feeTier: Decimal;
   rebalancingParameters: RebalanceFieldInfo[];
@@ -207,12 +207,12 @@ export interface TokensBalances {
 export interface SwapperIxBuilder {
   (
     input: DepositAmountsForSwap,
-    tokenAMint: PublicKey,
-    tokenBMint: PublicKey,
-    owner: PublicKey,
+    tokenAMint: Address,
+    tokenBMint: Address,
+    owner: TransactionSigner,
     slippage: Decimal,
-    allKeys: PublicKey[]
-  ): Promise<[TransactionInstruction[], PublicKey[]]>;
+    allKeys: Address[]
+  ): Promise<[IInstruction[], Address[]]>;
 }
 
 export interface ProfiledFunctionExecution {
@@ -224,19 +224,19 @@ export function noopProfiledFunctionExecution(promise: Promise<any>): Promise<an
 }
 
 export interface CreateAta {
-  ata: PublicKey;
-  createIxns: TransactionInstruction[];
-  closeIxns: TransactionInstruction[];
+  ata: Address;
+  createIxns: IInstruction[];
+  closeIxns: IInstruction[];
 }
 
 export interface DeserializedVersionedTransaction {
   txMessage: TransactionMessage[];
-  lookupTablesAddresses: PublicKey[];
+  lookupTablesAddresses: Address[];
 }
 
 export interface InstructionsWithLookupTables {
-  instructions: TransactionInstruction[];
-  lookupTablesAddresses: PublicKey[];
+  instructions: IInstruction[];
+  lookupTablesAddresses: Address[];
 }
 
 export interface PerformanceFees {
@@ -267,46 +267,46 @@ export interface InputRebalanceFieldInfo {
 }
 
 export interface InitStrategyIxs {
-  initStrategyIx: TransactionInstruction;
-  updateStrategyParamsIxs: TransactionInstruction[];
-  updateRebalanceParamsIx: TransactionInstruction;
-  openPositionIxs: TransactionInstruction[];
+  initStrategyIx: IInstruction;
+  updateStrategyParamsIxs: IInstruction[];
+  updateRebalanceParamsIx: IInstruction;
+  openPositionIxs: IInstruction[];
 }
 
 export interface WithdrawShares {
-  prerequisiteIxs: TransactionInstruction[];
-  withdrawIx: TransactionInstruction;
-  closeSharesAtaIx?: TransactionInstruction;
+  prerequisiteIxs: IInstruction[];
+  withdrawIx: IInstruction;
+  closeSharesAtaIx?: IInstruction;
 }
 
 export interface MetadataProgramAddressesOrca {
-  position: PublicKey;
+  position: Address;
   positionBump: number;
-  positionMetadata: PublicKey;
+  positionMetadata: Address;
   positionMetadataBump: number;
 }
 
 export interface MetadataProgramAddressesRaydium {
-  position: PublicKey;
+  position: Address;
   positionBump: number;
-  protocolPosition: PublicKey;
+  protocolPosition: Address;
   protocolPositionBump: number;
-  positionMetadata: PublicKey;
+  positionMetadata: Address;
   positionMetadataBump: number;
 }
 
 export interface LowerAndUpperTickPubkeys {
-  lowerTick: PublicKey;
+  lowerTick: Address;
   lowerTickBump: number;
-  upperTick: PublicKey;
+  upperTick: Address;
   upperTickBump: number;
 }
 export interface WithdrawAllAndCloseIxns {
-  withdrawIxns: TransactionInstruction[];
-  closeIxn: TransactionInstruction;
+  withdrawIxns: IInstruction[];
+  closeIxn: IInstruction;
 }
 
 export interface InitPoolTickIfNeeded {
-  tick: PublicKey;
-  initTickIx: TransactionInstruction | undefined;
+  tick: Address;
+  initTickIx: IInstruction | undefined;
 }

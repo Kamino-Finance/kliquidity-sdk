@@ -1,9 +1,9 @@
-import { PublicKey } from '@solana/web3.js';
-import { LbPair } from '../meteora_client/accounts';
+import { Address } from '@solana/kit';
+import { LbPair } from '../@codegen/meteora/accounts';
 
 export interface LbPairWithAddress {
   pool: LbPair;
-  address: PublicKey;
+  address: Address;
 }
 
 export default LbPairWithAddress;

@@ -1,12 +1,9 @@
-import { Connection, PublicKey, Transaction, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
-import { SolanaCluster } from '@hubbleprotocol/hubble-config';
+import { AccountRole, address, Address, IInstruction } from '@solana/kit';
 import axios from 'axios';
 import Decimal from 'decimal.js';
-import { DeserializedVersionedTransaction } from '../utils';
-import { QuoteResponse, SwapInstructionsResponse, SwapResponse, createJupiterApiClient } from '@jup-ag/api';
-import { PubkeyHashMap } from '../utils/pubkey';
+import { QuoteResponse, SwapInstructionsResponse, createJupiterApiClient, Instruction } from '@jup-ag/api';
 
-const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+const USDC_MINT = address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
 export const DEFAULT_JUP_API_ENDPOINT = 'https://api.jup.ag';
 
@@ -16,26 +13,27 @@ export type SwapTransactionsResponse = {
   cleanupTransaction: string | undefined;
 };
 
+interface SwapIInstructionsResponse {
+  tokenLedgerInstruction?: IInstruction;
+  computeBudgetInstructions: Array<IInstruction>;
+  setupInstructions: Array<IInstruction>;
+  swapInstruction: IInstruction;
+  cleanupInstruction?: IInstruction;
+  addressLookupTableAddresses: Array<Address>;
+}
+
 export class JupService {
-  private readonly _connection: Connection;
-  private readonly _cluster: SolanaCluster;
-
-  constructor(connection: Connection, cluster: SolanaCluster) {
-    this._connection = connection;
-    this._cluster = cluster;
-  }
-
   // the amounts has to be in lamports
   static getBestRouteV6 = async (
-    userPublicKey: PublicKey,
+    userAddress: Address,
     amount: Decimal,
-    inputMint: PublicKey,
-    outputMint: PublicKey,
+    inputMint: Address,
+    outputMint: Address,
     slippageBps: number,
     asLegacyTransaction?: boolean,
     maxAccounts?: number,
     onlyDirectRoutes?: boolean
-  ): Promise<SwapResponse> => {
+  ): Promise<SwapIInstructionsResponse> => {
     try {
       const jupiterQuoteApi = createJupiterApiClient(); // config is optional
 
@@ -51,15 +49,28 @@ export class JupService {
         onlyDirectRoutes
       );
 
-      const transaction: SwapResponse = await jupiterQuoteApi.swapPost({
+      const ixsResponse = await jupiterQuoteApi.swapInstructionsPost({
         swapRequest: {
           quoteResponse: res,
-          userPublicKey: userPublicKey.toString(),
+          userPublicKey: userAddress,
           wrapAndUnwrapSol: false,
         },
       });
 
-      return transaction;
+      const swapIxs: SwapIInstructionsResponse = {
+        tokenLedgerInstruction: ixsResponse.tokenLedgerInstruction
+          ? transformResponseIx(ixsResponse.tokenLedgerInstruction)
+          : undefined,
+        computeBudgetInstructions: ixsResponse.computeBudgetInstructions.map((ix) => transformResponseIx(ix)),
+        setupInstructions: ixsResponse.setupInstructions.map((ix) => transformResponseIx(ix)),
+        swapInstruction: transformResponseIx(ixsResponse.swapInstruction),
+        cleanupInstruction: ixsResponse.cleanupInstruction
+          ? transformResponseIx(ixsResponse.cleanupInstruction)
+          : undefined,
+        addressLookupTableAddresses: ixsResponse.addressLookupTableAddresses.map((a) => address(a)),
+      };
+
+      return swapIxs;
     } catch (error) {
       console.log('getBestRouteV6 error', error);
       throw error;
@@ -68,8 +79,8 @@ export class JupService {
 
   static getBestRouteQuoteV6 = async (
     amount: Decimal,
-    inputMint: PublicKey,
-    outputMint: PublicKey,
+    inputMint: Address,
+    outputMint: Address,
     slippageBps: number,
     asLegacyTransaction?: boolean,
     maxAccounts?: number,
@@ -78,8 +89,8 @@ export class JupService {
   ): Promise<QuoteResponse> => {
     try {
       const params = {
-        inputMint: inputMint.toString(),
-        outputMint: outputMint.toString(),
+        inputMint,
+        outputMint,
         amount: amount.floor().toNumber(),
         slippageBps,
         onlyDirectRoutes: onlyDirectRoutes,
@@ -97,7 +108,7 @@ export class JupService {
   };
 
   static getSwapIxsFromQuote = async (
-    userPublicKey: PublicKey,
+    userAddress: Address,
     quote: QuoteResponse,
     wrapUnwrapSOL = true,
     asLegacyTransaction?: boolean
@@ -108,7 +119,7 @@ export class JupService {
       return await jupiterQuoteApi.swapInstructionsPost({
         swapRequest: {
           quoteResponse: quote,
-          userPublicKey: userPublicKey.toString(),
+          userPublicKey: userAddress,
           wrapAndUnwrapSol: wrapUnwrapSOL,
           asLegacyTransaction: asLegacyTransaction,
         },
@@ -120,8 +131,8 @@ export class JupService {
   };
 
   static getPrice = async (
-    inputMint: PublicKey | string,
-    outputMint: PublicKey | string,
+    inputMint: Address | string,
+    outputMint: Address | string,
     jupEndpoint?: string
   ): Promise<number> => {
     const params = {
@@ -141,10 +152,10 @@ export class JupService {
   };
 
   static getPrices = async (
-    inputMints: (PublicKey | string)[],
-    outputMint: PublicKey | string,
+    inputMints: (Address | string)[],
+    outputMint: Address | string,
     jupEndpoint?: string
-  ): Promise<PubkeyHashMap<PublicKey, Decimal>> => {
+  ): Promise<Map<Address, Decimal>> => {
     const mintsCommaSeparated = inputMints.map((mint) => mint.toString()).join(',');
     const params = {
       ids: mintsCommaSeparated,
@@ -158,14 +169,14 @@ export class JupService {
     }
 
     const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
-    const prices: PubkeyHashMap<PublicKey, Decimal> = new PubkeyHashMap();
+    const prices = new Map<Address, Decimal>();
     try {
       const res = await axios.get(`${baseURL}/price/v2`, { params });
       for (const mint of inputMints) {
         try {
-          prices.set(new PublicKey(mint), new Decimal(res.data.data[mint.toString()].price));
+          prices.set(address(mint), new Decimal(res.data.data[mint.toString()].price));
         } catch (e) {
-          prices.set(new PublicKey(mint), new Decimal(0));
+          prices.set(address(mint), new Decimal(0));
         }
       }
     } catch (e) {
@@ -175,59 +186,35 @@ export class JupService {
     return prices;
   };
 
-  static getDollarPrices(
-    inputMints: (PublicKey | string)[],
-    jupEndpoint?: string
-  ): Promise<PubkeyHashMap<PublicKey, Decimal>> {
+  static getDollarPrices(inputMints: (Address | string)[], jupEndpoint?: string): Promise<Map<Address, Decimal>> {
     return this.getPrices(inputMints, USDC_MINT, jupEndpoint);
   }
 
-  static getDollarPrice = async (inputMint: PublicKey | string, jupEndpoint?: string): Promise<number> => {
+  static getDollarPrice = async (inputMint: Address | string, jupEndpoint?: string): Promise<number> => {
     return this.getPrice(inputMint, USDC_MINT, jupEndpoint);
   };
+}
 
-  static buildTransactionsFromSerialized = (serializedTransactions: Array<string | undefined>): Transaction[] => {
-    return serializedTransactions.filter(Boolean).map((tx) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return Transaction.from(Buffer.from(tx!, 'base64'));
-    });
+export function transformResponseIx(ix: Instruction): IInstruction {
+  return {
+    data: ix.data ? Buffer.from(ix.data, 'base64') : undefined,
+    programAddress: address(ix.programId),
+    accounts: ix.accounts.map((k) => ({
+      address: address(k.pubkey),
+      role: getAccountRole({ isSigner: k.isSigner, isMut: k.isWritable }),
+    })),
   };
+}
 
-  static deserealizeVersionedTransactions = async (
-    connection: Connection,
-    serializedTransactions: Array<string | undefined>
-  ): Promise<DeserializedVersionedTransaction> => {
-    const filtered = serializedTransactions.filter(Boolean);
-    const result: TransactionMessage[] = [];
-    let lookupTablesAddresses: PublicKey[] = [];
-
-    for (let i = 0; i < filtered.length; i++) {
-      const tx = filtered[i];
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      // safe to use as it is filtered above at 120 line
-      const buffer = Buffer.from(tx!, 'base64');
-
-      const versionedTx = VersionedTransaction.deserialize(buffer);
-      const { addressTableLookups } = versionedTx.message;
-      lookupTablesAddresses = [...lookupTablesAddresses, ...addressTableLookups.map((item) => item.accountKey)];
-
-      const lookupTableAccountsRequests = addressTableLookups.map((item) => {
-        return JupService.getLookupTableAccount(connection, item.accountKey);
-      });
-
-      const lookupTableAccounts = await Promise.all(lookupTableAccountsRequests);
-
-      const decompiledMessage = TransactionMessage.decompile(versionedTx.message, {
-        // @ts-ignore
-        addressLookupTableAccounts: lookupTableAccounts,
-      });
-      result.push(decompiledMessage);
-    }
-
-    return { txMessage: result, lookupTablesAddresses };
-  };
-
-  static getLookupTableAccount = async (connection: Connection, address: string | PublicKey) => {
-    return connection.getAddressLookupTable(new PublicKey(address)).then((res) => res.value);
-  };
+export function getAccountRole({ isSigner, isMut }: { isSigner: boolean; isMut: boolean }): AccountRole {
+  if (isSigner && isMut) {
+    return AccountRole.WRITABLE_SIGNER;
+  }
+  if (isSigner && !isMut) {
+    return AccountRole.READONLY_SIGNER;
+  }
+  if (!isSigner && isMut) {
+    return AccountRole.WRITABLE;
+  }
+  return AccountRole.READONLY;
 }

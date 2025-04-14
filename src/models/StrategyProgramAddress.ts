@@ -1,14 +1,14 @@
-import { PublicKey } from '@solana/web3.js';
+import { Address } from '@solana/kit';
 
 export type StrategyProgramAddress = {
-  tokenAVault: PublicKey;
+  tokenAVault: Address;
   tokenABump: number;
-  tokenBVault: PublicKey;
+  tokenBVault: Address;
   tokenBBump: number;
-  baseVaultAuthority: PublicKey;
+  baseVaultAuthority: Address;
   baseVaultAuthorityBump: number;
-  sharesMint: PublicKey;
+  sharesMint: Address;
   sharesMintBump: number;
-  sharesMintAuthority: PublicKey;
+  sharesMintAuthority: Address;
   sharesMintAuthorityBump: number;
 };

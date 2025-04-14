@@ -1,13 +1,13 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Address, Rpc, SolanaRpcApi } from '@solana/kit';
 import {
   LiquidityDistribution as RaydiumLiquidityDistribuion,
   Pool,
   RaydiumPoolsResponse,
 } from './RaydiumPoolsResponse';
-import { PersonalPositionState, PoolState } from '../raydium_client';
+import { PersonalPositionState, PoolState } from '../@codegen/raydium/accounts';
 import Decimal from 'decimal.js';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
-import { WhirlpoolStrategy } from '../kamino-client/accounts';
+import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import {
   aprToApy,
   GenericPoolInfo,
@@ -18,7 +18,7 @@ import {
 } from '../utils';
 import axios from 'axios';
 import { FullPercentage } from '../utils/CreationParameters';
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../raydium_client/programId';
+import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../@codegen/raydium/programId';
 import { priceToTickIndexWithRounding } from '../utils/raydium';
 import {
   ApiV3PoolInfoConcentratedItem,
@@ -30,26 +30,29 @@ import {
   SqrtPriceMath,
   TickMath,
 } from '@raydium-io/raydium-sdk-v2/lib';
+import { Connection } from '@solana/web3.js';
 
 export class RaydiumService {
-  private readonly _connection: Connection;
-  private readonly _raydiumProgramId: PublicKey;
+  private readonly _rpc: Rpc<SolanaRpcApi>;
+  private readonly _legacyConnection: Connection;
+  private readonly _raydiumProgramId: Address;
 
-  constructor(connection: Connection, raydiumProgramId: PublicKey = RAYDIUM_PROGRAM_ID) {
+  constructor(rpc: Rpc<SolanaRpcApi>, legacyConnection: Connection, raydiumProgramId: Address = RAYDIUM_PROGRAM_ID) {
+    this._rpc = rpc;
+    this._legacyConnection = legacyConnection;
     this._raydiumProgramId = raydiumProgramId;
-    this._connection = connection;
   }
 
-  getRaydiumProgramId(): PublicKey {
+  getRaydiumProgramId(): Address {
     return this._raydiumProgramId;
   }
 
   async getRaydiumWhirlpools(): Promise<RaydiumPoolsResponse> {
     return (await axios.get<RaydiumPoolsResponse>(`https://api.kamino.finance/v2/raydium/ammPools`)).data;
   }
-  
-  async getRaydiumPoolInfo(poolPubkey: PublicKey): Promise<ApiV3PoolInfoConcentratedItem> {
-    const raydiumLoadParams: RaydiumLoadParams = { connection: this._connection };
+
+  async getRaydiumPoolInfo(poolPubkey: Address): Promise<ApiV3PoolInfoConcentratedItem> {
+    const raydiumLoadParams: RaydiumLoadParams = { connection: this._legacyConnection };
     const raydium = await Raydium.load(raydiumLoadParams);
     const rayClmm = new Clmm({ scope: raydium, moduleName: '' });
     const otherPoolInfo = await rayClmm.getPoolInfoFromRpc(poolPubkey.toString());
@@ -58,7 +61,7 @@ export class RaydiumService {
   }
 
   async getRaydiumPoolLiquidityDistribution(
-    pool: PublicKey,
+    pool: Address,
     keepOrder: boolean = true,
     lowestTick?: number,
     highestTick?: number
@@ -69,7 +72,7 @@ export class RaydiumService {
       )
     ).data;
 
-    const poolState = await PoolState.fetch(this._connection, pool);
+    const poolState = await PoolState.fetch(this._rpc, pool);
     if (!poolState) {
       throw Error(`Raydium pool state ${pool} does not exist`);
     }
@@ -118,11 +121,11 @@ export class RaydiumService {
   }
 
   getStrategyWhirlpoolPoolAprApy = async (strategy: WhirlpoolStrategy, pools?: Pool[]): Promise<WhirlpoolAprApy> => {
-    const position = await PersonalPositionState.fetch(this._connection, strategy.position);
+    const position = await PersonalPositionState.fetch(this._rpc, strategy.position);
     if (!position) {
       throw Error(`Position ${strategy.position} does not exist`);
     }
-    const poolState = await PoolState.fetch(this._connection, strategy.pool);
+    const poolState = await PoolState.fetch(this._rpc, strategy.pool);
     if (!poolState) {
       throw Error(`Raydium pool state ${strategy.pool} does not exist`);
     }
@@ -190,12 +193,12 @@ export class RaydiumService {
   };
 
   getRaydiumPositionAprApy = async (
-    poolPubkey: PublicKey,
+    poolPubkey: Address,
     priceLower: Decimal,
     priceUpper: Decimal,
     pools?: Pool[]
   ): Promise<WhirlpoolAprApy> => {
-    const poolState = await PoolState.fetch(this._connection, poolPubkey);
+    const poolState = await PoolState.fetch(this._rpc, poolPubkey);
     if (!poolState) {
       throw Error(`Raydium pool state ${poolPubkey} does not exist`);
     }
@@ -275,8 +278,8 @@ export class RaydiumService {
     };
   };
 
-  async getGenericPoolInfo(poolPubkey: PublicKey, pools?: Pool[]): Promise<GenericPoolInfo> {
-    const poolState = await PoolState.fetch(this._connection, poolPubkey);
+  async getGenericPoolInfo(poolPubkey: Address, pools?: Pool[]): Promise<GenericPoolInfo> {
+    const poolState = await PoolState.fetch(this._rpc, poolPubkey);
     if (!poolState) {
       throw Error(`Raydium pool state ${poolPubkey} does not exist`);
     }
@@ -296,7 +299,7 @@ export class RaydiumService {
 
     const poolInfo: GenericPoolInfo = {
       dex: 'RAYDIUM',
-      address: new PublicKey(poolPubkey),
+      address: poolPubkey,
       tokenMintA: poolState.tokenMint0,
       tokenMintB: poolState.tokenMint1,
       price: new Decimal(raydiumPool.price),
@@ -310,14 +313,16 @@ export class RaydiumService {
     return poolInfo;
   }
 
-  async getPositionsCountByPool(pool: PublicKey): Promise<number> {
-    const positions = await this._connection.getProgramAccounts(this._raydiumProgramId, {
-      commitment: 'confirmed',
-      filters: [
-        { dataSize: PositionInfoLayout.span },
-        { memcmp: { bytes: pool.toBase58(), offset: PositionInfoLayout.offsetOf('poolId') } },
-      ],
-    });
+  async getPositionsCountByPool(pool: Address): Promise<number> {
+    const positions = await this._rpc
+      .getProgramAccounts(this._raydiumProgramId, {
+        commitment: 'confirmed',
+        filters: [
+          { dataSize: BigInt(PositionInfoLayout.span) },
+          { memcmp: { bytes: pool, offset: BigInt(PositionInfoLayout.offsetOf('poolId')), encoding: 'base58' } },
+        ],
+      })
+      .send();
 
     return positions.length;
   }

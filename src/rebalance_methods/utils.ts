@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { RebalanceTypeKind } from '../kamino-client/types';
+import { RebalanceTypeKind } from '../@codegen/kliquidity/types';
 import {
   Manual,
   PricePercentage,
@@ -9,7 +9,7 @@ import {
   TakeProfit,
   PeriodicRebalance,
   Autodrift,
-} from '../kamino-client/types/RebalanceType';
+} from '../@codegen/kliquidity/types/RebalanceType';
 import { RebalanceFieldInfo } from '../utils';
 import {
   AutodriftMethod,
