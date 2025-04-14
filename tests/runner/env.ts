@@ -6,10 +6,12 @@ import {
   TransactionSigner,
 } from '@solana/kit';
 import { ConnectionPool } from './tx';
+import { Connection } from '@solana/web3.js';
 
 export type Env = {
   admin: TransactionSigner;
   c: ConnectionPool;
+  legacyConnection: Connection;
 }
 
 export type InitEnvParams = {
@@ -37,9 +39,12 @@ export async function initEnv({
   // await sleep(2000);
   console.log(`Airdropping ${solAirdrop} SOL to admin: ${adminSigner.address}...`);
 
+  const legacyConnection = new Connection(rpcUrl, 'processed');
+
   const env: Env = {
     admin: adminSigner,
     c: { rpc, wsRpc: ws },
+    legacyConnection
   };
 
   return env;

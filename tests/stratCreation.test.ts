@@ -54,6 +54,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -63,7 +64,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const strategyState = await kamino.getStrategyByAddress(
       address('4TQ1DZtibQuy5ux33fcZprUmLcLoAdSNfwaUukc9kdXP')
     );
-    const raydiumService = new RaydiumService(connection);
+    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
     const aprApy = await raydiumService.getStrategyWhirlpoolPoolAprApy(strategyState!);
     console.log('aprApy', aprApy);
 
@@ -100,6 +101,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -114,6 +116,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -128,6 +131,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -149,6 +153,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -167,6 +172,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -183,6 +189,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -199,6 +206,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -215,6 +223,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -234,6 +243,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigStaging,
       KaminoProgramIdStaging,
       WHIRLPOOL_PROGRAM_ID,
@@ -303,6 +313,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -363,6 +374,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -383,6 +395,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -398,6 +411,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -413,6 +427,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -474,6 +489,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -533,6 +549,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -557,6 +574,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -574,6 +592,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -594,6 +613,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -614,6 +634,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -633,6 +654,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -652,6 +674,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -702,6 +725,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -752,6 +776,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -801,6 +826,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -850,6 +876,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -898,6 +925,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -947,6 +975,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1018,7 +1047,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium pool liquidity distribution', async () => {
-    const raydiumService = new RaydiumService(connection);
+    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       address('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv')
     );
@@ -1027,7 +1056,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium pool liquidity distribution with range', async () => {
-    const raydiumService = new RaydiumService(connection);
+    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       address('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv'),
       true,
@@ -1039,7 +1068,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium pool liquidity distribution with range inverse order', async () => {
-    const raydiumService = new RaydiumService(connection);
+    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       address('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv'),
       false,
@@ -1051,7 +1080,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium positions for live pool', async () => {
-    const raydiumService = new RaydiumService(connection);
+    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       address('61R1ndXxvsWXXkWSyNkCxnzwd3zUNB8Q2ibmkiLPC8ht')
     );
@@ -1060,7 +1089,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get orca pool liquidity distribution', async () => {
-    const orcaService = new OrcaService(connection, cluster);
+    const orcaService = new OrcaService(env.c.rpc, env.legacyConnection, cluster);
     const liquidityDistribution = await orcaService.getWhirlpoolLiquidityDistribution(
       address('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );
@@ -1069,7 +1098,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get orca positions for pool', async () => {
-    const orcaService = new OrcaService(connection, cluster);
+    const orcaService = new OrcaService(env.c.rpc, env.legacyConnection, cluster);
     const positionsCount = await orcaService.getPositionsCountByPool(
       address('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );
@@ -1078,7 +1107,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium positions for pool', async () => {
-    const raydiumService = new RaydiumService(connection);
+    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
     const positionsCount = await raydiumService.getPositionsCountByPool(
       address('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv')
     );
@@ -1090,6 +1119,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1157,6 +1187,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1221,6 +1252,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1236,6 +1268,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1293,6 +1326,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1344,6 +1378,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1425,6 +1460,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1472,6 +1508,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1519,6 +1556,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1571,6 +1609,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1629,6 +1668,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1681,6 +1721,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1737,6 +1778,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1829,6 +1871,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1851,7 +1894,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const wsUrl: string = 'wss://api.devnet.solana.com';
     const env = await initEnv({ rpcUrl, wsUrl });
 
-    const kamino = new Kamino(cluster, env.c.rpc);
+    const kamino = new Kamino(cluster, env.c.rpc, env.legacyConnection);
 
     const shareData = await kamino.getStrategiesShareData({});
     console.log('shareData', shareData.length);
@@ -1861,6 +1904,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1882,6 +1926,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,
@@ -1904,6 +1949,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
+      env.legacyConnection,
       GlobalConfigMainnet,
       KaminoProgramIdMainnet,
       WHIRLPOOL_PROGRAM_ID,

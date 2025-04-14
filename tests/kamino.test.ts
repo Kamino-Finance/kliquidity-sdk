@@ -84,6 +84,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -282,6 +283,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -314,6 +316,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -330,6 +333,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -344,6 +348,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -361,6 +366,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -382,6 +388,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -397,6 +404,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -434,6 +442,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -446,6 +455,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -458,6 +468,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -531,6 +542,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -566,6 +578,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -597,6 +610,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -670,6 +684,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -729,6 +744,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -773,6 +789,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -818,6 +835,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -850,6 +868,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -882,6 +901,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -918,6 +938,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -951,7 +972,8 @@ describe('Kamino SDK Tests', async () => {
   });
 
   it('should rebalance an Orca strategy', async () => {
-    const kamino = new Kamino('localnet', env.c.rpc, fixtures.globalConfig, fixtures.kaminoProgramId);
+    const kamino = new Kamino('localnet', env.c.rpc, env.legacyConnection,
+      fixtures.globalConfig, fixtures.kaminoProgramId);
 
     // New position to rebalance into
     const newPosition = await generateKeyPairSigner();
@@ -987,6 +1009,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1057,6 +1080,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1112,6 +1136,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1130,6 +1155,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1148,6 +1174,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1167,6 +1194,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1185,6 +1213,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1203,6 +1232,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1238,6 +1268,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1276,6 +1307,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1299,6 +1331,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1316,6 +1349,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1339,6 +1373,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1361,6 +1396,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1383,6 +1419,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1405,6 +1442,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1427,6 +1465,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1449,6 +1488,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1497,6 +1537,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1561,6 +1602,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1592,6 +1634,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1623,6 +1666,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1654,6 +1698,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1685,6 +1730,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1729,6 +1775,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1777,6 +1824,7 @@ describe('Kamino SDK Tests', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
+      env.legacyConnection,
       fixtures.globalConfig,
       fixtures.kaminoProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1854,7 +1902,7 @@ describe('Kamino SDK Tests', async () => {
     const rpcUrl: string = 'https://api.mainnet-beta.solana.com';
     const wsUrl: string = 'wss://api.mainnet-beta.solana.com';
     const env = await initEnv({ rpcUrl, wsUrl })
-    const kamino = new Kamino('mainnet-beta', env.c.rpc);
+    const kamino = new Kamino('mainnet-beta', env.c.rpc, env.legacyConnection);
     const prices = await kamino.getAllPrices();
     expect(prices).not.to.be.undefined;
     expect(Object.keys(prices.spot)).to.have.length.greaterThan(0);

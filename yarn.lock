@@ -350,29 +350,6 @@
     decimal.js "^10.3.1"
     tiny-invariant "^1.2.0"
 
-"@orca-so/whirlpools-client@1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@orca-so/whirlpools-client/-/whirlpools-client-1.0.5.tgz#6f718854b74e9f8333c5914a601f37dd2db4c950"
-  integrity sha512-KFnwRaj0r0PrWq9mN0ol9qf7Mb6IIX1guFnFuaY81YwCtFsX/gxVQRemEwJSnbkIAW1rb8w5IAu0IqN4CIIA6w==
-
-"@orca-so/whirlpools-core@1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@orca-so/whirlpools-core/-/whirlpools-core-1.0.4.tgz#398e5c4e370a527e0b00bd8fe7587082df75548f"
-  integrity sha512-+Yg8zuKS7aR0ydOMR0fzEg+PkgqEBWlqj8o5nvZmcwnZ0qF0O2CU++pEef3/RhUxUPPrHjkJLY6uSh+qx0/MIA==
-
-"@orca-so/whirlpools@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@orca-so/whirlpools/-/whirlpools-1.1.1.tgz#90c35020d7e385d3e4640ddd0f67053acc25c85a"
-  integrity sha512-DRmOLIAOZwOu7MMf7TdAXeM69EKeFwZ2l4bLdNZUk6bD0BDAAZcug8aUUMsbFRY4eDacmCEdtqK4Y/z8HkE/Hw==
-  dependencies:
-    "@orca-so/whirlpools-client" "1.0.5"
-    "@orca-so/whirlpools-core" "1.0.4"
-    "@solana-program/memo" "^0.7.0"
-    "@solana-program/system" "^0.7.0"
-    "@solana-program/token" "^0.5.1"
-    "@solana-program/token-2022" "^0.4.0"
-    "@solana/sysvars" "^2.1.0"
-
 "@project-serum/anchor@0.20.1", "@project-serum/anchor@^0.20.1":
   version "0.20.1"
   resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.20.1.tgz#0937807e807e8332aa708cfef4bcb6cbb88b4129"
@@ -450,11 +427,6 @@
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/@solana-program/compute-budget/-/compute-budget-0.7.0.tgz#a9e30b2bb4f9d11b8b8eef926b1ce258c6382431"
   integrity sha512-/JJSE1fKO5zx7Z55Z2tLGWBDDi7tUE+xMlK8qqkHlY51KpqksMsIBzQMkG9Dqhoe2Cnn5/t3QK1nJKqW6eHzpg==
-
-"@solana-program/memo@^0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@solana-program/memo/-/memo-0.7.0.tgz#7f38df2b3e5ed7e771c17920594703b19cf731e4"
-  integrity sha512-3T9iUjWSYtN/5S5jzJuasD2yQfVfFAQ9yTwIE25+P9peWqz4oarn6ZQvRj/FLcBqaMLtSqLhU1hN2cyVBS6hyg==
 
 "@solana-program/system@^0.7.0":
   version "0.7.0"
@@ -965,7 +937,7 @@
     "@solana/rpc-types" "2.1.0"
     "@solana/transaction-messages" "2.1.0"
 
-"@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.31.0", "@solana/web3.js@^1.32.0", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.95.3":
+"@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.31.0", "@solana/web3.js@^1.32.0", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.95.3", "@solana/web3.js@^1.98.0":
   version "1.98.0"
   resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.98.0.tgz#21ecfe8198c10831df6f0cfde7f68370d0405917"
   integrity sha512-nz3Q5OeyGFpFCR+erX2f6JPt3sKhzhYcSycBCSPkWjzSVDh/Rr1FqTVMRe58FKO16/ivTUcuJjeS5MyBvpkbzA==
@@ -1407,10 +1379,19 @@ axios@^0.25.0:
   dependencies:
     follow-redirects "^1.14.7"
 
-axios@^1.1.3, axios@^1.7.7, axios@^1.7.8:
+axios@^1.1.3, axios@^1.7.7:
   version "1.7.9"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.9.tgz#d7d071380c132a24accda1b2cfc1535b79ec650a"
   integrity sha512-LhLcE7Hbiryz8oMDdDptSrWowmB4Bl6RCt6sIJKpRB4XtVf0iEgewX3au/pJqm+Py1kCASkb/FFKjxQaLtxJvw==
+  dependencies:
+    follow-redirects "^1.15.6"
+    form-data "^4.0.0"
+    proxy-from-env "^1.1.0"
+
+axios@^1.8.4:
+  version "1.8.4"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.8.4.tgz#78990bb4bc63d2cae072952d374835950a82f447"
+  integrity sha512-eBSYY4Y68NNlHbHBMdeDmKNtDgXWhQsJcGqzO3iLUM0GraQFSS9cVgPX5I9b3lbdFKyYoAEGAZF1DwhTaljNAw==
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.0"

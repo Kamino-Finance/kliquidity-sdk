@@ -30,14 +30,17 @@ import {
   SqrtPriceMath,
   TickMath,
 } from '@raydium-io/raydium-sdk-v2/lib';
+import { Connection } from '@solana/web3.js';
 
 export class RaydiumService {
-  private readonly _connection: Rpc<SolanaRpcApi>;
+  private readonly _rpc: Rpc<SolanaRpcApi>;
+  private readonly _legacyConnection: Connection;
   private readonly _raydiumProgramId: Address;
 
-  constructor(connection: Rpc<SolanaRpcApi>, raydiumProgramId: Address = RAYDIUM_PROGRAM_ID) {
+  constructor(rpc: Rpc<SolanaRpcApi>, legacyConnection: Connection, raydiumProgramId: Address = RAYDIUM_PROGRAM_ID) {
+    this._rpc = rpc;
+    this._legacyConnection = legacyConnection;
     this._raydiumProgramId = raydiumProgramId;
-    this._connection = connection;
   }
 
   getRaydiumProgramId(): Address {
@@ -49,7 +52,7 @@ export class RaydiumService {
   }
 
   async getRaydiumPoolInfo(poolPubkey: Address): Promise<ApiV3PoolInfoConcentratedItem> {
-    const raydiumLoadParams: RaydiumLoadParams = { connection: this._connection };
+    const raydiumLoadParams: RaydiumLoadParams = { connection: this._legacyConnection };
     const raydium = await Raydium.load(raydiumLoadParams);
     const rayClmm = new Clmm({ scope: raydium, moduleName: '' });
     const otherPoolInfo = await rayClmm.getPoolInfoFromRpc(poolPubkey.toString());
@@ -69,7 +72,7 @@ export class RaydiumService {
       )
     ).data;
 
-    const poolState = await PoolState.fetch(this._connection, pool);
+    const poolState = await PoolState.fetch(this._rpc, pool);
     if (!poolState) {
       throw Error(`Raydium pool state ${pool} does not exist`);
     }
@@ -118,11 +121,11 @@ export class RaydiumService {
   }
 
   getStrategyWhirlpoolPoolAprApy = async (strategy: WhirlpoolStrategy, pools?: Pool[]): Promise<WhirlpoolAprApy> => {
-    const position = await PersonalPositionState.fetch(this._connection, strategy.position);
+    const position = await PersonalPositionState.fetch(this._rpc, strategy.position);
     if (!position) {
       throw Error(`Position ${strategy.position} does not exist`);
     }
-    const poolState = await PoolState.fetch(this._connection, strategy.pool);
+    const poolState = await PoolState.fetch(this._rpc, strategy.pool);
     if (!poolState) {
       throw Error(`Raydium pool state ${strategy.pool} does not exist`);
     }
@@ -195,7 +198,7 @@ export class RaydiumService {
     priceUpper: Decimal,
     pools?: Pool[]
   ): Promise<WhirlpoolAprApy> => {
-    const poolState = await PoolState.fetch(this._connection, poolPubkey);
+    const poolState = await PoolState.fetch(this._rpc, poolPubkey);
     if (!poolState) {
       throw Error(`Raydium pool state ${poolPubkey} does not exist`);
     }
@@ -276,7 +279,7 @@ export class RaydiumService {
   };
 
   async getGenericPoolInfo(poolPubkey: Address, pools?: Pool[]): Promise<GenericPoolInfo> {
-    const poolState = await PoolState.fetch(this._connection, poolPubkey);
+    const poolState = await PoolState.fetch(this._rpc, poolPubkey);
     if (!poolState) {
       throw Error(`Raydium pool state ${poolPubkey} does not exist`);
     }
@@ -311,7 +314,7 @@ export class RaydiumService {
   }
 
   async getPositionsCountByPool(pool: Address): Promise<number> {
-    const positions = await this._connection.getProgramAccounts(this._raydiumProgramId, {
+    const positions = await this._rpc.getProgramAccounts(this._raydiumProgramId, {
       commitment: 'confirmed',
       filters: [
         { dataSize: BigInt(PositionInfoLayout.span) },

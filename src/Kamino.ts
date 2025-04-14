@@ -351,12 +351,15 @@ import {
 } from '@solana-program/address-lookup-table';
 import { fetchMultipleLookupTableAccounts } from './utils/lookupTable';
 import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } from '@solana/rpc-types';
+import { Connection } from '@solana/web3.js';
+import { toLegacyPublicKey } from './utils/compat';
 
 const addressEncoder = getAddressEncoder();
 
 export class Kamino {
   private readonly _cluster: SolanaCluster;
   private readonly _rpc: Rpc<SolanaRpcApi>;
+  private readonly _legacyConnection: Connection;
   readonly _config: HubbleConfig;
   private _globalConfig: Address;
   private readonly _scope: Scope;
@@ -370,14 +373,18 @@ export class Kamino {
    * Create a new instance of the Kamino SDK class.
    * @param cluster Name of the Solana cluster
    * @param rpc Connection to the Solana cluster
+   * @param legacyConnection Connection to the Solana cluster
    * @param globalConfig override kamino global config
    * @param programId override kamino program id
    * @param whirlpoolProgramId override whirlpool program id
    * @param raydiumProgramId override raydium program id
+   * @param meteoraProgramId
+   * @param jupBaseAPI
    */
   constructor(
     cluster: SolanaCluster,
     rpc: Rpc<SolanaRpcApi>,
+    legacyConnection: Connection,
     globalConfig?: Address,
     programId?: Address,
     whirlpoolProgramId?: Address,
@@ -387,6 +394,7 @@ export class Kamino {
   ) {
     this._cluster = cluster;
     this._rpc = rpc;
+    this._legacyConnection = legacyConnection;
     this._config = getConfigByCluster(cluster);
 
     if (programId && programId === STAGING_KAMINO_PROGRAM_ID) {
@@ -398,8 +406,8 @@ export class Kamino {
     }
 
     this._scope = new Scope(cluster, rpc);
-    this._orcaService = new OrcaService(rpc, cluster, whirlpoolProgramId);
-    this._raydiumService = new RaydiumService(rpc, raydiumProgramId);
+    this._orcaService = new OrcaService(rpc, legacyConnection, cluster, whirlpoolProgramId);
+    this._raydiumService = new RaydiumService(rpc, legacyConnection, raydiumProgramId);
     this._meteoraService = new MeteoraService(rpc, meteoraProgramId);
 
     if (jupBaseAPI) {
@@ -2494,10 +2502,14 @@ export class Kamino {
     const result: StrategyHolder[] = [];
     for (const tokenAccount of tokenAccounts) {
       const accountData = tokenAccount.account.data;
-      result.push({
-        holderPubkey: address(accountData.parsed!.info.owner),
-        amount: new Decimal(accountData.parsed!.info.tokenAmount.uiAmountString),
-      });
+      if ('parsed' in accountData) {
+        result.push({
+          // @ts-ignore
+          holderPubkey: address(accountData.parsed.info.owner),
+          // @ts-ignore
+          amount: new Decimal(accountData.parsed!.info.tokenAmount.uiAmountString),
+        });
+      }
     }
     return result;
   };
@@ -3304,15 +3316,15 @@ export class Kamino {
           input: DepositAmountsForSwap,
           tokenAMint: Address,
           tokenBMint: Address,
-          user: Address,
+          user: TransactionSigner,
           slippageBps: Decimal,
           allAccounts: Address[]
-        ) =>
+        ): Promise<[IInstruction[], Address[]]> =>
           this.getJupSwapIxsV6(
             input,
             tokenAMint,
             tokenBMint,
-            user,
+            user.address,
             slippageBps,
             false,
             allAccounts,
@@ -4440,8 +4452,8 @@ export class Kamino {
     tickUpperIndex: number
   ): Promise<MetadataProgramAddressesRaydium> => {
     const { publicKey: protocolPosition, nonce: protocolPositionBump } = getPdaProtocolPositionAddress(
-      this._raydiumService.getRaydiumProgramId(),
-      pool,
+      toLegacyPublicKey(this._raydiumService.getRaydiumProgramId()),
+      toLegacyPublicKey(pool),
       tickLowerIndex,
       tickUpperIndex
     );
@@ -4459,7 +4471,7 @@ export class Kamino {
     return {
       position,
       positionBump,
-      protocolPosition,
+      protocolPosition: fromLegacyPublicKey(protocolPosition),
       protocolPositionBump,
       positionMetadata,
       positionMetadataBump,
@@ -4795,7 +4807,7 @@ export class Kamino {
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
       poolProgram: this._orcaService.getWhirlpoolProgramId(),
       oldPositionOrBaseVaultAuthority: isRebalancing ? oldPositionOrBaseVaultAuthority : baseVaultAuthority,
-      oldPositionMintOrBaseVaultAuthority: isRebalancing ? oldPositionMintOrBaseVaultAuthority : positionMint,
+      oldPositionMintOrBaseVaultAuthority: isRebalancing ? oldPositionMintOrBaseVaultAuthority : positionMint.address,
       oldPositionTokenAccountOrBaseVaultAuthority: isRebalancing
         ? oldPositionTokenAccountOrBaseVaultAuthority
         : positionTokenAccount,
@@ -4937,7 +4949,7 @@ export class Kamino {
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
       poolProgram: this._raydiumService.getRaydiumProgramId(),
       oldPositionOrBaseVaultAuthority: isRebalancing ? oldPositionOrBaseVaultAuthority : baseVaultAuthority,
-      oldPositionMintOrBaseVaultAuthority: isRebalancing ? oldPositionMintOrBaseVaultAuthority : positionMint,
+      oldPositionMintOrBaseVaultAuthority: isRebalancing ? oldPositionMintOrBaseVaultAuthority : positionMint.address,
       oldPositionTokenAccountOrBaseVaultAuthority: isRebalancing
         ? oldPositionTokenAccountOrBaseVaultAuthority
         : positionTokenAccount,
@@ -6528,11 +6540,13 @@ export class Kamino {
     for (const tokenAccount of userTokenAccounts) {
       const accountData = tokenAccount.account.data;
       if ('parsed' in accountData) {
-        const strategy = liveStrategies.find((x) => x.strategy.sharesMint === accountData.parsed!.info.mint);
+        // @ts-ignore
+        const strategy = liveStrategies.find((x) => x.strategy.sharesMint === accountData.parsed.info.mint);
         if (strategy) {
           positions.push({
             shareMint: strategy.strategy.sharesMint,
             strategy: strategy.address,
+            // @ts-ignore
             sharesAmount: new Decimal(accountData.parsed.info.tokenAmount.uiAmountString),
             strategyDex: numberToDex(strategy.strategy.strategyDex.toNumber()),
           });
@@ -6916,11 +6930,11 @@ export class Kamino {
       );
 
       const params: InternalAddLiquidityQuoteParam = {
-        tokenMintA,
-        tokenMintB,
+        tokenMintA: toLegacyPublicKey(tokenMintA),
+        tokenMintB: toLegacyPublicKey(tokenMintB),
         tickCurrentIndex: whirlpoolState.tickCurrentIndex,
         sqrtPrice: whirlpoolState.sqrtPrice,
-        inputTokenMint: tokenMintA,
+        inputTokenMint: toLegacyPublicKey(tokenMintA),
         inputTokenAmount: new BN(collToLamportsDecimal(tokenAAmountToDeposit, decimalsA).toString()),
         tickLowerIndex,
         tickUpperIndex,
@@ -7091,7 +7105,7 @@ export class Kamino {
       return [new Decimal(0), new Decimal(0)];
     }
     // Given A in ATA, calc how much A and B
-    const accessor = new OrcaDAL(whirlpoolConfig, this._orcaService.getWhirlpoolProgramId(), this._rpc);
+    const accessor = new OrcaDAL(whirlpoolConfig, this._orcaService.getWhirlpoolProgramId(), this._legacyConnection);
     const orcaPosition = new OrcaPosition(accessor);
     const defaultSlippagePercentage = Percentage.fromFraction(1, 1000); // 0.1%
 
@@ -7404,11 +7418,11 @@ export class Kamino {
     }
 
     const params: InternalAddLiquidityQuoteParam = {
-      tokenMintA: strategyState.tokenAMint,
-      tokenMintB: strategyState.tokenBMint,
+      tokenMintA: toLegacyPublicKey(strategyState.tokenAMint),
+      tokenMintB: toLegacyPublicKey(strategyState.tokenBMint),
       tickCurrentIndex: whirlpool.tickCurrentIndex,
       sqrtPrice: whirlpool.sqrtPrice,
-      inputTokenMint: strategyState.tokenAMint,
+      inputTokenMint: toLegacyPublicKey(strategyState.tokenAMint),
       inputTokenAmount: amountA,
       tickLowerIndex: position.tickLowerIndex,
       tickUpperIndex: position.tickUpperIndex,
@@ -7486,11 +7500,11 @@ export class Kamino {
     }
 
     const params: InternalAddLiquidityQuoteParam = {
-      tokenMintA: strategyState.tokenAMint,
-      tokenMintB: strategyState.tokenBMint,
+      tokenMintA: toLegacyPublicKey(strategyState.tokenAMint),
+      tokenMintB: toLegacyPublicKey(strategyState.tokenBMint),
       tickCurrentIndex: whirlpool.tickCurrentIndex,
       sqrtPrice: whirlpool.sqrtPrice,
-      inputTokenMint: strategyState.tokenBMint,
+      inputTokenMint: toLegacyPublicKey(strategyState.tokenBMint),
       inputTokenAmount: amountB,
       tickLowerIndex: position.tickLowerIndex,
       tickUpperIndex: position.tickUpperIndex,
