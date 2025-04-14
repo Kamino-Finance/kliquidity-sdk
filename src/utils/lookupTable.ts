@@ -1,13 +1,10 @@
-import {
-  Address,
-  Rpc,
-  GetProgramAccountsApi,
-  Account, GetMultipleAccountsApi,
-} from '@solana/kit';
+import { Address, Rpc, GetProgramAccountsApi, Account, GetMultipleAccountsApi } from '@solana/kit';
 import { LUT_OWNER_KEY } from '../constants/pubkeys';
 import { SolanaCluster } from '@hubbleprotocol/hubble-config';
 import {
-  ADDRESS_LOOKUP_TABLE_PROGRAM_ADDRESS, AddressLookupTable, getAddressLookupTableDecoder,
+  ADDRESS_LOOKUP_TABLE_PROGRAM_ADDRESS,
+  AddressLookupTable,
+  getAddressLookupTableDecoder,
 } from '@solana-program/address-lookup-table';
 
 const lutDecoder = getAddressLookupTableDecoder();
@@ -55,7 +52,10 @@ export async function getAllUserLookupTables(
   });
 }
 
-export async function fetchMultipleLookupTableAccounts(rpc: Rpc<GetMultipleAccountsApi>, addresses: Address[]): Promise<Account<AddressLookupTable>[]> {
+export async function fetchMultipleLookupTableAccounts(
+  rpc: Rpc<GetMultipleAccountsApi>,
+  addresses: Address[]
+): Promise<Account<AddressLookupTable>[]> {
   const accountInfos = await rpc.getMultipleAccounts(addresses).send();
   const luts: Account<AddressLookupTable>[] = [];
   for (let i = 0; i < accountInfos.value.length; i++) {

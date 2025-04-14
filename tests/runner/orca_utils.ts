@@ -3,7 +3,10 @@ import {
   IInstruction,
   TransactionSigner,
   generateKeyPairSigner,
-  getProgramDerivedAddress, getAddressEncoder, Rpc, GetAccountInfoApi,
+  getProgramDerivedAddress,
+  getAddressEncoder,
+  Rpc,
+  GetAccountInfoApi,
 } from '@solana/kit';
 import { DeployedPool, range } from './utils';
 import * as WhirlpoolInstructions from '../../src/@codegen/whirlpools/instructions';
@@ -50,8 +53,12 @@ export async function initializeWhirlpool(
   }
 
   const [feeTierPk] = await getProgramDerivedAddress({
-    seeds: [Buffer.from('fee_tier'), addressEncoder.encode(config.address), new anchor.BN(tickSize).toArrayLike(Buffer, 'le', 2)],
-    programAddress: WHIRLPOOL_PROGRAM_ID
+    seeds: [
+      Buffer.from('fee_tier'),
+      addressEncoder.encode(config.address),
+      new anchor.BN(tickSize).toArrayLike(Buffer, 'le', 2),
+    ],
+    programAddress: WHIRLPOOL_PROGRAM_ID,
   });
 
   {
@@ -115,13 +122,7 @@ export async function initializeWhirlpool(
   }
 
   {
-    const tx = await initTickArrayForTicks(
-      env.admin,
-      whirlpool,
-      range(-300, 300, 40),
-      tickSize,
-      WHIRLPOOL_PROGRAM_ID
-    );
+    const tx = await initTickArrayForTicks(env.admin, whirlpool, range(-300, 300, 40), tickSize, WHIRLPOOL_PROGRAM_ID);
 
     const sig = await sendAndConfirmTx(env.c, env.admin, tx);
     console.log('InitializeTickArray:', sig);
@@ -199,13 +200,13 @@ export async function initTickArrayInstruction(
   return WhirlpoolInstructions.initializeTickArray(initTickArrayArgs, initTickArrayAccounts);
 }
 
-async function getTickArray(programId: Address, whirlpoolAddress: Address, startTick: number): Promise<ProgramDerivedAddress> {
+async function getTickArray(
+  programId: Address,
+  whirlpoolAddress: Address,
+  startTick: number
+): Promise<ProgramDerivedAddress> {
   return getProgramDerivedAddress({
-    seeds: [
-      Buffer.from('tick_array'),
-      addressEncoder.encode(whirlpoolAddress),
-      Buffer.from(startTick.toString()),
-    ],
+    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpoolAddress), Buffer.from(startTick.toString())],
     programAddress: programId,
   });
 }
@@ -216,7 +217,11 @@ async function getTokenBadge(
   tokenMintKey: Address
 ): Promise<ProgramDerivedAddress> {
   return getProgramDerivedAddress({
-    seeds: [Buffer.from('token_badge'), addressEncoder.encode(whirlpoolsConfigAddress), addressEncoder.encode(tokenMintKey)],
+    seeds: [
+      Buffer.from('token_badge'),
+      addressEncoder.encode(whirlpoolsConfigAddress),
+      addressEncoder.encode(tokenMintKey),
+    ],
     programAddress: programId,
   });
 }
@@ -236,19 +241,11 @@ export async function getTickArrayPubkeysFromRangeOrca(
   const endTickIndex = getStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing, 0);
 
   const [startTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [
-      Buffer.from('tick_array'),
-      addressEncoder.encode(whirlpool),
-      Buffer.from(startTickIndex.toString()),
-    ],
+    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(startTickIndex.toString())],
     programAddress: WHIRLPOOL_PROGRAM_ID,
   });
   const [endTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [
-      Buffer.from('tick_array'),
-      addressEncoder.encode(whirlpool),
-      Buffer.from(endTickIndex.toString()),
-    ],
+    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(endTickIndex.toString())],
     programAddress: WHIRLPOOL_PROGRAM_ID,
   });
   return [startTickIndexPk, endTickIndexPk];

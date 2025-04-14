@@ -10,6 +10,6 @@ export async function getTickArray(
 ): Promise<ProgramDerivedAddress> {
   return await getProgramDerivedAddress({
     seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpoolAddress), Buffer.from(startTick.toString())],
-    programAddress: programId
+    programAddress: programId,
   });
 }

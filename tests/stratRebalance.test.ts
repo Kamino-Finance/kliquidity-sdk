@@ -1,8 +1,4 @@
-import {
-  address,
-  generateKeyPairSigner,
-  IInstruction,
-} from '@solana/kit';
+import { address, generateKeyPairSigner, IInstruction } from '@solana/kit';
 import {
   Dex,
   DriftRebalanceTypeName,
@@ -90,18 +86,18 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
-    let txHash = await sendAndConfirmTx(env.c, signer, ixs)
+    let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
     const strategySetupIxs: IInstruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
-    txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs)
+    txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
     const strategySetupFeesIxs: IInstruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
-    txHash = await sendAndConfirmTx(env.c, signer, strategySetupFeesIxs)
+    txHash = await sendAndConfirmTx(env.c, signer, strategySetupFeesIxs);
     console.log('setup strategy fees tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
@@ -110,10 +106,14 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
 
     // set up lookup table for strategy
     const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.address);
-    await sendAndConfirmTx(env.c, signer, [strategyLookupTable.createLookupTableIx, ...strategyLookupTable.populateLookupTableIxs, strategyLookupTable.updateStrategyLookupTableIx]);
+    await sendAndConfirmTx(env.c, signer, [
+      strategyLookupTable.createLookupTableIx,
+      ...strategyLookupTable.populateLookupTableIxs,
+      strategyLookupTable.updateStrategyLookupTableIx,
+    ]);
 
     for (const ix of updateRewardMappingIxs) {
-      txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable.lookupTable])
+      txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable.lookupTable]);
       console.log('setup strategy reward mapping', txHash);
     }
 
@@ -122,7 +122,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const openPositionTxId = await sendAndConfirmTx(env.c, signer, [
       ...getComputeBudgetAndPriorityFeeIxns(1_400_000),
       ...openPositionIxn,
-    ])
+    ]);
     console.log('openPositionTxId', openPositionTxId);
 
     let stratFields = await kamino.readRebalancingParams(newStrategy.address);
@@ -170,7 +170,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceLower,
       newPriceUpper
     );
-    const rebalanceTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable.lookupTable]);
+    const rebalanceTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable.lookupTable]
+    );
     console.log('rebalanceTxId', rebalanceTxId);
 
     stratFields = await kamino.readRebalancingParams(newStrategy.address);
@@ -353,7 +359,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceUpper
     );
 
-    const rebalanceTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalanceTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalanceTxId', rebalanceTxId);
 
     stratFields = await kamino.readRebalancingParams(newStrategy.address);
@@ -578,11 +590,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceUpper
     );
 
-    const rebalanceTxId = await sendAndConfirmTx(env.c, signer, [
-      ...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns
-    ], [], [
-      ...(await kamino.getMainLookupTablePks()), strategyLookupTable
-    ]);
+    const rebalanceTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalanceTxId', rebalanceTxId);
 
     // read the updated strat fields
@@ -805,7 +819,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceUpper
     );
 
-    const rebalanceTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalanceTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalanceTxId', rebalanceTxId);
 
     stratFields = await kamino.readRebalancingParams(newStrategy.address);
@@ -960,7 +980,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceUpper
     );
 
-    const rebalanceTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalanceTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalanceTxId', rebalanceTxId);
 
     stratFields = await kamino.readRebalancingParams(newStrategy.address);
@@ -1214,7 +1240,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceUpper
     );
 
-    const rebalanceTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalanceTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalanceTxId', rebalanceTxId);
 
     stratFields = await kamino.readRebalancingParams(newStrategy.address);
@@ -1495,7 +1527,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceUpper
     );
 
-    const rebalanceTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalanceTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalanceTxId', rebalanceTxId);
 
     stratFields = await kamino.readRebalancingParams(newStrategy.address);
@@ -1621,7 +1659,11 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
 
     expect(strategyState!.rebalanceRaw.referencePriceType).to.be.eq(POOL.discriminator);
 
-    let updatePriceReferenceTypeIx = await kamino.getUpdateReferencePriceTypeIx(env.admin, newStrategy.address, new TWAP());
+    let updatePriceReferenceTypeIx = await kamino.getUpdateReferencePriceTypeIx(
+      env.admin,
+      newStrategy.address,
+      new TWAP()
+    );
     let updatePriceReferenceTypeTxId = await sendAndConfirmTx(env.c, signer, [updatePriceReferenceTypeIx]);
     console.log('update reference price to TWAP tx', updatePriceReferenceTypeTxId);
 
@@ -1777,7 +1819,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceUpper
     );
 
-    const rebalanceTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalanceTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalanceIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalance to pricePercentage TxId', rebalanceTxId);
 
     // 3. update the rebalance strategy to price percentage with reset
@@ -1830,8 +1878,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceLower,
       newPriceUpper
     );
-    const rebalancePricePercentageWithReseteTxId = await sendAndConfirmTx(env.c, signer,
-      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalancePricePercentageWithResetIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalancePricePercentageWithReseteTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...rebalancePricePercentageWithResetIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalance to pricePercentageWithReset TxId', rebalancePricePercentageWithReseteTxId);
 
     // 4. update the rebalance strategy to drift
@@ -1872,14 +1925,14 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     );
 
     newPosition = await generateKeyPairSigner();
-    const driftIxns = await kamino.rebalance(
-      env.admin,
-      newStrategy.address,
-      newPosition,
-      newPriceLower,
-      newPriceUpper
+    const driftIxns = await kamino.rebalance(env.admin, newStrategy.address, newPosition, newPriceLower, newPriceUpper);
+    const rebalanceDriftTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...driftIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
     );
-    const rebalanceDriftTxId = await sendAndConfirmTx(env.c, signer,[...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...driftIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
     console.log('rebalance to Drift TxId', rebalanceDriftTxId);
 
     // 5. update the rebalance strategy to TakeProfit
@@ -1931,7 +1984,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceLower,
       newPriceUpper
     );
-    const rebalanceTakeProfitTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...takeProfitIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalanceTakeProfitTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...takeProfitIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalance to TakeProfit TxId', rebalanceTakeProfitTxId);
 
     // sleep so rpc doesn't complain about rate limiting
@@ -1987,7 +2046,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newPriceUpper
     );
 
-    const rebalancePeriodicRebalanceTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...periodicRebalanceIxns], [], [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalancePeriodicRebalanceTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...periodicRebalanceIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalance to Periodic Rebalance TxId', rebalancePeriodicRebalanceTxId);
     // sleep so rpc doesn't complain about rate limiting
     await sleep(10000);
@@ -2029,17 +2094,15 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     );
 
     newPosition = await generateKeyPairSigner();
-    const expanderIxns = await kamino.rebalance(
-      signer,
-      newStrategy.address,
-      newPosition,
-      newPriceLower,
-      newPriceUpper
-    );
+    const expanderIxns = await kamino.rebalance(signer, newStrategy.address, newPosition, newPriceLower, newPriceUpper);
 
-    const rebalanceExpanderTxId = await sendAndConfirmTx(env.c, signer,
-      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...expanderIxns], [],
-      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]);
+    const rebalanceExpanderTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...expanderIxns],
+      [],
+      [...(await kamino.getMainLookupTablePks()), strategyLookupTable]
+    );
     console.log('rebalance to Expander TxId', rebalanceExpanderTxId);
   });
 });

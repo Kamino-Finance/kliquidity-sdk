@@ -1,4 +1,4 @@
-import { ClmmConfigInfo } from "@raydium-io/raydium-sdk-v2/lib";
+import { ClmmConfigInfo } from '@raydium-io/raydium-sdk-v2/lib';
 
 export interface RaydiumPoolsResponse {
   data: Pool[];

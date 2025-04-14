@@ -1492,10 +1492,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u64",
-                3
-              ]
+              "array": ["u64", 3]
             }
           }
         ]
@@ -1513,19 +1510,13 @@
           {
             "name": "operationOwners",
             "type": {
-              "array": [
-                "publicKey",
-                10
-              ]
+              "array": ["publicKey", 10]
             }
           },
           {
             "name": "whitelistMints",
             "type": {
-              "array": [
-                "publicKey",
-                100
-              ]
+              "array": ["publicKey", 100]
             }
           }
         ]
@@ -1558,10 +1549,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u128",
-                5
-              ]
+              "array": ["u128", 5]
             }
           }
         ]
@@ -1626,10 +1614,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u64",
-                8
-              ]
+              "array": ["u64", 8]
             }
           }
         ]
@@ -1643,10 +1628,7 @@
           {
             "name": "bump",
             "type": {
-              "array": [
-                "u8",
-                1
-              ]
+              "array": ["u8", 1]
             }
           },
           {
@@ -1748,10 +1730,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                7
-              ]
+              "array": ["u8", 7]
             }
           },
           {
@@ -1768,10 +1747,7 @@
           {
             "name": "tickArrayBitmap",
             "type": {
-              "array": [
-                "u64",
-                16
-              ]
+              "array": ["u64", 16]
             }
           },
           {
@@ -1805,19 +1781,13 @@
           {
             "name": "padding1",
             "type": {
-              "array": [
-                "u64",
-                25
-              ]
+              "array": ["u64", 25]
             }
           },
           {
             "name": "padding2",
             "type": {
-              "array": [
-                "u64",
-                32
-              ]
+              "array": ["u64", 32]
             }
           }
         ]
@@ -1867,19 +1837,13 @@
           {
             "name": "rewardGrowthInside",
             "type": {
-              "array": [
-                "u128",
-                3
-              ]
+              "array": ["u128", 3]
             }
           },
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u64",
-                8
-              ]
+              "array": ["u64", 8]
             }
           }
         ]
@@ -1916,10 +1880,7 @@
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u8",
-                115
-              ]
+              "array": ["u8", 115]
             }
           }
         ]
@@ -1939,10 +1900,7 @@
             "type": {
               "array": [
                 {
-                  "array": [
-                    "u64",
-                    8
-                  ]
+                  "array": ["u64", 8]
                 },
                 14
               ]
@@ -1953,10 +1911,7 @@
             "type": {
               "array": [
                 {
-                  "array": [
-                    "u64",
-                    8
-                  ]
+                  "array": ["u64", 8]
                 },
                 14
               ]
@@ -2107,19 +2062,13 @@
           {
             "name": "rewardGrowthsOutsideX64",
             "type": {
-              "array": [
-                "u128",
-                3
-              ]
+              "array": ["u128", 3]
             }
           },
           {
             "name": "padding",
             "type": {
-              "array": [
-                "u32",
-                13
-              ]
+              "array": ["u32", 13]
             }
           }
         ]
@@ -2350,10 +2299,7 @@
         {
           "name": "rewardAmounts",
           "type": {
-            "array": [
-              "u64",
-              3
-            ]
+            "array": ["u64", 3]
           },
           "index": false
         },
@@ -2455,10 +2401,7 @@
         {
           "name": "rewardGrowthGlobalX64",
           "type": {
-            "array": [
-              "u128",
-              3
-            ]
+            "array": ["u128", 3]
           },
           "index": false
         }

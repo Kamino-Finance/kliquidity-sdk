@@ -1,8 +1,4 @@
-import {
-  Address,
-  IInstruction,
-  address, TransactionSigner, Rpc, GetAccountInfoApi, Account,
-} from '@solana/kit';
+import { Address, IInstruction, address, TransactionSigner, Rpc, GetAccountInfoApi, Account } from '@solana/kit';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import { tickIndexToPrice } from '@orca-so/whirlpool-sdk';
 import Decimal from 'decimal.js';
@@ -10,16 +6,15 @@ import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { getPriceOfBinByBinIdWithDecimals } from './meteora';
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token';
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ADDRESS, fetchMaybeMint, fetchMaybeToken,
+  ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+  fetchMaybeMint,
+  fetchMaybeToken,
   findAssociatedTokenPda,
   getCreateAssociatedTokenInstruction,
   Token,
 } from '@solana-program/token-2022';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
-import {
-  getSetComputeUnitLimitInstruction,
-  getSetComputeUnitPriceInstruction,
-} from '@solana-program/compute-budget';
+import { getSetComputeUnitLimitInstruction, getSetComputeUnitPriceInstruction } from '@solana-program/compute-budget';
 
 export const SOL_MINTS = [
   address('So11111111111111111111111111111111111111111'),
@@ -44,12 +39,14 @@ export async function getAssociatedTokenAddress(
   programId: Address = TOKEN_PROGRAM_ADDRESS,
   associatedTokenProgramId: Address = ASSOCIATED_TOKEN_PROGRAM_ADDRESS
 ): Promise<Address> {
-
-  const [ata] = await findAssociatedTokenPda({
-    mint,
-    owner,
-    tokenProgram: programId,
-  }, { programAddress: associatedTokenProgramId });
+  const [ata] = await findAssociatedTokenPda(
+    {
+      mint,
+      owner,
+      tokenProgram: programId,
+    },
+    { programAddress: associatedTokenProgramId }
+  );
   return ata;
 }
 
@@ -68,13 +65,14 @@ export function createAssociatedTokenAccountInstruction(
       ata: associatedToken,
       payer: payer,
       tokenProgram: programId,
-      systemProgram: SYSTEM_PROGRAM_ADDRESS
-    }, { programAddress: associatedTokenProgramId }
-  )
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+    },
+    { programAddress: associatedTokenProgramId }
+  );
 }
 
 export function createAddExtraComputeUnitsIx(units: number): IInstruction {
-  return getSetComputeUnitPriceInstruction({ microLamports: units })
+  return getSetComputeUnitPriceInstruction({ microLamports: units });
 }
 
 export function createComputeUnitLimitIx(extraUnits: number = 400000): IInstruction {

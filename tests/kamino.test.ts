@@ -1,7 +1,12 @@
 import {
   address,
-  Address, generateKeyPairSigner, getAddressEncoder,
-  IInstruction, isAddress, Signature, TransactionSigner,
+  Address,
+  generateKeyPairSigner,
+  getAddressEncoder,
+  IInstruction,
+  isAddress,
+  Signature,
+  TransactionSigner,
 } from '@solana/kit';
 import {
   collToLamportsDecimal,
@@ -15,10 +20,7 @@ import {
   ZERO,
 } from '../src';
 import Decimal from 'decimal.js';
-import {
-  createComputeUnitLimitIx,
-  getAssociatedTokenAddressAndAccount,
-} from '../src';
+import { createComputeUnitLimitIx, getAssociatedTokenAddressAndAccount } from '../src';
 import * as Instructions from '../src/@codegen/kliquidity/instructions';
 import { GlobalConfigOption, GlobalConfigOptionKind, UpdateCollateralInfoMode } from '../src/@codegen/kliquidity/types';
 import { initializeRaydiumPool, orderMints } from './runner/raydium_utils';
@@ -118,25 +120,9 @@ describe('Kamino SDK Tests', async () => {
     const collateralInfo = await setUpCollateralInfo(env, kamino);
     await sleep(1000);
 
-    await updateCollateralInfoForToken(
-      env,
-      1,
-      USDH_SCOPE_CHAIN_ID,
-      globalConfig,
-      'USDH',
-      BigInt(1),
-      tokenAMint
-    );
+    await updateCollateralInfoForToken(env, 1, USDH_SCOPE_CHAIN_ID, globalConfig, 'USDH', BigInt(1), tokenAMint);
 
-    await updateCollateralInfoForToken(
-      env,
-      0,
-      USDC_SCOPE_CHAIN_ID,
-      globalConfig,
-      'USDC',
-      BigInt(1),
-      tokenBMint
-    );
+    await updateCollateralInfoForToken(env, 0, USDC_SCOPE_CHAIN_ID, globalConfig, 'USDC', BigInt(1), tokenBMint);
 
     await sleep(100);
     fixtures.tokenInfos = collateralInfo;
@@ -163,19 +149,11 @@ describe('Kamino SDK Tests', async () => {
     );
     console.log('updateTreasuryFeeB tx', updateTreasuryFeeB);
 
-    const raydiumPool = await initializeRaydiumPool(
-      env,
-      1,
-      fixtures.newTokenMintA,
-      fixtures.newTokenMintB
-    );
+    const raydiumPool = await initializeRaydiumPool(env, 1, fixtures.newTokenMintA, fixtures.newTokenMintB);
     fixtures.newRaydiumPool = raydiumPool.pool;
     const createRaydiumTx = [createComputeUnitLimitIx()];
     const newRaydiumStrategy = await generateKeyPairSigner();
-    const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(
-      env.admin,
-      newRaydiumStrategy
-    );
+    const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(env.admin, newRaydiumStrategy);
 
     createRaydiumTx.push(createRaydiumStrategyAccountIx);
     const raydiumStrategyIx = await kamino.createStrategy(
@@ -200,12 +178,7 @@ describe('Kamino SDK Tests', async () => {
     const newOrcaStrategy = await generateKeyPairSigner();
     const createStrategyAccountIx = await kamino.createStrategyAccount(env.admin, newOrcaStrategy);
     tx.push(createStrategyAccountIx);
-    const orcaStrategyIx = await kamino.createStrategy(
-      newOrcaStrategy.address,
-      whirlpool.pool,
-      env.admin,
-      'ORCA'
-    );
+    const orcaStrategyIx = await kamino.createStrategy(newOrcaStrategy.address, whirlpool.pool, env.admin, 'ORCA');
     tx.push(orcaStrategyIx);
 
     const txHash = await sendAndConfirmTx(env.c, env.admin, tx);
@@ -214,30 +187,10 @@ describe('Kamino SDK Tests', async () => {
 
     fixtures.newOrcaStrategy = newOrcaStrategy.address;
 
-    await updateStrategyConfig(
-      env,
-      fixtures.newOrcaStrategy,
-      new UpdateDepositCapIxn(),
-      new Decimal(1000000000000000)
-    );
-    await updateStrategyConfig(
-      env,
-      fixtures.newOrcaStrategy,
-      new UpdateDepositCap(),
-      new Decimal(10000000000000000)
-    );
-    await updateStrategyConfig(
-      env,
-      fixtures.newOrcaStrategy,
-      new UpdateMaxDeviationBps(),
-      new Decimal(1000)
-    );
-    await updateStrategyConfig(
-      env,
-      fixtures.newOrcaStrategy,
-      new AllowDepositWithoutInvest(),
-      new Decimal(1)
-    );
+    await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateDepositCapIxn(), new Decimal(1000000000000000));
+    await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateDepositCap(), new Decimal(10000000000000000));
+    await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateMaxDeviationBps(), new Decimal(1000));
+    await updateStrategyConfig(env, fixtures.newOrcaStrategy, new AllowDepositWithoutInvest(), new Decimal(1));
 
     await updateStrategyConfig(
       env,
@@ -245,24 +198,9 @@ describe('Kamino SDK Tests', async () => {
       new UpdateDepositCapIxn(),
       new Decimal(100000000000000)
     );
-    await updateStrategyConfig(
-      env,
-      fixtures.newRaydiumStrategy,
-      new UpdateDepositCap(),
-      new Decimal(100000000000000)
-    );
-    await updateStrategyConfig(
-      env,
-      fixtures.newRaydiumStrategy,
-      new UpdateMaxDeviationBps(),
-      new Decimal(2000)
-    );
-    await updateStrategyConfig(
-      env,
-      fixtures.newRaydiumStrategy,
-      new AllowDepositWithoutInvest(),
-      new Decimal(1)
-    );
+    await updateStrategyConfig(env, fixtures.newRaydiumStrategy, new UpdateDepositCap(), new Decimal(100000000000000));
+    await updateStrategyConfig(env, fixtures.newRaydiumStrategy, new UpdateMaxDeviationBps(), new Decimal(2000));
+    await updateStrategyConfig(env, fixtures.newRaydiumStrategy, new AllowDepositWithoutInvest(), new Decimal(1));
 
     await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address);
     await setupStrategyLookupTable(env, kamino, newRaydiumStrategy.address);
@@ -602,7 +540,7 @@ describe('Kamino SDK Tests', async () => {
     const createwSolAtaTxId = await sendAndConfirmTx(env.c, user.owner, [
       ...createWSolAtaIxns.createIxns,
       ...createWSolAtaIxns.closeIxns,
-    ])
+    ]);
     console.log('createwSolAta tx hash', createwSolAtaTxId);
   });
 
@@ -663,7 +601,13 @@ describe('Kamino SDK Tests', async () => {
       );
 
     const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
-    await sendAndConfirmTx(env.c, env.admin, [increaseBudgetIx, ...singleSidedDepositIxs], [], [strategyState.strategyLookupTable]);
+    await sendAndConfirmTx(
+      env.c,
+      env.admin,
+      [increaseBudgetIx, ...singleSidedDepositIxs],
+      [],
+      [strategyState.strategyLookupTable]
+    );
 
     const strategy = await kamino.getStrategyByAddress(fixtures.newOrcaStrategy);
     expect(strategy).to.not.be.null;
@@ -972,8 +916,13 @@ describe('Kamino SDK Tests', async () => {
   });
 
   it('should rebalance an Orca strategy', async () => {
-    const kamino = new Kamino('localnet', env.c.rpc, env.legacyConnection,
-      fixtures.globalConfig, fixtures.kaminoProgramId);
+    const kamino = new Kamino(
+      'localnet',
+      env.c.rpc,
+      env.legacyConnection,
+      fixtures.globalConfig,
+      fixtures.kaminoProgramId
+    );
 
     // New position to rebalance into
     const newPosition = await generateKeyPairSigner();
@@ -998,7 +947,13 @@ describe('Kamino SDK Tests', async () => {
       const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
 
       console.log('opening raydium position in rebalancing');
-      const sig = await sendAndConfirmTx(env.c, env.admin, [increaseBudgetIx, openPositionIx], [], [strategy.strategyLookupTable]);
+      const sig = await sendAndConfirmTx(
+        env.c,
+        env.admin,
+        [increaseBudgetIx, openPositionIx],
+        [],
+        [strategy.strategyLookupTable]
+      );
       console.log('open position tx hash', sig);
 
       expect(sig).to.not.be.null;
@@ -1064,7 +1019,13 @@ describe('Kamino SDK Tests', async () => {
     {
       const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
       console.log('opening raydium position in rebalancing');
-      const myHash = await sendAndConfirmTx(env.c, env.admin, [increaseBudgetIx, openPositionIx], [], [strategy.strategyLookupTable]);
+      const myHash = await sendAndConfirmTx(
+        env.c,
+        env.admin,
+        [increaseBudgetIx, openPositionIx],
+        [],
+        [strategy.strategyLookupTable]
+      );
       console.log('open position tx hash', myHash);
     }
 
@@ -1089,10 +1050,7 @@ describe('Kamino SDK Tests', async () => {
 
     const createRaydiumTx = [createComputeUnitLimitIx()];
     const newRaydiumStrategy = await generateKeyPairSigner();
-    const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(
-      env.admin,
-      newRaydiumStrategy
-    );
+    const createRaydiumStrategyAccountIx = await kamino.createStrategyAccount(env.admin, newRaydiumStrategy);
 
     createRaydiumTx.push(createRaydiumStrategyAccountIx);
     const raydiumStrategyIx = await kamino.createStrategy(
@@ -1127,7 +1085,13 @@ describe('Kamino SDK Tests', async () => {
       const increaseBudgetIx = createAddExtraComputeUnitsIx(1_400_000);
 
       console.log('rebalancing raydium strategy in rebalancing');
-      const myHash = await sendAndConfirmTx(env.c, env.admin, [increaseBudgetIx, ...rebalanceIxs], [], [strategy.strategyLookupTable]);
+      const myHash = await sendAndConfirmTx(
+        env.c,
+        env.admin,
+        [increaseBudgetIx, ...rebalanceIxs],
+        [],
+        [strategy.strategyLookupTable]
+      );
       console.log('rebalance tx hash', myHash);
     }
   });
@@ -1247,12 +1211,7 @@ describe('Kamino SDK Tests', async () => {
     expect(strats.length).to.be.eq(3);
 
     // set creation state to live
-    await updateStrategyConfig(
-      env,
-      fixtures.newOrcaStrategy,
-      new UpdateStrategyCreationState(),
-      new Decimal(2)
-    );
+    await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateStrategyCreationState(), new Decimal(2));
 
     // assert only a single strat remained SHADOW
     strats = await kamino.getAllStrategiesWithFilters(filters);
@@ -1298,11 +1257,7 @@ describe('Kamino SDK Tests', async () => {
   it('create_terms_signature_and_read_state', async () => {
     const owner = await generateKeyPairSigner();
 
-    await solAirdrop(
-      env.c,
-      owner.address,
-      new Decimal(100)
-    );
+    await solAirdrop(env.c, owner.address, new Decimal(100));
 
     const kamino = new Kamino(
       'localnet',
@@ -1316,7 +1271,7 @@ describe('Kamino SDK Tests', async () => {
 
     // generate signature for a basic message
     const message = Uint8Array.from([0xab, 0xbc, 0xcd, 0xde]);
-    const signature = await owner.signMessages([{content: message, signatures: {}}]);
+    const signature = await owner.signMessages([{ content: message, signatures: {} }]);
 
     // initialize signature
     const signTermsIx = await kamino.getUserTermsSignatureIx(owner, signature[0][owner.address]);
@@ -1502,12 +1457,7 @@ describe('Kamino SDK Tests', async () => {
     expect(performanceFees.reward2FeeBPS.eq(ZERO)).to.be.true;
 
     // update fees and check they are read correctly
-    await updateStrategyConfig(
-      env,
-      fixtures.newOrcaStrategy,
-      new UpdateCollectFeesFee(),
-      new Decimal(200)
-    );
+    await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateCollectFeesFee(), new Decimal(200));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateReward0Fee(), new Decimal(300));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateReward1Fee(), new Decimal(400));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateReward2Fee(), new Decimal(500));
@@ -1562,12 +1512,7 @@ describe('Kamino SDK Tests', async () => {
     expect(performanceFees.reward2FeeBPS.eq(new Decimal(500))).to.be.true;
 
     // update fees and check they are read correctly
-    await updateStrategyConfig(
-      env,
-      fixtures.newOrcaStrategy,
-      new UpdateCollectFeesFee(),
-      new Decimal(400)
-    );
+    await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateCollectFeesFee(), new Decimal(400));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateReward0Fee(), new Decimal(450));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateReward1Fee(), new Decimal(700));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateReward2Fee(), new Decimal(800));
@@ -1843,18 +1788,8 @@ describe('Kamino SDK Tests', async () => {
     );
     txStrategyCreate.push(orcaStrategyIx);
     await sendAndConfirmTx(env.c, env.admin, txStrategyCreate);
-    await updateStrategyConfig(
-      env,
-      newOrcaStrategy.address,
-      new UpdateDepositCapIxn(),
-      new Decimal(1000000000000000)
-    );
-    await updateStrategyConfig(
-      env,
-      newOrcaStrategy.address,
-      new UpdateDepositCap(),
-      new Decimal(10000000000000000)
-    );
+    await updateStrategyConfig(env, newOrcaStrategy.address, new UpdateDepositCapIxn(), new Decimal(1000000000000000));
+    await updateStrategyConfig(env, newOrcaStrategy.address, new UpdateDepositCap(), new Decimal(10000000000000000));
     const strategyState = (await kamino.getStrategyByAddress(newOrcaStrategy.address))!;
 
     // Create lookup table and open new position
@@ -1865,12 +1800,7 @@ describe('Kamino SDK Tests', async () => {
     // Deposit some funds
     await setupAta(env.c, env.admin, strategyState.sharesMint);
     const depositTxn = [createComputeUnitLimitIx(1000000)];
-    const depositIx = await kamino.deposit(
-      newOrcaStrategy.address,
-      new Decimal(100.0),
-      new Decimal(100.0),
-      env.admin
-    );
+    const depositIx = await kamino.deposit(newOrcaStrategy.address, new Decimal(100.0), new Decimal(100.0), env.admin);
     depositTxn.push(depositIx);
     await sendAndConfirmTx(env.c, env.admin, depositTxn);
 
@@ -1901,7 +1831,7 @@ describe('Kamino SDK Tests', async () => {
   it.skip('should get all mainnet Kamino prices', async () => {
     const rpcUrl: string = 'https://api.mainnet-beta.solana.com';
     const wsUrl: string = 'wss://api.mainnet-beta.solana.com';
-    const env = await initEnv({ rpcUrl, wsUrl })
+    const env = await initEnv({ rpcUrl, wsUrl });
     const kamino = new Kamino('mainnet-beta', env.c.rpc, env.legacyConnection);
     const prices = await kamino.getAllPrices();
     expect(prices).not.to.be.undefined;
@@ -1932,7 +1862,13 @@ export async function openPosition(
     const openPositionIx = await kamino.openPosition(owner, strategy, positionMint, priceLower, priceUpper);
     const increaseBudgetIx = createAddExtraComputeUnitsIx(1_400_000);
 
-    const sig = await sendAndConfirmTx(env.c, owner, [increaseBudgetIx, openPositionIx], [], [strategyState!.strategyLookupTable])
+    const sig = await sendAndConfirmTx(
+      env.c,
+      owner,
+      [increaseBudgetIx, openPositionIx],
+      [],
+      [strategyState!.strategyLookupTable]
+    );
 
     console.log('open ray position th hash', sig);
     console.log('new position has been opened', positionMint.address);
@@ -2102,13 +2038,7 @@ export async function updateCollateralInfoForToken(
   tokenMint: Address
 ) {
   // Set Mint
-  await updateCollateralInfo(
-    env,
-    globalConfig,
-    collTokenIndex,
-    new UpdateCollateralInfoMode.CollateralId(),
-    tokenMint
-  );
+  await updateCollateralInfo(env, globalConfig, collTokenIndex, new UpdateCollateralInfoMode.CollateralId(), tokenMint);
 
   // Set Label
   await updateCollateralInfo(

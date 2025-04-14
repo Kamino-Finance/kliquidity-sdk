@@ -314,13 +314,15 @@ export class RaydiumService {
   }
 
   async getPositionsCountByPool(pool: Address): Promise<number> {
-    const positions = await this._rpc.getProgramAccounts(this._raydiumProgramId, {
-      commitment: 'confirmed',
-      filters: [
-        { dataSize: BigInt(PositionInfoLayout.span) },
-        { memcmp: { bytes: pool, offset: BigInt(PositionInfoLayout.offsetOf('poolId')), encoding: 'base58' } },
-      ],
-    }).send();
+    const positions = await this._rpc
+      .getProgramAccounts(this._raydiumProgramId, {
+        commitment: 'confirmed',
+        filters: [
+          { dataSize: BigInt(PositionInfoLayout.span) },
+          { memcmp: { bytes: pool, offset: BigInt(PositionInfoLayout.offsetOf('poolId')), encoding: 'base58' } },
+        ],
+      })
+      .send();
 
     return positions.length;
   }

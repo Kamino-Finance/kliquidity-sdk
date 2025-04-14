@@ -1,13 +1,13 @@
 import {
-  Address, GetAccountInfoApi, GetTokenAccountBalanceApi,
-  IInstruction, Rpc, TransactionSigner,
+  Address,
+  GetAccountInfoApi,
+  GetTokenAccountBalanceApi,
+  IInstruction,
+  Rpc,
+  TransactionSigner,
 } from '@solana/kit';
 import Decimal from 'decimal.js';
-import {
-  DECIMALS_SOL,
-  createAssociatedTokenAccountInstruction,
-  getAssociatedTokenAddress,
-} from './tokenUtils';
+import { DECIMALS_SOL, createAssociatedTokenAccountInstruction, getAssociatedTokenAddress } from './tokenUtils';
 import { collToLamportsDecimal } from './utils';
 import { CreateAta } from './types';
 import { DEFAULT_PUBLIC_KEY, WRAPPED_SOL_MINT } from '../constants/pubkeys';
@@ -19,17 +19,15 @@ import {
 } from '@solana-program/compute-budget';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
-  fetchMaybeToken, getCloseAccountInstruction,
+  fetchMaybeToken,
+  getCloseAccountInstruction,
   getSyncNativeInstruction,
 } from '@solana-program/token-2022';
 import { getTransferSolInstruction } from '@solana-program/system';
 
 export const MAX_ACCOUNTS_PER_TRANSACTION = 64;
 
-export const getComputeBudgetAndPriorityFeeIxns = (
-  units: number,
-  priorityFeeLamports?: Decimal
-): IInstruction[] => {
+export const getComputeBudgetAndPriorityFeeIxns = (units: number, priorityFeeLamports?: Decimal): IInstruction[] => {
   const ixns: IInstruction[] = [];
 
   ixns.push(getSetComputeUnitLimitInstruction({ units }));
@@ -91,7 +89,9 @@ export const createWsolAtaIfMissing = async (
 
   // This checks if we need to create it
   if (!wsolAtaTokenAccount.exists) {
-    createIxns.push(createAssociatedTokenAccountInstruction(owner, wsolAta, owner.address, WRAPPED_SOL_MINT, TOKEN_PROGRAM_ADDRESS));
+    createIxns.push(
+      createAssociatedTokenAccountInstruction(owner, wsolAta, owner.address, WRAPPED_SOL_MINT, TOKEN_PROGRAM_ADDRESS)
+    );
   }
 
   let uiAmount = 0;
@@ -120,13 +120,21 @@ export const createWsolAtaIfMissing = async (
 
   if (createIxns.length > 0) {
     createIxns.push(
-      getSyncNativeInstruction({
-        account: wsolAta
-      }, { programAddress: TOKEN_PROGRAM_ADDRESS })
+      getSyncNativeInstruction(
+        {
+          account: wsolAta,
+        },
+        { programAddress: TOKEN_PROGRAM_ADDRESS }
+      )
     );
   }
 
-  closeIxns.push(getCloseAccountInstruction({ account: wsolAta, owner: owner, destination: owner.address, multiSigners: [] }, { programAddress: TOKEN_PROGRAM_ADDRESS }));
+  closeIxns.push(
+    getCloseAccountInstruction(
+      { account: wsolAta, owner: owner, destination: owner.address, multiSigners: [] },
+      { programAddress: TOKEN_PROGRAM_ADDRESS }
+    )
+  );
 
   return {
     ata: wsolAta,
@@ -169,7 +177,10 @@ export function removeBudgetAndAtaIxns(ixns: IInstruction[], mints: Address[]): 
   });
 }
 
-export const findAtaBalance = async (connection: Rpc<GetTokenAccountBalanceApi>, ata: Address): Promise<number | null> => {
+export const findAtaBalance = async (
+  connection: Rpc<GetTokenAccountBalanceApi>,
+  ata: Address
+): Promise<number | null> => {
   const res = await connection.getTokenAccountBalance(ata).send();
   if (res && res.value) {
     return res.value.uiAmount;

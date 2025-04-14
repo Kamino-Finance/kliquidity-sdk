@@ -1,8 +1,15 @@
 import {
   address,
-  Address, generateKeyPairSigner,
-  GetAccountInfoApi, getAddressEncoder, GetBalanceApi, GetTokenAccountBalanceApi,
-  IInstruction, isAddress, lamports, Lamports,
+  Address,
+  generateKeyPairSigner,
+  GetAccountInfoApi,
+  getAddressEncoder,
+  GetBalanceApi,
+  GetTokenAccountBalanceApi,
+  IInstruction,
+  isAddress,
+  lamports,
+  Lamports,
   Rpc,
   Signature,
   TransactionSigner,
@@ -222,22 +229,15 @@ export async function createUser(
   return testingUser;
 }
 
-export async function solAirdrop(
-  connection: ConnectionPool,
-  account: Address,
-  solAirdrop: Decimal
-): Promise<Decimal> {
-  const airdropTxnId = await connection.rpc.requestAirdrop(account, lamports(BigInt(collToLamportsDecimal(solAirdrop, 9).toString()))).send();
+export async function solAirdrop(connection: ConnectionPool, account: Address, solAirdrop: Decimal): Promise<Decimal> {
+  const airdropTxnId = await connection.rpc
+    .requestAirdrop(account, lamports(BigInt(collToLamportsDecimal(solAirdrop, 9).toString())))
+    .send();
   // await connection.confirmTransaction(airdropTxnId); // todo
   return await getSolBalance(connection.rpc, account);
 }
 
-export async function mintTo(
-  env: Env,
-  mintPubkey: Address,
-  tokenAccount: Address,
-  amount: number
-): Promise<Signature> {
+export async function mintTo(env: Env, mintPubkey: Address, tokenAccount: Address, amount: number): Promise<Signature> {
   console.log(`mintTo ${tokenAccount} mint ${mintPubkey} amount ${amount}`);
   const mintToIx = getMintToIx(env.admin, mintPubkey, tokenAccount, amount);
   const res = await sendAndConfirmTx(env.c, env.admin, [mintToIx]);
@@ -269,12 +269,15 @@ export function getBurnFromIx(
   amount: number
 ): IInstruction {
   console.log(`burnFrom ${tokenAccount.toString()} mint ${mintPubkey.toString()} amount ${amount}`);
-  return getBurnInstruction({
-    mint: mintPubkey,
-    amount: amount,
-    authority: signer,
-    account: tokenAccount,
-  }, { programAddress: TOKEN_PROGRAM_ADDRESS });
+  return getBurnInstruction(
+    {
+      mint: mintPubkey,
+      amount: amount,
+      authority: signer,
+      account: tokenAccount,
+    },
+    { programAddress: TOKEN_PROGRAM_ADDRESS }
+  );
 }
 
 export async function burnFrom(
@@ -307,16 +310,19 @@ export function createAtaInstruction(
   payer: TransactionSigner,
   mint: Address,
   ata: Address,
-  owner: Address = payer.address,
+  owner: Address = payer.address
 ): IInstruction {
-  return getCreateAssociatedTokenInstruction({
-    payer,
-    owner,
-    ata,
-    mint,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-  }, { programAddress: ASSOCIATED_TOKEN_PROGRAM_ADDRESS });
+  return getCreateAssociatedTokenInstruction(
+    {
+      payer,
+      owner,
+      ata,
+      mint,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+      tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    },
+    { programAddress: ASSOCIATED_TOKEN_PROGRAM_ADDRESS }
+  );
 }
 
 export async function getSolBalance(rpc: Rpc<GetAccountInfoApi>, account: Address): Promise<Decimal> {
@@ -342,21 +348,13 @@ export async function createMint(env: Env, decimals: number = 6): Promise<Addres
   return await createMintFromKeypair(env, mint, decimals);
 }
 
-export async function createMintFromKeypair(
-  env: Env,
-  mint: TransactionSigner,
-  decimals: number = 6
-): Promise<Address> {
+export async function createMintFromKeypair(env: Env, mint: TransactionSigner, decimals: number = 6): Promise<Address> {
   const instructions = await createMintInstructions(env, mint, decimals);
   await sendAndConfirmTx(env.c, env.admin, instructions);
   return mint.address;
 }
 
-async function createMintInstructions(
-  env: Env,
-  mint: TransactionSigner,
-  decimals: number
-): Promise<IInstruction[]> {
+async function createMintInstructions(env: Env, mint: TransactionSigner, decimals: number): Promise<IInstruction[]> {
   return [
     getCreateAccountInstruction({
       payer: env.admin,

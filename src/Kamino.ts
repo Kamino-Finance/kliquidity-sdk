@@ -11,7 +11,8 @@ import {
   GetProgramAccountsMemcmpFilter,
   getProgramDerivedAddress,
   IInstruction,
-  isSome, JsonParsedTokenAccount,
+  isSome,
+  JsonParsedTokenAccount,
   none,
   Option,
   Rpc,
@@ -334,7 +335,8 @@ import {
 import {
   ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   fetchAllMint,
-  getCloseAccountInstruction, Token,
+  getCloseAccountInstruction,
+  Token,
   TOKEN_2022_PROGRAM_ADDRESS,
 } from '@solana-program/token-2022';
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token';
@@ -1288,9 +1290,11 @@ export class Kamino {
     }
 
     return (
-      await this._rpc.getProgramAccounts(this._kaminoProgramId, {
-        filters,
-      }).send()
+      await this._rpc
+        .getProgramAccounts(this._kaminoProgramId, {
+          filters,
+        })
+        .send()
     ).map((x) => {
       const res: StrategyWithAddress = {
         strategy: WhirlpoolStrategy.decode(Buffer.from(x.account.data)),
@@ -1330,9 +1334,11 @@ export class Kamino {
         },
       },
     ];
-    const matchingStrategies = await this._rpc.getProgramAccounts(this.getProgramID(), {
-      filters,
-    }).send();
+    const matchingStrategies = await this._rpc
+      .getProgramAccounts(this.getProgramID(), {
+        filters,
+      })
+      .send();
 
     if (matchingStrategies.length === 0) {
       return null;
@@ -1399,8 +1405,7 @@ export class Kamino {
     );
 
     const raydiumStrategies = strategiesWithAddresses.filter(
-      (x) =>
-        x.strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM') && x.strategy.position !== DEFAULT_PUBLIC_KEY
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM') && x.strategy.position !== DEFAULT_PUBLIC_KEY
     );
     const raydiumPoolsPromise = this.getRaydiumPools(raydiumStrategies.map((x) => x.strategy.pool));
     const raydiumPositionsPromise = this.getRaydiumPositions(raydiumStrategies.map((x) => x.strategy.position));
@@ -1410,8 +1415,7 @@ export class Kamino {
     const orcaPoolsPromise = this.getWhirlpools(orcaStrategies.map((x) => x.strategy.pool));
     const orcaPositionsPromise = this.getOrcaPositions(orcaStrategies.map((x) => x.strategy.position));
     const meteoraStrategies = strategiesWithAddresses.filter(
-      (x) =>
-        x.strategy.strategyDex.toNumber() === dexToNumber('METEORA') && x.strategy.position !== DEFAULT_PUBLIC_KEY
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('METEORA') && x.strategy.position !== DEFAULT_PUBLIC_KEY
     );
     const meteoraPoolsPromise = this.getMeteoraPools(meteoraStrategies.map((x) => x.strategy.pool));
     const meteoraPositionsPromise = this.getMeteoraPositions(meteoraStrategies.map((x) => x.strategy.position));
@@ -1945,10 +1949,9 @@ export class Kamino {
     mode: 'DEPOSIT' | 'WITHDRAW' = 'WITHDRAW'
   ): Promise<TokenHoldings> => {
     if (strategy.strategyDex.toNumber() === dexToNumber('ORCA')) {
-      const [whirlpoolAcc, positionAcc] = (await this.getConnection().getMultipleAccounts([
-        strategy.pool,
-        strategy.position,
-      ]).send()).value;
+      const [whirlpoolAcc, positionAcc] = (
+        await this.getConnection().getMultipleAccounts([strategy.pool, strategy.position]).send()
+      ).value;
       if (!whirlpoolAcc) {
         throw Error(`Could not fetch Orca whirlpool state with pubkey ${strategy.pool.toString()}`);
       }
@@ -1959,10 +1962,9 @@ export class Kamino {
       const position = Position.decode(Buffer.from(positionAcc.data[0], 'base64'));
       return this.getOrcaTokensBalances(strategy, whirlpool, position, mode);
     } else if (strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM')) {
-      const [poolStateAcc, positionAcc] = (await this.getConnection().getMultipleAccounts([
-        strategy.pool,
-        strategy.position,
-      ]).send()).value;
+      const [poolStateAcc, positionAcc] = (
+        await this.getConnection().getMultipleAccounts([strategy.pool, strategy.position]).send()
+      ).value;
       if (!poolStateAcc) {
         throw Error(`Could not fetch Raydium pool state with pubkey ${strategy.pool.toString()}`);
       }
@@ -2022,10 +2024,7 @@ export class Kamino {
     scopePrices?: OraclePrices,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalances> => {
-    const res = await this.getConnection().getMultipleAccounts([
-      strategy.pool,
-      strategy.position,
-    ]).send();
+    const res = await this.getConnection().getMultipleAccounts([strategy.pool, strategy.position]).send();
     const [whirlpoolAcc, positionAcc] = res.value;
     if (!whirlpoolAcc) {
       throw Error(`Could not fetch Orca whirlpool state with pubkey ${strategy.pool.toString()}`);
@@ -2053,8 +2052,7 @@ export class Kamino {
     scopePrices?: OraclePrices,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalances> => {
-    const res = await fetchEncodedAccounts(this.getConnection(), [strategy.pool,
-      strategy.position])
+    const res = await fetchEncodedAccounts(this.getConnection(), [strategy.pool, strategy.position]);
     const [poolStateAcc, positionAcc] = res;
     if (!poolStateAcc.exists) {
       throw Error(`Could not fetch Raydium pool state with pubkey ${strategy.pool}`);
@@ -2074,10 +2072,7 @@ export class Kamino {
     scopePrices?: OraclePrices,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalances> => {
-    const res = await this.getConnection().getMultipleAccounts([
-      strategy.pool,
-      strategy.position,
-    ]).send();
+    const res = await this.getConnection().getMultipleAccounts([strategy.pool, strategy.position]).send();
     const [poolStateAcc, positionAcc] = res.value;
     if (!poolStateAcc) {
       throw Error(`Could not fetch Meteora pool state with pubkey ${strategy.pool}`);
@@ -2309,25 +2304,33 @@ export class Kamino {
   /**
    * Get all token accounts for the specified share mint
    */
-  getShareTokenAccounts = async (shareMint: Address): Promise<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithJsonData>[]> => {
+  getShareTokenAccounts = async (
+    shareMint: Address
+  ): Promise<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithJsonData>[]> => {
     //how to get all token accounts for specific mint: https://spl.solana.com/token#finding-all-token-accounts-for-a-specific-mint
     //get it from the hardcoded token program and create a filter with the actual mint address
     //datasize:165 filter selects all token accounts, memcmp filter selects based on the mint address withing each token account
-    return this._rpc.getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
-      filters: [{ dataSize: 165n }, { memcmp: { offset: 0n, bytes: shareMint, encoding: 'base58' } }],
-      encoding: 'jsonParsed'
-    }).send();
+    return this._rpc
+      .getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
+        filters: [{ dataSize: 165n }, { memcmp: { offset: 0n, bytes: shareMint, encoding: 'base58' } }],
+        encoding: 'jsonParsed',
+      })
+      .send();
   };
 
   /**
    * Get all token accounts for the specified wallet
    */
-  getAllTokenAccounts = async (wallet: Address): Promise<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithJsonData>[]> => {
+  getAllTokenAccounts = async (
+    wallet: Address
+  ): Promise<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithJsonData>[]> => {
     //how to get all token accounts for specific wallet: https://spl.solana.com/token#finding-all-token-accounts-for-a-wallet
-    return this._rpc.getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
-      filters: [{ dataSize: 165n }, { memcmp: { offset: 32n, bytes: wallet, encoding: 'base58' } }],
-      encoding: 'jsonParsed'
-    }).send();
+    return this._rpc
+      .getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
+        filters: [{ dataSize: 165n }, { memcmp: { offset: 32n, bytes: wallet, encoding: 'base58' } }],
+        encoding: 'jsonParsed',
+      })
+      .send();
   };
 
   /**
@@ -2414,11 +2417,7 @@ export class Kamino {
     }
   };
 
-  getPositionRangeOrca = async (
-    positionPk: Address,
-    decimalsA: number,
-    decimalsB: number
-  ): Promise<PositionRange> => {
+  getPositionRangeOrca = async (positionPk: Address, decimalsA: number, decimalsB: number): Promise<PositionRange> => {
     if (positionPk === DEFAULT_PUBLIC_KEY) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
@@ -2661,10 +2660,9 @@ export class Kamino {
 
     if (dex.toNumber() === dexToNumber('METEORA')) {
       const [key] = await getProgramDerivedAddress({
-          seeds: [Buffer.from('__event_authority')],
-          programAddress: this._meteoraService.getMeteoraProgramId(),
-        }
-      );
+        seeds: [Buffer.from('__event_authority')],
+        programAddress: this._meteoraService.getMeteoraProgramId(),
+      });
       return some(key);
     }
     throw new Error('Invalid dex');
@@ -2774,11 +2772,13 @@ export class Kamino {
 
       withdrawIx = {
         ...withdrawIx,
-        accounts: withdrawIx.accounts?.concat([{
-          address: strategyState.strategy.raydiumPoolConfigOrBaseVaultAuthority,
-          role: AccountRole.WRITABLE,
-        }])
-      }
+        accounts: withdrawIx.accounts?.concat([
+          {
+            address: strategyState.strategy.raydiumPoolConfigOrBaseVaultAuthority,
+            role: AccountRole.WRITABLE,
+          },
+        ]),
+      };
       if (strategyState.strategy.reward0Decimals.toNumber() > 0) {
         withdrawIx = {
           ...withdrawIx,
@@ -2795,8 +2795,8 @@ export class Kamino {
               address: poolState.rewardInfos[0].tokenMint,
               role: AccountRole.WRITABLE,
             },
-          ])
-        }
+          ]),
+        };
       }
       if (strategyState.strategy.reward1Decimals.toNumber() > 0) {
         withdrawIx = {
@@ -2814,8 +2814,8 @@ export class Kamino {
               address: poolState.rewardInfos[1].tokenMint,
               role: AccountRole.WRITABLE,
             },
-          ])
-        }
+          ]),
+        };
       }
       if (strategyState.strategy.reward2Decimals.toNumber() > 0) {
         withdrawIx = {
@@ -2833,35 +2833,36 @@ export class Kamino {
               address: poolState.rewardInfos[2].tokenMint,
               role: AccountRole.WRITABLE,
             },
-          ])
-        }
+          ]),
+        };
       }
 
       const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = await getProgramDerivedAddress({
-          seeds: [
-            Buffer.from('pool_tick_array_bitmap_extension'),
-            addressEncoder.encode(strategyState.strategy.pool),
-          ],
-          programAddress: this._raydiumService.getRaydiumProgramId(),
-        }
-      );
+        seeds: [Buffer.from('pool_tick_array_bitmap_extension'), addressEncoder.encode(strategyState.strategy.pool)],
+        programAddress: this._raydiumService.getRaydiumProgramId(),
+      });
       withdrawIx = {
         ...withdrawIx,
-        accounts: withdrawIx.accounts?.concat([{
-          address: poolTickArrayBitmap,
-          role: AccountRole.WRITABLE,
-        }])
-      }
+        accounts: withdrawIx.accounts?.concat([
+          {
+            address: poolTickArrayBitmap,
+            role: AccountRole.WRITABLE,
+          },
+        ]),
+      };
     }
 
     const res: WithdrawShares = { prerequisiteIxs: collectFeesAndRewardsIxns, withdrawIx };
     // if we withdraw everything also close the shares ATA
     if (sharesAtaBalance && sharesAtaBalance.lte(sharesAmount)) {
-      res.closeSharesAtaIx = getCloseAccountInstruction({
-        owner,
-        account: sharesAta,
-        destination: owner.address,
-      }, { programAddress: TOKEN_PROGRAM_ADDRESS })
+      res.closeSharesAtaIx = getCloseAccountInstruction(
+        {
+          owner,
+          account: sharesAta,
+          destination: owner.address,
+        },
+        { programAddress: TOKEN_PROGRAM_ADDRESS }
+      );
     }
 
     return res;
@@ -2993,11 +2994,7 @@ export class Kamino {
    * @private
    */
   private getTreasuryFeeVaultPDAs = async (tokenAMint: Address, tokenBMint: Address): Promise<TreasuryFeeVault> => {
-    const [
-      [treasuryFeeTokenAVault],
-      [treasuryFeeTokenBVault],
-      [treasuryFeeVaultAuthority],
-    ] = await Promise.all([
+    const [[treasuryFeeTokenAVault], [treasuryFeeTokenBVault], [treasuryFeeVaultAuthority]] = await Promise.all([
       getProgramDerivedAddress({
         seeds: [Buffer.from('treasury_fee_vault'), addressEncoder.encode(tokenAMint)],
         programAddress: this.getProgramID(),
@@ -3033,7 +3030,9 @@ export class Kamino {
     if (!sharesData || sharesData.data.amount === 0n) {
       return null;
     }
-    const amount = new Decimal(sharesData.data.amount.toString()).div(new Decimal(10).pow(strategyState.strategy.sharesMintDecimals.toString()));
+    const amount = new Decimal(sharesData.data.amount.toString()).div(
+      new Decimal(10).pow(strategyState.strategy.sharesMintDecimals.toString())
+    );
     return this.withdrawShares(strategyState, amount, owner);
   };
 
@@ -3046,11 +3045,7 @@ export class Kamino {
   getAllDepositAccounts = async (strategy: Address | StrategyWithAddress, owner: Address): Promise<Address[]> => {
     const strategyState = await this.getStrategyStateIfNotFetched(strategy);
 
-    const globalConfig = await GlobalConfig.fetch(
-      this._rpc,
-      strategyState.strategy.globalConfig,
-      this.getProgramID()
-    );
+    const globalConfig = await GlobalConfig.fetch(this._rpc, strategyState.strategy.globalConfig, this.getProgramID());
     if (!globalConfig) {
       throw Error(`Could not fetch global config with pubkey ${strategyState.strategy.globalConfig.toString()}`);
     }
@@ -3206,13 +3201,19 @@ export class Kamino {
     // if any of the tokens is SOL, we need to read how much SOL the user has, not how much wSOL which is what getInitialUserTokenBalances returns
     if (isSOLMint(strategyWithAddress.strategy.tokenAMint)) {
       userTokenBalances.a = userTokenBalances.a?.add(
-        lamportsToNumberDecimal(new Decimal((await this._rpc.getBalance(owner.address).send()).value.toString()), DECIMALS_SOL)
+        lamportsToNumberDecimal(
+          new Decimal((await this._rpc.getBalance(owner.address).send()).value.toString()),
+          DECIMALS_SOL
+        )
       );
     }
 
     if (isSOLMint(strategyWithAddress.strategy.tokenBMint)) {
       userTokenBalances.b = userTokenBalances.b?.add(
-        lamportsToNumberDecimal(new Decimal((await this._rpc.getBalance(owner.address).send()).value.toString()), DECIMALS_SOL)
+        lamportsToNumberDecimal(
+          new Decimal((await this._rpc.getBalance(owner.address).send()).value.toString()),
+          DECIMALS_SOL
+        )
       );
     }
 
@@ -3296,13 +3297,19 @@ export class Kamino {
     // if any of the tokens is SOL, we need to read how much SOL the user has, not how much wSOL which is what getInitialUserTokenBalances returns
     if (isSOLMint(strategyWithAddress.strategy.tokenAMint)) {
       userTokenBalances.a = userTokenBalances.a?.add(
-        lamportsToNumberDecimal(new Decimal((await this._rpc.getBalance(owner.address).send()).value.toString()), DECIMALS_SOL)
+        lamportsToNumberDecimal(
+          new Decimal((await this._rpc.getBalance(owner.address).send()).value.toString()),
+          DECIMALS_SOL
+        )
       );
     }
 
     if (isSOLMint(strategyWithAddress.strategy.tokenBMint)) {
       userTokenBalances.b = userTokenBalances.b?.add(
-        lamportsToNumberDecimal(new Decimal((await this._rpc.getBalance(owner.address).send()).value.toString()), DECIMALS_SOL)
+        lamportsToNumberDecimal(
+          new Decimal((await this._rpc.getBalance(owner.address).send()).value.toString()),
+          DECIMALS_SOL
+        )
       );
     }
 
@@ -3547,11 +3554,17 @@ export class Kamino {
 
     const createAtaList: [Address, Address][] = [[strategyState.sharesMint, TOKEN_PROGRAM_ADDRESS]];
     if (!tokenAAtaBalance.greaterThan(0)) {
-      createAtaList.push([strategyState.tokenAMint, keyOrDefault(strategyState.tokenATokenProgram, TOKEN_PROGRAM_ADDRESS)]);
+      createAtaList.push([
+        strategyState.tokenAMint,
+        keyOrDefault(strategyState.tokenATokenProgram, TOKEN_PROGRAM_ADDRESS),
+      ]);
     }
 
     if (!tokenBAtaBalance.greaterThan(0)) {
-      createAtaList.push([strategyState.tokenBMint, keyOrDefault(strategyState.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS)]);
+      createAtaList.push([
+        strategyState.tokenBMint,
+        keyOrDefault(strategyState.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS),
+      ]);
     }
 
     const createAtasIxnsPromise = getAtasWithCreateIxnsIfMissing(
@@ -3687,7 +3700,7 @@ export class Kamino {
       source: owner,
       destination: topupVault,
       amount: BigInt(amountLamports.floor().toString()),
-    })
+    });
     return ix;
   };
 
@@ -3698,7 +3711,10 @@ export class Kamino {
    */
   topupVaultBalance = async (owner: Address): Promise<Decimal> => {
     const topupVault = await this.getUserTopupVault(owner);
-    return lamportsToNumberDecimal(new Decimal((await this._rpc.getBalance(topupVault).send()).value.toString()), DECIMALS_SOL);
+    return lamportsToNumberDecimal(
+      new Decimal((await this._rpc.getBalance(topupVault).send()).value.toString()),
+      DECIMALS_SOL
+    );
   };
 
   /**
@@ -3781,7 +3797,7 @@ export class Kamino {
       ...removeBudgetAndAtaIxns(jupiterQuote.setupInstructions, [tokenAMint, tokenBMint]),
       jupiterQuote.swapInstruction,
       ...(jupiterQuote.cleanupInstruction ? [jupiterQuote.cleanupInstruction] : []),
-    ]
+    ];
 
     const allJupAccounts = allJupIxs.flatMap((ix) => ix.accounts?.map((key) => key.address) || []);
     const allAccounts = new Set<Address>([...existingAccounts, ...allJupAccounts]);
@@ -3927,11 +3943,7 @@ export class Kamino {
       tokenAMint = whirlpoolState.tokenMintA;
       tokenBMint = whirlpoolState.tokenMintB;
     } else if (dex === 'RAYDIUM') {
-      const raydiumPoolState = await PoolState.fetch(
-        this._rpc,
-        pool,
-        this._raydiumService.getRaydiumProgramId()
-      );
+      const raydiumPoolState = await PoolState.fetch(this._rpc, pool, this._raydiumService.getRaydiumProgramId());
       if (!raydiumPoolState) {
         throw Error(`Could not fetch Raydium pool state with pubkey ${pool.toString()}`);
       }
@@ -3996,8 +4008,8 @@ export class Kamino {
       accounts: ix.accounts?.concat([
         { address: config.scopePriceId, role: AccountRole.READONLY },
         { address: config.scopeProgramId, role: AccountRole.READONLY },
-      ])
-    }
+      ]),
+    };
     return ix;
   };
 
@@ -4010,7 +4022,7 @@ export class Kamino {
    */
   withdrawAllAndCloseStrategy = async (
     admin: TransactionSigner,
-    strategy: Address | StrategyWithAddress,
+    strategy: Address | StrategyWithAddress
   ): Promise<WithdrawAllAndCloseIxns | null> => {
     const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
     const withdrawIxns = await this.withdrawAllShares(strategyWithAddress, admin);
@@ -4130,11 +4142,7 @@ export class Kamino {
       kaminoReward2Vault = strategyState.kaminoRewards[2].rewardVault;
       rewardMints[5] = strategyState.kaminoRewards[2].rewardVault;
       rewardTokenPrograms[5] = await this.getAccountOwner(rewardMints[5]);
-      userReward2Ata = await getAssociatedTokenAddress(
-        rewardMints[5],
-        admin.address,
-        rewardTokenPrograms[5]
-      );
+      userReward2Ata = await getAssociatedTokenAddress(rewardMints[5], admin.address, rewardTokenPrograms[5]);
     }
 
     const strategyAccounts: CloseStrategyAccounts = {
@@ -4182,7 +4190,7 @@ export class Kamino {
           { address: rewardMints[i], role: AccountRole.READONLY },
           { address: rewardTokenPrograms[i], role: AccountRole.READONLY },
         ]),
-      }
+      };
     }
 
     return ix;
@@ -4192,7 +4200,7 @@ export class Kamino {
     const [topupVault] = await getProgramDerivedAddress({
       seeds: [Buffer.from('topup_vault'), addressEncoder.encode(user)],
       programAddress: this.getProgramID(),
-    })
+    });
     return topupVault;
   };
 
@@ -4222,7 +4230,12 @@ export class Kamino {
       programAddress: this.getProgramID(),
     });
     const [sharesMint, sharesMintBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('shares'), addressEncoder.encode(strategy), addressEncoder.encode(tokenMintA), addressEncoder.encode(tokenMintB)],
+      seeds: [
+        Buffer.from('shares'),
+        addressEncoder.encode(strategy),
+        addressEncoder.encode(tokenMintA),
+        addressEncoder.encode(tokenMintB),
+      ],
       programAddress: this.getProgramID(),
     });
     const [sharesMintAuthority, sharesMintAuthorityBump] = await getProgramDerivedAddress({
@@ -4284,10 +4297,8 @@ export class Kamino {
     const { address: strategyPubkey, strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
     const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
-    const { treasuryFeeTokenAVault, treasuryFeeTokenBVault, treasuryFeeVaultAuthority } = await this.getTreasuryFeeVaultPDAs(
-      strategyState.tokenAMint,
-      strategyState.tokenBMint
-    );
+    const { treasuryFeeTokenAVault, treasuryFeeTokenBVault, treasuryFeeVaultAuthority } =
+      await this.getTreasuryFeeVaultPDAs(strategyState.tokenAMint, strategyState.tokenBMint);
 
     let programId = this._orcaService.getWhirlpoolProgramId();
 
@@ -4298,11 +4309,7 @@ export class Kamino {
     let rewardMint1 = DEFAULT_PUBLIC_KEY;
     let rewardMint2 = DEFAULT_PUBLIC_KEY;
     if (strategyState.strategyDex.toNumber() === dexToNumber('ORCA')) {
-      const whirlpool = await Whirlpool.fetch(
-        this._rpc,
-        strategyState.pool,
-        this._orcaService.getWhirlpoolProgramId()
-      );
+      const whirlpool = await Whirlpool.fetch(this._rpc, strategyState.pool, this._orcaService.getWhirlpoolProgramId());
       if (!whirlpool) {
         throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
       }
@@ -4333,11 +4340,7 @@ export class Kamino {
     } else if (strategyState.strategyDex.toNumber() === dexToNumber('METEORA')) {
       programId = this._meteoraService.getMeteoraProgramId();
 
-      const poolState = await LbPair.fetch(
-        this._rpc,
-        strategyState.pool,
-        this._meteoraService.getMeteoraProgramId()
-      );
+      const poolState = await LbPair.fetch(this._rpc, strategyState.pool, this._meteoraService.getMeteoraProgramId());
       if (!poolState) {
         throw Error(`Could not fetch Meteora pool state with pubkey ${strategyState.pool.toString()}`);
       }
@@ -4402,8 +4405,8 @@ export class Kamino {
           accounts: ix.accounts?.concat([
             { address: mint, role: AccountRole.READONLY },
             { address: tokenProgram, role: AccountRole.READONLY },
-          ])
-        }
+          ]),
+        };
       }
     }
 
@@ -4415,10 +4418,8 @@ export class Kamino {
 
       ix = {
         ...ix,
-        accounts: ix.accounts?.concat([
-          { address: poolTickArrayBitmap, role: AccountRole.READONLY }
-        ])
-      }
+        accounts: ix.accounts?.concat([{ address: poolTickArrayBitmap, role: AccountRole.READONLY }]),
+      };
     }
     return ix;
   };
@@ -4543,16 +4544,8 @@ export class Kamino {
       poolPk,
       position.lowerBinId
     );
-    const lowerBinArray = await BinArray.fetch(
-      this._rpc,
-      lowerTickPk,
-      this._meteoraService.getMeteoraProgramId()
-    );
-    const upperBinArray = await BinArray.fetch(
-      this._rpc,
-      upperTickPk,
-      this._meteoraService.getMeteoraProgramId()
-    );
+    const lowerBinArray = await BinArray.fetch(this._rpc, lowerTickPk, this._meteoraService.getMeteoraProgramId());
+    const upperBinArray = await BinArray.fetch(this._rpc, upperTickPk, this._meteoraService.getMeteoraProgramId());
     if (!lowerBinArray || !upperBinArray) {
       return {
         Address: positionPk,
@@ -4767,7 +4760,9 @@ export class Kamino {
       whirlpool.tickSpacing
     );
 
-    const { position, positionBump, positionMetadata } = await this.getMetadataProgramAddressesOrca(positionMint.address);
+    const { position, positionBump, positionMetadata } = await this.getMetadataProgramAddressesOrca(
+      positionMint.address
+    );
 
     const positionTokenAccount = await getAssociatedTokenAddress(positionMint.address, baseVaultAuthority);
 
@@ -4777,12 +4772,8 @@ export class Kamino {
       bump: positionBump,
     };
 
-    const { lowerTick: startTickIndex, upperTick: endTickIndex } = await this.getStartEndTicketIndexProgramAddressesOrca(
-      pool,
-      whirlpool,
-      tickLowerIndex,
-      tickUpperIndex
-    );
+    const { lowerTick: startTickIndex, upperTick: endTickIndex } =
+      await this.getStartEndTicketIndexProgramAddressesOrca(pool, whirlpool, tickLowerIndex, tickUpperIndex);
 
     const globalConfig = await this.getGlobalConfigState(this._globalConfig);
     if (!globalConfig) {
@@ -4831,14 +4822,14 @@ export class Kamino {
 
     const ix = openLiquidityPosition(args, accounts);
 
-    const accs = [...ix.accounts || []];
+    const accs = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === positionMint.address);
     if (accountIndex >= 0) {
       accs[accountIndex] = {
         ...accs[accountIndex],
         role: AccountRole.WRITABLE_SIGNER,
         // @ts-ignore
-        signer: positionMint
+        signer: positionMint,
       };
     }
     return {
@@ -4905,12 +4896,8 @@ export class Kamino {
       decimalsB
     );
 
-    const { position, positionBump, protocolPosition, positionMetadata } = await this.getMetadataProgramAddressesRaydium(
-      positionMint.address,
-      pool,
-      tickLowerIndex,
-      tickUpperIndex
-    );
+    const { position, positionBump, protocolPosition, positionMetadata } =
+      await this.getMetadataProgramAddressesRaydium(positionMint.address, pool, tickLowerIndex, tickUpperIndex);
 
     const positionTokenAccount = await getAssociatedTokenAddress(positionMint.address, baseVaultAuthority);
 
@@ -4920,12 +4907,8 @@ export class Kamino {
       bump: positionBump,
     };
 
-    const { lowerTick: startTickIndex, upperTick: endTickIndex } = await this.getStartEndTicketIndexProgramAddressesRaydium(
-      pool,
-      poolState,
-      tickLowerIndex,
-      tickUpperIndex
-    );
+    const { lowerTick: startTickIndex, upperTick: endTickIndex } =
+      await this.getStartEndTicketIndexProgramAddressesRaydium(pool, poolState, tickLowerIndex, tickUpperIndex);
 
     const globalConfig = await this.getGlobalConfigState(this._globalConfig);
     if (!globalConfig) {
@@ -4973,7 +4956,7 @@ export class Kamino {
     const [poolTickArrayBitmap] = await getProgramDerivedAddress({
       seeds: [Buffer.from('pool_tick_array_bitmap_extension'), addressEncoder.encode(pool)],
       programAddress: this._raydiumService.getRaydiumProgramId(),
-    })
+    });
 
     let ix = openLiquidityPosition(args, accounts);
 
@@ -5017,14 +5000,14 @@ export class Kamino {
       };
     }
 
-    const accs = [...ix.accounts || []];
+    const accs = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === positionMint.address);
     if (accountIndex >= 0) {
       accs[accountIndex] = {
         ...accs[accountIndex],
         role: AccountRole.WRITABLE_SIGNER,
         // @ts-ignore
-        signer: positionMint
+        signer: positionMint,
       };
     }
     return {
@@ -5075,7 +5058,11 @@ export class Kamino {
     const tickLowerIndex = getBinIdFromPriceWithDecimals(priceLower, lbPair.binStep, true, decimalsA, decimalsB);
     const tickUpperIndex = getBinIdFromPriceWithDecimals(priceUpper, lbPair.binStep, true, decimalsA, decimalsB);
 
-    const { position: positionMint, positionBump, positionMetadata } = await this.getMetadataProgramAddressesOrca(position.address);
+    const {
+      position: positionMint,
+      positionBump,
+      positionMetadata,
+    } = await this.getMetadataProgramAddressesOrca(position.address);
 
     const positionTokenAccount = await getAssociatedTokenAddress(position.address, baseVaultAuthority);
 
@@ -5085,10 +5072,8 @@ export class Kamino {
       bump: positionBump,
     };
 
-    const { lowerTick: startTickIndex, upperTick: endTickIndex } = await this.getStartEndTicketIndexProgramAddressesMeteora(
-      pool,
-      tickLowerIndex
-    );
+    const { lowerTick: startTickIndex, upperTick: endTickIndex } =
+      await this.getStartEndTicketIndexProgramAddressesMeteora(pool, tickLowerIndex);
 
     const globalConfig = await this.getGlobalConfigState(this._globalConfig);
     if (!globalConfig) {
@@ -5137,14 +5122,14 @@ export class Kamino {
 
     const ix = openLiquidityPosition(args, accounts);
 
-    const accs = [...ix.accounts || []];
+    const accs = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === position.address);
     if (accountIndex >= 0) {
       accs[accountIndex] = {
         ...accs[accountIndex],
         role: AccountRole.WRITABLE_SIGNER,
         // @ts-ignore
-        signer: position
+        signer: position,
       };
     }
     return {
@@ -5347,8 +5332,7 @@ export class Kamino {
   getPendingFees = async (strategies: Address[]): Promise<StrategyWithPendingFees[]> => {
     const strategiesWithAddresses = await this.getStrategiesWithAddresses(strategies);
     const raydiumStrategies = strategiesWithAddresses.filter(
-      (x) =>
-        x.strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM') && x.strategy.position !== DEFAULT_PUBLIC_KEY
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM') && x.strategy.position !== DEFAULT_PUBLIC_KEY
     );
     const raydiumPositionsPromise = this.getRaydiumPositions(raydiumStrategies.map((x) => x.strategy.position));
     const orcaStrategies = strategiesWithAddresses.filter(
@@ -5356,8 +5340,7 @@ export class Kamino {
     );
     const orcaPositionsPromise = this.getOrcaPositions(orcaStrategies.map((x) => x.strategy.position));
     const meteoraStrategies = strategiesWithAddresses.filter(
-      (x) =>
-        x.strategy.strategyDex.toNumber() === dexToNumber('METEORA') && x.strategy.position !== DEFAULT_PUBLIC_KEY
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('METEORA') && x.strategy.position !== DEFAULT_PUBLIC_KEY
     );
     const meteoraPositionsPromise = this.getMeteoraPositions(meteoraStrategies.map((x) => x.strategy.position));
     const [raydiumPositions, orcaPositions, meteoraPositions] = await Promise.all([
@@ -5597,11 +5580,7 @@ export class Kamino {
       tokenMintB = whirlpoolState.tokenMintB;
       tickSpacing = whirlpoolState.tickSpacing;
     } else if (dex === 'RAYDIUM') {
-      const raydiumPoolState = await PoolState.fetch(
-        this._rpc,
-        pool,
-        this._raydiumService.getRaydiumProgramId()
-      );
+      const raydiumPoolState = await PoolState.fetch(this._rpc, pool, this._raydiumService.getRaydiumProgramId());
       if (!raydiumPoolState) {
         throw Error(`Could not fetch Raydium pool state with pubkey ${pool.toString()}`);
       }
@@ -5688,7 +5667,7 @@ export class Kamino {
         baseVaultAuthority,
         baseVaultAuthority,
         baseVaultAuthority,
-        baseVaultAuthority,
+        baseVaultAuthority
       );
       if (initLowerTickIfNeeded.initTickIx) {
         openPositionIxs.push(initLowerTickIfNeeded.initTickIx);
@@ -5879,11 +5858,7 @@ export class Kamino {
       }
       return whirlpoolState.tickSpacing;
     } else if (dex === 'RAYDIUM') {
-      const raydiumPoolState = await PoolState.fetch(
-        this._rpc,
-        pool,
-        this._raydiumService.getRaydiumProgramId()
-      );
+      const raydiumPoolState = await PoolState.fetch(this._rpc, pool, this._raydiumService.getRaydiumProgramId());
       if (!raydiumPoolState) {
         throw Error(`Could not fetch Raydium pool state with pubkey ${pool.toString()}`);
       }
@@ -6282,7 +6257,8 @@ export class Kamino {
         .getProgramAccounts(ADDRESS_LOOKUP_TABLE_PROGRAM_ADDRESS, {
           filters: [{ memcmp: { offset: 22n, bytes: LUT_OWNER_KEY, encoding: 'base58' } }],
           dataSlice: { length: 0, offset: 0 },
-        }).send()
+        })
+        .send()
         .then((res) => res.map((raw) => raw.pubkey));
     }
     return [];
@@ -6302,7 +6278,7 @@ export class Kamino {
   };
 
   getInitLookupTableIx = async (authority: TransactionSigner, slot?: Slot): Promise<[IInstruction, Address]> => {
-    let recentSlot : Slot;
+    let recentSlot: Slot;
     if (slot) {
       recentSlot = slot;
     } else {
@@ -6329,10 +6305,8 @@ export class Kamino {
     if (!strategyState) {
       throw Error(`Could not fetch strategy state with pubkey ${strategy.toString()}`);
     }
-    const { treasuryFeeTokenAVault, treasuryFeeTokenBVault, treasuryFeeVaultAuthority } = await this.getTreasuryFeeVaultPDAs(
-      strategyState.tokenAMint,
-      strategyState.tokenBMint
-    );
+    const { treasuryFeeTokenAVault, treasuryFeeTokenBVault, treasuryFeeVaultAuthority } =
+      await this.getTreasuryFeeVaultPDAs(strategyState.tokenAMint, strategyState.tokenBMint);
 
     const accountsToBeInserted: Address[] = [
       address,
@@ -6391,9 +6365,9 @@ export class Kamino {
     strategy: Address | StrategyWithAddress,
     slot?: Slot
   ): Promise<{
-    lookupTable: Address,
+    lookupTable: Address;
     createLookupTableIx: IInstruction;
-    populateLookupTableIxs: IInstruction[],
+    populateLookupTableIxs: IInstruction[];
     updateStrategyLookupTableIx: IInstruction;
   }> => {
     const [createLookupTableIx, lookupTable] = await this.getInitLookupTableIx(authority, slot);
@@ -6519,7 +6493,9 @@ export class Kamino {
       ixs.push(await this.collectFeesAndRewards(strategyWithAddress, admin));
     }
 
-    ixs.push(await this.openPosition(admin, strategyWithAddress, newPosition, priceLower, priceUpper, new Rebalancing()));
+    ixs.push(
+      await this.openPosition(admin, strategyWithAddress, newPosition, priceLower, priceUpper, new Rebalancing())
+    );
 
     return ixs;
   };
@@ -6568,12 +6544,14 @@ export class Kamino {
     strategiesWithShareMintsMap: Map<Address, KaminoStrategyWithShareMint>,
     strategiesWithAddressMap?: Map<Address, WhirlpoolStrategy>
   ): Promise<KaminoPosition[]> => {
-    const tokenAccounts = await this._rpc.getTokenAccountsByOwner(wallet, { programId: TOKEN_PROGRAM_ADDRESS }, { encoding: 'jsonParsed' }).send();
+    const tokenAccounts = await this._rpc
+      .getTokenAccountsByOwner(wallet, { programId: TOKEN_PROGRAM_ADDRESS }, { encoding: 'jsonParsed' })
+      .send();
 
     const mints = tokenAccounts.value.map((accountInfo) => {
       return accountInfo.account.data.parsed.info.mint;
     });
-    const mintInfos = await batchFetch(mints, async (chunk) => (await fetchAllMint(this.getConnection(), chunk)));
+    const mintInfos = await batchFetch(mints, async (chunk) => await fetchAllMint(this.getConnection(), chunk));
 
     const kaminoStrategyAddresses: Address[] = [];
     const kaminoAccountInfos: Array<JsonParsedTokenAccount> = [];
@@ -7060,11 +7038,7 @@ export class Kamino {
     const isRaydium = dexToNumber('RAYDIUM') === dex;
     const isMeteora = dexToNumber('METEORA') === dex;
     if (isOrca) {
-      const whirlpool = await Whirlpool.fetch(
-        this._rpc,
-        strategyState.pool,
-        this._orcaService.getWhirlpoolProgramId()
-      );
+      const whirlpool = await Whirlpool.fetch(this._rpc, strategyState.pool, this._orcaService.getWhirlpoolProgramId());
       if (!whirlpool) {
         throw new Error(`Unable to get Orca whirlpool for pubkey ${strategyState.pool}`);
       }
@@ -7160,11 +7134,7 @@ export class Kamino {
       return [new Decimal(0), new Decimal(0)];
     }
 
-    const poolState = await PoolState.fetch(
-      this._rpc,
-      strategyState.pool,
-      this._raydiumService.getRaydiumProgramId()
-    );
+    const poolState = await PoolState.fetch(this._rpc, strategyState.pool, this._raydiumService.getRaydiumProgramId());
     const position = await PersonalPositionState.fetch(
       this._rpc,
       strategyState.position,
@@ -7239,11 +7209,7 @@ export class Kamino {
       return [new Decimal(0), new Decimal(0)];
     }
 
-    const poolState = await LbPair.fetch(
-      this._rpc,
-      strategyState.pool,
-      this._meteoraService.getMeteoraProgramId()
-    );
+    const poolState = await LbPair.fetch(this._rpc, strategyState.pool, this._meteoraService.getMeteoraProgramId());
     if (!poolState) {
       throw new Error(`poolState ${strategyState.pool.toString()} is not found`);
     }
@@ -7366,7 +7332,10 @@ export class Kamino {
    */
   async getUserTermsSignatureState(owner: Address): Promise<TermsSignature | null> {
     const pdaSeed = [Buffer.from('signature'), addressEncoder.encode(owner)];
-    const [signatureStateKey, _signatureStateBump] = await getProgramDerivedAddress({ seeds: pdaSeed, programAddress: this._kaminoProgramId });
+    const [signatureStateKey, _signatureStateBump] = await getProgramDerivedAddress({
+      seeds: pdaSeed,
+      programAddress: this._kaminoProgramId,
+    });
 
     return await TermsSignature.fetch(this._rpc, signatureStateKey);
   }
@@ -7378,7 +7347,7 @@ export class Kamino {
    */
   async getUserTermsSignatureIx(owner: TransactionSigner, signature: Uint8Array): Promise<IInstruction> {
     const pdaSeed = [Buffer.from('signature'), addressEncoder.encode(owner.address)];
-    const [signatureStateKey] = await getProgramDerivedAddress({ seeds: pdaSeed, programAddress: this.getProgramID() })
+    const [signatureStateKey] = await getProgramDerivedAddress({ seeds: pdaSeed, programAddress: this.getProgramID() });
     const args: SignTermsArgs = {
       signature: Array.from(signature),
     };
@@ -7399,20 +7368,12 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const whirlpool = await Whirlpool.fetch(
-      this._rpc,
-      strategyState.pool,
-      this._orcaService.getWhirlpoolProgramId()
-    );
+    const whirlpool = await Whirlpool.fetch(this._rpc, strategyState.pool, this._orcaService.getWhirlpoolProgramId());
     if (!whirlpool) {
       throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    const position = await Position.fetch(
-      this._rpc,
-      strategyState.position,
-      this._orcaService.getWhirlpoolProgramId()
-    );
+    const position = await Position.fetch(this._rpc, strategyState.position, this._orcaService.getWhirlpoolProgramId());
     if (!position) {
       throw new Error(`Whirlpool position ${strategyState.position} does not exist`);
     }
@@ -7439,11 +7400,7 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const poolStatePromise = LbPair.fetch(
-      this._rpc,
-      strategyState.pool,
-      this._meteoraService.getMeteoraProgramId()
-    );
+    const poolStatePromise = LbPair.fetch(this._rpc, strategyState.pool, this._meteoraService.getMeteoraProgramId());
     const positionPromise = PositionV2.fetch(
       this._rpc,
       strategyState.position,
@@ -7481,20 +7438,12 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> => {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const whirlpool = await Whirlpool.fetch(
-      this._rpc,
-      strategyState.pool,
-      this._orcaService.getWhirlpoolProgramId()
-    );
+    const whirlpool = await Whirlpool.fetch(this._rpc, strategyState.pool, this._orcaService.getWhirlpoolProgramId());
     if (!whirlpool) {
       throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    const position = await Position.fetch(
-      this._rpc,
-      strategyState.position,
-      this._orcaService.getWhirlpoolProgramId()
-    );
+    const position = await Position.fetch(this._rpc, strategyState.position, this._orcaService.getWhirlpoolProgramId());
     if (!position) {
       throw new Error(`Whirlpool position ${strategyState.position} does not exist`);
     }
@@ -7522,11 +7471,7 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> => {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const poolState = await PoolState.fetch(
-      this._rpc,
-      strategyState.pool,
-      this._raydiumService.getRaydiumProgramId()
-    );
+    const poolState = await PoolState.fetch(this._rpc, strategyState.pool, this._raydiumService.getRaydiumProgramId());
     const positionState = await PersonalPositionState.fetch(
       this._rpc,
       strategyState.position,
@@ -7563,11 +7508,7 @@ export class Kamino {
   ): Promise<{ amountSlippageA: BN; amountSlippageB: BN }> => {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const poolState = await PoolState.fetch(
-      this._rpc,
-      strategyState.pool,
-      this._raydiumService.getRaydiumProgramId()
-    );
+    const poolState = await PoolState.fetch(this._rpc, strategyState.pool, this._raydiumService.getRaydiumProgramId());
     const positionState = await PersonalPositionState.fetch(
       this._rpc,
       strategyState.position,
@@ -7710,11 +7651,7 @@ export class Kamino {
     const collateralInfos = await this.getCollateralInfo(globalConfig.tokenInfos);
     const result: [IInstruction, TransactionSigner][] = [];
     if (strategyState.strategyDex.toNumber() === dexToNumber('ORCA')) {
-      const whirlpool = await Whirlpool.fetch(
-        this._rpc,
-        strategyState.pool,
-        this._orcaService.getWhirlpoolProgramId()
-      );
+      const whirlpool = await Whirlpool.fetch(this._rpc, strategyState.pool, this._orcaService.getWhirlpoolProgramId());
       if (!whirlpool) {
         throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
       }
@@ -7794,11 +7731,7 @@ export class Kamino {
       }
       return result;
     } else if (strategyState.strategyDex.toNumber() === dexToNumber('METEORA')) {
-      const poolState = await LbPair.fetch(
-        this._rpc,
-        strategyState.pool,
-        this._meteoraService.getMeteoraProgramId()
-      );
+      const poolState = await LbPair.fetch(this._rpc, strategyState.pool, this._meteoraService.getMeteoraProgramId());
       if (!poolState) {
         throw new Error(`Could not fetch meteora state with pubkey ${strategyState.pool.toString()}`);
       }

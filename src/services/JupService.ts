@@ -1,9 +1,4 @@
-import {
-  AccountRole,
-  address,
-  Address,
-  IInstruction,
-} from '@solana/kit';
+import { AccountRole, address, Address, IInstruction } from '@solana/kit';
 import axios from 'axios';
 import Decimal from 'decimal.js';
 import { QuoteResponse, SwapInstructionsResponse, createJupiterApiClient, Instruction } from '@jup-ag/api';
@@ -28,7 +23,6 @@ interface SwapIInstructionsResponse {
 }
 
 export class JupService {
-
   // the amounts has to be in lamports
   static getBestRouteV6 = async (
     userAddress: Address,
@@ -64,13 +58,17 @@ export class JupService {
       });
 
       const swapIxs: SwapIInstructionsResponse = {
-        tokenLedgerInstruction: ixsResponse.tokenLedgerInstruction ? transformResponseIx(ixsResponse.tokenLedgerInstruction) : undefined,
+        tokenLedgerInstruction: ixsResponse.tokenLedgerInstruction
+          ? transformResponseIx(ixsResponse.tokenLedgerInstruction)
+          : undefined,
         computeBudgetInstructions: ixsResponse.computeBudgetInstructions.map((ix) => transformResponseIx(ix)),
         setupInstructions: ixsResponse.setupInstructions.map((ix) => transformResponseIx(ix)),
         swapInstruction: transformResponseIx(ixsResponse.swapInstruction),
-        cleanupInstruction: ixsResponse.cleanupInstruction ? transformResponseIx(ixsResponse.cleanupInstruction) : undefined,
+        cleanupInstruction: ixsResponse.cleanupInstruction
+          ? transformResponseIx(ixsResponse.cleanupInstruction)
+          : undefined,
         addressLookupTableAddresses: ixsResponse.addressLookupTableAddresses.map((a) => address(a)),
-      }
+      };
 
       return swapIxs;
     } catch (error) {
@@ -188,10 +186,7 @@ export class JupService {
     return prices;
   };
 
-  static getDollarPrices(
-    inputMints: (Address | string)[],
-    jupEndpoint?: string
-  ): Promise<Map<Address, Decimal>> {
+  static getDollarPrices(inputMints: (Address | string)[], jupEndpoint?: string): Promise<Map<Address, Decimal>> {
     return this.getPrices(inputMints, USDC_MINT, jupEndpoint);
   }
 

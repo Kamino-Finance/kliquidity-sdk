@@ -2,14 +2,19 @@
 /**
  * Added roundUp flag to accurately estimate token holdings for deposits
  */
-import { tickIndexToSqrtPriceX64 } from "@orca-so/whirlpool-client-sdk";
-import { BN } from "@coral-xyz/anchor";
-import { Address } from "@solana/kit";
+import { tickIndexToSqrtPriceX64 } from '@orca-so/whirlpool-client-sdk';
+import { BN } from '@coral-xyz/anchor';
+import { Address } from '@solana/kit';
 import {
-  adjustForSlippage, getTokenAFromLiquidity,
-  getTokenBFromLiquidity, Percentage, PositionStatus, PositionUtil, RemoveLiquidityQuote,
+  adjustForSlippage,
+  getTokenAFromLiquidity,
+  getTokenBFromLiquidity,
+  Percentage,
+  PositionStatus,
+  PositionUtil,
+  RemoveLiquidityQuote,
 } from '@orca-so/whirlpool-sdk';
-import { ZERO_BN } from "./utils";
+import { ZERO_BN } from './utils';
 
 export type InternalRemoveLiquidityQuoteParam = {
   positionAddress: Address;
@@ -23,7 +28,7 @@ export type InternalRemoveLiquidityQuoteParam = {
 
 export function getRemoveLiquidityQuote(
   param: InternalRemoveLiquidityQuoteParam,
-  roundUp: boolean = false,
+  roundUp: boolean = false
 ): RemoveLiquidityQuote {
   const positionStatus = PositionUtil.getPositionStatus(
     param.tickCurrentIndex,
@@ -45,7 +50,7 @@ export function getRemoveLiquidityQuote(
 
 function getRemoveLiquidityQuoteWhenPositionIsBelowRange(
   param: InternalRemoveLiquidityQuoteParam,
-  roundUp: boolean = false,
+  roundUp: boolean = false
 ): RemoveLiquidityQuote {
   const { positionAddress, tickLowerIndex, tickUpperIndex, liquidity, slippageTolerance } = param;
 
@@ -67,16 +72,9 @@ function getRemoveLiquidityQuoteWhenPositionIsBelowRange(
 
 function getRemoveLiquidityQuoteWhenPositionIsInRange(
   param: InternalRemoveLiquidityQuoteParam,
-  roundUp: boolean = false,
+  roundUp: boolean = false
 ): RemoveLiquidityQuote {
-  const {
-    positionAddress,
-    sqrtPrice,
-    tickLowerIndex,
-    tickUpperIndex,
-    liquidity,
-    slippageTolerance,
-  } = param;
+  const { positionAddress, sqrtPrice, tickLowerIndex, tickUpperIndex, liquidity, slippageTolerance } = param;
 
   const sqrtPriceX64 = sqrtPrice;
   const sqrtPriceLowerX64 = tickIndexToSqrtPriceX64(tickLowerIndex);
@@ -100,16 +98,9 @@ function getRemoveLiquidityQuoteWhenPositionIsInRange(
 
 function getRemoveLiquidityQuoteWhenPositionIsAboveRange(
   param: InternalRemoveLiquidityQuoteParam,
-  roundUp: boolean = false,
-
+  roundUp: boolean = false
 ): RemoveLiquidityQuote {
-  const {
-    positionAddress,
-    tickLowerIndex,
-    tickUpperIndex,
-    liquidity,
-    slippageTolerance: slippageTolerance,
-  } = param;
+  const { positionAddress, tickLowerIndex, tickUpperIndex, liquidity, slippageTolerance: slippageTolerance } = param;
 
   const sqrtPriceLowerX64 = tickIndexToSqrtPriceX64(tickLowerIndex);
   const sqrtPriceUpperX64 = tickIndexToSqrtPriceX64(tickUpperIndex);

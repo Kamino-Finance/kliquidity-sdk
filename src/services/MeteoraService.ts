@@ -43,10 +43,12 @@ export class MeteoraService {
   }
 
   async getMeteoraPools(): Promise<MeteoraPool[]> {
-    const rawPools = await this._rpc.getProgramAccounts(METEORA_PROGRAM_ID, {
-      commitment: 'confirmed',
-      filters: [{ dataSize: 904n }],
-    }).send();
+    const rawPools = await this._rpc
+      .getProgramAccounts(METEORA_PROGRAM_ID, {
+        commitment: 'confirmed',
+        filters: [{ dataSize: 904n }],
+      })
+      .send();
     const pools: MeteoraPool[] = [];
     for (let i = 0; i < rawPools.length; i++) {
       try {
@@ -251,10 +253,12 @@ export class MeteoraService {
   }
 
   async getPositionsCountByPool(pool: Address): Promise<number> {
-    const rawPositions = await this._rpc.getProgramAccounts(METEORA_PROGRAM_ID, {
-      commitment: 'confirmed',
-      filters: [{ dataSize: 8120n, }, { memcmp: { bytes: pool, offset: 8n, encoding: 'base58' } }],
-    }).send();
+    const rawPositions = await this._rpc
+      .getProgramAccounts(METEORA_PROGRAM_ID, {
+        commitment: 'confirmed',
+        filters: [{ dataSize: 8120n }, { memcmp: { bytes: pool, offset: 8n, encoding: 'base58' } }],
+      })
+      .send();
 
     return rawPositions.length;
   }

@@ -10,7 +10,8 @@ export async function setupStrategyLookupTable(
   strategy: Address | StrategyWithAddress,
   slot?: Slot
 ): Promise<Address> {
-  const { lookupTable, createLookupTableIx, populateLookupTableIxs, updateStrategyLookupTableIx } = await kamino.setupStrategyLookupTable(env.admin, strategy, slot);
+  const { lookupTable, createLookupTableIx, populateLookupTableIxs, updateStrategyLookupTableIx } =
+    await kamino.setupStrategyLookupTable(env.admin, strategy, slot);
   const ixs = [createLookupTableIx, ...populateLookupTableIxs, updateStrategyLookupTableIx];
   await sendAndConfirmTx(env.c, env.admin, ixs);
   return lookupTable;

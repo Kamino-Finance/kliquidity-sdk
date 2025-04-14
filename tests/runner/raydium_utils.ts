@@ -2,7 +2,8 @@ import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../../src/@codegen/raydium/pro
 import * as anchor from '@coral-xyz/anchor';
 import {
   Address,
-  generateKeyPairSigner, GetAccountInfoApi,
+  generateKeyPairSigner,
+  GetAccountInfoApi,
   getAddressEncoder,
   getProgramDerivedAddress,
   Rpc,
@@ -188,7 +189,12 @@ export async function getPoolAddress(
   programId: Address
 ): Promise<ProgramDerivedAddress> {
   return getProgramDerivedAddress({
-    seeds: [POOL_SEED, addressEncoder.encode(ammConfig), addressEncoder.encode(tokenMint0), addressEncoder.encode(tokenMint1)],
+    seeds: [
+      POOL_SEED,
+      addressEncoder.encode(ammConfig),
+      addressEncoder.encode(tokenMint0),
+      addressEncoder.encode(tokenMint1),
+    ],
     programAddress: programId,
   });
 }

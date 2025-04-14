@@ -213,7 +213,7 @@ export async function getUpdateStrategyConfigIx(
   strategy: Address,
   mode: StrategyConfigOptionKind,
   amount: Decimal,
-  newAccount: Address = DEFAULT_PUBLIC_KEY,
+  newAccount: Address = DEFAULT_PUBLIC_KEY
 ): Promise<IInstruction> {
   const args: UpdateStrategyConfigArgs = {
     mode: mode.discriminator,

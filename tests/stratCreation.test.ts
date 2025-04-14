@@ -1,8 +1,4 @@
-import {
-  address,
-  Address, generateKeyPairSigner,
-  IInstruction,
-} from '@solana/kit';
+import { address, Address, generateKeyPairSigner, IInstruction } from '@solana/kit';
 import {
   createAddExtraComputeUnitsIx,
   getAssociatedTokenAddressAndAccount,
@@ -61,14 +57,16 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    const strategyState = await kamino.getStrategyByAddress(
-      address('4TQ1DZtibQuy5ux33fcZprUmLcLoAdSNfwaUukc9kdXP')
-    );
+    const strategyState = await kamino.getStrategyByAddress(address('4TQ1DZtibQuy5ux33fcZprUmLcLoAdSNfwaUukc9kdXP'));
     const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
     const aprApy = await raydiumService.getStrategyWhirlpoolPoolAprApy(strategyState!);
     console.log('aprApy', aprApy);
 
-    const second = await raydiumService.getRaydiumPositionAprApy(address('8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj'), new Decimal(180.0), new Decimal(250.0));
+    const second = await raydiumService.getRaydiumPositionAprApy(
+      address('8sLbNZoA1cfnvMJLPfp98ZLAnFSYCFApfJKMbiXNLwxj'),
+      new Decimal(180.0),
+      new Decimal(250.0)
+    );
     console.log('second', second);
   });
 
@@ -138,10 +136,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       RAYDIUM_PROGRAM_ID
     );
 
-    const upkeepIxn = await kamino.withdrawTopupVault(
-      signer,
-      new Decimal(U64_MAX)
-    );
+    const upkeepIxn = await kamino.withdrawTopupVault(signer, new Decimal(U64_MAX));
 
     const ixs: IInstruction[] = [upkeepIxn];
     console.log('ixs', ixs.length);
@@ -305,7 +300,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     );
 
     const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
-    const txHash = await sendAndConfirmTx(env.c, signer, [increaseBudgetIx, ...ataInstructions, depositIx], [], [strategyState.strategyLookupTable]);
+    const txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [increaseBudgetIx, ...ataInstructions, depositIx],
+      [],
+      [strategyState.strategyLookupTable]
+    );
     console.log('deposit tx hash', txHash);
   });
 
@@ -366,7 +367,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     );
 
     const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
-    const txHash = await sendAndConfirmTx(env.c, signer, [increaseBudgetIx, ...ataInstructions, depositIx], [], [strategyState.strategyLookupTable]);
+    const txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [increaseBudgetIx, ...ataInstructions, depositIx],
+      [],
+      [strategyState.strategyLookupTable]
+    );
     console.log('deposit tx hash', txHash);
   });
 
@@ -481,7 +488,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     );
 
     const increaseBudgetIx = createAddExtraComputeUnitsIx(1_000_000);
-    const txHash = await sendAndConfirmTx(env.c, signer, [increaseBudgetIx, ...ataInstructions, depositIx], [], [strategyState.strategyLookupTable]);
+    const txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [increaseBudgetIx, ...ataInstructions, depositIx],
+      [],
+      [strategyState.strategyLookupTable]
+    );
     console.log('deposit tx hash', txHash);
   });
 
@@ -541,7 +554,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     );
 
     const increaseBudgetIx = createAddExtraComputeUnitsIx(1_400_000);
-    const txHash = await sendAndConfirmTx(env.c, signer, [increaseBudgetIx, ...depositIx.instructions], [], [strategyState.strategyLookupTable, ...depositIx.lookupTablesAddresses]);
+    const txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [increaseBudgetIx, ...depositIx.instructions],
+      [],
+      [strategyState.strategyLookupTable, ...depositIx.lookupTablesAddresses]
+    );
     console.log('deposit tx hash', txHash);
   });
 
@@ -562,9 +581,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       new Decimal(400)
     );
 
-    const holdings = await kamino.getStrategyTokensHoldings(
-      address('Cfuy5T6osdazUeLego5LFycBQebm9PP3H7VNdCndXXEN')
-    );
+    const holdings = await kamino.getStrategyTokensHoldings(address('Cfuy5T6osdazUeLego5LFycBQebm9PP3H7VNdCndXXEN'));
 
     console.log('amounts', amounts);
     console.log('holdings', holdings);
@@ -708,7 +725,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
@@ -759,7 +782,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
@@ -810,7 +839,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
@@ -860,7 +895,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
@@ -909,7 +950,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
@@ -959,7 +1006,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
@@ -1008,7 +1061,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // after strategy creation we have to set the reward mappings so it autocompounds
@@ -1020,11 +1079,10 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     }
 
     // update rebalance params
-    const updateRebalanceParamsIx = await kamino.getUpdateRebalancingParamsIxns(
-      signer,
-      newStrategy.address,
-      [new Decimal(10.0), new Decimal(24.0)]
-    );
+    const updateRebalanceParamsIx = await kamino.getUpdateRebalancingParamsIxns(signer, newStrategy.address, [
+      new Decimal(10.0),
+      new Decimal(24.0),
+    ]);
     const tx = [createComputeUnitLimitIx()];
     tx.push(updateRebalanceParamsIx);
     const updateRebalanceParamsTxHash = await sendAndConfirmTx(env.c, signer, tx);
@@ -1035,12 +1093,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     expect(strategyData[0]?.rebalanceRaw.params[2] == 24.0);
 
     // update rebalance method to manual
-    await updateStrategyConfig(
-      env,
-      newStrategy.address,
-      new UpdateRebalanceType(),
-      new Decimal(Manual.discriminator)
-    );
+    await updateStrategyConfig(env, newStrategy.address, new UpdateRebalanceType(), new Decimal(Manual.discriminator));
 
     strategyData = await kamino.getStrategies([newStrategy.address]);
     expect(strategyData[0]?.rebalanceType == Manual.discriminator);
@@ -1152,15 +1205,20 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // update rebalance params
-    const updateRebalanceParamsIx = await kamino.getUpdateRebalancingParamsIxns(
-      signer,
-      newStrategy.address,
-      [new Decimal(10.0), new Decimal(24.0)]
-    );
+    const updateRebalanceParamsIx = await kamino.getUpdateRebalancingParamsIxns(signer, newStrategy.address, [
+      new Decimal(10.0),
+      new Decimal(24.0),
+    ]);
     const tx = [createComputeUnitLimitIx()];
     tx.push(updateRebalanceParamsIx);
     const updateRebalanceParamsTxHash = await sendAndConfirmTx(env.c, signer, tx);
@@ -1171,12 +1229,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     expect(strategyData[0]?.rebalanceRaw.params[2] == 24.0);
 
     // update rebalance method to manual
-    await updateStrategyConfig(
-      env,
-      newStrategy.address,
-      new UpdateRebalanceType(),
-      new Decimal(Manual.discriminator)
-    );
+    await updateStrategyConfig(env, newStrategy.address, new UpdateRebalanceType(), new Decimal(Manual.discriminator));
 
     strategyData = await kamino.getStrategies([newStrategy.address]);
     expect(strategyData[0]?.rebalanceType == Manual.discriminator);
@@ -1225,7 +1278,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // verify strategy rebalance params
@@ -1237,10 +1296,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
 
     // open position
     const openPositionIxns = buildNewStrategyIxs.openPositionIxs;
-    const openPositionTxId = await sendAndConfirmTx(env.c, signer, openPositionIxns, [], [
-      strategyLookupTable,
-      ...(await kamino.getMainLookupTablePks()),
-    ]);
+    const openPositionTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      openPositionIxns,
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('openPositionTxId', openPositionTxId);
 
     // read prices
@@ -1318,7 +1380,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     expect(strategyData[0]?.rebalanceRaw.params[2].toString() == upperPriceBpsDifference.toString());
 
     // open position
-    const openPositionTxId = await sendAndConfirmTx(env.c, signer, buildNewStrategyIxs.openPositionIxs, [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    const openPositionTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      buildNewStrategyIxs.openPositionIxs,
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('openPositionTxId', openPositionTxId);
   });
 
@@ -1362,7 +1430,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     // set up lookup table for strategy
     const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
 
-    txHash = await sendAndConfirmTx(env.c, signer, [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx], [], [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]);
+    txHash = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...buildNewStrategyIxs.updateStrategyParamsIxs, buildNewStrategyIxs.updateRebalanceParamsIx],
+      [],
+      [strategyLookupTable, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('setup strategy tx hash', txHash);
 
     // verify strategy rebalance params
@@ -1370,7 +1444,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     expect(strategyData[0]?.rebalanceRaw.params[0].toString() == lowerPriceBpsDifference.toString());
     expect(strategyData[0]?.rebalanceRaw.params[2].toString() == upperPriceBpsDifference.toString());
 
-    const openPositionTxId = await sendAndConfirmTx(env.c, signer, buildNewStrategyIxs.openPositionIxs)
+    const openPositionTxId = await sendAndConfirmTx(env.c, signer, buildNewStrategyIxs.openPositionIxs);
     console.log('openPositionTxId', openPositionTxId);
   });
 
@@ -1440,10 +1514,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     }
 
     try {
-      const depositTxId = await sendAndConfirmTx(env.c, env.admin,
+      const depositTxId = await sendAndConfirmTx(
+        env.c,
+        env.admin,
         [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs],
         [],
-        [...lookupTables, ...(await kamino.getMainLookupTablePks())]);
+        [...lookupTables, ...(await kamino.getMainLookupTablePks())]
+      );
       // const depositTxId = await kamino._connection.simulateTransaction(singleSidedDepositTx);
       console.log('singleSidedDepoxit tx hash', depositTxId);
     } catch (e) {
@@ -1500,7 +1577,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       lookupTables = lookupTablesAddresses;
     }
 
-    const depositTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs], [], [...lookupTables, ...(await kamino.getMainLookupTablePks())]);
+    const depositTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs],
+      [],
+      [...lookupTables, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('singleSidedDepoxit tx hash', depositTxId);
   });
 
@@ -1548,7 +1631,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       lookupTables = lookupTablesAddresses;
     }
 
-    const depositTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs], [], [...lookupTables, ...(await kamino.getMainLookupTablePks())]);
+    const depositTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs],
+      [],
+      [...lookupTables, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('singleSidedDepoxit tx hash', depositTxId);
   });
 
@@ -1597,8 +1686,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     }
 
     try {
-      const depositTxId = await sendAndConfirmTx(env.c, env.admin,       [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs], [],
-        [...lookupTables, ...(await kamino.getMainLookupTablePks())])
+      const depositTxId = await sendAndConfirmTx(
+        env.c,
+        env.admin,
+        [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs],
+        [],
+        [...lookupTables, ...(await kamino.getMainLookupTablePks())]
+      );
       console.log('singleSidedDepoxit tx hash', depositTxId);
     } catch (e) {
       console.log(e);
@@ -1655,9 +1749,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     }
 
     try {
-      const depositTxId = await sendAndConfirmTx(env.c, env.admin,
-        [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs], [],
-        [...lookupTables, ...(await kamino.getMainLookupTablePks())])
+      const depositTxId = await sendAndConfirmTx(
+        env.c,
+        env.admin,
+        [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs],
+        [],
+        [...lookupTables, ...(await kamino.getMainLookupTablePks())]
+      );
       console.log('singleSidedDepoxit tx hash', depositTxId);
     } catch (e) {
       console.log(e);
@@ -1713,7 +1811,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       lookupTables = lookupTablesAddresses;
     }
 
-    const depositTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs], [], [...lookupTables, ...(await kamino.getMainLookupTablePks())]);
+    const depositTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs],
+      [],
+      [...lookupTables, ...(await kamino.getMainLookupTablePks())]
+    );
     console.log('singleSidedDepoxit tx hash', depositTxId);
   });
 
@@ -1767,7 +1871,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     }
 
     try {
-      const depositTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs], [], [...lookupTables, ...(await kamino.getMainLookupTablePks())]);
+      const depositTxId = await sendAndConfirmTx(
+        env.c,
+        signer,
+        [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs],
+        [],
+        [...lookupTables, ...(await kamino.getMainLookupTablePks())]
+      );
       console.log('singleSidedDepoxit tx hash', depositTxId);
     } catch (e) {
       console.log(e);
@@ -1841,7 +1951,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
 
     console.log('lookupTables', lookupTables.length);
 
-    const depositTxId = await sendAndConfirmTx(env.c, signer, [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs], [], lookupTables);
+    const depositTxId = await sendAndConfirmTx(
+      env.c,
+      signer,
+      [...getComputeBudgetAndPriorityFeeIxns(1_400_000), ...singleSidedDepositIxs],
+      [],
+      lookupTables
+    );
     console.log('singleSidedDepoxit tx hash', depositTxId);
 
     await sleep(5000);

@@ -2567,10 +2567,7 @@
           {
             "name": "positionBitmap",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           }
         ]
@@ -2686,10 +2683,7 @@
           {
             "name": "whirlpoolBump",
             "type": {
-              "array": [
-                "u8",
-                1
-              ]
+              "array": ["u8", 1]
             }
           },
           {
@@ -2699,10 +2693,7 @@
           {
             "name": "tickSpacingSeed",
             "type": {
-              "array": [
-                "u8",
-                2
-              ]
+              "array": ["u8", 2]
             }
           },
           {
@@ -2849,10 +2840,7 @@
           {
             "name": "rewardGrowthsOutside",
             "type": {
-              "array": [
-                "u128",
-                3
-              ]
+              "array": ["u128", 3]
             }
           }
         ]
