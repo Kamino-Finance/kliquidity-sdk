@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
-import { OraclePrices } from '@kamino-finance/scope-sdk';
-import { CollateralInfo } from '../kamino-client/types';
+import { OraclePrices } from '@kamino-finance/scope-sdk/dist/@codegen/scope/accounts/OraclePrices';
+import { CollateralInfo } from '../@codegen/kliquidity/types';
 
 export interface EnrichedScopePrice {
   /**

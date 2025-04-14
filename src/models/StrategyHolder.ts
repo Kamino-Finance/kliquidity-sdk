@@ -1,7 +1,7 @@
-import { PublicKey } from '@solana/web3.js';
+import { Address } from '@solana/kit';
 import Decimal from 'decimal.js';
 
 export type StrategyHolder = {
-  holderPubkey: PublicKey;
+  holderPubkey: Address;
   amount: Decimal;
 };

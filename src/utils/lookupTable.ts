@@ -1,52 +1,79 @@
 import {
-  AddressLookupTableAccount,
-  Connection,
-  MessageV0,
-  PublicKey,
-  TransactionInstruction,
-  TransactionMessage,
-} from '@solana/web3.js';
-import { ADDRESS_LUT_PROGRAM_ID, LUT_OWNER_KEY } from '../constants/pubkeys';
+  Address,
+  Rpc,
+  GetProgramAccountsApi,
+  Account, GetMultipleAccountsApi,
+} from '@solana/kit';
+import { LUT_OWNER_KEY } from '../constants/pubkeys';
 import { SolanaCluster } from '@hubbleprotocol/hubble-config';
+import {
+  ADDRESS_LOOKUP_TABLE_PROGRAM_ADDRESS, AddressLookupTable, getAddressLookupTableDecoder,
+} from '@solana-program/address-lookup-table';
+
+const lutDecoder = getAddressLookupTableDecoder();
 
 export async function getLookupTable(
   cluster: SolanaCluster,
-  connection: Connection
-): Promise<AddressLookupTableAccount[]> {
+  rpc: Rpc<GetProgramAccountsApi>
+): Promise<Account<AddressLookupTable>[]> {
   if (cluster == 'mainnet-beta' || cluster == 'devnet') {
-    return await connection
-      .getProgramAccounts(ADDRESS_LUT_PROGRAM_ID, {
-        filters: [{ memcmp: { offset: 22, bytes: new PublicKey(LUT_OWNER_KEY).toString() } }],
-      })
-      .then((res) =>
-        res.map((raw) => {
-          return new AddressLookupTableAccount({
-            key: raw.pubkey,
-            state: AddressLookupTableAccount.deserialize(raw.account.data),
-          });
-        })
-      );
-  } else {
-    throw Error('There is no lookup table for localnet yet');
+    return getAllUserLookupTables(rpc, LUT_OWNER_KEY);
   }
+  return [];
 }
 
-export async function getTransactionV2Message(
-  cluster: SolanaCluster,
-  connection: Connection,
-  payer: PublicKey,
-  blockhash: string,
-  instructions: Array<TransactionInstruction>
-): Promise<MessageV0> {
-  if (cluster == 'mainnet-beta' || cluster == 'devnet') {
-    const lookupTable = await getLookupTable(cluster, connection);
-    const v2Tx = new TransactionMessage({
-      payerKey: payer,
-      recentBlockhash: blockhash,
-      instructions: instructions,
-    }).compileToV0Message(lookupTable);
-    return v2Tx;
-  } else {
-    throw Error('No TransactionV2 on localnet as no lookup table was created');
+export async function getAllUserLookupTables(
+  c: Rpc<GetProgramAccountsApi>,
+  user: Address
+): Promise<Account<AddressLookupTable>[]> {
+  const accountInfos = await c
+    .getProgramAccounts(ADDRESS_LOOKUP_TABLE_PROGRAM_ADDRESS, {
+      filters: [
+        {
+          memcmp: {
+            offset: 22n,
+            bytes: user,
+            encoding: 'base58',
+          },
+        },
+      ],
+      encoding: 'base64',
+    })
+    .send();
+
+  return accountInfos.map((info) => {
+    const data = lutDecoder.decode(Buffer.from(info.account.data[0], 'base64'));
+    const acc: Account<AddressLookupTable> = {
+      executable: info.account.executable,
+      programAddress: info.account.owner,
+      lamports: info.account.lamports,
+      address: info.pubkey,
+      data: data,
+      space: info.account.space,
+    };
+    return acc;
+  });
+}
+
+export async function fetchMultipleLookupTableAccounts(rpc: Rpc<GetMultipleAccountsApi>, addresses: Address[]): Promise<Account<AddressLookupTable>[]> {
+  const accountInfos = await rpc.getMultipleAccounts(addresses).send();
+  const luts: Account<AddressLookupTable>[] = [];
+  for (let i = 0; i < accountInfos.value.length; i++) {
+    const info = accountInfos.value[i];
+    if (info === null) {
+      throw new Error(`Could not get lookup table ${addresses[i]}`);
+    }
+    const address = addresses[i];
+    const data = lutDecoder.decode(Buffer.from(info.data[0], 'base64'));
+    const acc: Account<AddressLookupTable> = {
+      executable: info.executable,
+      programAddress: info.owner,
+      lamports: info.lamports,
+      address,
+      data: data,
+      space: info.space,
+    };
+    luts.push(acc);
   }
+  return luts;
 }

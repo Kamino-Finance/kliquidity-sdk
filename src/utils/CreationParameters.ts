@@ -1,4 +1,4 @@
-import { PublicKey } from '@solana/web3.js';
+import { address, Address } from '@solana/kit';
 import {
   Autodrift,
   Drift,
@@ -8,7 +8,7 @@ import {
   PricePercentage,
   PricePercentageWithReset,
   TakeProfit,
-} from '../kamino-client/types/RebalanceType';
+} from '../@codegen/kliquidity/types/RebalanceType';
 import Decimal from 'decimal.js';
 import { Dex } from './utils';
 
@@ -25,8 +25,8 @@ export const DefaultUpperPercentageBPSDecimal: Decimal = new Decimal(DefaultUppe
 export const DefaultLowerPriceDifferenceBPS: number = 500;
 export const DefaultUpperPriceDifferenceBPS: number = 500;
 
-export const DefaultMintTokenA: PublicKey = new PublicKey('So11111111111111111111111111111111111111112');
-export const DefaultMintTokenB: PublicKey = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+export const DefaultMintTokenA: Address = address('So11111111111111111111111111111111111111112');
+export const DefaultMintTokenB: Address = address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 export const DefaultFeeTierOrca: Decimal = new Decimal(0.0005);
 export const DefaultTickSpacing: number = 1;
 export const DefaultDex: Dex = 'ORCA';

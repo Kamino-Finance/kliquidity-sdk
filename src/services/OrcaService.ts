@@ -1,18 +1,18 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Address, Rpc, SolanaRpcApi } from '@solana/kit';
 import Decimal from 'decimal.js';
-import {
-  estimateAprsForPriceRange,
-  OrcaNetwork,
-  OrcaWhirlpoolClient,
-  getNearestValidTickIndexFromTickIndex,
-  priceToTickIndex,
-  PoolData,
-} from '@orca-so/whirlpool-sdk';
+// import {
+//   estimateAprsForPriceRange,
+//   OrcaNetwork,
+//   OrcaWhirlpoolClient,
+//   getNearestValidTickIndexFromTickIndex,
+//   priceToTickIndex,
+//   PoolData,
+// } from '@orca-so/whirlpool-sdk';
 import axios from 'axios';
 import { OrcaWhirlpoolsResponse, Whirlpool } from './OrcaWhirlpoolsResponse';
 import { SolanaCluster } from '@hubbleprotocol/hubble-config';
-import { WhirlpoolStrategy } from '../kamino-client/accounts';
-import { Position } from '../whirlpools-client';
+import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
+import { Position, Whirlpool as WhirlpoolAcc } from '../@codegen/whirlpools/accounts';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
 import {
   aprToApy,
@@ -22,24 +22,26 @@ import {
   LiquidityForPrice,
   ZERO,
 } from '../utils';
-import { WHIRLPOOL_PROGRAM_ID } from '../whirlpools-client/programId';
-import { CollateralInfo } from '../kamino-client/types';
+import { PROGRAM_ID as WHIRLPOOLS_PROGRAM_ID } from '../@codegen/whirlpools/programId';
+import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { KaminoPrices } from '../models';
+import { fromLegacyPublicKey } from '@solana/compat';
+import { fetchConcentratedLiquidityPool, InitializedPool, PoolInfo } from '@orca-so/whirlpools';
 
 export class OrcaService {
-  private readonly _connection: Connection;
-  private readonly _whirilpoolProgramId: PublicKey;
+  private readonly _connection: Rpc<SolanaRpcApi>;
+  private readonly _whirilpoolProgramId: Address;
   private readonly _orcaNetwork: OrcaNetwork;
   private readonly _orcaApiUrl: string;
 
-  constructor(connection: Connection, cluster: SolanaCluster, whirlpoolProgramId: PublicKey = WHIRLPOOL_PROGRAM_ID) {
+  constructor(connection: Rpc<SolanaRpcApi>, cluster: SolanaCluster, whirlpoolProgramId: Address = WHIRLPOOLS_PROGRAM_ID) {
     this._connection = connection;
     this._whirilpoolProgramId = whirlpoolProgramId;
     this._orcaNetwork = cluster === 'mainnet-beta' ? OrcaNetwork.MAINNET : OrcaNetwork.DEVNET;
     this._orcaApiUrl = `https://api.${cluster === 'mainnet-beta' ? 'mainnet' : 'devnet'}.orca.so`;
   }
 
-  getWhirlpoolProgramId(): PublicKey {
+  getWhirlpoolProgramId(): Address {
     return this._whirilpoolProgramId;
   }
 
@@ -94,14 +96,14 @@ export class OrcaService {
     return tokensPrices;
   }
 
-  private getPoolTokensPrices(pool: PoolData, prices: KaminoPrices) {
+  private getPoolTokensPrices(pool: InitializedPool, prices: KaminoPrices) {
     const tokensPrices: Record<string, Decimal> = {};
     const tokens = [
       pool.tokenMintA.toString(),
       pool.tokenMintB.toString(),
-      pool.rewards[0].mint.toString(),
-      pool.rewards[1].mint.toString(),
-      pool.rewards[2].mint.toString(),
+      pool.rewardInfos[0].mint.toString(),
+      pool.rewardInfos[1].mint.toString(),
+      pool.rewardInfos[2].mint.toString(),
     ];
     for (const mint of tokens) {
       if (mint) {
@@ -116,12 +118,12 @@ export class OrcaService {
     return tokensPrices;
   }
 
-  async getPool(poolAddress: PublicKey) {
+  async getPool(poolAddress: Address) {
     const orca = new OrcaWhirlpoolClient({
       connection: this._connection,
       network: this._orcaNetwork,
     });
-    return await orca.getPool(poolAddress);
+    return orca.getPool(poolAddress);
   }
 
   async getStrategyWhirlpoolPoolAprApy(
@@ -130,10 +132,6 @@ export class OrcaService {
     prices: KaminoPrices,
     whirlpools?: Whirlpool[]
   ): Promise<WhirlpoolAprApy> {
-    const orca = new OrcaWhirlpoolClient({
-      connection: this._connection,
-      network: this._orcaNetwork,
-    });
     const position = await Position.fetch(this._connection, strategy.position);
     if (!position) {
       throw new Error(`Position ${strategy.position.toString()} does not exist`);
@@ -144,7 +142,7 @@ export class OrcaService {
       ({ whirlpools } = await this.getOrcaWhirlpools());
     }
 
-    const whirlpool = whirlpools?.find((x) => x.address === strategy.pool.toString());
+    const whirlpool = whirlpools?.find((x) => x.address === strategy.pool);
 
     if (!pool || !whirlpool) {
       throw Error(`Could not get orca pool data for ${strategy.pool.toString()}`);
@@ -196,7 +194,7 @@ export class OrcaService {
 
   // strongly recommended to pass lowestTick and highestTick because fetching the lowest and highest existent takes very long
   async getWhirlpoolLiquidityDistribution(
-    pool: PublicKey,
+    pool: Address,
     keepOrder: boolean = true,
     lowestTick?: number,
     highestTick?: number
@@ -254,7 +252,7 @@ export class OrcaService {
   }
 
   async getWhirlpoolPositionAprApy(
-    poolPubkey: PublicKey,
+    poolPubkey: Address,
     priceLower: Decimal,
     priceUpper: Decimal,
     prices: KaminoPrices,
@@ -328,7 +326,7 @@ export class OrcaService {
     };
   }
 
-  async getGenericPoolInfo(poolPubkey: PublicKey, whirlpools?: Whirlpool[]) {
+  async getGenericPoolInfo(poolPubkey: Address, whirlpools?: Whirlpool[]) {
     const orca = new OrcaWhirlpoolClient({
       connection: this._connection,
       network: this._orcaNetwork,
@@ -348,9 +346,9 @@ export class OrcaService {
 
     const poolInfo: GenericPoolInfo = {
       dex: 'ORCA',
-      address: new PublicKey(poolPubkey),
-      tokenMintA: pool.tokenMintA,
-      tokenMintB: pool.tokenMintB,
+      address: poolPubkey,
+      tokenMintA: fromLegacyPublicKey(pool.tokenMintA),
+      tokenMintB: fromLegacyPublicKey(pool.tokenMintB),
       price: pool.price,
       feeRate: pool.feePercentage,
       volumeOnLast7d: whirlpool.volume ? new Decimal(whirlpool.volume?.week) : undefined,
@@ -362,15 +360,15 @@ export class OrcaService {
     return poolInfo;
   }
 
-  async getPositionsCountByPool(pool: PublicKey): Promise<number> {
-    const rawPositions = await this._connection.getProgramAccounts(WHIRLPOOL_PROGRAM_ID, {
+  async getPositionsCountByPool(pool: Address): Promise<number> {
+    const rawPositions = await this._connection.getProgramAccounts(WHIRLPOOLS_PROGRAM_ID, {
       commitment: 'confirmed',
       filters: [
         // account LAYOUT: https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/position.rs#L20
-        { dataSize: 216 },
-        { memcmp: { bytes: pool.toBase58(), offset: 8 } },
+        { dataSize: 216n },
+        { memcmp: { bytes: pool, offset: 8n, encoding: 'base58' } },
       ],
-    });
+    }).send();
 
     return rawPositions.length;
   }

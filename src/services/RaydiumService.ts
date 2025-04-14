@@ -1,13 +1,13 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Address, Rpc, SolanaRpcApi } from '@solana/kit';
 import {
   LiquidityDistribution as RaydiumLiquidityDistribuion,
   Pool,
   RaydiumPoolsResponse,
 } from './RaydiumPoolsResponse';
-import { PersonalPositionState, PoolState } from '../raydium_client';
+import { PersonalPositionState, PoolState } from '../@codegen/raydium/accounts';
 import Decimal from 'decimal.js';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
-import { WhirlpoolStrategy } from '../kamino-client/accounts';
+import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import {
   aprToApy,
   GenericPoolInfo,
@@ -18,7 +18,7 @@ import {
 } from '../utils';
 import axios from 'axios';
 import { FullPercentage } from '../utils/CreationParameters';
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../raydium_client/programId';
+import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../@codegen/raydium/programId';
 import { priceToTickIndexWithRounding } from '../utils/raydium';
 import {
   ApiV3PoolInfoConcentratedItem,
@@ -32,23 +32,23 @@ import {
 } from '@raydium-io/raydium-sdk-v2/lib';
 
 export class RaydiumService {
-  private readonly _connection: Connection;
-  private readonly _raydiumProgramId: PublicKey;
+  private readonly _connection: Rpc<SolanaRpcApi>;
+  private readonly _raydiumProgramId: Address;
 
-  constructor(connection: Connection, raydiumProgramId: PublicKey = RAYDIUM_PROGRAM_ID) {
+  constructor(connection: Rpc<SolanaRpcApi>, raydiumProgramId: Address = RAYDIUM_PROGRAM_ID) {
     this._raydiumProgramId = raydiumProgramId;
     this._connection = connection;
   }
 
-  getRaydiumProgramId(): PublicKey {
+  getRaydiumProgramId(): Address {
     return this._raydiumProgramId;
   }
 
   async getRaydiumWhirlpools(): Promise<RaydiumPoolsResponse> {
     return (await axios.get<RaydiumPoolsResponse>(`https://api.kamino.finance/v2/raydium/ammPools`)).data;
   }
-  
-  async getRaydiumPoolInfo(poolPubkey: PublicKey): Promise<ApiV3PoolInfoConcentratedItem> {
+
+  async getRaydiumPoolInfo(poolPubkey: Address): Promise<ApiV3PoolInfoConcentratedItem> {
     const raydiumLoadParams: RaydiumLoadParams = { connection: this._connection };
     const raydium = await Raydium.load(raydiumLoadParams);
     const rayClmm = new Clmm({ scope: raydium, moduleName: '' });
@@ -58,7 +58,7 @@ export class RaydiumService {
   }
 
   async getRaydiumPoolLiquidityDistribution(
-    pool: PublicKey,
+    pool: Address,
     keepOrder: boolean = true,
     lowestTick?: number,
     highestTick?: number
@@ -190,7 +190,7 @@ export class RaydiumService {
   };
 
   getRaydiumPositionAprApy = async (
-    poolPubkey: PublicKey,
+    poolPubkey: Address,
     priceLower: Decimal,
     priceUpper: Decimal,
     pools?: Pool[]
@@ -275,7 +275,7 @@ export class RaydiumService {
     };
   };
 
-  async getGenericPoolInfo(poolPubkey: PublicKey, pools?: Pool[]): Promise<GenericPoolInfo> {
+  async getGenericPoolInfo(poolPubkey: Address, pools?: Pool[]): Promise<GenericPoolInfo> {
     const poolState = await PoolState.fetch(this._connection, poolPubkey);
     if (!poolState) {
       throw Error(`Raydium pool state ${poolPubkey} does not exist`);
@@ -296,7 +296,7 @@ export class RaydiumService {
 
     const poolInfo: GenericPoolInfo = {
       dex: 'RAYDIUM',
-      address: new PublicKey(poolPubkey),
+      address: poolPubkey,
       tokenMintA: poolState.tokenMint0,
       tokenMintB: poolState.tokenMint1,
       price: new Decimal(raydiumPool.price),
@@ -310,14 +310,14 @@ export class RaydiumService {
     return poolInfo;
   }
 
-  async getPositionsCountByPool(pool: PublicKey): Promise<number> {
+  async getPositionsCountByPool(pool: Address): Promise<number> {
     const positions = await this._connection.getProgramAccounts(this._raydiumProgramId, {
       commitment: 'confirmed',
       filters: [
-        { dataSize: PositionInfoLayout.span },
-        { memcmp: { bytes: pool.toBase58(), offset: PositionInfoLayout.offsetOf('poolId') } },
+        { dataSize: BigInt(PositionInfoLayout.span) },
+        { memcmp: { bytes: pool, offset: BigInt(PositionInfoLayout.offsetOf('poolId')), encoding: 'base58' } },
       ],
-    });
+    }).send();
 
     return positions.length;
   }

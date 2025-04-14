@@ -1,6 +1,6 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { address, Address, Rpc, SolanaRpcApi } from '@solana/kit';
 import Decimal from 'decimal.js';
-import { WhirlpoolStrategy } from '../kamino-client/accounts';
+import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import {
   aprToApy,
   GenericPoolInfo,
@@ -10,46 +10,47 @@ import {
   LiquidityDistribution,
   ZERO,
 } from '../utils';
-import { LbPair, PositionV2 } from '../meteora_client/accounts';
+import { LbPair, PositionV2 } from '../@codegen/meteora/accounts';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
-import { METEORA_PROGRAM_ID } from '../meteora_client/programId';
+import { PROGRAM_ID as METEORA_PROGRAM_ID } from '../@codegen/meteora/programId';
 import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';
+import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
 
 export interface MeteoraPool {
-  key: PublicKey;
+  key: Address;
   pool: LbPair;
 }
 
 export class MeteoraService {
-  private readonly _connection: Connection;
-  private readonly _meteoraProgramId: PublicKey;
+  private readonly _rpc: Rpc<SolanaRpcApi>;
+  private readonly _meteoraProgramId: Address;
 
-  constructor(connection: Connection, meteoraProgramId: PublicKey = METEORA_PROGRAM_ID) {
-    this._connection = connection;
+  constructor(rpc: Rpc<SolanaRpcApi>, meteoraProgramId: Address = METEORA_PROGRAM_ID) {
+    this._rpc = rpc;
     this._meteoraProgramId = meteoraProgramId;
   }
 
-  getMeteoraProgramId(): PublicKey {
+  getMeteoraProgramId(): Address {
     return this._meteoraProgramId;
   }
 
-  async getPool(poolAddress: PublicKey): Promise<LbPair | null> {
-    return await LbPair.fetch(this._connection, poolAddress);
+  async getPool(poolAddress: Address): Promise<LbPair | null> {
+    return await LbPair.fetch(this._rpc, poolAddress);
   }
 
-  async getPosition(position: PublicKey): Promise<PositionV2 | null> {
-    return await PositionV2.fetch(this._connection, position);
+  async getPosition(position: Address): Promise<PositionV2 | null> {
+    return await PositionV2.fetch(this._rpc, position);
   }
 
   async getMeteoraPools(): Promise<MeteoraPool[]> {
-    const rawPools = await this._connection.getProgramAccounts(METEORA_PROGRAM_ID, {
+    const rawPools = await this._rpc.getProgramAccounts(METEORA_PROGRAM_ID, {
       commitment: 'confirmed',
-      filters: [{ dataSize: 904 }],
-    });
+      filters: [{ dataSize: 904n }],
+    }).send();
     const pools: MeteoraPool[] = [];
     for (let i = 0; i < rawPools.length; i++) {
       try {
-        const lbPair = LbPair.decode(rawPools[i].account.data);
+        const lbPair = LbPair.decode(Buffer.from(rawPools[i].account.data));
         pools.push({ pool: lbPair, key: rawPools[i].pubkey });
       } catch (e) {
         console.log(e);
@@ -120,7 +121,7 @@ export class MeteoraService {
 
   // strongly recommended to pass lowestTick and highestTick because fetching the lowest and highest existent takes very long
   async getMeteoraLiquidityDistribution(
-    poolKey: PublicKey,
+    poolKey: Address,
     keepOrder: boolean = true,
     lowestTick?: number,
     highestTick?: number
@@ -141,8 +142,8 @@ export class MeteoraService {
     }
 
     const currentTickIndex = pool.activeId;
-    const tokenXDecimals = await getMintDecimals(this._connection, pool.tokenXMint);
-    const tokenYDecimals = await getMintDecimals(this._connection, pool.tokenYMint);
+    const tokenXDecimals = await getMintDecimals(this._rpc, pool.tokenXMint);
+    const tokenYDecimals = await getMintDecimals(this._rpc, pool.tokenYMint);
     const currentPrice = getPriceOfBinByBinIdWithDecimals(
       currentTickIndex,
       pool.binStep,
@@ -158,7 +159,7 @@ export class MeteoraService {
   }
 
   async getMeteoraPositionAprApy(
-    poolPubkey: PublicKey,
+    poolPubkey: Address,
     priceLower: Decimal,
     priceUpper: Decimal
   ): Promise<WhirlpoolAprApy> {
@@ -177,8 +178,8 @@ export class MeteoraService {
         totalApr: ZERO,
       };
     }
-    const tokenXDecimals = await getMintDecimals(this._connection, pool.tokenXMint);
-    const tokenYDecimals = await getMintDecimals(this._connection, pool.tokenYMint);
+    const tokenXDecimals = await getMintDecimals(this._rpc, pool.tokenXMint);
+    const tokenYDecimals = await getMintDecimals(this._rpc, pool.tokenYMint);
     const priceRange = getStrategyPriceRangeMeteora(
       priceLower,
       priceUpper,
@@ -212,14 +213,14 @@ export class MeteoraService {
     };
   }
 
-  async getGenericPoolInfo(poolPubkey: PublicKey): Promise<GenericPoolInfo> {
+  async getGenericPoolInfo(poolPubkey: Address): Promise<GenericPoolInfo> {
     const pool = await this.getPool(poolPubkey);
     if (!pool) {
       return {
         dex: 'METEORA',
-        address: new PublicKey(0),
-        tokenMintA: new PublicKey(0),
-        tokenMintB: new PublicKey(0),
+        address: DEFAULT_PUBLIC_KEY,
+        tokenMintA: DEFAULT_PUBLIC_KEY,
+        tokenMintB: DEFAULT_PUBLIC_KEY,
         price: new Decimal(0),
         feeRate: new Decimal(0),
         volumeOnLast7d: new Decimal(0),
@@ -228,13 +229,13 @@ export class MeteoraService {
         positions: new Decimal(0),
       };
     }
-    const tokenXDecimals = await getMintDecimals(this._connection, pool.tokenXMint);
-    const tokenYDecimals = await getMintDecimals(this._connection, pool.tokenYMint);
+    const tokenXDecimals = await getMintDecimals(this._rpc, pool.tokenXMint);
+    const tokenYDecimals = await getMintDecimals(this._rpc, pool.tokenYMint);
     const price = getPriceOfBinByBinIdWithDecimals(pool.activeId, pool.binStep, tokenXDecimals, tokenYDecimals);
 
     const poolInfo: GenericPoolInfo = {
       dex: 'METEORA',
-      address: new PublicKey(poolPubkey),
+      address: address(poolPubkey),
       tokenMintA: pool.tokenXMint,
       tokenMintB: pool.tokenYMint,
       price,
@@ -249,11 +250,11 @@ export class MeteoraService {
     return poolInfo;
   }
 
-  async getPositionsCountByPool(pool: PublicKey): Promise<number> {
-    const rawPositions = await this._connection.getProgramAccounts(METEORA_PROGRAM_ID, {
+  async getPositionsCountByPool(pool: Address): Promise<number> {
+    const rawPositions = await this._rpc.getProgramAccounts(METEORA_PROGRAM_ID, {
       commitment: 'confirmed',
-      filters: [{ dataSize: 8120 }, { memcmp: { bytes: pool.toBase58(), offset: 8 } }],
-    });
+      filters: [{ dataSize: 8120n, }, { memcmp: { bytes: pool, offset: 8n, encoding: 'base58' } }],
+    }).send();
 
     return rawPositions.length;
   }
