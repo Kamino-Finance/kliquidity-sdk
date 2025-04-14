@@ -230,7 +230,7 @@ export async function createUser(
 }
 
 export async function solAirdrop(connection: ConnectionPool, account: Address, solAirdrop: Decimal): Promise<Decimal> {
-  const airdropTxnId = await connection.rpc
+  await connection.rpc
     .requestAirdrop(account, lamports(BigInt(collToLamportsDecimal(solAirdrop, 9).toString())))
     .send();
   // await connection.confirmTransaction(airdropTxnId); // todo

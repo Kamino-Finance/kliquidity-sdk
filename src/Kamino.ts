@@ -5244,7 +5244,7 @@ export class Kamino {
     strategy: Address | StrategyWithAddress,
     referencePriceType: ReferencePriceTypeKind
   ): Promise<IInstruction> => {
-    const { address, strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
+    const { address } = await this.getStrategyStateIfNotFetched(strategy);
 
     return getUpdateStrategyConfigIx(
       admin,
