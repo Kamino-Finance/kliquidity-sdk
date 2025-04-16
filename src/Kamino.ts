@@ -1380,6 +1380,20 @@ export class Kamino {
   };
 
   /**
+   * Get the token A and B per share for the specified Kamino whirlpool strategy
+   * @param strategy
+   */
+  getTokenAAndBPerShare = async (strategy: Address | StrategyWithAddress): Promise<TokenAmounts> => {
+    const strategyState = await this.getStrategyStateIfNotFetched(strategy);
+    const sharesIssued = new Decimal(strategyState.strategy.sharesIssued.toString());
+    const balances = await this.getStrategyBalances(strategyState.strategy);
+    if (sharesIssued.isZero()) {
+      return { a: new Decimal(0), b: new Decimal(0) };
+    }
+    return { a: balances.tokenAAmounts.div(sharesIssued), b: balances.tokenBAmounts.div(sharesIssued) };
+  };
+
+  /**
    * Batch fetch share data for all or a filtered list of strategies
    * @param strategyFilters strategy filters or a list of strategy public keys
    */
