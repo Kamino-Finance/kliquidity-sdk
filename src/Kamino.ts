@@ -6000,6 +6000,63 @@ export class Kamino {
   }
 
   /**
+   * Get the current withdrawal caps for a strategy
+   */
+  async getStrategyCurrentWithdrawalCaps(strategy: Address | StrategyWithAddress): Promise<TokenAmounts> {
+    const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
+
+    const tokenAWithdrawalCap = strategyWithAddress.strategy.withdrawalCapA;
+    const tokenBWithdrawalCap = strategyWithAddress.strategy.withdrawalCapB;
+    let tokenAWithdrawalCapTokens = Decimal.max(
+      new Decimal(tokenAWithdrawalCap.configCapacity.toString()).sub(tokenAWithdrawalCap.currentTotal.toString()),
+      ZERO
+    );
+    let tokenBWithdrawalCapTokens = Decimal.max(
+      new Decimal(tokenBWithdrawalCap.configCapacity.toString()).sub(tokenBWithdrawalCap.currentTotal.toString()),
+      ZERO
+    );
+    if (tokenAWithdrawalCap.configIntervalLengthSeconds.toNumber() == 0) {
+      tokenAWithdrawalCapTokens = new Decimal(Number.MAX_VALUE);
+    }
+    if (tokenBWithdrawalCap.configIntervalLengthSeconds.toNumber() == 0) {
+      tokenBWithdrawalCapTokens = new Decimal(Number.MAX_VALUE);
+    }
+    return {
+      a: lamportsToNumberDecimal(tokenAWithdrawalCapTokens, strategyWithAddress.strategy.tokenAMintDecimals.toNumber()),
+      b: lamportsToNumberDecimal(tokenBWithdrawalCapTokens, strategyWithAddress.strategy.tokenBMintDecimals.toNumber()),
+    };
+  }
+
+  /**
+   * Get the max USD value that can be deposited per ix for a strategy
+   */
+  async getStrategyDepositCapInUSDPerIx(strategy: Address | StrategyWithAddress): Promise<Decimal> {
+    const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
+    return lamportsToNumberDecimal(new Decimal(strategyWithAddress.strategy.depositCapUsdPerIxn.toString()), 6);
+  }
+
+  async getStrategyMaxDepositInUSD(strategy: Address | StrategyWithAddress): Promise<Decimal> {
+    const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
+    const depositCapInUSDPerIx = await this.getStrategyDepositCapInUSDPerIx(strategy);
+
+    // return the min between deposit cap per ix and the cap left in the deposit
+    const depositCapInTokens = lamportsToNumberDecimal(
+      new Decimal(strategyWithAddress.strategy.depositCapUsd.toString()),
+      6
+    );
+
+    // read the tvl from API
+    const url = `https://api.hubbleprotocol.io/strategies/${strategyWithAddress.address.toString()}/metrics?env=mainnet-beta`;
+    const response = await fetch(url);
+    const data = (await response.json()) as { totalValueLocked: number };
+    const tvl = new Decimal(data.totalValueLocked);
+
+    const spaceLeftInDeposit = Decimal.max(depositCapInTokens.sub(tvl), ZERO);
+
+    return Decimal.min(depositCapInUSDPerIx, spaceLeftInDeposit);
+  }
+
+  /**
    * Get the prices for rebalancing params (range and reset range, if strategy involves a reset range)
    */
   async readRebalancingParams(strategy: Address | StrategyWithAddress): Promise<RebalanceFieldInfo[]> {
