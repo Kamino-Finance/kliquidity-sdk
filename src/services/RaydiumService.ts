@@ -52,6 +52,7 @@ export class RaydiumService {
   }
 
   async getRaydiumPoolInfo(poolPubkey: Address): Promise<ApiV3PoolInfoConcentratedItem> {
+    console.log('getting raydium pool info for', poolPubkey);
     const raydiumLoadParams: RaydiumLoadParams = { connection: this._legacyConnection };
     const raydium = await Raydium.load(raydiumLoadParams);
     const rayClmm = new Clmm({ scope: raydium, moduleName: '' });
@@ -162,8 +163,9 @@ export class RaydiumService {
       };
     }
 
+    console.log('after checking if strat is in range');
+    console.log('position lower and upper index', position.tickLowerIndex, position.tickUpperIndex);
     const raydiumPoolInfo = await this.getRaydiumPoolInfo(strategy.pool);
-    console.log('raydiumPoolInfo', raydiumPoolInfo);
     const params: {
       poolInfo: ApiV3PoolInfoConcentratedItem;
       aprType: 'day' | 'week' | 'month';
@@ -176,9 +178,14 @@ export class RaydiumService {
       positionTickUpperIndex: position.tickUpperIndex,
     };
 
+    console.log('params', params);
+    console.log('after params');
     const { apr, feeApr, rewardsApr } = PoolUtils.estimateAprsForPriceRangeMultiplier(params);
-    const totalApr = new Decimal(apr).div(100);
-    const fee = new Decimal(feeApr).div(100);
+    const totalApr = new Decimal(apr);
+    const fee = new Decimal(feeApr);
+    console.log('apr', apr);
+    console.log('feeApr', feeApr);
+    console.log('rewardsApr', rewardsApr);
     const rewards = rewardsApr.map((reward) => new Decimal(reward).div(100));
 
     return {
