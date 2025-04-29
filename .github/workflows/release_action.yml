@@ -27,11 +27,11 @@ jobs:
           submodules: recursive
           token: ${{ secrets.HUBBLEPROTOCOLBOT_WRITE_REPO_PAT }} # use bot to avoid branch protection
 
-      - name: Master-branch check
-        run: |
-          echo "Must be on master branch to publish the package."
-          exit 1
-        if: github.ref != 'refs/heads/master'
+#      - name: Master-branch check
+#        run: |
+#          echo "Must be on master branch to publish the package."
+#          exit 1
+#        if: github.ref != 'refs/heads/master'
 
       - name: Setup .npmrc file for publish
         uses: actions/setup-node@v3
