@@ -5,7 +5,7 @@ import { QuoteResponse, SwapInstructionsResponse, createJupiterApiClient, Instru
 
 const USDC_MINT = address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-export const DEFAULT_JUP_API_ENDPOINT = 'https://lite-api.jup.ag/';
+export const DEFAULT_JUP_API_ENDPOINT = 'https://lite-api.jup.ag';
 export const DEFAULT_JUP_SWAP_API = 'https://lite-api.jup.ag/swap/v1';
 
 const jupiterSwapApi = createJupiterApiClient({
