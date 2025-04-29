@@ -1,6 +1,7 @@
 import {
   address,
   Address,
+  airdropFactory,
   generateKeyPairSigner,
   GetAccountInfoApi,
   getAddressEncoder,
@@ -230,10 +231,12 @@ export async function createUser(
 }
 
 export async function solAirdrop(connection: ConnectionPool, account: Address, solAirdrop: Decimal): Promise<Decimal> {
-  await connection.rpc
-    .requestAirdrop(account, lamports(BigInt(collToLamportsDecimal(solAirdrop, 9).toString())))
-    .send();
-  // await connection.confirmTransaction(airdropTxnId); // todo
+  const f = airdropFactory({ rpc: connection.rpc, rpcSubscriptions: connection.wsRpc });
+  await f({
+    recipientAddress: account,
+    commitment: 'processed',
+    lamports: lamports(BigInt(collToLamportsDecimal(solAirdrop, 9).toString())),
+  });
   return await getSolBalance(connection.rpc, account);
 }
 

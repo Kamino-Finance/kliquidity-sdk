@@ -30,7 +30,7 @@
   "license": "MIT",
   "scripts": {
     "build": "rm -rf dist/; yarn tsc",
-    "build:test": "tsc --project ./tests/tsconfig.json",
+    "build:test": "yarn tsc --project ./tests/tsconfig.json",
     "test": "yarn build:test && yarn ts-mocha tests/**/*.test.ts --exit",
     "watch": "tsc --watch",
     "lint": "yarn prettier --check .; yarn eslint .",
