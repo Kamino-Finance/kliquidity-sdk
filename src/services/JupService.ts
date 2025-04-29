@@ -8,7 +8,12 @@ import { PubkeyHashMap } from '../utils/pubkey';
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-export const DEFAULT_JUP_API_ENDPOINT = 'https://api.jup.ag';
+export const DEFAULT_JUP_API_ENDPOINT = 'https://lite-api.jup.ag/';
+export const DEFAULT_JUP_SWAP_API = 'https://lite-api.jup.ag/swap/v1';
+
+const jupiterSwapApi = createJupiterApiClient({
+  basePath: DEFAULT_JUP_SWAP_API,
+});
 
 export type SwapTransactionsResponse = {
   setupTransaction: string | undefined;
@@ -37,9 +42,7 @@ export class JupService {
     onlyDirectRoutes?: boolean
   ): Promise<SwapResponse> => {
     try {
-      const jupiterQuoteApi = createJupiterApiClient(); // config is optional
-
-      // quote-api.jup.ag/v6/quote?inputMint=7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj&outputMint=mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So&amount=71101983&slippageBps=10&onlyDirectRoutes=false&asLegacyTransaction=false&maxAccounts=33
+      // https://lite-api.jup.ag/swap/v1/quote?inputMint=7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj&outputMint=mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So&amount=71101983&slippageBps=10&onlyDirectRoutes=false&asLegacyTransaction=false&maxAccounts=33
 
       const res = await this.getBestRouteQuoteV6(
         amount,
@@ -51,7 +54,7 @@ export class JupService {
         onlyDirectRoutes
       );
 
-      const transaction: SwapResponse = await jupiterQuoteApi.swapPost({
+      const transaction: SwapResponse = await jupiterSwapApi.swapPost({
         swapRequest: {
           quoteResponse: res,
           userPublicKey: userPublicKey.toString(),
@@ -103,9 +106,7 @@ export class JupService {
     asLegacyTransaction?: boolean
   ): Promise<SwapInstructionsResponse> => {
     try {
-      const jupiterQuoteApi = createJupiterApiClient(); // config is optional
-
-      return await jupiterQuoteApi.swapInstructionsPost({
+      return await jupiterSwapApi.swapInstructionsPost({
         swapRequest: {
           quoteResponse: quote,
           userPublicKey: userPublicKey.toString(),
