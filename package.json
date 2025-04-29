@@ -49,7 +49,7 @@
     "@coral-xyz/anchor": "^0.29.0",
     "@coral-xyz/borsh": "^0.30.1",
     "@hubbleprotocol/hubble-config": "^5.0.0",
-    "@jup-ag/api": "^6.0.38",
+    "@jup-ag/api": "6.0.39",
     "@kamino-finance/scope-sdk": "^9.0.0",
     "@orca-so/whirlpool-client-sdk": "^0.0.8",
     "@orca-so/whirlpool-sdk": "^0.4.2",
