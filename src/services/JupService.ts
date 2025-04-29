@@ -8,7 +8,7 @@ import { PubkeyHashMap } from '../utils/pubkey';
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-export const DEFAULT_JUP_API_ENDPOINT = 'https://lite-api.jup.ag/';
+export const DEFAULT_JUP_API_ENDPOINT = 'https://lite-api.jup.ag';
 export const DEFAULT_JUP_SWAP_API = 'https://lite-api.jup.ag/swap/v1';
 
 const jupiterSwapApi = createJupiterApiClient({
