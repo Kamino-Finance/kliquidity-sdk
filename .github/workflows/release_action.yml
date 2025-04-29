@@ -27,11 +27,11 @@ jobs:
           submodules: recursive
           token: ${{ secrets.HUBBLEPROTOCOLBOT_WRITE_REPO_PAT }} # use bot to avoid branch protection
 
-      - name: Master-branch check
-        run: |
-          echo "Must be on master branch to publish the package."
-          exit 1
-        if: github.ref != 'refs/heads/master'
+#      - name: Master-branch check
+#        run: |
+#          echo "Must be on master branch to publish the package."
+#          exit 1
+#        if: github.ref != 'refs/heads/master'
 
       - name: Setup .npmrc file for publish
         uses: actions/setup-node@v3
@@ -77,11 +77,19 @@ jobs:
         run: yarn publish --new-version ${{ steps.semver.outputs.new_tag }}
 
       - name: Create git commit
-        # force push to avoid branch protection
         run: |
           yarn config set version-git-message "@kamino-finance/kliquidity-sdk:%s"
           yarn version --new-version ${{ steps.semver.outputs.new_tag }}
-          git push --force origin master
+          
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "Current branch: $CURRENT_BRANCH"
+          
+          if [ "$CURRENT_BRANCH" = "master" ]; then
+            echo "On master branch, pushing changes..."
+            git push --force origin master
+          else
+            echo "Not on master branch, skipping push."
+          fi
 
       - name: Create Git tag
         if: steps.semver.outputs.tag_created == 'true'
