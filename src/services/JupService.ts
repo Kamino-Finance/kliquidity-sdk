@@ -5,7 +5,8 @@ import { QuoteResponse, SwapInstructionsResponse, createJupiterApiClient, Instru
 
 const USDC_MINT = address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-export const DEFAULT_JUP_API_ENDPOINT = 'https://api.jup.ag';
+export const DEFAULT_JUP_API_ENDPOINT = 'https://lite-api.jup.ag/';
+export const DEFAULT_JUP_API_SWAP_ENDPOINT = 'https://lite-api.jup.ag/swap/v1/quote';
 
 export type SwapTransactionsResponse = {
   setupTransaction: string | undefined;
@@ -35,9 +36,11 @@ export class JupService {
     onlyDirectRoutes?: boolean
   ): Promise<SwapIInstructionsResponse> => {
     try {
-      const jupiterQuoteApi = createJupiterApiClient(); // config is optional
+      const jupiterQuoteApi = createJupiterApiClient({
+        basePath: DEFAULT_JUP_API_SWAP_ENDPOINT,
+      });
 
-      // quote-api.jup.ag/v6/quote?inputMint=7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj&outputMint=mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So&amount=71101983&slippageBps=10&onlyDirectRoutes=false&asLegacyTransaction=false&maxAccounts=33
+      // https://lite-api.jup.ag/swap/v1/quote?inputMint=7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj&outputMint=mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So&amount=71101983&slippageBps=10&onlyDirectRoutes=false&asLegacyTransaction=false&maxAccounts=33
 
       const res = await this.getBestRouteQuoteV6(
         amount,
@@ -114,7 +117,9 @@ export class JupService {
     asLegacyTransaction?: boolean
   ): Promise<SwapInstructionsResponse> => {
     try {
-      const jupiterQuoteApi = createJupiterApiClient(); // config is optional
+      const jupiterQuoteApi = createJupiterApiClient({
+        basePath: DEFAULT_JUP_API_SWAP_ENDPOINT,
+      });
 
       return await jupiterQuoteApi.swapInstructionsPost({
         swapRequest: {
