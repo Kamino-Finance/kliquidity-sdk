@@ -30,7 +30,7 @@
   "license": "MIT",
   "scripts": {
     "prepublish": "yarn build",
-    "build": "rm -rf dist/; tsc",
+    "build": "rm -rf dist/; yarn tsc",
     "build:test": "tsc --project ./tests/tsconfig.json",
     "test": "npx ts-mocha tests/**/*.test.ts --exit",
     "watch": "tsc --watch",
@@ -88,6 +88,7 @@
     "ts-mocha": "^10.0.0",
     "tweetnacl-ts": "^1.0.3",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^0.0.1-alpha.0"
+    "typescript-eslint": "^0.0.1-alpha.0",
+    "tsx": "^4.19.3"
   }
 }
