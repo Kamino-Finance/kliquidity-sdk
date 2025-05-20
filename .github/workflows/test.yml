@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: hubbleprotocol/solana-setup-action@v0.2
+      - uses: hubbleprotocol/solana-setup-action@v0.5
         id: solana-setup
         with:
           solana-version: ${{ env.solana_version }}
