@@ -2972,8 +2972,8 @@ export class Kamino {
   private getWhirlpoolStateIfNotFetched = async (
     whirlpool: Address | WhirlpoolWithAddress
   ): Promise<WhirlpoolWithAddress> => {
-    const hasWhirlpoolBeenFetched = (object: Address | WhirlpoolWithAddress): object is WhirlpoolWithAddress => {
-      return 'whirlpool' in object;
+    const hasWhirlpoolBeenFetched = (object: Address | WhirlpoolWithAddress) => {
+      return typeof object !== 'string' && 'whirlpool' in object;
     };
 
     if (hasWhirlpoolBeenFetched(whirlpool)) {
@@ -2988,8 +2988,8 @@ export class Kamino {
   };
 
   private getMeteoraStateIfNotFetched = async (lbPair: Address | LbPairWithAddress): Promise<LbPairWithAddress> => {
-    const hasLbPairBeenFetched = (object: Address | LbPairWithAddress): object is LbPairWithAddress => {
-      return 'lbPair' in object;
+    const hasLbPairBeenFetched = (object: Address | LbPairWithAddress) => {
+      return typeof object !== 'string' && 'pool' in object;
     };
 
     if (hasLbPairBeenFetched(lbPair)) {
