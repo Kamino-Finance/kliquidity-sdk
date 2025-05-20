@@ -244,7 +244,7 @@ export async function mintTo(env: Env, mintPubkey: Address, tokenAccount: Addres
   console.log(`mintTo ${tokenAccount} mint ${mintPubkey} amount ${amount}`);
   const mintToIx = getMintToIx(env.admin, mintPubkey, tokenAccount, amount);
   const res = await sendAndConfirmTx(env.c, env.admin, [mintToIx]);
-  console.log(`token ${mintPubkey.toString()} mint to ATA ${tokenAccount.toString()} tx hash: ${res}`);
+  console.log(`token ${mintPubkey} mint to ATA ${tokenAccount} tx hash: ${res}`);
   return res;
 }
 
