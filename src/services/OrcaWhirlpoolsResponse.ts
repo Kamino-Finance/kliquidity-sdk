@@ -1,5 +1,3 @@
-import { Address } from '@solana/kit';
-
 export interface OrcaWhirlpoolsResponse {
   whirlpools: Whirlpool[];
 }
