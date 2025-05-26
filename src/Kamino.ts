@@ -345,7 +345,7 @@ import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } 
 import { Connection } from '@solana/web3.js';
 import { toLegacyPublicKey } from './utils/compat';
 import { tickIndexToPrice as orcaTickIndexToPrice } from '@orca-so/whirlpools-core';
-import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools/dist';
+import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
 
 const addressEncoder = getAddressEncoder();
 
