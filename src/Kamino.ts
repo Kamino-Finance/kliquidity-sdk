@@ -36,6 +36,7 @@ import {
   getTickArrayStartTickIndex as orcaGetTickArrayStartTickIndex,
   priceToTickIndex as orcaPriceToTickIndex,
   IncreaseLiquidityQuote,
+  sqrtPriceToPrice,
 } from '@orca-so/whirlpools-core';
 import {
   getEmptyShareData,
@@ -5845,12 +5846,22 @@ export class Kamino {
     const pool = strategyWithAddress.strategy.pool;
     const dex = numberToDex(strategyWithAddress.strategy.strategyDex.toNumber());
 
-    return this.getCurrentPriceFromPool(dex, pool);
+    return this.getCurrentPriceFromPool(
+      dex,
+      pool,
+      strategyWithAddress.strategy.tokenAMintDecimals.toNumber(),
+      strategyWithAddress.strategy.tokenBMintDecimals.toNumber()
+    );
   }
 
-  async getCurrentPriceFromPool(dex: Dex, pool: Address): Promise<Decimal> {
+  async getCurrentPriceFromPool(
+    dex: Dex,
+    pool: Address,
+    tokenADecimals?: number,
+    tokenBDecimals?: number
+  ): Promise<Decimal> {
     if (dex === 'ORCA') {
-      return this.getOrcaPoolPrice(pool);
+      return this.getOrcaPoolPrice(pool, tokenADecimals, tokenBDecimals);
     } else if (dex === 'RAYDIUM') {
       return this.getRaydiumPoolPrice(pool);
     } else if (dex === 'METEORA') {
@@ -6227,9 +6238,9 @@ export class Kamino {
   /**
    * Read the pool price for a specific dex and pool
    */
-  async getPoolPrice(dex: Dex, pool: Address): Promise<Decimal> {
+  async getPoolPrice(dex: Dex, pool: Address, tokenADecimals: number, tokenBDecimals: number): Promise<Decimal> {
     if (dex === 'ORCA') {
-      return this.getOrcaPoolPrice(pool);
+      return this.getOrcaPoolPrice(pool, tokenADecimals, tokenBDecimals);
     } else if (dex === 'RAYDIUM') {
       return this.getRaydiumPoolPrice(pool);
     } else if (dex === 'METEORA') {
@@ -6239,12 +6250,25 @@ export class Kamino {
     }
   }
 
-  async getOrcaPoolPrice(pool: Address): Promise<Decimal> {
-    const poolData = await this._orcaService.getOrcaWhirlpool(pool);
-    if (!poolData) {
-      throw Error(`Could not fetch Whirlpool data for ${pool.toString()}`);
+  async getOrcaPoolPrice(pool: Address, tokenADecimals?: number, tokenBDecimals?: number): Promise<Decimal> {
+    // if the decimals are provided read from API, otherwise use RPC
+    if (tokenADecimals && tokenBDecimals) {
+      const whirlpool = await Whirlpool.fetch(this._rpc, pool, this._orcaService.getWhirlpoolProgramId());
+      if (!whirlpool) {
+        throw Error(`Could not fetch Whirlpool data for ${pool.toString()}`);
+      }
+
+      return new Decimal(sqrtPriceToPrice(BigInt(whirlpool.sqrtPrice.toString()), tokenADecimals, tokenBDecimals));
+    } else {
+      const whirlpool = await this._orcaService.getOrcaWhirlpool(pool);
+      if (!whirlpool) {
+        throw Error(`Could not fetch Whirlpool data for ${pool.toString()}`);
+      }
+
+      return new Decimal(
+        sqrtPriceToPrice(BigInt(whirlpool.sqrtPrice.toString()), whirlpool.tokenA.decimals, whirlpool.tokenB.decimals)
+      );
     }
-    return new Decimal(poolData.price);
   }
 
   async getRaydiumPoolPrice(pool: Address): Promise<Decimal> {
