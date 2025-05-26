@@ -35,7 +35,7 @@ export interface Whirlpool {
   tokenBalanceA: string;
   tokenBalanceB: string;
   stats: Stats;
-  rewards: WhirlpoolRewards;
+  rewards: WhirlpoolReward[];
   feeTierIndex: number;
   adaptiveFeeEnabled: boolean;
   tradeEnableTimestamp: string;

@@ -22,7 +22,7 @@ import { PROGRAM_ID as WHIRLPOOLS_PROGRAM_ID } from '../@codegen/whirlpools/prog
 import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { KaminoPrices } from '../models';
 import { Connection } from '@solana/web3.js';
-import { priceToTickIndex } from '@orca-so/whirlpools-core/dist/nodejs/orca_whirlpools_core_js_bindings';
+import { priceToTickIndex } from '@orca-so/whirlpools-core';
 
 export class OrcaService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
@@ -112,9 +112,9 @@ export class OrcaService {
     const tokens = [
       address(pool.tokenMintA.toString()),
       address(pool.tokenMintB.toString()),
-      address(pool.rewards.rewards[0]?.mint.toString()),
-      address(pool.rewards.rewards[1]?.mint.toString()),
-      address(pool.rewards.rewards[2]?.mint.toString()),
+      address(pool.rewards[0]?.mint.toString()),
+      address(pool.rewards[1]?.mint.toString()),
+      address(pool.rewards[2]?.mint.toString()),
     ];
     for (const mint of tokens) {
       if (mint) {
@@ -178,7 +178,10 @@ export class OrcaService {
       position.tickUpperIndex
     );
 
-    const totalApr = new Decimal(apr.fee).add(apr.rewards[0]).add(apr.rewards[1]).add(apr.rewards[2]);
+    let totalApr = new Decimal(apr.fee);
+    for (const reward of apr.rewards) {
+      totalApr = totalApr.add(reward);
+    }
     const feeApr = new Decimal(apr.fee);
     const rewardsApr = apr.rewards.map((r) => new Decimal(r));
     return {
@@ -197,7 +200,6 @@ export class OrcaService {
 
   // strongly recommended to pass lowestTick and highestTick because fetching the lowest and highest existent takes very long
   async getWhirlpoolLiquidityDistribution(
-    rpc: Rpc<SolanaRpcApi>,
     pool: Address,
     keepOrder: boolean = true,
     lowestTick?: number,
@@ -212,18 +214,18 @@ export class OrcaService {
     if (lowestTick) {
       lowestInitializedTick = lowestTick;
     } else {
-      lowestInitializedTick = await getLowestInitializedTickArrayTickIndex(rpc, pool, whirlpool.tickSpacing);
+      lowestInitializedTick = await getLowestInitializedTickArrayTickIndex(this._rpc, pool, whirlpool.tickSpacing);
     }
 
     let highestInitializedTick: number;
     if (highestTick) {
       highestInitializedTick = highestTick;
     } else {
-      highestInitializedTick = await getHighestInitializedTickArrayTickIndex(rpc, pool, whirlpool.tickSpacing);
+      highestInitializedTick = await getHighestInitializedTickArrayTickIndex(this._rpc, pool, whirlpool.tickSpacing);
     }
 
     const orcaLiqDistribution = await getLiquidityDistribution(
-      rpc,
+      this._rpc,
       pool,
       whirlpool,
       lowestInitializedTick,

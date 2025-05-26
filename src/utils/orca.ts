@@ -226,10 +226,10 @@ export function estimateAprsForPriceRange(
   const tokenValueB = getTokenValue(minTokenB, pool.tokenB.decimals, tokenPriceB);
   const concentratedValue = tokenValueA.add(tokenValueB);
 
-  const feesPerYear = new Decimal(fees24h).mul(365);
+  const feesPerYear = new Decimal(fees24h).mul(365).div(new Decimal(10).pow(6)); // scale from lamports of USDC to tokens
   const feeApr = feesPerYear.div(concentratedValue).toNumber();
 
-  const rewards = pool.rewards.rewards.map((reward) => estimateRewardApr(reward, concentratedValue, tokenPrices));
+  const rewards = pool.rewards.map((reward) => estimateRewardApr(reward, concentratedValue, tokenPrices));
 
   return { fee: feeApr, rewards };
 }

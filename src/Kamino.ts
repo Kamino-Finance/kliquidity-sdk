@@ -6790,17 +6790,15 @@ export class Kamino {
   };
 
   getLiquidityDistributionOrcaWhirlpool = (
-    rpc: Rpc<SolanaRpcApi>,
     pool: Address,
     keepOrder: boolean = true,
     lowestTick?: number,
     highestTick?: number
   ): Promise<LiquidityDistribution> => {
-    return this._orcaService.getWhirlpoolLiquidityDistribution(rpc, pool, keepOrder, lowestTick, highestTick);
+    return this._orcaService.getWhirlpoolLiquidityDistribution(pool, keepOrder, lowestTick, highestTick);
   };
 
   getLiquidityDistribution = async (
-    rpc: Rpc<SolanaRpcApi>,
     dex: Dex,
     pool: Address,
     keepOrder: boolean = true,
@@ -6808,7 +6806,7 @@ export class Kamino {
     highestTick?: number
   ): Promise<LiquidityDistribution> => {
     if (dex === 'ORCA') {
-      return this.getLiquidityDistributionOrcaWhirlpool(rpc, pool, keepOrder, lowestTick, highestTick);
+      return this.getLiquidityDistributionOrcaWhirlpool(pool, keepOrder, lowestTick, highestTick);
     } else if (dex === 'RAYDIUM') {
       return this.getLiquidityDistributionRaydiumPool(pool, keepOrder, lowestTick, highestTick);
     } else if (dex === 'METEORA') {
