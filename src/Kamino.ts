@@ -6,7 +6,6 @@ import {
   Address,
   fetchEncodedAccounts,
   generateKeyPairSigner,
-  GetAccountInfoApi,
   getAddressEncoder,
   GetProgramAccountsDatasizeFilter,
   GetProgramAccountsMemcmpFilter,
