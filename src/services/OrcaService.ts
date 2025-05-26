@@ -50,7 +50,14 @@ export class OrcaService {
   }
 
   async getOrcaWhirlpool(poolAddress: Address): Promise<WhirlpoolAPIResponse> {
-    return (await axios.get<WhirlpoolAPIResponse>(`${this._orcaApiUrl}/pools/${poolAddress}`)).data;
+    const response = await axios.get(`${this._orcaApiUrl}/pools/${poolAddress}`);
+
+    // If the API response has a nested data field that contains the actual pool data
+    if (response.data.data && typeof response.data.data === 'object') {
+      return response.data.data;
+    }
+
+    return response.data;
   }
 
   /**
