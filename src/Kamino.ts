@@ -6,6 +6,7 @@ import {
   Address,
   fetchEncodedAccounts,
   generateKeyPairSigner,
+  GetAccountInfoApi,
   getAddressEncoder,
   GetProgramAccountsDatasizeFilter,
   GetProgramAccountsMemcmpFilter,
@@ -30,21 +31,13 @@ import {
   InitializeTickArrayAccounts,
   InitializeTickArrayArgs,
 } from './@codegen/whirlpools/instructions';
-import { Position, TickArray, Whirlpool } from './@codegen/whirlpools/accounts';
+import { Position as OrcaPosition, TickArray, Whirlpool } from './@codegen/whirlpools/accounts';
 import {
-  AddLiquidityQuote,
-  AddLiquidityQuoteParam,
-  defaultSlippagePercentage,
-  getNearestValidTickIndexFromTickIndex,
-  getNextValidTickIndex,
-  getStartTickIndex,
-  Percentage,
-  priceToTickIndex,
-  sqrtPriceX64ToPrice,
-  tickIndexToPrice,
-} from '@orca-so/whirlpool-sdk';
-import { OrcaDAL } from '@orca-so/whirlpool-sdk/dist/dal/orca-dal';
-import { OrcaPosition } from '@orca-so/whirlpool-sdk/dist/position/orca-position';
+  sqrtPriceToPrice as orcaSqrtPriceToPrice,
+  getTickArrayStartTickIndex as orcaGetTickArrayStartTickIndex,
+  priceToTickIndex as orcaPriceToTickIndex,
+  IncreaseLiquidityQuote,
+} from '@orca-so/whirlpools-core';
 import {
   getEmptyShareData,
   Holdings,
@@ -119,7 +112,9 @@ import {
   WithdrawAllAndCloseIxns,
   WithdrawShares,
   ZERO,
-  ZERO_BN,
+  getNearestValidTickIndexFromTickIndex as orcaGetNearestValidTickIndexFromTickIndex,
+  getIncreaseLiquidityQuote,
+  defaultSlippagePercentageBPS,
 } from './utils';
 import {
   checkExpectedVaultsBalances,
@@ -165,7 +160,7 @@ import {
 import BN from 'bn.js';
 import StrategyWithAddress from './models/StrategyWithAddress';
 import { Rebalancing, Uninitialized } from './@codegen/kliquidity/types/StrategyStatus';
-import { FRONTEND_KAMINO_STRATEGY_URL, METADATA_PROGRAM_ID, U64_MAX } from './constants';
+import { FRONTEND_KAMINO_STRATEGY_URL, METADATA_PROGRAM_ID, U64_MAX, ZERO_BN } from './constants';
 import {
   CollateralInfo,
   ExecutiveWithdrawActionKind,
@@ -177,12 +172,7 @@ import {
 } from './@codegen/kliquidity/types';
 import { AmmConfig, PersonalPositionState, PoolState } from './@codegen/raydium/accounts';
 
-import { OrcaService, RaydiumService, Whirlpool as OrcaPool, WhirlpoolAprApy } from './services';
-import {
-  getAddLiquidityQuote,
-  InternalAddLiquidityQuote,
-  InternalAddLiquidityQuoteParam,
-} from '@orca-so/whirlpool-sdk/dist/position/quotes/add-liquidity';
+import { OrcaService, RaydiumService, Whirlpool as WhirlpoolAPIResponse, WhirlpoolAprApy } from './services';
 import { Pool } from './services/RaydiumPoolsResponse';
 import {
   UpdateCollectFeesFee,
@@ -327,10 +317,10 @@ import {
 import {
   getPdaProtocolPositionAddress,
   i32ToBytes,
-  LiquidityMath,
-  SqrtPriceMath,
-  TickMath,
-  TickUtils,
+  LiquidityMath as RaydiumLiquidityMath,
+  SqrtPriceMath as RaydiumSqrtPriceMath,
+  TickMath as RaydiumTickMath,
+  TickUtils as RaydiumTickUtils,
 } from '@raydium-io/raydium-sdk-v2/lib';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
@@ -355,6 +345,8 @@ import { fetchMultipleLookupTableAccounts } from './utils/lookupTable';
 import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } from '@solana/rpc-types';
 import { Connection } from '@solana/web3.js';
 import { toLegacyPublicKey } from './utils/compat';
+import { tickIndexToPrice as orcaTickIndexToPrice } from '@orca-so/whirlpools-core';
+import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools/dist';
 
 const addressEncoder = getAddressEncoder();
 
@@ -408,7 +400,7 @@ export class Kamino {
     }
 
     this._scope = new Scope(cluster, rpc);
-    this._orcaService = new OrcaService(rpc, legacyConnection, cluster, whirlpoolProgramId);
+    this._orcaService = new OrcaService(rpc, legacyConnection, whirlpoolProgramId);
     this._raydiumService = new RaydiumService(rpc, legacyConnection, raydiumProgramId);
     this._meteoraService = new MeteoraService(rpc, meteoraProgramId);
 
@@ -962,7 +954,7 @@ export class Kamino {
       if (pools.length === 0) {
         throw new Error(`No pool found for ${poolTokenA.toString()} and ${poolTokenB.toString()}`);
       }
-      return pools[0].price;
+      return Number(pools[0].price);
     } else if (dex === 'RAYDIUM') {
       const pools = await this.getRaydiumPoolsForTokens(poolTokenA, poolTokenB);
       if (pools.length === 0) {
@@ -1033,7 +1025,7 @@ export class Kamino {
       let pool: Address = DEFAULT_PUBLIC_KEY;
       const orcaPools = await this.getOrcaPoolsForTokens(poolTokenA, poolTokenB);
       orcaPools.forEach((element) => {
-        if (element.lpFeeRate * FullBPS === feeBPS.toNumber()) {
+        if (element.feeRate * FullBPS === feeBPS.toNumber()) {
           pool = address(element.address);
         }
       });
@@ -1080,22 +1072,24 @@ export class Kamino {
     if (dex === 'ORCA') {
       const pools = await this.getOrcaPoolsForTokens(tokenMintA, tokenMintB);
       const genericPoolInfos: GenericPoolInfo[] = await Promise.all(
-        pools.map(async (pool: OrcaPool) => {
+        pools.map(async (pool: WhirlpoolAPIResponse) => {
           const positionsCount = new Decimal(await this.getPositionsCountForPool(dex, address(pool.address)));
           // read price from pool
-          const poolData = await this._orcaService.getPool(address(pool.address));
+          const poolData = await this._orcaService.getOrcaWhirlpool(address(pool.address));
           if (!poolData) {
             throw new Error(`Pool ${pool.address} not found`);
           }
           const poolInfo: GenericPoolInfo = {
             dex,
             address: address(pool.address),
-            price: sqrtPriceX64ToPrice(poolData.sqrtPrice, pool.tokenA.decimals, pool.tokenB.decimals),
-            tokenMintA: address(pool.tokenA.mint),
-            tokenMintB: address(pool.tokenB.mint),
-            tvl: pool.tvl ? new Decimal(pool.tvl) : undefined,
-            feeRate: new Decimal(pool.lpFeeRate).mul(FullBPS),
-            volumeOnLast7d: pool.volume ? new Decimal(pool.volume.week) : undefined,
+            price: new Decimal(
+              orcaSqrtPriceToPrice(BigInt(poolData.sqrtPrice), pool.tokenA.decimals, pool.tokenB.decimals)
+            ),
+            tokenMintA: address(pool.tokenMintA),
+            tokenMintB: address(pool.tokenMintB),
+            tvl: pool.tvlUsdc ? new Decimal(pool.tvlUsdc) : undefined,
+            feeRate: new Decimal(pool.feeRate).mul(FullBPS),
+            volumeOnLast7d: pool.stats['7d'] ? new Decimal(pool.stats['7d'].volume) : undefined,
             tickSpacing: new Decimal(pool.tickSpacing),
             positions: positionsCount,
           };
@@ -1157,15 +1151,15 @@ export class Kamino {
     }
   }
 
-  getOrcaPoolsForTokens = async (poolTokenA: Address, poolTokenB: Address): Promise<OrcaPool[]> => {
-    const pools: OrcaPool[] = [];
+  getOrcaPoolsForTokens = async (poolTokenA: Address, poolTokenB: Address): Promise<WhirlpoolAPIResponse[]> => {
+    const pools: WhirlpoolAPIResponse[] = [];
     const poolTokenAString = poolTokenA.toString();
     const poolTokenBString = poolTokenB.toString();
     const whirlpools = await this._orcaService.getOrcaWhirlpools();
     whirlpools.whirlpools.forEach((element) => {
       if (
-        (element.tokenA.mint === poolTokenAString && element.tokenB.mint === poolTokenBString) ||
-        (element.tokenA.mint === poolTokenBString && element.tokenB.mint === poolTokenAString)
+        (element.tokenMintA === poolTokenAString && element.tokenMintB === poolTokenBString) ||
+        (element.tokenMintA === poolTokenBString && element.tokenMintB === poolTokenAString)
       )
         pools.push(element);
     });
@@ -1484,7 +1478,7 @@ export class Kamino {
     );
 
     fetchBalances.push(
-      ...this.getBalance<Whirlpool, Position>(
+      ...this.getBalance<Whirlpool, OrcaPosition>(
         orcaStrategies,
         orcaPools,
         orcaPositions,
@@ -1602,18 +1596,18 @@ export class Kamino {
     const decimalsA = strategy.tokenAMintDecimals.toNumber();
     const decimalsB = strategy.tokenBMintDecimals.toNumber();
 
-    const poolPrice = SqrtPriceMath.sqrtPriceX64ToPrice(pool.sqrtPriceX64, decimalsA, decimalsB);
+    const poolPrice = RaydiumSqrtPriceMath.sqrtPriceX64ToPrice(pool.sqrtPriceX64, decimalsA, decimalsB);
     const twapPrice =
       strategyPrices.aTwapPrice !== null && strategyPrices.bTwapPrice !== null
         ? strategyPrices.aTwapPrice.div(strategyPrices.bTwapPrice)
         : null;
-    const upperPrice = SqrtPriceMath.sqrtPriceX64ToPrice(
-      SqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
+    const upperPrice = RaydiumSqrtPriceMath.sqrtPriceX64ToPrice(
+      RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
       decimalsA,
       decimalsB
     );
-    const lowerPrice = SqrtPriceMath.sqrtPriceX64ToPrice(
-      SqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
+    const lowerPrice = RaydiumSqrtPriceMath.sqrtPriceX64ToPrice(
+      RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
       decimalsA,
       decimalsB
     );
@@ -1726,10 +1720,10 @@ export class Kamino {
     position: PersonalPositionState,
     mode: 'DEPOSIT' | 'WITHDRAW' = 'WITHDRAW'
   ): TokenHoldings => {
-    const lowerSqrtPriceX64 = SqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex);
-    const upperSqrtPriceX64 = SqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex);
+    const lowerSqrtPriceX64 = RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex);
+    const upperSqrtPriceX64 = RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex);
 
-    const { amountA, amountB } = LiquidityMath.getAmountsFromLiquidity(
+    const { amountA, amountB } = RaydiumLiquidityMath.getAmountsFromLiquidity(
       pool.sqrtPriceX64,
       new BN(lowerSqrtPriceX64),
       new BN(upperSqrtPriceX64),
@@ -1790,7 +1784,7 @@ export class Kamino {
   private getOrcaBalances = async (
     strategy: WhirlpoolStrategy,
     pool: Whirlpool,
-    position: Position,
+    position: OrcaPosition,
     collateralInfos: CollateralInfo[],
     prices?: OraclePrices,
     disabledTokensPrices?: Map<Address, Decimal>,
@@ -1814,13 +1808,13 @@ export class Kamino {
     const decimalsA = strategy.tokenAMintDecimals.toNumber();
     const decimalsB = strategy.tokenBMintDecimals.toNumber();
 
-    const poolPrice = sqrtPriceX64ToPrice(pool.sqrtPrice, decimalsA, decimalsB);
+    const poolPrice = new Decimal(orcaSqrtPriceToPrice(BigInt(pool.sqrtPrice.toString()), decimalsA, decimalsB));
     const twapPrice =
       strategyPrices.aTwapPrice !== null && strategyPrices.bTwapPrice !== null
         ? strategyPrices.aTwapPrice.div(strategyPrices.bTwapPrice)
         : null;
-    const upperPrice = tickIndexToPrice(position.tickUpperIndex, decimalsA, decimalsB);
-    const lowerPrice = tickIndexToPrice(position.tickLowerIndex, decimalsA, decimalsB);
+    const upperPrice = new Decimal(orcaTickIndexToPrice(position.tickUpperIndex, decimalsA, decimalsB));
+    const lowerPrice = new Decimal(orcaTickIndexToPrice(position.tickLowerIndex, decimalsA, decimalsB));
     let lowerResetPrice: Decimal | null = null;
     let upperResetPrice: Decimal | null = null;
     const dex = numberToDex(strategy.strategyDex.toNumber());
@@ -1856,14 +1850,14 @@ export class Kamino {
   private getOrcaTokensBalances = (
     strategy: WhirlpoolStrategy,
     pool: Whirlpool,
-    position: Position,
+    position: OrcaPosition,
     mode: 'DEPOSIT' | 'WITHDRAW' = 'WITHDRAW'
   ): TokenHoldings => {
     const quote = getRemoveLiquidityQuote(
       {
         positionAddress: strategy.position,
         liquidity: position.liquidity,
-        slippageTolerance: Percentage.fromFraction(0, 1000),
+        slippageTolerance: { numerator: ZERO_BN, denominator: new BN(1000) },
         sqrtPrice: pool.sqrtPrice,
         tickLowerIndex: position.tickLowerIndex,
         tickUpperIndex: position.tickUpperIndex,
@@ -1975,7 +1969,7 @@ export class Kamino {
         throw Error(`Could not fetch Orca whirlpool position state with pubkey ${strategy.position.toString()}`);
       }
       const whirlpool = Whirlpool.decode(Buffer.from(whirlpoolAcc.data[0], 'base64'));
-      const position = Position.decode(Buffer.from(positionAcc.data[0], 'base64'));
+      const position = OrcaPosition.decode(Buffer.from(positionAcc.data[0], 'base64'));
       return this.getOrcaTokensBalances(strategy, whirlpool, position, mode);
     } else if (strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM')) {
       const [poolStateAcc, positionAcc] = (
@@ -2049,7 +2043,7 @@ export class Kamino {
       throw Error(`Could not fetch Orca whirlpool position state with pubkey ${strategy.position.toString()}`);
     }
     const whirlpool = Whirlpool.decode(Buffer.from(whirlpoolAcc.data[0], 'base64'));
-    const position = Position.decode(Buffer.from(positionAcc.data[0], 'base64'));
+    const position = OrcaPosition.decode(Buffer.from(positionAcc.data[0], 'base64'));
 
     return this.getOrcaBalances(
       strategy,
@@ -2437,12 +2431,12 @@ export class Kamino {
     if (positionPk === DEFAULT_PUBLIC_KEY) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
-    const position = await Position.fetch(this._rpc, positionPk, this._orcaService.getWhirlpoolProgramId());
+    const position = await OrcaPosition.fetch(this._rpc, positionPk, this._orcaService.getWhirlpoolProgramId());
     if (!position) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
-    const lowerPrice = tickIndexToPrice(position.tickLowerIndex, decimalsA, decimalsB);
-    const upperPrice = tickIndexToPrice(position.tickUpperIndex, decimalsA, decimalsB);
+    const lowerPrice = new Decimal(orcaTickIndexToPrice(position.tickLowerIndex, decimalsA, decimalsB));
+    const upperPrice = new Decimal(orcaTickIndexToPrice(position.tickUpperIndex, decimalsA, decimalsB));
 
     const positionRange: PositionRange = { lowerPrice, upperPrice };
 
@@ -2465,14 +2459,14 @@ export class Kamino {
     if (!position) {
       return { lowerPrice: ZERO, upperPrice: ZERO };
     }
-    const lowerPrice = sqrtPriceX64ToPrice(
-      SqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
+    const lowerPrice = RaydiumSqrtPriceMath.sqrtPriceX64ToPrice(
+      RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
       decimalsA,
       decimalsB
     );
 
-    const upperPrice = sqrtPriceX64ToPrice(
-      SqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
+    const upperPrice = RaydiumSqrtPriceMath.sqrtPriceX64ToPrice(
+      RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
       decimalsA,
       decimalsB
     );
@@ -2558,13 +2552,13 @@ export class Kamino {
    * Get a list of Orca positions from public keys
    * @param positions
    */
-  getOrcaPositions = async (positions: Address[]): Promise<(Position | null)[]> => {
+  getOrcaPositions = async (positions: Address[]): Promise<(OrcaPosition | null)[]> => {
     const nonDefaults = positions.filter((value) => value !== DEFAULT_PUBLIC_KEY);
     const fetched = await batchFetch(nonDefaults, (chunk) =>
-      Position.fetchMultiple(this._rpc, chunk, this._orcaService.getWhirlpoolProgramId())
+      OrcaPosition.fetchMultiple(this._rpc, chunk, this._orcaService.getWhirlpoolProgramId())
     );
-    const fetchedMap: Record<string, Position | null> = fetched.reduce(
-      (map: Record<Address, Position | null>, position, i) => {
+    const fetchedMap: Record<string, OrcaPosition | null> = fetched.reduce(
+      (map: Record<Address, OrcaPosition | null>, position, i) => {
         map[nonDefaults[i]] = position;
         return map;
       },
@@ -4501,8 +4495,8 @@ export class Kamino {
     tickLowerIndex: number,
     tickUpperIndex: number
   ): Promise<LowerAndUpperTickPubkeys> => {
-    const startTickIndex = getStartTickIndex(tickLowerIndex, whirlpoolState.tickSpacing, 0);
-    const endTickIndex = getStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing, 0);
+    const startTickIndex = orcaGetTickArrayStartTickIndex(tickLowerIndex, whirlpoolState.tickSpacing);
+    const endTickIndex = orcaGetTickArrayStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing);
 
     const [lowerTickPubkey, lowerTickBump] = await getProgramDerivedAddress({
       seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(startTickIndex.toString())],
@@ -4526,8 +4520,8 @@ export class Kamino {
     tickLowerIndex: number,
     tickUpperIndex: number
   ): Promise<LowerAndUpperTickPubkeys> => {
-    const startTickIndex = TickUtils.getTickArrayStartIndexByTick(tickLowerIndex, poolState.tickSpacing);
-    const endTickIndex = TickUtils.getTickArrayStartIndexByTick(tickUpperIndex, poolState.tickSpacing);
+    const startTickIndex = RaydiumTickUtils.getTickArrayStartIndexByTick(tickLowerIndex, poolState.tickSpacing);
+    const endTickIndex = RaydiumTickUtils.getTickArrayStartIndexByTick(tickUpperIndex, poolState.tickSpacing);
 
     const [lowerTickPubkey, lowerTickBump] = await getProgramDerivedAddress({
       seeds: [Buffer.from('tick_array'), addressEncoder.encode(pool), i32ToBytes(startTickIndex)],
@@ -4767,12 +4761,12 @@ export class Kamino {
     const decimalsA = await getMintDecimals(this._rpc, whirlpool.tokenMintA);
     const decimalsB = await getMintDecimals(this._rpc, whirlpool.tokenMintB);
 
-    const tickLowerIndex = getNextValidTickIndex(
-      priceToTickIndex(priceLower, decimalsA, decimalsB),
+    const tickLowerIndex = orcaGetTickArrayStartTickIndex(
+      orcaPriceToTickIndex(priceLower.toNumber(), decimalsA, decimalsB),
       whirlpool.tickSpacing
     );
-    const tickUpperIndex = getNextValidTickIndex(
-      priceToTickIndex(priceUpper, decimalsA, decimalsB),
+    const tickUpperIndex = orcaGetTickArrayStartTickIndex(
+      orcaPriceToTickIndex(priceUpper.toNumber(), decimalsA, decimalsB),
       whirlpool.tickSpacing
     );
 
@@ -4898,15 +4892,15 @@ export class Kamino {
     const decimalsA = await getMintDecimals(this._rpc, poolState.tokenMint0);
     const decimalsB = await getMintDecimals(this._rpc, poolState.tokenMint1);
 
-    const tickLowerIndex = TickMath.getTickWithPriceAndTickspacing(
-      TickMath.roundPriceWithTickspacing(priceLower, poolState.tickSpacing, decimalsA, decimalsB),
+    const tickLowerIndex = RaydiumTickMath.getTickWithPriceAndTickspacing(
+      RaydiumTickMath.roundPriceWithTickspacing(priceLower, poolState.tickSpacing, decimalsA, decimalsB),
       poolState.tickSpacing,
       decimalsA,
       decimalsB
     );
 
-    const tickUpperIndex = TickMath.getTickWithPriceAndTickspacing(
-      TickMath.roundPriceWithTickspacing(priceUpper, poolState.tickSpacing, decimalsA, decimalsB),
+    const tickUpperIndex = RaydiumTickMath.getTickWithPriceAndTickspacing(
+      RaydiumTickMath.roundPriceWithTickspacing(priceUpper, poolState.tickSpacing, decimalsA, decimalsB),
       poolState.tickSpacing,
       decimalsA,
       decimalsB
@@ -5461,7 +5455,7 @@ export class Kamino {
       const { whirlpool: whilrpoolState } = await this.getWhirlpoolStateIfNotFetched(pool);
       if (rebalanceTypeKind.kind === RebalanceType.Drift.kind) {
         processedRebalanceParams[0] = new Decimal(
-          getNearestValidTickIndexFromTickIndex(rebalanceParams[0].toNumber(), whilrpoolState.tickSpacing)
+          orcaGetNearestValidTickIndexFromTickIndex(rebalanceParams[0].toNumber(), whilrpoolState.tickSpacing)
         );
       }
     }
@@ -5830,7 +5824,7 @@ export class Kamino {
         return getPositionRangeFromExpanderParams(price, rebalanceParams[0], rebalanceParams[1]);
 
       case RebalanceType.Autodrift.kind:
-        const currentTickIndex = priceToTickIndex(price, tokenADecimals, tokenBDecimals);
+        const currentTickIndex = orcaPriceToTickIndex(price.toNumber(), tokenADecimals, tokenBDecimals);
         const startMidTick = new Decimal(currentTickIndex);
         return getPositionRangeFromAutodriftParams(
           dex,
@@ -6247,11 +6241,11 @@ export class Kamino {
   }
 
   async getOrcaPoolPrice(pool: Address): Promise<Decimal> {
-    const poolData = await this._orcaService.getPool(pool);
+    const poolData = await this._orcaService.getOrcaWhirlpool(pool);
     if (!poolData) {
       throw Error(`Could not fetch Whirlpool data for ${pool.toString()}`);
     }
-    return poolData.price;
+    return new Decimal(poolData.price);
   }
 
   async getRaydiumPoolPrice(pool: Address): Promise<Decimal> {
@@ -6260,7 +6254,7 @@ export class Kamino {
       throw new Error(`Raydium poolState ${pool.toString()} is not found`);
     }
 
-    const price = SqrtPriceMath.sqrtPriceX64ToPrice(
+    const price = RaydiumSqrtPriceMath.sqrtPriceX64ToPrice(
       poolState.sqrtPriceX64,
       poolState.mintDecimals0,
       poolState.mintDecimals1
@@ -6692,7 +6686,7 @@ export class Kamino {
    */
   getStrategyAprApy = async (
     strategy: Address | StrategyWithAddress,
-    orcaPools?: OrcaPool[],
+    orcaPools?: WhirlpoolAPIResponse[],
     raydiumPools?: Pool[]
   ): Promise<WhirlpoolAprApy> => {
     const { strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
@@ -6717,7 +6711,7 @@ export class Kamino {
     if (isOrca) {
       const prices = await this.getAllPrices();
       const collateralInfos = await this.getCollateralInfos();
-      return this._orcaService.getStrategyWhirlpoolPoolAprApy(strategyState, collateralInfos, prices, orcaPools);
+      return this._orcaService.getStrategyWhirlpoolPoolAprApy(strategyState, collateralInfos, prices);
     }
     if (isRaydium) {
       return this._raydiumService.getStrategyWhirlpoolPoolAprApy(strategyState, raydiumPools);
@@ -6729,6 +6723,7 @@ export class Kamino {
   };
 
   getStrategyPerformanceFees = async (
+    rpc: Rpc<GetAccountInfoApi>,
     strategy: Address | StrategyWithAddress,
     globalConfig?: GlobalConfig
   ): Promise<PerformanceFees> => {
@@ -6773,15 +6768,17 @@ export class Kamino {
   };
 
   getLiquidityDistributionOrcaWhirlpool = (
+    rpc: Rpc<SolanaRpcApi>,
     pool: Address,
     keepOrder: boolean = true,
     lowestTick?: number,
     highestTick?: number
   ): Promise<LiquidityDistribution> => {
-    return this._orcaService.getWhirlpoolLiquidityDistribution(pool, keepOrder, lowestTick, highestTick);
+    return this._orcaService.getWhirlpoolLiquidityDistribution(rpc, pool, keepOrder, lowestTick, highestTick);
   };
 
   getLiquidityDistribution = async (
+    rpc: Rpc<SolanaRpcApi>,
     dex: Dex,
     pool: Address,
     keepOrder: boolean = true,
@@ -6789,7 +6786,7 @@ export class Kamino {
     highestTick?: number
   ): Promise<LiquidityDistribution> => {
     if (dex === 'ORCA') {
-      return this.getLiquidityDistributionOrcaWhirlpool(pool, keepOrder, lowestTick, highestTick);
+      return this.getLiquidityDistributionOrcaWhirlpool(rpc, pool, keepOrder, lowestTick, highestTick);
     } else if (dex === 'RAYDIUM') {
       return this.getLiquidityDistributionRaydiumPool(pool, keepOrder, lowestTick, highestTick);
     } else if (dex === 'METEORA') {
@@ -6951,10 +6948,10 @@ export class Kamino {
       const decimalsA = poolState.mintDecimals0;
       const decimalsB = poolState.mintDecimals1;
 
-      const { amountA, amountB } = LiquidityMath.getAmountsFromLiquidity(
+      const { amountA, amountB } = RaydiumLiquidityMath.getAmountsFromLiquidity(
         poolState.sqrtPriceX64,
-        SqrtPriceMath.priceToSqrtPriceX64(lowerPrice, decimalsA, decimalsB),
-        SqrtPriceMath.priceToSqrtPriceX64(upperPrice, decimalsA, decimalsB),
+        RaydiumSqrtPriceMath.priceToSqrtPriceX64(lowerPrice, decimalsA, decimalsB),
+        RaydiumSqrtPriceMath.priceToSqrtPriceX64(upperPrice, decimalsA, decimalsB),
         new BN(100_000_000),
         true
       );
@@ -6972,31 +6969,31 @@ export class Kamino {
       const decimalsA = await getMintDecimals(this._rpc, tokenMintA);
       const decimalsB = await getMintDecimals(this._rpc, tokenMintB);
 
-      const tickLowerIndex = getNearestValidTickIndexFromTickIndex(
-        priceToTickIndex(lowerPrice, decimalsA, decimalsB),
+      const tickLowerIndex = orcaGetNearestValidTickIndexFromTickIndex(
+        orcaPriceToTickIndex(lowerPrice.toNumber(), decimalsA, decimalsB),
         whirlpoolState.tickSpacing
       );
-      const tickUpperIndex = getNearestValidTickIndexFromTickIndex(
-        priceToTickIndex(upperPrice, decimalsA, decimalsB),
+      const tickUpperIndex = orcaGetNearestValidTickIndexFromTickIndex(
+        orcaPriceToTickIndex(upperPrice.toNumber(), decimalsA, decimalsB),
         whirlpoolState.tickSpacing
       );
 
-      const params: InternalAddLiquidityQuoteParam = {
-        tokenMintA: toLegacyPublicKey(tokenMintA),
-        tokenMintB: toLegacyPublicKey(tokenMintB),
-        tickCurrentIndex: whirlpoolState.tickCurrentIndex,
-        sqrtPrice: whirlpoolState.sqrtPrice,
-        inputTokenMint: toLegacyPublicKey(tokenMintA),
-        inputTokenAmount: new BN(collToLamportsDecimal(tokenAAmountToDeposit, decimalsA).toString()),
-        tickLowerIndex,
-        tickUpperIndex,
-        slippageTolerance: defaultSlippagePercentage,
+      const param: IncreaseLiquidityQuoteParam = {
+        tokenA: BigInt(collToLamportsDecimal(tokenAAmountToDeposit, decimalsA).toString()),
       };
 
-      const addLiqResult: InternalAddLiquidityQuote = getAddLiquidityQuote(params);
+      const addLiqResult: IncreaseLiquidityQuote = getIncreaseLiquidityQuote(
+        param,
+        whirlpoolState,
+        tickLowerIndex,
+        tickUpperIndex,
+        defaultSlippagePercentageBPS,
+        undefined,
+        undefined
+      );
       return [
-        lamportsToNumberDecimal(addLiqResult.estTokenA.toNumber(), decimalsA),
-        lamportsToNumberDecimal(addLiqResult.estTokenB.toNumber(), decimalsB),
+        lamportsToNumberDecimal(new Decimal(addLiqResult.tokenEstA.toString()), decimalsA),
+        lamportsToNumberDecimal(new Decimal(addLiqResult.tokenEstB.toString()), decimalsB),
       ];
     } else if (dex === 'METEORA') {
       const poolState = await LbPair.fetch(this._rpc, pool, this._meteoraService.getMeteoraProgramId());
@@ -7118,9 +7115,7 @@ export class Kamino {
       }
 
       return this.calculateAmountsOrca({
-        whirlpoolConfig: whirlpool.whirlpoolsConfig,
-        tokenAMint: strategyState.tokenAMint,
-        tokenBMint: strategyState.tokenBMint,
+        whirlpoolState: whirlpool,
         positionAddress: strategyState.position,
         tokenAAmount,
         tokenBAmount,
@@ -7135,16 +7130,12 @@ export class Kamino {
   };
 
   calculateAmountsOrca = async ({
-    whirlpoolConfig,
-    tokenAMint,
-    tokenBMint,
+    whirlpoolState,
     positionAddress,
     tokenAAmount,
     tokenBAmount,
   }: {
-    whirlpoolConfig: Address;
-    tokenAMint: Address;
-    tokenBMint: Address;
+    whirlpoolState: Whirlpool;
     positionAddress: Address;
     tokenAAmount?: Decimal;
     tokenBAmount?: Decimal;
@@ -7152,47 +7143,61 @@ export class Kamino {
     if (!tokenAAmount && !tokenBAmount) {
       return [new Decimal(0), new Decimal(0)];
     }
+
     // Given A in ATA, calc how much A and B
-    const accessor = new OrcaDAL(whirlpoolConfig, this._orcaService.getWhirlpoolProgramId(), this._legacyConnection);
-    const orcaPosition = new OrcaPosition(accessor);
-    const defaultSlippagePercentage = Percentage.fromFraction(1, 1000); // 0.1%
-
-    const primaryTokenAmount = tokenAAmount || tokenBAmount;
-    const primaryTokenMint = tokenAAmount ? tokenAMint : tokenBMint;
-    const secondaryTokenAmount = tokenAAmount ? tokenBAmount : tokenAAmount;
-    const secondaryTokenMint = tokenAAmount ? tokenBMint : tokenAMint;
-
-    let params: AddLiquidityQuoteParam = {
+    const defaultSlippagePercentageBPS = 10;
+    const positionState = await OrcaPosition.fetch(
+      this._rpc,
       positionAddress,
-      tokenMint: primaryTokenMint,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      tokenAmount: new BN(primaryTokenAmount!.toString()), // safe to use ! here because we check in the beginning that at least one of the amounts are not undefined;
-      refresh: true,
-      slippageTolerance: defaultSlippagePercentage,
-    };
-    const estimatedGivenPrimary: AddLiquidityQuote = await orcaPosition.getAddLiquidityQuote(params);
+      this._orcaService.getWhirlpoolProgramId()
+    );
+    if (!positionState) {
+      throw new Error(`Unable to get Orca position for pubkey ${positionAddress}`);
+    }
 
-    if (
-      secondaryTokenAmount &&
-      new Decimal(estimatedGivenPrimary.estTokenB.toString()) > new Decimal(secondaryTokenAmount.toString())
-    ) {
-      params = {
-        positionAddress,
-        tokenMint: secondaryTokenMint,
-        tokenAmount: new BN(secondaryTokenAmount.toString()),
-        refresh: true,
-        slippageTolerance: defaultSlippagePercentage,
+    let computedAmounts: [Decimal, Decimal] = [new Decimal(0), new Decimal(0)];
+
+    if (tokenAAmount) {
+      const tokenAForQuote = BigInt(tokenAAmount.toString());
+      const params: IncreaseLiquidityQuoteParam = {
+        tokenA: tokenAForQuote,
       };
-      const estimatedGivenSecondary: AddLiquidityQuote = await orcaPosition.getAddLiquidityQuote(params);
-      return [
-        new Decimal(estimatedGivenSecondary.estTokenA.toString()),
-        new Decimal(estimatedGivenSecondary.estTokenB.toString()),
+      const estimatedGivenA: IncreaseLiquidityQuote = getIncreaseLiquidityQuote(
+        params,
+        whirlpoolState,
+        positionState.tickLowerIndex,
+        positionState.tickUpperIndex,
+        defaultSlippagePercentageBPS,
+        undefined, // todo: use new Wirlpool state and read transfer fees
+        undefined
+      );
+      computedAmounts = [
+        new Decimal(estimatedGivenA.tokenEstA.toString()),
+        new Decimal(estimatedGivenA.tokenEstB.toString()),
       ];
     }
-    return [
-      new Decimal(estimatedGivenPrimary.estTokenA.toString()),
-      new Decimal(estimatedGivenPrimary.estTokenB.toString()),
-    ];
+
+    if (tokenBAmount && computedAmounts[1] > tokenBAmount) {
+      const tokenBForQuote = BigInt(tokenBAmount.toString());
+      const params: IncreaseLiquidityQuoteParam = {
+        tokenB: tokenBForQuote,
+      };
+      const estimatedGivenB: IncreaseLiquidityQuote = getIncreaseLiquidityQuote(
+        params,
+        whirlpoolState,
+        positionState.tickLowerIndex,
+        positionState.tickUpperIndex,
+        defaultSlippagePercentageBPS,
+        undefined, // todo: use new Wirlpool state and read transfer fees
+        undefined
+      );
+      computedAmounts = [
+        new Decimal(estimatedGivenB.tokenEstA.toString()),
+        new Decimal(estimatedGivenB.tokenEstB.toString()),
+      ];
+    }
+
+    return computedAmounts;
   };
 
   calculateAmountsRaydium = async ({
@@ -7224,18 +7229,18 @@ export class Kamino {
     }
 
     if (tokenAAmount && tokenBAmount && tokenAAmount.gt(0) && tokenBAmount.gt(0)) {
-      const liquidity = LiquidityMath.getLiquidityFromTokenAmounts(
+      const liquidity = RaydiumLiquidityMath.getLiquidityFromTokenAmounts(
         poolState.sqrtPriceX64,
-        SqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
-        SqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
+        RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
+        RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
         new BN(tokenAAmount.toString()),
         new BN(tokenBAmount.toString())
       );
 
-      const { amountA, amountB } = LiquidityMath.getAmountsFromLiquidity(
+      const { amountA, amountB } = RaydiumLiquidityMath.getAmountsFromLiquidity(
         poolState.sqrtPriceX64,
-        SqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
-        SqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
+        RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
+        RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
         liquidity,
         true
       );
@@ -7245,10 +7250,10 @@ export class Kamino {
       const primaryTokenAmount = tokenAAmount || tokenBAmount;
       const secondaryTokenAmount = tokenAAmount ? tokenBAmount : tokenAAmount;
 
-      const { amountA, amountB } = LiquidityMath.getAmountsFromLiquidity(
+      const { amountA, amountB } = RaydiumLiquidityMath.getAmountsFromLiquidity(
         poolState.sqrtPriceX64,
-        SqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
-        SqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
+        RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickLowerIndex),
+        RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(position.tickUpperIndex),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         new BN(primaryTokenAmount!.plus(secondaryTokenAmount || 0)!.toString()), // safe to use ! here because we check in the beginning that at least one of the amounts are not undefined;
         true
@@ -7447,26 +7452,30 @@ export class Kamino {
       throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    const position = await Position.fetch(this._rpc, strategyState.position, this._orcaService.getWhirlpoolProgramId());
+    const position = await OrcaPosition.fetch(
+      this._rpc,
+      strategyState.position,
+      this._orcaService.getWhirlpoolProgramId()
+    );
     if (!position) {
       throw new Error(`Whirlpool position ${strategyState.position} does not exist`);
     }
 
-    const params: InternalAddLiquidityQuoteParam = {
-      tokenMintA: toLegacyPublicKey(strategyState.tokenAMint),
-      tokenMintB: toLegacyPublicKey(strategyState.tokenBMint),
-      tickCurrentIndex: whirlpool.tickCurrentIndex,
-      sqrtPrice: whirlpool.sqrtPrice,
-      inputTokenMint: toLegacyPublicKey(strategyState.tokenAMint),
-      inputTokenAmount: amountA,
-      tickLowerIndex: position.tickLowerIndex,
-      tickUpperIndex: position.tickUpperIndex,
-      slippageTolerance: defaultSlippagePercentage,
+    const params: IncreaseLiquidityQuoteParam = {
+      tokenA: BigInt(amountA.toString()),
     };
 
-    const quote: InternalAddLiquidityQuote = getAddLiquidityQuote(params);
+    const quote: IncreaseLiquidityQuote = getIncreaseLiquidityQuote(
+      params,
+      whirlpool,
+      position.tickLowerIndex,
+      position.tickUpperIndex,
+      defaultSlippagePercentageBPS,
+      undefined,
+      undefined
+    );
 
-    return { amountSlippageA: quote.estTokenA, amountSlippageB: quote.estTokenB };
+    return { amountSlippageA: new BN(quote.tokenEstA.toString()), amountSlippageB: new BN(quote.tokenEstB.toString()) };
   }
 
   private async getDepositRatioFromAMeteora(
@@ -7517,26 +7526,30 @@ export class Kamino {
       throw Error(`Could not fetch whirlpool state with pubkey ${strategyState.pool.toString()}`);
     }
 
-    const position = await Position.fetch(this._rpc, strategyState.position, this._orcaService.getWhirlpoolProgramId());
+    const position = await OrcaPosition.fetch(
+      this._rpc,
+      strategyState.position,
+      this._orcaService.getWhirlpoolProgramId()
+    );
     if (!position) {
       throw new Error(`Whirlpool position ${strategyState.position} does not exist`);
     }
 
-    const params: InternalAddLiquidityQuoteParam = {
-      tokenMintA: toLegacyPublicKey(strategyState.tokenAMint),
-      tokenMintB: toLegacyPublicKey(strategyState.tokenBMint),
-      tickCurrentIndex: whirlpool.tickCurrentIndex,
-      sqrtPrice: whirlpool.sqrtPrice,
-      inputTokenMint: toLegacyPublicKey(strategyState.tokenBMint),
-      inputTokenAmount: amountB,
-      tickLowerIndex: position.tickLowerIndex,
-      tickUpperIndex: position.tickUpperIndex,
-      slippageTolerance: defaultSlippagePercentage,
+    const param: IncreaseLiquidityQuoteParam = {
+      tokenB: BigInt(amountB.toString()),
     };
 
-    const quote: InternalAddLiquidityQuote = getAddLiquidityQuote(params);
+    const quote: IncreaseLiquidityQuote = getIncreaseLiquidityQuote(
+      param,
+      whirlpool,
+      position.tickLowerIndex,
+      position.tickUpperIndex,
+      defaultSlippagePercentageBPS,
+      undefined,
+      undefined
+    );
 
-    return { amountSlippageA: quote.estTokenA, amountSlippageB: quote.estTokenB };
+    return { amountSlippageA: new BN(quote.tokenEstA.toString()), amountSlippageB: new BN(quote.tokenEstB.toString()) };
   };
 
   private getDepositRatioFromARaydium = async (
@@ -7559,11 +7572,16 @@ export class Kamino {
       throw new Error(`Raydium pool ${strategyState.pool.toString()} could not be found.`);
     }
 
-    const lowerSqrtPriceX64 = SqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickLowerIndex);
-    const upperSqrtPriceX64 = SqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickUpperIndex);
+    const lowerSqrtPriceX64 = RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickLowerIndex);
+    const upperSqrtPriceX64 = RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickUpperIndex);
 
-    const liqudity = LiquidityMath.getLiquidityFromTokenAmountA(lowerSqrtPriceX64, upperSqrtPriceX64, amountA, false);
-    const amountsSlippage = LiquidityMath.getAmountsFromLiquidityWithSlippage(
+    const liqudity = RaydiumLiquidityMath.getLiquidityFromTokenAmountA(
+      lowerSqrtPriceX64,
+      upperSqrtPriceX64,
+      amountA,
+      false
+    );
+    const amountsSlippage = RaydiumLiquidityMath.getAmountsFromLiquidityWithSlippage(
       poolState.sqrtPriceX64,
       lowerSqrtPriceX64,
       upperSqrtPriceX64,
@@ -7596,11 +7614,11 @@ export class Kamino {
       throw new Error(`Raydium pool ${strategyState.pool.toString()} could not be found.`);
     }
 
-    const lowerSqrtPriceX64 = SqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickLowerIndex);
-    const upperSqrtPriceX64 = SqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickUpperIndex);
+    const lowerSqrtPriceX64 = RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickLowerIndex);
+    const upperSqrtPriceX64 = RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickUpperIndex);
 
-    const liqudity = LiquidityMath.getLiquidityFromTokenAmountB(lowerSqrtPriceX64, upperSqrtPriceX64, amountB);
-    const amountsSlippage = LiquidityMath.getAmountsFromLiquidityWithSlippage(
+    const liqudity = RaydiumLiquidityMath.getLiquidityFromTokenAmountB(lowerSqrtPriceX64, upperSqrtPriceX64, amountB);
+    const amountsSlippage = RaydiumLiquidityMath.getAmountsFromLiquidityWithSlippage(
       poolState.sqrtPriceX64,
       lowerSqrtPriceX64,
       upperSqrtPriceX64,
@@ -7869,8 +7887,11 @@ export class Kamino {
 
     const decimalsA = await getMintDecimals(this._rpc, whilrpoolState.tokenMintA);
     const decimalsB = await getMintDecimals(this._rpc, whilrpoolState.tokenMintB);
-    const tickIndex = getNextValidTickIndex(priceToTickIndex(price, decimalsA, decimalsB), whilrpoolState.tickSpacing);
-    const startTickIndex = getStartTickIndex(tickIndex, whilrpoolState.tickSpacing);
+    const tickIndex = orcaGetTickArrayStartTickIndex(
+      orcaPriceToTickIndex(price.toNumber(), decimalsA, decimalsB),
+      whilrpoolState.tickSpacing
+    );
+    const startTickIndex = orcaGetTickArrayStartTickIndex(tickIndex, whilrpoolState.tickSpacing);
 
     const [startTickIndexPk, _startTickIndexBump] = await getTickArray(
       this._orcaService.getWhirlpoolProgramId(),
