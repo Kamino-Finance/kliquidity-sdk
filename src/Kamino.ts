@@ -6723,7 +6723,6 @@ export class Kamino {
   };
 
   getStrategyPerformanceFees = async (
-    rpc: Rpc<GetAccountInfoApi>,
     strategy: Address | StrategyWithAddress,
     globalConfig?: GlobalConfig
   ): Promise<PerformanceFees> => {
