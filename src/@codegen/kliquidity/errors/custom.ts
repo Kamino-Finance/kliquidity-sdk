@@ -156,6 +156,13 @@ export type CustomError =
   | RepeatedMint
   | UnsupportedTokenExtension
   | UnsupportedDexForToken22
+  | GlobalConfigInvalidScopePriceIndex
+  | GlobalConfigScopePricesIdsFull
+  | GlobalConfigAlreadyContainsScopePriceId
+  | GlobalConfigExpectedScopePricesAccount
+  | RewardScopePriceAccountNotPresent
+  | IncorrectScopePricesAccountID
+  | CouldNotCalculatePriceTwap
 
 export class IntegerOverflow extends Error {
   static readonly code = 6000
@@ -1923,6 +1930,89 @@ export class UnsupportedDexForToken22 extends Error {
   }
 }
 
+export class GlobalConfigInvalidScopePriceIndex extends Error {
+  static readonly code = 6157
+  readonly code = 6157
+  readonly name = "GlobalConfigInvalidScopePriceIndex"
+  readonly msg = "Scope price index is not present in global config"
+
+  constructor(readonly logs?: string[]) {
+    super("6157: Scope price index is not present in global config")
+  }
+}
+
+export class GlobalConfigScopePricesIdsFull extends Error {
+  static readonly code = 6158
+  readonly code = 6158
+  readonly name = "GlobalConfigScopePricesIdsFull"
+  readonly msg = "Scope prices ids array in global config is full"
+
+  constructor(readonly logs?: string[]) {
+    super("6158: Scope prices ids array in global config is full")
+  }
+}
+
+export class GlobalConfigAlreadyContainsScopePriceId extends Error {
+  static readonly code = 6159
+  readonly code = 6159
+  readonly name = "GlobalConfigAlreadyContainsScopePriceId"
+  readonly msg = "Scope prices ids array already contains given scope price id"
+
+  constructor(readonly logs?: string[]) {
+    super("6159: Scope prices ids array already contains given scope price id")
+  }
+}
+
+export class GlobalConfigExpectedScopePricesAccount extends Error {
+  static readonly code = 6160
+  readonly code = 6160
+  readonly name = "GlobalConfigExpectedScopePricesAccount"
+  readonly msg =
+    "Expected scope prices account being passed in when adding or updating a scope prices feed"
+
+  constructor(readonly logs?: string[]) {
+    super(
+      "6160: Expected scope prices account being passed in when adding or updating a scope prices feed"
+    )
+  }
+}
+
+export class RewardScopePriceAccountNotPresent extends Error {
+  static readonly code = 6161
+  readonly code = 6161
+  readonly name = "RewardScopePriceAccountNotPresent"
+  readonly msg =
+    "A reward scope price account should have been passed in, but it is missing"
+
+  constructor(readonly logs?: string[]) {
+    super(
+      "6161: A reward scope price account should have been passed in, but it is missing"
+    )
+  }
+}
+
+export class IncorrectScopePricesAccountID extends Error {
+  static readonly code = 6162
+  readonly code = 6162
+  readonly name = "IncorrectScopePricesAccountID"
+  readonly msg = "Incorrect scope prices account id passed in"
+
+  constructor(readonly logs?: string[]) {
+    super("6162: Incorrect scope prices account id passed in")
+  }
+}
+
+export class CouldNotCalculatePriceTwap extends Error {
+  static readonly code = 6163
+  readonly code = 6163
+  readonly name = "CouldNotCalculatePriceTwap"
+  readonly msg = "Could not calculate get_price_usd_unchecked()"
+
+  constructor(readonly logs?: string[]) {
+    super("6163: Could not calculate get_price_usd_unchecked()")
+  }
+}
+
 export function fromCode(code: number, logs?: string[]): CustomError | null {
   switch (code) {
     case 6000:
@@ -2239,6 +2329,20 @@ export function fromCode(code: number, logs?: string[]): CustomError | null {
       return new UnsupportedTokenExtension(logs)
     case 6156:
       return new UnsupportedDexForToken22(logs)
+    case 6157:
+      return new GlobalConfigInvalidScopePriceIndex(logs)
+    case 6158:
+      return new GlobalConfigScopePricesIdsFull(logs)
+    case 6159:
+      return new GlobalConfigAlreadyContainsScopePriceId(logs)
+    case 6160:
+      return new GlobalConfigExpectedScopePricesAccount(logs)
+    case 6161:
+      return new RewardScopePriceAccountNotPresent(logs)
+    case 6162:
+      return new IncorrectScopePricesAccountID(logs)
+    case 6163:
+      return new CouldNotCalculatePriceTwap(logs)
   }
 
   return null

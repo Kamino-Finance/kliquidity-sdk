@@ -303,6 +303,29 @@ export class UpdateMaxIgnorableAmountAsReward {
   }
 }
 
+export interface UpdateScopeFeedJSON {
+  kind: "UpdateScopeFeed"
+}
+
+export class UpdateScopeFeed {
+  static readonly discriminator = 13
+  static readonly kind = "UpdateScopeFeed"
+  readonly discriminator = 13
+  readonly kind = "UpdateScopeFeed"
+
+  toJSON(): UpdateScopeFeedJSON {
+    return {
+      kind: "UpdateScopeFeed",
+    }
+  }
+
+  toEncodable() {
+    return {
+      UpdateScopeFeed: {},
+    }
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function fromDecoded(obj: any): types.UpdateCollateralInfoModeKind {
   if (typeof obj !== "object") {
@@ -347,6 +370,9 @@ export function fromDecoded(obj: any): types.UpdateCollateralInfoModeKind {
   }
   if ("UpdateMaxIgnorableAmountAsReward" in obj) {
     return new UpdateMaxIgnorableAmountAsReward()
+  }
+  if ("UpdateScopeFeed" in obj) {
+    return new UpdateScopeFeed()
   }
 
   throw new Error("Invalid enum object")
@@ -395,6 +421,9 @@ export function fromJSON(
     case "UpdateMaxIgnorableAmountAsReward": {
       return new UpdateMaxIgnorableAmountAsReward()
     }
+    case "UpdateScopeFeed": {
+      return new UpdateScopeFeed()
+    }
   }
 }
 
@@ -413,6 +442,7 @@ export function layout(property?: string) {
     borsh.struct([], "UpdateDisabled"),
     borsh.struct([], "UpdateStakingRateChain"),
     borsh.struct([], "UpdateMaxIgnorableAmountAsReward"),
+    borsh.struct([], "UpdateScopeFeed"),
   ])
   if (property !== undefined) {
     return ret.replicate(property)
