@@ -169,6 +169,7 @@ import { FRONTEND_KAMINO_STRATEGY_URL, METADATA_PROGRAM_ID, U64_MAX } from './co
 import {
   CollateralInfo,
   ExecutiveWithdrawActionKind,
+  KaminoRewardInfo,
   RebalanceType,
   RebalanceTypeKind,
   ReferencePriceTypeKind,
@@ -353,7 +354,7 @@ import {
 } from '@solana-program/address-lookup-table';
 import { fetchMultipleLookupTableAccounts } from './utils/lookupTable';
 import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } from '@solana/rpc-types';
-import { Connection } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { toLegacyPublicKey } from './utils/compat';
 
 const addressEncoder = getAddressEncoder();
@@ -1366,12 +1367,12 @@ export class Kamino {
    */
   getStrategyShareData = async (
     strategy: Address | StrategyWithAddress,
-    scopePrices?: OraclePrices
+    scopePricesMap?: Record<Address, OraclePrices>
   ): Promise<ShareData> => {
     const strategyState = await this.getStrategyStateIfNotFetched(strategy);
     const sharesFactor = Decimal.pow(10, strategyState.strategy.sharesMintDecimals.toString());
     const sharesIssued = new Decimal(strategyState.strategy.sharesIssued.toString());
-    const balances = await this.getStrategyBalances(strategyState.strategy, scopePrices);
+    const balances = await this.getStrategyBalances(strategyState.strategy, scopePricesMap);
     if (sharesIssued.isZero()) {
       return { price: new Decimal(1), balance: balances };
     } else {
@@ -1394,6 +1395,47 @@ export class Kamino {
   };
 
   /**
+   * Get all scope prices feeds (token A, token B and rewards) for the specified strategy
+   * @param strategy
+   * @param collateralInfos the collateral infos array
+   */
+  getAllScopePriceFeedsForStrategy = (strategy: WhirlpoolStrategy, collateralInfos: CollateralInfo[]): Address[] => {
+    const res = [
+      collateralInfos[strategy.tokenACollateralId.toNumber()].scopeFeed,
+      collateralInfos[strategy.tokenBCollateralId.toNumber()].scopeFeed,
+    ];
+
+    // Check whether reward vaults are initialized
+    if (
+      toLegacyPublicKey(strategy.reward0Vault) !== PublicKey.default &&
+      strategy.reward0Vault !== strategy.baseVaultAuthority
+    ) {
+      res.push(collateralInfos[strategy.reward0CollateralId.toNumber()].scopeFeed);
+    }
+    if (
+      toLegacyPublicKey(strategy.reward1Vault) !== PublicKey.default &&
+      strategy.reward1Vault !== strategy.baseVaultAuthority
+    ) {
+      res.push(collateralInfos[strategy.reward1CollateralId.toNumber()].scopeFeed);
+    }
+    if (
+      toLegacyPublicKey(strategy.reward2Vault) !== PublicKey.default &&
+      strategy.reward2Vault !== strategy.baseVaultAuthority
+    ) {
+      res.push(collateralInfos[strategy.reward2CollateralId.toNumber()].scopeFeed);
+    }
+
+    for (let i = 0; i < 3; i++) {
+      const rewardInfo: KaminoRewardInfo = strategy.kaminoRewards[i];
+      if (toLegacyPublicKey(rewardInfo.rewardMint) !== PublicKey.default && rewardInfo.decimals.toNumber() > 0) {
+        res.push(collateralInfos[rewardInfo.rewardCollateralId.toNumber()].scopeFeed);
+      }
+    }
+
+    return res;
+  };
+
+  /**
    * Batch fetch share data for all or a filtered list of strategies
    * @param strategyFilters strategy filters or a list of strategy public keys
    */
@@ -1410,7 +1452,10 @@ export class Kamino {
         ? await this.getStrategiesWithAddresses(strategyFilters)
         : await this.getAllStrategiesWithFilters(strategyFilters);
     const fetchBalances: Promise<StrategyBalanceWithAddress>[] = [];
-    const allScopePrices = strategiesWithAddresses.map((x) => x.strategy.scopePrices);
+    const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
+    const allScopePrices = strategiesWithAddresses
+      .map((x) => this.getAllScopePriceFeedsForStrategy(x.strategy, collInfos))
+      .reduce((acc, val) => acc.concat(val), []);
     const scopePrices = await this._scope.getMultipleOraclePrices(allScopePrices);
     const scopePricesMap: Record<Address, OraclePrices> = scopePrices.reduce(
       (map: Record<Address, OraclePrices>, [address, price]) => {
@@ -1447,15 +1492,9 @@ export class Kamino {
       ]);
 
     const inactiveStrategies = strategiesWithAddresses.filter((x) => x.strategy.position === DEFAULT_PUBLIC_KEY);
-    const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
     const disabledPrices = disabledTokensPrices ? disabledTokensPrices : await this.getDisabledTokensPrices(collInfos);
     for (const { strategy, address } of inactiveStrategies) {
-      const strategyPrices = await this.getStrategyPrices(
-        strategy,
-        collInfos,
-        scopePricesMap[strategy.scopePrices],
-        disabledPrices
-      );
+      const strategyPrices = await this.getStrategyPrices(strategy, collInfos, scopePricesMap, disabledPrices);
       result.push({
         address,
         strategy,
@@ -1539,11 +1578,11 @@ export class Kamino {
       pool: PoolT,
       position: PositionT,
       collateralInfos: CollateralInfo[],
-      prices?: OraclePrices,
+      pricesMap?: Record<Address, OraclePrices>,
       disabledTokensPrices?: Map<Address, Decimal>
     ) => Promise<StrategyBalances>,
     collateralInfos: CollateralInfo[],
-    prices?: Record<string, OraclePrices>,
+    pricesMap?: Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalanceWithAddress>[] => {
     const fetchBalances: Promise<StrategyBalanceWithAddress>[] = [];
@@ -1566,7 +1605,7 @@ export class Kamino {
           pool as PoolT,
           position as PositionT,
           collateralInfos,
-          prices ? prices[strategy.scopePrices] : undefined,
+          pricesMap,
           disabledTokensPrices
         ).then((balance) => {
           return { balance, strategyWithAddress: { strategy, address } };
@@ -1581,10 +1620,10 @@ export class Kamino {
     pool: PoolState,
     position: PersonalPositionState,
     collateralInfos: CollateralInfo[],
-    prices?: OraclePrices,
+    pricesMap?: Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalances> => {
-    const strategyPrices = await this.getStrategyPrices(strategy, collateralInfos, prices, disabledTokensPrices);
+    const strategyPrices = await this.getStrategyPrices(strategy, collateralInfos, pricesMap, disabledTokensPrices);
     const rebalanceKind = numberToRebalanceType(strategy.rebalanceType);
     const tokenHoldings = this.getRaydiumTokensBalances(strategy, pool, position);
 
@@ -1654,10 +1693,10 @@ export class Kamino {
     pool: LbPair,
     position: PositionV2 | undefined, // the undefined is for scenarios where the position is not initialised yet
     collateralInfos: CollateralInfo[],
-    prices?: OraclePrices,
+    pricesMap?: Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalances> => {
-    const strategyPricesPromise = this.getStrategyPrices(strategy, collateralInfos, prices, disabledTokensPrices);
+    const strategyPricesPromise = this.getStrategyPrices(strategy, collateralInfos, pricesMap, disabledTokensPrices);
     const rebalanceKind = numberToRebalanceType(strategy.rebalanceType);
     const tokenHoldingsPromise = this.getMeteoraTokensBalances(strategy);
     const [strategyPrices, tokenHoldings] = await Promise.all([strategyPricesPromise, tokenHoldingsPromise]);
@@ -1792,11 +1831,11 @@ export class Kamino {
     pool: Whirlpool,
     position: Position,
     collateralInfos: CollateralInfo[],
-    prices?: OraclePrices,
+    pricesMap?: Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>,
     mode: 'DEPOSIT' | 'WITHDRAW' = 'WITHDRAW'
   ): Promise<StrategyBalances> => {
-    const strategyPrices = await this.getStrategyPrices(strategy, collateralInfos, prices, disabledTokensPrices);
+    const strategyPrices = await this.getStrategyPrices(strategy, collateralInfos, pricesMap, disabledTokensPrices);
     const rebalanceKind = numberToRebalanceType(strategy.rebalanceType);
 
     const tokenHoldings = this.getOrcaTokensBalances(strategy, pool, position, mode);
@@ -1940,7 +1979,7 @@ export class Kamino {
 
   private getStrategyBalances = async (
     strategy: WhirlpoolStrategy,
-    scopePrices?: OraclePrices,
+    scopePricesMap?: Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalances> => {
     const collateralInfos = await this.getCollateralInfos();
@@ -1950,11 +1989,11 @@ export class Kamino {
     }
 
     if (strategy.strategyDex.toNumber() === dexToNumber('ORCA')) {
-      return this.getStrategyBalancesOrca(strategy, collateralInfos, scopePrices, disabledPrices);
+      return this.getStrategyBalancesOrca(strategy, collateralInfos, scopePricesMap, disabledPrices);
     } else if (strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM')) {
-      return this.getStrategyBalancesRaydium(strategy, collateralInfos, scopePrices, disabledPrices);
+      return this.getStrategyBalancesRaydium(strategy, collateralInfos, scopePricesMap, disabledPrices);
     } else if (strategy.strategyDex.toNumber() === dexToNumber('METEORA')) {
-      return this.getStrategyBalancesMeteora(strategy, collateralInfos, scopePrices, disabledPrices);
+      return this.getStrategyBalancesMeteora(strategy, collateralInfos, scopePricesMap, disabledPrices);
     } else {
       throw new Error(`Invalid dex ${strategy.strategyDex.toString()}`);
     }
@@ -2037,7 +2076,7 @@ export class Kamino {
   private getStrategyBalancesOrca = async (
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    scopePrices?: OraclePrices,
+    scopePricesMap?: Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalances> => {
     const res = await this.getConnection().getMultipleAccounts([strategy.pool, strategy.position]).send();
@@ -2056,7 +2095,7 @@ export class Kamino {
       whirlpool,
       position,
       collateralInfos,
-      scopePrices,
+      scopePricesMap,
       disabledTokensPrices,
       undefined
     );
@@ -2065,7 +2104,7 @@ export class Kamino {
   private getStrategyBalancesRaydium = async (
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    scopePrices?: OraclePrices,
+    scopePricesMap?: Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalances> => {
     const res = await fetchEncodedAccounts(this.getConnection(), [strategy.pool, strategy.position]);
@@ -2079,13 +2118,20 @@ export class Kamino {
     const poolState = PoolState.decode(Buffer.from(poolStateAcc.data));
     const position = PersonalPositionState.decode(Buffer.from(positionAcc.data));
 
-    return this.getRaydiumBalances(strategy, poolState, position, collateralInfos, scopePrices, disabledTokensPrices);
+    return this.getRaydiumBalances(
+      strategy,
+      poolState,
+      position,
+      collateralInfos,
+      scopePricesMap,
+      disabledTokensPrices
+    );
   };
 
   private getStrategyBalancesMeteora = async (
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    scopePrices?: OraclePrices,
+    scopePricesMap?: Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyBalances> => {
     const res = await this.getConnection().getMultipleAccounts([strategy.pool, strategy.position]).send();
@@ -2100,14 +2146,21 @@ export class Kamino {
     const poolState = LbPair.decode(Buffer.from(poolStateAcc.data[0], 'base64'));
     try {
       const position = PositionV2.decode(Buffer.from(positionAcc.data[0], 'base64'));
-      return this.getMeteoraBalances(strategy, poolState, position, collateralInfos, scopePrices, disabledTokensPrices);
+      return this.getMeteoraBalances(
+        strategy,
+        poolState,
+        position,
+        collateralInfos,
+        scopePricesMap,
+        disabledTokensPrices
+      );
     } catch (e) {
       return this.getMeteoraBalances(
         strategy,
         poolState,
         undefined,
         collateralInfos,
-        scopePrices,
+        scopePricesMap,
         disabledTokensPrices
       );
     }
@@ -2239,12 +2292,12 @@ export class Kamino {
    * Get the prices of all tokens in the specified strategy, or null if the reward token does not exist
    * @param strategy
    * @param collateralInfos
-   * @param scopePrices
+   * @param scopePricesMap
    */
   getStrategyPrices = async (
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    scopePrices?: OraclePrices,
+    scopePricesMap?: Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyPrices> => {
     const tokenA = collateralInfos[strategy.tokenACollateralId.toNumber()];
@@ -2253,11 +2306,17 @@ export class Kamino {
     const rewardToken1 = collateralInfos[strategy.reward1CollateralId.toNumber()];
     const rewardToken2 = collateralInfos[strategy.reward2CollateralId.toNumber()];
 
-    let prices: OraclePrices;
-    if (scopePrices) {
-      prices = scopePrices;
+    let pricesMap: Record<Address, OraclePrices>;
+    if (scopePricesMap) {
+      pricesMap = scopePricesMap;
     } else {
-      prices = await this._scope.getOraclePrices({ prices: strategy.scopePrices });
+      const scopePrices = await this._scope.getMultipleOraclePrices(
+        this.getAllScopePriceFeedsForStrategy(strategy, collateralInfos)
+      );
+      pricesMap = scopePrices.reduce((map: Record<Address, OraclePrices>, [address, price]) => {
+        map[address] = price;
+        return map;
+      }, {});
     }
 
     let jupPrices: Map<Address, Decimal>;
@@ -2272,37 +2331,42 @@ export class Kamino {
     const fallbackReward1Price = jupPrices.get(rewardToken1.mint) ?? new Decimal(0);
     const fallbackReward2Price = jupPrices.get(rewardToken2.mint) ?? new Decimal(0);
 
+    const tokenAScopeFeed = collateralInfos[strategy.tokenACollateralId.toNumber()].scopeFeed;
     const aPrice = Scope.isScopeChainValid(tokenA.scopePriceChain)
-      ? (await this._scope.getPriceFromChain(tokenA.scopePriceChain, prices)).price
+      ? (await this._scope.getPriceFromChain(tokenA.scopePriceChain, pricesMap[tokenAScopeFeed])).price
       : fallbackTokenAPrice;
+    const tokenBScopeFeed = collateralInfos[strategy.tokenBCollateralId.toNumber()].scopeFeed;
     const bPrice = Scope.isScopeChainValid(tokenB.scopePriceChain)
-      ? (await this._scope.getPriceFromChain(tokenB.scopePriceChain, prices)).price
+      ? (await this._scope.getPriceFromChain(tokenB.scopePriceChain, pricesMap[tokenBScopeFeed])).price
       : fallbackTokenBPrice;
     const tokenATwap = stripTwapZeros(tokenA.scopeTwapPriceChain);
     const tokenBTwap = stripTwapZeros(tokenB.scopeTwapPriceChain);
     const aTwapPrice = Scope.isScopeChainValid(tokenATwap)
-      ? await this._scope.getPriceFromChain(tokenATwap, prices)
+      ? await this._scope.getPriceFromChain(tokenATwap, pricesMap[tokenAScopeFeed])
       : null;
     const bTwapPrice = Scope.isScopeChainValid(tokenBTwap)
-      ? await this._scope.getPriceFromChain(tokenBTwap, prices)
+      ? await this._scope.getPriceFromChain(tokenBTwap, pricesMap[tokenBScopeFeed])
       : null;
 
     let reward0Price = null;
     if (strategy.reward0Decimals.toNumber() !== 0) {
+      const reward0ScopeFeed = collateralInfos[strategy.reward0CollateralId.toNumber()].scopeFeed;
       reward0Price = Scope.isScopeChainValid(rewardToken0.scopePriceChain)
-        ? (await this._scope.getPriceFromChain(rewardToken0.scopePriceChain, prices)).price
+        ? (await this._scope.getPriceFromChain(rewardToken0.scopePriceChain, pricesMap[reward0ScopeFeed])).price
         : fallbackReward0Price;
     }
     let reward1Price = null;
     if (strategy.reward1Decimals.toNumber() !== 0) {
+      const reward1ScopeFeed = collateralInfos[strategy.reward1CollateralId.toNumber()].scopeFeed;
       reward1Price = Scope.isScopeChainValid(rewardToken1.scopePriceChain)
-        ? (await this._scope.getPriceFromChain(rewardToken1.scopePriceChain, prices)).price
+        ? (await this._scope.getPriceFromChain(rewardToken1.scopePriceChain, pricesMap[reward1ScopeFeed])).price
         : fallbackReward1Price;
     }
     let reward2Price = null;
     if (strategy.reward2Decimals.toNumber() !== 0) {
+      const reward2ScopeFeed = collateralInfos[strategy.reward1CollateralId.toNumber()].scopeFeed;
       reward2Price = Scope.isScopeChainValid(rewardToken2.scopePriceChain)
-        ? (await this._scope.getPriceFromChain(rewardToken2.scopePriceChain, prices)).price
+        ? (await this._scope.getPriceFromChain(rewardToken2.scopePriceChain, pricesMap[reward2ScopeFeed])).price
         : fallbackReward2Price;
     }
 
@@ -3065,6 +3129,8 @@ export class Kamino {
     if (!globalConfig) {
       throw Error(`Could not fetch global config with pubkey ${strategyState.strategy.globalConfig.toString()}`);
     }
+    const collateralInfos = await this.getCollateralInfos();
+    const scopePricesFeeds = this.getAllScopePriceFeedsForStrategy(strategyState.strategy, collateralInfos);
 
     const [sharesAta, tokenAAta, tokenBAta] = await Promise.all([
       getAssociatedTokenAddress(strategyState.strategy.sharesMint, owner),
@@ -3096,7 +3162,8 @@ export class Kamino {
       tokenBAta,
       strategyState.strategy.sharesMint,
       strategyState.strategy.sharesMintAuthority,
-      strategyState.strategy.scopePrices,
+      scopePricesFeeds[0],
+      scopePricesFeeds[1],
       globalConfig.tokenInfos,
       TOKEN_PROGRAM_ADDRESS,
       keyOrDefault(strategyState.strategy.tokenATokenProgram, TOKEN_PROGRAM_ADDRESS),
@@ -3105,6 +3172,8 @@ export class Kamino {
       strategyState.strategy.tickArrayLower,
       strategyState.strategy.tickArrayUpper,
     ];
+    // Reward scope prices feeds are added as remaining accounts
+    accounts.concat(scopePricesFeeds.slice(2));
 
     return accounts;
   };
@@ -3132,6 +3201,8 @@ export class Kamino {
     if (!globalConfig) {
       throw Error(`Could not fetch global config with pubkey ${strategyState.strategy.globalConfig.toString()}`);
     }
+    const collateralInfos = await this.getCollateralInfos();
+    const scopePricesFeeds = this.getAllScopePriceFeedsForStrategy(strategyState.strategy, collateralInfos);
 
     const [sharesAta, tokenAAta, tokenBAta] = await Promise.all([
       getAssociatedTokenAddress(strategyState.strategy.sharesMint, owner.address),
@@ -3171,7 +3242,8 @@ export class Kamino {
       userSharesAta: sharesAta,
       sharesMint: strategyState.strategy.sharesMint,
       sharesMintAuthority: strategyState.strategy.sharesMintAuthority,
-      scopePrices: strategyState.strategy.scopePrices,
+      scopePricesA: scopePricesFeeds[0],
+      scopePricesB: scopePricesFeeds[1],
       tokenInfos: globalConfig.tokenInfos,
       tokenProgram: TOKEN_PROGRAM_ADDRESS,
       instructionSysvarAccount: SYSVAR_INSTRUCTIONS_ADDRESS,
@@ -3181,7 +3253,16 @@ export class Kamino {
       tokenBTokenProgram: keyOrDefault(strategyState.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS),
     };
 
-    return deposit(depositArgs, depositAccounts, this.getProgramID());
+    const depositIx = deposit(depositArgs, depositAccounts, this.getProgramID());
+    const accounts = depositIx.accounts?.slice();
+
+    // Add reward scope price feed accounts as remaining accounts
+    for (let i = 2; i < scopePricesFeeds.length; i++) {
+      accounts?.push({ address: scopePricesFeeds[i], role: AccountRole.READONLY });
+    }
+
+    const resIx: IInstruction = { ...depositIx, accounts };
+    return resIx;
   };
 
   singleSidedDepositTokenA = async (
@@ -3605,6 +3686,9 @@ export class Kamino {
       []
     );
 
+    const collateralInfos = await this.getCollateralInfos();
+    const scopePricesFeeds = this.getAllScopePriceFeedsForStrategy(strategyState, collateralInfos);
+
     const args: SingleTokenDepositWithMinArgs = {
       tokenAMinPostDepositBalance: new BN(realTokenAMinPostDepositBalanceLamports.floor().toString()),
       tokenBMinPostDepositBalance: new BN(realTokenBMinPostDepositBalanceLamports.floor().toString()),
@@ -3626,7 +3710,8 @@ export class Kamino {
       userSharesAta: sharesAta,
       sharesMint: strategyState.sharesMint,
       sharesMintAuthority: strategyState.sharesMintAuthority,
-      scopePrices: strategyState.scopePrices,
+      scopePricesA: scopePricesFeeds[0],
+      scopePricesB: scopePricesFeeds[1],
       tokenInfos: globalConfig!.tokenInfos,
       tokenProgram: TOKEN_PROGRAM_ADDRESS,
       instructionSysvarAccount: SYSVAR_INSTRUCTIONS_ADDRESS,
@@ -3637,6 +3722,17 @@ export class Kamino {
     };
 
     const singleSidedDepositIx = singleTokenDepositWithMin(args, accounts, this.getProgramID());
+    const singleSidedDepositIxAccounts = singleSidedDepositIx.accounts?.slice();
+
+    // Add reward scope price feed accounts as remaining accounts
+    for (let i = 2; i < scopePricesFeeds.length; i++) {
+      singleSidedDepositIxAccounts?.push({ address: scopePricesFeeds[i], role: AccountRole.READONLY });
+    }
+
+    const singleSidedDepositIxWithRemainingAccounts: IInstruction = {
+      ...singleSidedDepositIx,
+      accounts: singleSidedDepositIxAccounts,
+    };
 
     let result: IInstruction[] = [];
     if (includeAtaIxns) {
@@ -3649,7 +3745,7 @@ export class Kamino {
     const allKeys = [
       ...extractKeys(result),
       ...extractKeys([checkExpectedVaultsBalancesIx]),
-      ...extractKeys([singleSidedDepositIx]),
+      ...extractKeys([singleSidedDepositIxWithRemainingAccounts]),
       ...extractKeys(cleanupIxs),
     ];
 
@@ -3658,7 +3754,7 @@ export class Kamino {
       amountsToDepositWithSwap.tokenAToSwapAmount.gte(ZERO) &&
       amountsToDepositWithSwap.tokenBToSwapAmount.gte(ZERO)
     ) {
-      result = result.concat([checkExpectedVaultsBalancesIx, singleSidedDepositIx, ...cleanupIxs]);
+      result = result.concat([checkExpectedVaultsBalancesIx, singleSidedDepositIxWithRemainingAccounts, ...cleanupIxs]);
       return { instructions: result, lookupTablesAddresses: [] };
     }
 
@@ -3685,7 +3781,12 @@ export class Kamino {
       []
     );
 
-    result = result.concat([checkExpectedVaultsBalancesIx, ...jupSwapIxs, singleSidedDepositIx, ...cleanupIxs]);
+    result = result.concat([
+      checkExpectedVaultsBalancesIx,
+      ...jupSwapIxs,
+      singleSidedDepositIxWithRemainingAccounts,
+      ...cleanupIxs,
+    ]);
     return { instructions: result, lookupTablesAddresses };
   };
 
@@ -3987,7 +4088,7 @@ export class Kamino {
     }
     const tokenBCollateralId = collateralInfos.findIndex((x) => x.mint === tokenBMint);
     if (tokenBCollateralId === -1) {
-      throw Error(`Could not find token A (mint ${tokenBMint}) in collateral infos`);
+      throw Error(`Could not find token B (mint ${tokenBMint}) in collateral infos`);
     }
 
     const programAddresses = await this.getStrategyProgramAddresses(strategy, tokenAMint, tokenBMint);
@@ -4018,14 +4119,7 @@ export class Kamino {
       tokenBTokenProgram,
     };
 
-    let ix = initializeStrategy(strategyArgs, strategyAccounts, this.getProgramID());
-    ix = {
-      ...ix,
-      accounts: ix.accounts?.concat([
-        { address: config.scopePriceId, role: AccountRole.READONLY },
-        { address: config.scopeProgramId, role: AccountRole.READONLY },
-      ]),
-    };
+    const ix = initializeStrategy(strategyArgs, strategyAccounts, this.getProgramID());
     return ix;
   };
 
@@ -4795,6 +4889,15 @@ export class Kamino {
     if (!globalConfig) {
       throw Error(`Could not fetch global config with pubkey ${this._globalConfig.toString()}`);
     }
+    const collateralInfos = await this.getCollateralInfos();
+    if (!collateralInfos) {
+      throw Error(`Could not fetch collateral infos with pubkey ${globalConfig.tokenInfos.toString()}`);
+    }
+    const strategyState = await this.getWhirlpoolStrategy(strategy);
+    if (!strategyState) {
+      throw Error(`Could not fetch strategy with pubkey ${strategy.toString()}`);
+    }
+    const scopePricesFeeds = this.getAllScopePriceFeedsForStrategy(strategyState, collateralInfos);
 
     const accounts: OpenLiquidityPositionAccounts = {
       adminAuthority: adminAuthority,
@@ -4825,7 +4928,8 @@ export class Kamino {
       tokenBVault,
       poolTokenVaultA: whirlpool.tokenVaultA,
       poolTokenVaultB: whirlpool.tokenVaultB,
-      scopePrices: globalConfig.scopePriceId,
+      scopePricesA: scopePricesFeeds[0],
+      scopePricesB: scopePricesFeeds[1],
       tokenInfos: globalConfig.tokenInfos,
       tokenAMint,
       tokenBMint,
@@ -4930,6 +5034,16 @@ export class Kamino {
     if (!globalConfig) {
       throw Error(`Could not fetch global config with pubkey ${this._globalConfig.toString()}`);
     }
+    const collateralInfos = await this.getCollateralInfos();
+    if (!collateralInfos) {
+      throw Error(`Could not fetch collateral infos with pubkey ${globalConfig.tokenInfos.toString()}`);
+    }
+    const strategyState = await this.getWhirlpoolStrategy(strategy);
+    if (!strategyState) {
+      throw Error(`Could not fetch strategy with pubkey ${strategy.toString()}`);
+    }
+    const scopePricesFeeds = this.getAllScopePriceFeedsForStrategy(strategyState, collateralInfos);
+
     const accounts: OpenLiquidityPositionAccounts = {
       adminAuthority: adminAuthority,
       strategy,
@@ -4959,7 +5073,8 @@ export class Kamino {
       tokenBVault: tokenBVault,
       poolTokenVaultA: poolState.tokenVault0,
       poolTokenVaultB: poolState.tokenVault1,
-      scopePrices: globalConfig.scopePriceId,
+      scopePricesA: scopePricesFeeds[0],
+      scopePricesB: scopePricesFeeds[1],
       tokenInfos: globalConfig.tokenInfos,
       tokenAMint,
       tokenBMint,
@@ -5095,6 +5210,15 @@ export class Kamino {
     if (!globalConfig) {
       throw Error(`Could not fetch global config with pubkey ${this._globalConfig.toString()}`);
     }
+    const collateralInfos = await this.getCollateralInfos();
+    if (!collateralInfos) {
+      throw Error(`Could not fetch collateral infos with pubkey ${globalConfig.tokenInfos.toString()}`);
+    }
+    const strategyState = await this.getWhirlpoolStrategy(strategy);
+    if (!strategyState) {
+      throw Error(`Could not fetch strategy with pubkey ${strategy.toString()}`);
+    }
+    const scopePricesFeeds = this.getAllScopePriceFeedsForStrategy(strategyState, collateralInfos);
 
     const accounts: OpenLiquidityPositionAccounts = {
       adminAuthority: adminAuthority,
@@ -5125,7 +5249,8 @@ export class Kamino {
       tokenBVault,
       poolTokenVaultA: lbPair.reserveX,
       poolTokenVaultB: lbPair.reserveY,
-      scopePrices: globalConfig.scopePriceId,
+      scopePricesA: scopePricesFeeds[0],
+      scopePricesB: scopePricesFeeds[1],
       tokenInfos: globalConfig.tokenInfos,
       tokenAMint,
       tokenBMint,
@@ -5172,6 +5297,12 @@ export class Kamino {
     if (globalConfig === null) {
       throw new Error(`Unable to fetch GlobalConfig with Pubkey ${strategyState.globalConfig}`);
     }
+    const collateralInfos = await this.getCollateralInfos();
+    if (!collateralInfos) {
+      throw Error(`Could not fetch collateral infos with pubkey ${globalConfig.tokenInfos.toString()}`);
+    }
+    const scopePricesFeeds = this.getAllScopePriceFeedsForStrategy(strategyState, collateralInfos);
+
     const args: ExecutiveWithdrawArgs = {
       action: action.discriminator,
     };
@@ -5194,7 +5325,8 @@ export class Kamino {
       poolTokenVaultB: strategyState.poolTokenVaultB,
       tokenAMint: strategyState.tokenAMint,
       tokenBMint: strategyState.tokenBMint,
-      scopePrices: strategyState.scopePrices,
+      scopePricesA: scopePricesFeeds[0],
+      scopePricesB: scopePricesFeeds[1],
       raydiumProtocolPositionOrBaseVaultAuthority: strategyState.raydiumProtocolPositionOrBaseVaultAuthority,
       poolProgram: programId,
       tokenInfos: globalConfig.tokenInfos,
@@ -5288,6 +5420,11 @@ export class Kamino {
     if (!globalConfig) {
       throw Error(`Could not fetch global config with pubkey ${strategyState.globalConfig.toString()}`);
     }
+    const collateralInfos = await this.getCollateralInfos();
+    if (!collateralInfos) {
+      throw Error(`Could not fetch collateral infos with pubkey ${globalConfig.tokenInfos.toString()}`);
+    }
+    const scopePricesFeeds = this.getAllScopePriceFeedsForStrategy(strategyState, collateralInfos);
 
     const programId = this.getDexProgramId(strategyState);
     const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
@@ -5306,7 +5443,8 @@ export class Kamino {
       poolTokenVaultB: strategyState.poolTokenVaultB,
       tickArrayLower: strategyState.tickArrayLower,
       tickArrayUpper: strategyState.tickArrayUpper,
-      scopePrices: globalConfig.scopePriceId,
+      scopePricesA: scopePricesFeeds[0],
+      scopePricesB: scopePricesFeeds[1],
       raydiumProtocolPositionOrBaseVaultAuthority: strategyState.raydiumProtocolPositionOrBaseVaultAuthority,
       tokenInfos: globalConfig.tokenInfos,
       poolProgram: programId,

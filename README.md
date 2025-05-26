@@ -442,7 +442,7 @@ let nonPeggedStrats = await kamino.getAllStrategiesWithFilters(filters);
 ## FAQ
 
 ## Codegen 
-* Copy the new `idl` from the kamino-liquidity program to `src/kamino-client/idl.json`
+* Copy the new `idl` from the kamino-liquidity program to `src/idl/kliquidity.json`
 * `yarn codegen:kliquidity`
 
 ## Setup localnet 

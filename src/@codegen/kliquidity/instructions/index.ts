@@ -133,3 +133,8 @@ export { signTerms } from "./signTerms"
 export type { SignTermsArgs, SignTermsAccounts } from "./signTerms"
 export { updateStrategyAdmin } from "./updateStrategyAdmin"
 export type { UpdateStrategyAdminAccounts } from "./updateStrategyAdmin"
+export { tokenInfosInitScopeFeed } from "./tokenInfosInitScopeFeed"
+export type {
+  TokenInfosInitScopeFeedArgs,
+  TokenInfosInitScopeFeedAccounts,
+} from "./tokenInfosInitScopeFeed"
