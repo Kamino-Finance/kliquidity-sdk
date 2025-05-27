@@ -170,12 +170,23 @@ export class OrcaService {
     const fee24Usd = new Decimal(volume24hUsd).mul(lpFeeRate).toNumber();
     const tokensPrices = this.getTokenPrices(strategy, prices, collateralInfos);
 
+    const rewardsDecimals = new Map<Address, number>();
+    if (strategy.reward0Decimals.toNumber() !== 0) {
+      rewardsDecimals.set(address(pool.rewards[0]?.mint), strategy.reward0Decimals.toNumber());
+    }
+    if (strategy.reward1Decimals.toNumber() !== 0) {
+      rewardsDecimals.set(address(pool.rewards[1]?.mint), strategy.reward1Decimals.toNumber());
+    }
+    if (strategy.reward2Decimals.toNumber() !== 0) {
+      rewardsDecimals.set(address(pool.rewards[2]?.mint), strategy.reward2Decimals.toNumber());
+    }
     const apr = estimateAprsForPriceRange(
       pool,
       tokensPrices,
       fee24Usd,
       position.tickLowerIndex,
-      position.tickUpperIndex
+      position.tickUpperIndex,
+      rewardsDecimals
     );
 
     let totalApr = new Decimal(apr.fee);
@@ -260,7 +271,8 @@ export class OrcaService {
     poolPubkey: Address,
     priceLower: Decimal,
     priceUpper: Decimal,
-    prices: KaminoPrices
+    prices: KaminoPrices,
+    rewardsDecimals: Map<Address, number>
   ): Promise<WhirlpoolAprApy> {
     const pool = await this.getOrcaWhirlpool(poolPubkey);
     if (!pool) {
@@ -300,7 +312,14 @@ export class OrcaService {
       pool.tickSpacing
     );
 
-    const apr = estimateAprsForPriceRange(pool, tokensPrices, fee24Usd, tickLowerIndex, tickUpperIndex);
+    const apr = estimateAprsForPriceRange(
+      pool,
+      tokensPrices,
+      fee24Usd,
+      tickLowerIndex,
+      tickUpperIndex,
+      rewardsDecimals
+    );
 
     const totalApr = new Decimal(apr.fee).add(apr.rewards[0]).add(apr.rewards[1]).add(apr.rewards[2]);
     const feeApr = new Decimal(apr.fee);

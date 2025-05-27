@@ -37,6 +37,7 @@ import {
   priceToTickIndex as orcaPriceToTickIndex,
   IncreaseLiquidityQuote,
   sqrtPriceToPrice,
+  tickIndexToPrice as orcaTickIndexToPrice,
 } from '@orca-so/whirlpools-core';
 import {
   getEmptyShareData,
@@ -345,7 +346,6 @@ import { fetchMultipleLookupTableAccounts } from './utils/lookupTable';
 import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } from '@solana/rpc-types';
 import { Connection } from '@solana/web3.js';
 import { toLegacyPublicKey } from './utils/compat';
-import { tickIndexToPrice as orcaTickIndexToPrice } from '@orca-so/whirlpools-core';
 import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
 
 const addressEncoder = getAddressEncoder();

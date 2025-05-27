@@ -40,17 +40,22 @@ const SECONDS_PER_YEAR =
   60 * // MINUTES
   24 * // HOURS
   365; // DAYS
-function estimateRewardApr(reward: WhirlpoolReward, concentratedValue: Decimal, tokenPrices: Map<Address, Decimal>) {
-  const { mint, emissions_per_second_x64 } = reward;
-  const rewardTokenPrice = tokenPrices.get(address(mint));
 
-  const emissionsPerSecondX64 = new Decimal(emissions_per_second_x64.toString());
-  if (!emissionsPerSecondX64.eq(ZERO) || !rewardTokenPrice) {
+function estimateRewardApr(
+  reward: WhirlpoolReward,
+  rewardTokenDecimals: number,
+  concentratedValue: Decimal,
+  tokenPrices: Map<Address, Decimal>
+) {
+  const { mint } = reward;
+  const rewardTokenPrice = tokenPrices.get(address(mint));
+  const emissionsPerSecond = new Decimal(reward.emissionsPerSecond).div(new Decimal(10).pow(rewardTokenDecimals));
+  if (emissionsPerSecond.eq(ZERO) || !rewardTokenPrice) {
     return 0;
   }
 
-  // todo (silviu): not sure if emissionsPerSecondX64 has to be scaled or remain X64
-  return emissionsPerSecondX64.mul(SECONDS_PER_YEAR).mul(rewardTokenPrice).div(concentratedValue).toNumber();
+  const res = emissionsPerSecond.mul(SECONDS_PER_YEAR).mul(rewardTokenPrice).div(concentratedValue).toNumber();
+  return res;
 }
 
 export async function getTickArray(
@@ -133,25 +138,6 @@ export function getIncreaseLiquidityQuote(
   }
 }
 
-// export function decreaseLiquidityQuote(liquidity_delta: bigint, slippage_tolerance_bps: number, current_sqrt_price: bigint, tick_index_1: number, tick_index_2: number, transfer_fee_a?: TransferFee | null, transfer_fee_b?: TransferFee | null): DecreaseLiquidityQuote;
-// export function getRemoveLiquidityQuote(
-//   pool: Whirlpool,
-//   tickLowerIndex: number,
-//   tickUpperIndex: number,
-//   liquidity: BN,
-//   slippageToleranceBps: number,
-//   transferFeeA: TransferFee | undefined,
-//   transferFeeB: TransferFee | undefined
-// ): DecreaseLiquidityQuote {
-//   return decreaseLiquidityQuote(
-//     BigInt(liquidity.toString()),
-//     slippageToleranceBps,
-//     BigInt(pool.sqrtPrice.toString()),
-//     tickLowerIndex,
-//     tickUpperIndex,
-//   )
-// }
-
 function orderSqrtPrice(sqrtPrice0X64: BN, sqrtPrice1X64: BN): [BN, BN] {
   if (sqrtPrice0X64.lt(sqrtPrice1X64)) {
     return [sqrtPrice0X64, sqrtPrice1X64];
@@ -202,7 +188,8 @@ export function estimateAprsForPriceRange(
   tokenPrices: Map<Address, Decimal>,
   fees24h: number,
   tickLowerIndex: number,
-  tickUpperIndex: number
+  tickUpperIndex: number,
+  rewardsDecimals: Map<Address, number>
 ): EstimatedAprs {
   const tokenPriceA = tokenPrices.get(address(pool.tokenMintA));
   const tokenPriceB = tokenPrices.get(address(pool.tokenMintB));
@@ -229,7 +216,13 @@ export function estimateAprsForPriceRange(
   const feesPerYear = new Decimal(fees24h).mul(365).div(new Decimal(10).pow(6)); // scale from lamports of USDC to tokens
   const feeApr = feesPerYear.div(concentratedValue).toNumber();
 
-  const rewards = pool.rewards.map((reward) => estimateRewardApr(reward, concentratedValue, tokenPrices));
+  const rewards = pool.rewards.map((reward) => {
+    if (rewardsDecimals.has(address(reward.mint))) {
+      return estimateRewardApr(reward, rewardsDecimals.get(address(reward.mint))!, concentratedValue, tokenPrices);
+    } else {
+      return 0;
+    }
+  });
 
   return { fee: feeApr, rewards };
 }
@@ -396,14 +389,3 @@ export async function getTickArrayPda(
 
   return [pdaWithBump[0], pdaWithBump[1]];
 }
-
-// function getPdaWithTickIndex(
-//   tickIndex: number,
-//   tickSpacing: number,
-//   whirlpool: Address,
-//   programId: Address,
-//   tickArrayOffset = 0
-// ): Address {
-//   const startIndex = orcaGetTickArrayStartTickIndex(tickIndex, tickSpacing);
-//   return getTickArrayPda(toPubKey(programId), toPubKey(whirlpool), startIndex);
-// }

@@ -51,75 +51,6 @@ export interface WhirlpoolToken {
   tags: string[];
 }
 
-export interface Volume {
-  day: number;
-  week: number;
-  month: number;
-}
-
-export interface VolumeDenominatedA {
-  day: number;
-  week: number;
-  month: number;
-}
-
-export interface VolumeDenominatedB {
-  day: number;
-  week: number;
-  month: number;
-}
-
-export interface PriceRange {
-  day: Day;
-  week: Week;
-  month: Month;
-}
-
-export interface Day {
-  min: number;
-  max: number;
-}
-
-export interface Week {
-  min: number;
-  max: number;
-}
-
-export interface Month {
-  min: number;
-  max: number;
-}
-
-export interface FeeApr {
-  day: number;
-  week: number;
-  month: number;
-}
-
-export interface Reward0Apr {
-  day: number;
-  week?: number;
-  month?: number;
-}
-
-export interface Reward1Apr {
-  day: number;
-  week: number;
-  month: number;
-}
-
-export interface Reward2Apr {
-  day: number;
-  week: number;
-  month: number;
-}
-
-export interface TotalApr {
-  day: number;
-  week?: number;
-  month?: number;
-}
-
 export interface WhirlpoolStat {
   volume: string;
   fees: string;
@@ -141,8 +72,4 @@ export interface WhirlpoolReward {
   growth_global_x64: string;
   active: boolean;
   emissionsPerSecond: string;
-}
-
-export interface WhirlpoolRewards {
-  rewards: WhirlpoolReward[];
 }
