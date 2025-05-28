@@ -116,16 +116,16 @@ export function getPositionRangeFromDriftParams(
     return { lowerPrice, upperPrice };
   } else if (dex == 'RAYDIUM') {
     const lowerPrice = new Decimal(
-      orcaSqrtPriceToPrice(
-        BigInt(SqrtPriceMath.getSqrtPriceX64FromTick(lowerTickIndex.toNumber()).toString()),
+      SqrtPriceMath.sqrtPriceX64ToPrice(
+        SqrtPriceMath.getSqrtPriceX64FromTick(lowerTickIndex.toNumber()),
         tokenADecimals,
         tokenBDecimals
       )
     );
 
     const upperPrice = new Decimal(
-      orcaSqrtPriceToPrice(
-        BigInt(SqrtPriceMath.getSqrtPriceX64FromTick(upperTickIndex.toNumber()).toString()),
+      SqrtPriceMath.sqrtPriceX64ToPrice(
+        SqrtPriceMath.getSqrtPriceX64FromTick(upperTickIndex.toNumber()),
         tokenADecimals,
         tokenBDecimals
       )
