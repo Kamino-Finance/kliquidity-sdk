@@ -43,10 +43,58 @@ export class OrcaService {
     return this._whirlpoolProgramId;
   }
 
-  // todo: check if there are more than 1000 pools and read paginated
-  async getOrcaWhirlpools(): Promise<OrcaWhirlpoolsResponse> {
+  // Fetch all Orca whirlpools with pagination support (note there are over 20 pages so it may take a while)
+  async getOrcaWhirlpools(tokens: Address[] = []): Promise<WhirlpoolAPIResponse[]> {
     const maxPageSize = 1000;
-    return (await axios.get<OrcaWhirlpoolsResponse>(`${this._orcaApiUrl}/pools?size=${maxPageSize}`)).data;
+    const maxPages = 100; // Safety limit to prevent infinite loops
+    const allWhirlpools: WhirlpoolAPIResponse[] = [];
+    let after: string | undefined = undefined;
+    let hasMore = true;
+    let pageCount = 0;
+
+    while (hasMore && pageCount < maxPages) {
+      pageCount++;
+      const url = new URL(`${this._orcaApiUrl}/pools`);
+      url.searchParams.set('size', maxPageSize.toString());
+
+      if (after) {
+        url.searchParams.set('after', after);
+      }
+
+      // Add token filtering parameters based on the number of tokens provided
+      if (tokens.length === 1) {
+        url.searchParams.set('token', tokens[0]);
+      } else if (tokens.length === 2) {
+        url.searchParams.set('tokensBothOf', tokens.join(','));
+      }
+
+      try {
+        const response = await axios.get<OrcaWhirlpoolsResponse>(url.toString());
+        const data = response.data;
+
+        // Add whirlpools from this page to our collection
+        if (data.data && data.data.length > 0) {
+          allWhirlpools.push(...data.data);
+        }
+
+        // Check if there are more pages using the meta.cursor.next field
+        if (data.meta?.cursor?.next) {
+          after = data.meta.cursor.next;
+          hasMore = true;
+        } else {
+          hasMore = false;
+        }
+      } catch (error) {
+        console.error('Error fetching Orca whirlpools page:', error);
+        throw error;
+      }
+    }
+
+    if (pageCount >= maxPages) {
+      console.warn(`Reached maximum page limit (${maxPages}). There might be more whirlpools available.`);
+    }
+
+    return allWhirlpools;
   }
 
   async getOrcaWhirlpool(poolAddress: Address): Promise<WhirlpoolAPIResponse> {

@@ -1156,7 +1156,7 @@ export class Kamino {
     const poolTokenAString = poolTokenA.toString();
     const poolTokenBString = poolTokenB.toString();
     const whirlpools = await this._orcaService.getOrcaWhirlpools();
-    whirlpools.whirlpools.forEach((element) => {
+    whirlpools.forEach((element) => {
       if (
         (element.tokenMintA === poolTokenAString && element.tokenMintB === poolTokenBString) ||
         (element.tokenMintA === poolTokenBString && element.tokenMintB === poolTokenAString)
@@ -2546,6 +2546,10 @@ export class Kamino {
       return map;
     }, {});
     return whirlpoolMap;
+  };
+
+  getAllWhirlpoolsFromAPI = async (tokens: Address[] = []): Promise<WhirlpoolAPIResponse[]> => {
+    return (await this._orcaService.getOrcaWhirlpools(tokens));
   };
 
   /**

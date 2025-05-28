@@ -1,5 +1,18 @@
+//
+// meta: {
+//   cursor: {
+//     previous: null,
+//     next: '5arazDvfFnLxLWEUdX9orQaeYvq6QRehJtAuna9Vu3zHTET'
+//   }
+// }
 export interface OrcaWhirlpoolsResponse {
-  whirlpools: Whirlpool[];
+  data: Whirlpool[];
+  meta: {
+    cursor: {
+      previous: string | null;
+      next: string | null;
+    };
+  };
 }
 
 export interface Whirlpool {
