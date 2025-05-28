@@ -1,22 +1,18 @@
-import { Address, Rpc, SolanaRpcApi } from '@solana/kit';
+import { address, Address, Rpc, SolanaRpcApi } from '@solana/kit';
 import Decimal from 'decimal.js';
-import {
-  estimateAprsForPriceRange,
-  OrcaNetwork,
-  OrcaWhirlpoolClient,
-  getNearestValidTickIndexFromTickIndex,
-  priceToTickIndex,
-  PoolData,
-} from '@orca-so/whirlpool-sdk';
 import axios from 'axios';
-import { OrcaWhirlpoolsResponse, Whirlpool } from './OrcaWhirlpoolsResponse';
-import { SolanaCluster } from '@hubbleprotocol/hubble-config';
+import { OrcaWhirlpoolsResponse, Whirlpool as WhirlpoolAPIResponse } from './OrcaWhirlpoolsResponse';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import { Position } from '../@codegen/whirlpools/accounts';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
 import {
   aprToApy,
+  estimateAprsForPriceRange,
   GenericPoolInfo,
+  getHighestInitializedTickArrayTickIndex,
+  getLiquidityDistribution,
+  getLowestInitializedTickArrayTickIndex,
+  getNearestValidTickIndexFromTickIndex,
   getStrategyPriceRangeOrca,
   LiquidityDistribution,
   LiquidityForPrice,
@@ -25,35 +21,91 @@ import {
 import { PROGRAM_ID as WHIRLPOOLS_PROGRAM_ID } from '../@codegen/whirlpools/programId';
 import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { KaminoPrices } from '../models';
-import { fromLegacyPublicKey } from '@solana/compat';
 import { Connection } from '@solana/web3.js';
+import { priceToTickIndex } from '@orca-so/whirlpools-core';
 
 export class OrcaService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
-  private readonly _legacyConnection: Connection;
   private readonly _whirlpoolProgramId: Address;
-  private readonly _orcaNetwork: OrcaNetwork;
   private readonly _orcaApiUrl: string;
 
   constructor(
     rpc: Rpc<SolanaRpcApi>,
     legacyConnection: Connection,
-    cluster: SolanaCluster,
     whirlpoolProgramId: Address = WHIRLPOOLS_PROGRAM_ID
   ) {
     this._rpc = rpc;
-    this._legacyConnection = legacyConnection;
     this._whirlpoolProgramId = whirlpoolProgramId;
-    this._orcaNetwork = cluster === 'mainnet-beta' ? OrcaNetwork.MAINNET : OrcaNetwork.DEVNET;
-    this._orcaApiUrl = `https://api.${cluster === 'mainnet-beta' ? 'mainnet' : 'devnet'}.orca.so`;
+    this._orcaApiUrl = `https://api.orca.so/v2/solana`;
   }
 
   getWhirlpoolProgramId(): Address {
     return this._whirlpoolProgramId;
   }
 
-  async getOrcaWhirlpools() {
-    return (await axios.get<OrcaWhirlpoolsResponse>(`${this._orcaApiUrl}/v1/whirlpool/list`)).data;
+  // Fetch all Orca whirlpools with pagination support (note there are over 20 pages so it may take a while)
+  async getOrcaWhirlpools(tokens: Address[] = []): Promise<WhirlpoolAPIResponse[]> {
+    const maxPageSize = 1000;
+    const maxPages = 100; // Safety limit to prevent infinite loops
+    const allWhirlpools: WhirlpoolAPIResponse[] = [];
+    let after: string | undefined = undefined;
+    let hasMore = true;
+    let pageCount = 0;
+
+    while (hasMore && pageCount < maxPages) {
+      pageCount++;
+      const url = new URL(`${this._orcaApiUrl}/pools`);
+      url.searchParams.set('size', maxPageSize.toString());
+
+      if (after) {
+        url.searchParams.set('after', after);
+      }
+
+      // Add token filtering parameters based on the number of tokens provided
+      if (tokens.length === 1) {
+        url.searchParams.set('token', tokens[0]);
+      } else if (tokens.length === 2) {
+        url.searchParams.set('tokensBothOf', tokens.join(','));
+      }
+
+      try {
+        const response = await axios.get<OrcaWhirlpoolsResponse>(url.toString());
+        const data = response.data;
+
+        // Add whirlpools from this page to our collection
+        if (data.data && data.data.length > 0) {
+          allWhirlpools.push(...data.data);
+        }
+
+        // Check if there are more pages using the meta.cursor.next field
+        if (data.meta?.cursor?.next) {
+          after = data.meta.cursor.next;
+          hasMore = true;
+        } else {
+          hasMore = false;
+        }
+      } catch (error) {
+        console.error('Error fetching Orca whirlpools page:', error);
+        throw error;
+      }
+    }
+
+    if (pageCount >= maxPages) {
+      console.warn(`Reached maximum page limit (${maxPages}). There might be more whirlpools available.`);
+    }
+
+    return allWhirlpools;
+  }
+
+  async getOrcaWhirlpool(poolAddress: Address): Promise<WhirlpoolAPIResponse> {
+    const response = await axios.get(`${this._orcaApiUrl}/pools/${poolAddress}`);
+
+    // If the API response has a nested data field that contains the actual pool data
+    if (response.data.data && typeof response.data.data === 'object') {
+      return response.data.data;
+    }
+
+    return response.data;
   }
 
   /**
@@ -68,8 +120,8 @@ export class OrcaService {
     strategy: WhirlpoolStrategy,
     prices: KaminoPrices,
     collateralInfos: CollateralInfo[]
-  ): Record<string, Decimal> {
-    const tokensPrices: Record<string, Decimal> = {};
+  ): Map<Address, Decimal> {
+    const tokensPrices: Map<Address, Decimal> = new Map();
 
     const tokenA = collateralInfos[strategy.tokenACollateralId.toNumber()];
     const tokenB = collateralInfos[strategy.tokenBCollateralId.toNumber()];
@@ -83,34 +135,34 @@ export class OrcaService {
     const reward1Price = strategy.reward1Decimals.toNumber() !== 0 ? prices.spot[rewardToken1.mint.toString()] : null;
     const reward2Price = strategy.reward2Decimals.toNumber() !== 0 ? prices.spot[rewardToken2.mint.toString()] : null;
 
-    const [mintA, mintB] = [strategy.tokenAMint.toString(), strategy.tokenBMint.toString()];
-    const reward0 = collateralInfos[strategy.reward0CollateralId.toNumber()]?.mint?.toString();
-    const reward1 = collateralInfos[strategy.reward1CollateralId.toNumber()]?.mint?.toString();
-    const reward2 = collateralInfos[strategy.reward2CollateralId.toNumber()]?.mint?.toString();
+    const [mintA, mintB] = [address(strategy.tokenAMint.toString()), address(strategy.tokenBMint.toString())];
+    const reward0 = address(collateralInfos[strategy.reward0CollateralId.toNumber()]?.mint?.toString());
+    const reward1 = address(collateralInfos[strategy.reward1CollateralId.toNumber()]?.mint?.toString());
+    const reward2 = address(collateralInfos[strategy.reward2CollateralId.toNumber()]?.mint?.toString());
 
-    tokensPrices[mintA] = aPrice.price;
-    tokensPrices[mintB] = bPrice.price;
+    tokensPrices.set(mintA, aPrice.price);
+    tokensPrices.set(mintB, bPrice.price);
     if (reward0Price !== null) {
-      tokensPrices[reward0] = reward0Price.price;
+      tokensPrices.set(reward0, reward0Price.price);
     }
     if (reward1Price !== null) {
-      tokensPrices[reward1] = reward1Price.price;
+      tokensPrices.set(reward1, reward1Price.price);
     }
     if (reward2Price !== null) {
-      tokensPrices[reward2] = reward2Price.price;
+      tokensPrices.set(reward2, reward2Price.price);
     }
 
     return tokensPrices;
   }
 
-  private getPoolTokensPrices(pool: PoolData, prices: KaminoPrices) {
-    const tokensPrices: Record<string, Decimal> = {};
+  private getPoolTokensPrices(pool: WhirlpoolAPIResponse, prices: KaminoPrices): Map<Address, Decimal> {
+    const tokensPrices: Map<Address, Decimal> = new Map();
     const tokens = [
-      pool.tokenMintA.toString(),
-      pool.tokenMintB.toString(),
-      pool.rewards[0].mint.toString(),
-      pool.rewards[1].mint.toString(),
-      pool.rewards[2].mint.toString(),
+      address(pool.tokenMintA.toString()),
+      address(pool.tokenMintB.toString()),
+      address(pool.rewards[0]?.mint.toString()),
+      address(pool.rewards[1]?.mint.toString()),
+      address(pool.rewards[2]?.mint.toString()),
     ];
     for (const mint of tokens) {
       if (mint) {
@@ -118,46 +170,28 @@ export class OrcaService {
         if (!price) {
           throw new Error(`Could not get token ${mint} price`);
         }
-        tokensPrices[mint] = price;
+        tokensPrices.set(mint, price);
       }
     }
 
     return tokensPrices;
   }
 
-  async getPool(poolAddress: Address) {
-    const orca = new OrcaWhirlpoolClient({
-      connection: this._legacyConnection,
-      network: this._orcaNetwork,
-    });
-    return orca.getPool(poolAddress);
-  }
-
   async getStrategyWhirlpoolPoolAprApy(
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    prices: KaminoPrices,
-    whirlpools?: Whirlpool[]
+    prices: KaminoPrices
   ): Promise<WhirlpoolAprApy> {
-    const orca = new OrcaWhirlpoolClient({
-      connection: this._legacyConnection,
-      network: this._orcaNetwork,
-    });
     const position = await Position.fetch(this._rpc, strategy.position);
     if (!position) {
       throw new Error(`Position ${strategy.position.toString()} does not exist`);
     }
 
-    const pool = await orca.getPool(strategy.pool);
-    if (!whirlpools) {
-      ({ whirlpools } = await this.getOrcaWhirlpools());
-    }
-
-    const whirlpool = whirlpools?.find((x) => x.address === strategy.pool);
-
-    if (!pool || !whirlpool) {
+    const pool = await this.getOrcaWhirlpool(strategy.pool);
+    if (!pool) {
       throw Error(`Could not get orca pool data for ${strategy.pool.toString()}`);
     }
+
     const priceRange = getStrategyPriceRangeOrca(
       position.tickLowerIndex,
       position.tickUpperIndex,
@@ -166,7 +200,10 @@ export class OrcaService {
     );
     if (priceRange.strategyOutOfRange) {
       return {
-        ...priceRange,
+        priceLower: new Decimal(priceRange.priceLower),
+        priceUpper: new Decimal(priceRange.priceUpper),
+        poolPrice: new Decimal(pool.price),
+        strategyOutOfRange: priceRange.strategyOutOfRange,
         rewardsApy: [],
         rewardsApr: [],
         feeApy: ZERO,
@@ -176,20 +213,34 @@ export class OrcaService {
       };
     }
 
-    const lpFeeRate = pool.feePercentage;
-    const volume24hUsd = whirlpool?.volume?.day ?? new Decimal(0);
+    const lpFeeRate = new Decimal(pool.feeRate);
+    const volume24hUsd = pool.stats['24h']?.volume ?? new Decimal(0);
     const fee24Usd = new Decimal(volume24hUsd).mul(lpFeeRate).toNumber();
     const tokensPrices = this.getTokenPrices(strategy, prices, collateralInfos);
 
+    const rewardsDecimals = new Map<Address, number>();
+    if (strategy.reward0Decimals.toNumber() !== 0) {
+      rewardsDecimals.set(address(pool.rewards[0]?.mint), strategy.reward0Decimals.toNumber());
+    }
+    if (strategy.reward1Decimals.toNumber() !== 0) {
+      rewardsDecimals.set(address(pool.rewards[1]?.mint), strategy.reward1Decimals.toNumber());
+    }
+    if (strategy.reward2Decimals.toNumber() !== 0) {
+      rewardsDecimals.set(address(pool.rewards[2]?.mint), strategy.reward2Decimals.toNumber());
+    }
     const apr = estimateAprsForPriceRange(
       pool,
       tokensPrices,
       fee24Usd,
       position.tickLowerIndex,
-      position.tickUpperIndex
+      position.tickUpperIndex,
+      rewardsDecimals
     );
 
-    const totalApr = new Decimal(apr.fee).add(apr.rewards[0]).add(apr.rewards[1]).add(apr.rewards[2]);
+    let totalApr = new Decimal(apr.fee);
+    for (const reward of apr.rewards) {
+      totalApr = totalApr.add(reward);
+    }
     const feeApr = new Decimal(apr.fee);
     const rewardsApr = apr.rewards.map((r) => new Decimal(r));
     return {
@@ -199,7 +250,10 @@ export class OrcaService {
       feeApy: aprToApy(feeApr, 365),
       rewardsApr,
       rewardsApy: rewardsApr.map((x) => aprToApy(x, 365)),
-      ...priceRange,
+      priceLower: new Decimal(priceRange.priceLower),
+      priceUpper: new Decimal(priceRange.priceUpper),
+      poolPrice: new Decimal(pool.price),
+      strategyOutOfRange: priceRange.strategyOutOfRange,
     };
   }
 
@@ -210,12 +264,8 @@ export class OrcaService {
     lowestTick?: number,
     highestTick?: number
   ): Promise<LiquidityDistribution> {
-    const orca = new OrcaWhirlpoolClient({
-      connection: this._legacyConnection,
-      network: this._orcaNetwork,
-    });
-    const poolData = await orca.getPool(pool);
-    if (!poolData) {
+    const whirlpool = await this.getOrcaWhirlpool(pool);
+    if (!whirlpool) {
       throw new Error(`Could not get pool data for Whirlpool ${pool}`);
     }
 
@@ -223,25 +273,28 @@ export class OrcaService {
     if (lowestTick) {
       lowestInitializedTick = lowestTick;
     } else {
-      lowestInitializedTick = await orca.pool.getLowestInitializedTickArrayTickIndex(pool, poolData.tickSpacing);
+      lowestInitializedTick = await getLowestInitializedTickArrayTickIndex(this._rpc, pool, whirlpool.tickSpacing);
     }
 
     let highestInitializedTick: number;
     if (highestTick) {
       highestInitializedTick = highestTick;
     } else {
-      highestInitializedTick = await orca.pool.getHighestInitializedTickArrayTickIndex(pool, poolData.tickSpacing);
+      highestInitializedTick = await getHighestInitializedTickArrayTickIndex(this._rpc, pool, whirlpool.tickSpacing);
     }
 
-    const orcaLiqDistribution = await orca.pool.getLiquidityDistribution(
+    const orcaLiqDistribution = await getLiquidityDistribution(
+      this._rpc,
       pool,
+      whirlpool,
       lowestInitializedTick,
-      highestInitializedTick
+      highestInitializedTick,
+      this._whirlpoolProgramId
     );
 
     const liqDistribution: LiquidityDistribution = {
-      currentPrice: poolData.price,
-      currentTickIndex: poolData.tickCurrentIndex,
+      currentPrice: new Decimal(whirlpool.price),
+      currentTickIndex: whirlpool.tickCurrentIndex,
       distribution: [],
     };
 
@@ -267,26 +320,15 @@ export class OrcaService {
     priceLower: Decimal,
     priceUpper: Decimal,
     prices: KaminoPrices,
-    whirlpools?: Whirlpool[]
+    rewardsDecimals: Map<Address, number>
   ): Promise<WhirlpoolAprApy> {
-    const orca = new OrcaWhirlpoolClient({
-      connection: this._legacyConnection,
-      network: this._orcaNetwork,
-    });
-
-    const pool = await orca.getPool(poolPubkey);
-    if (!whirlpools) {
-      ({ whirlpools } = await this.getOrcaWhirlpools());
-    }
-
-    const whirlpool = whirlpools?.find((x) => x.address === poolPubkey.toString());
-
-    if (!pool || !whirlpool) {
+    const pool = await this.getOrcaWhirlpool(poolPubkey);
+    if (!pool) {
       throw Error(`Could not get orca pool data for ${poolPubkey}`);
     }
 
     let strategyOutOfRange = false;
-    if (priceLower.gt(pool.price) || priceUpper.lt(pool.price)) {
+    if (priceLower.gt(new Decimal(pool.price)) || priceUpper.lt(new Decimal(pool.price))) {
       strategyOutOfRange = true;
     }
     if (strategyOutOfRange) {
@@ -294,7 +336,7 @@ export class OrcaService {
         priceLower,
         priceUpper,
         strategyOutOfRange,
-        poolPrice: pool.price,
+        poolPrice: new Decimal(pool.price),
         rewardsApy: [],
         rewardsApr: [],
         feeApy: ZERO,
@@ -304,21 +346,28 @@ export class OrcaService {
       };
     }
 
-    const lpFeeRate = pool.feePercentage;
-    const volume24hUsd = whirlpool?.volume?.day ?? new Decimal(0);
+    const lpFeeRate = pool.feeRate;
+    const volume24hUsd = pool?.stats?.['24h']?.volume ?? new Decimal(0);
     const fee24Usd = new Decimal(volume24hUsd).mul(lpFeeRate).toNumber();
     const tokensPrices = this.getPoolTokensPrices(pool, prices);
 
     const tickLowerIndex = getNearestValidTickIndexFromTickIndex(
-      priceToTickIndex(priceLower, pool.tokenDecimalsA, pool.tokenDecimalsB),
-      whirlpool.tickSpacing
+      priceToTickIndex(priceLower.toNumber(), pool.tokenA.decimals, pool.tokenB.decimals),
+      pool.tickSpacing
     );
     const tickUpperIndex = getNearestValidTickIndexFromTickIndex(
-      priceToTickIndex(priceUpper, pool.tokenDecimalsA, pool.tokenDecimalsB),
-      whirlpool.tickSpacing
+      priceToTickIndex(priceUpper.toNumber(), pool.tokenA.decimals, pool.tokenB.decimals),
+      pool.tickSpacing
     );
 
-    const apr = estimateAprsForPriceRange(pool, tokensPrices, fee24Usd, tickLowerIndex, tickUpperIndex);
+    const apr = estimateAprsForPriceRange(
+      pool,
+      tokensPrices,
+      fee24Usd,
+      tickLowerIndex,
+      tickUpperIndex,
+      rewardsDecimals
+    );
 
     const totalApr = new Decimal(apr.fee).add(apr.rewards[0]).add(apr.rewards[1]).add(apr.rewards[2]);
     const feeApr = new Decimal(apr.fee);
@@ -332,38 +381,26 @@ export class OrcaService {
       rewardsApy: rewardsApr.map((x) => aprToApy(x, 365)),
       priceLower,
       priceUpper,
-      poolPrice: pool.price,
+      poolPrice: new Decimal(pool.price),
       strategyOutOfRange,
     };
   }
 
-  async getGenericPoolInfo(poolPubkey: Address, whirlpools?: Whirlpool[]) {
-    const orca = new OrcaWhirlpoolClient({
-      connection: this._legacyConnection,
-      network: this._orcaNetwork,
-    });
-
-    const poolString = poolPubkey.toString();
-    const pool = await orca.getPool(poolPubkey);
-    if (!whirlpools) {
-      ({ whirlpools } = await this.getOrcaWhirlpools());
-    }
-
-    const whirlpool = whirlpools?.find((x) => x.address === poolString);
-
-    if (!pool || !whirlpool) {
-      throw Error(`Could not get orca pool data for ${poolString}`);
+  async getGenericPoolInfo(poolPubkey: Address) {
+    const pool = await this.getOrcaWhirlpool(poolPubkey);
+    if (!pool) {
+      throw Error(`Could not get orca pool data for ${poolPubkey.toString()}`);
     }
 
     const poolInfo: GenericPoolInfo = {
       dex: 'ORCA',
       address: poolPubkey,
-      tokenMintA: fromLegacyPublicKey(pool.tokenMintA),
-      tokenMintB: fromLegacyPublicKey(pool.tokenMintB),
-      price: pool.price,
-      feeRate: pool.feePercentage,
-      volumeOnLast7d: whirlpool.volume ? new Decimal(whirlpool.volume?.week) : undefined,
-      tvl: whirlpool.tvl ? new Decimal(whirlpool.tvl) : undefined,
+      tokenMintA: address(pool.tokenMintA),
+      tokenMintB: address(pool.tokenMintB),
+      price: new Decimal(pool.price),
+      feeRate: new Decimal(pool.feeRate),
+      volumeOnLast7d: pool.stats['7d'] ? new Decimal(pool.stats['7d'].volume) : undefined,
+      tvl: pool.tvlUsdc ? new Decimal(pool.tvlUsdc) : undefined,
       tickSpacing: new Decimal(pool.tickSpacing),
       // todo(Silviu): get real amount of positions
       positions: new Decimal(0),

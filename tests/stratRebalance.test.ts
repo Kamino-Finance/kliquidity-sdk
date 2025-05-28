@@ -36,11 +36,11 @@ import {
   PricePercentageWithResetRangeRebalanceMethod,
   TakeProfitMethod,
 } from '../src/utils/CreationParameters';
-import { priceToTickIndex } from '@orca-so/whirlpool-sdk';
 import { getMintDecimals } from '../src/utils';
 import { initEnv } from './runner/env';
 import { sendAndConfirmTx } from './runner/tx';
 import { setupStrategyLookupTable } from './runner/lut';
+import { priceToTickIndex } from '@orca-so/whirlpools-core';
 
 describe.skip('Kamino strategy creation SDK Tests', async () => {
   const cluster = 'mainnet-beta';
@@ -1376,7 +1376,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const tokenBDecimals = await getMintDecimals(kamino.getConnection(), tokenBMint);
 
     const poolPrice = new Decimal(await kamino.getPriceForPair(dex, tokenAMint, tokenBMint));
-    const startMidTick = new Decimal(priceToTickIndex(poolPrice, tokenADecimals, tokenBDecimals));
+    const startMidTick = new Decimal(priceToTickIndex(poolPrice.toNumber(), tokenADecimals, tokenBDecimals));
 
     const buildNewStrategyIxs = await kamino.getBuildStrategyIxns(
       dex,
