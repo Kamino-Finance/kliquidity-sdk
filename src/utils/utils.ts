@@ -19,18 +19,16 @@ import {
 import { RebalanceFieldInfo, RebalanceFieldsDict } from './types';
 import BN from 'bn.js';
 import { PoolPriceReferenceType, TwapPriceReferenceType } from './priceReferenceTypes';
-import { sqrtPriceX64ToPrice } from '@orca-so/whirlpool-sdk';
 import { U64_MAX } from '../constants/numericalValues';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib/raydium/clmm/utils/math';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
+import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
 
 export const DollarBasedMintingMethod = new Decimal(0);
 export const ProportionalMintingMethod = new Decimal(1);
 
 export const RebalanceParamOffset = new Decimal(256);
-
-export const ZERO_BN = new BN(0);
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -272,7 +270,7 @@ export function isVaultInitialized(vault: Address, decimals: BN): boolean {
 export function sqrtPriceToPrice(sqrtPrice: BN, dexNo: number, decimalsA: number, decimalsB: number): Decimal {
   const dex = numberToDex(dexNo);
   if (dex == 'ORCA') {
-    return sqrtPriceX64ToPrice(sqrtPrice, decimalsA, decimalsB);
+    return new Decimal(orcaSqrtPriceToPrice(BigInt(sqrtPrice.toString()), decimalsA, decimalsB));
   }
   if (dex == 'RAYDIUM') {
     return SqrtPriceMath.sqrtPriceX64ToPrice(sqrtPrice, decimalsA, decimalsB);

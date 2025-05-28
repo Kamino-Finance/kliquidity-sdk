@@ -1,6 +1,5 @@
 import { Address, IInstruction, address, TransactionSigner, Rpc, GetAccountInfoApi, Account } from '@solana/kit';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
-import { tickIndexToPrice } from '@orca-so/whirlpool-sdk';
 import Decimal from 'decimal.js';
 import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { getPriceOfBinByBinIdWithDecimals } from './meteora';
@@ -15,6 +14,7 @@ import {
 } from '@solana-program/token-2022';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { getSetComputeUnitLimitInstruction } from '@solana-program/compute-budget';
+import { tickIndexToPrice } from '@orca-so/whirlpools-core';
 
 export const SOL_MINTS = [
   address('So11111111111111111111111111111111111111111'),
@@ -99,9 +99,9 @@ export function getStrategyPriceRangeRaydium(
   tokenBDecimals: number
 ) {
   const { priceLower, priceUpper } = getPriceLowerUpper(tickLowerIndex, tickUpperIndex, tokenADecimals, tokenBDecimals);
-  const poolPrice = tickIndexToPrice(tickCurrent, tokenADecimals, tokenBDecimals);
+  const poolPrice = new Decimal(tickIndexToPrice(tickCurrent, tokenADecimals, tokenBDecimals));
   const strategyOutOfRange = poolPrice.lt(priceLower) || poolPrice.gt(priceUpper);
-  return { priceLower, poolPrice, priceUpper, strategyOutOfRange };
+  return { priceLower: new Decimal(priceLower), poolPrice, priceUpper: new Decimal(priceUpper), strategyOutOfRange };
 }
 
 export function getStrategyPriceRangeMeteora(
