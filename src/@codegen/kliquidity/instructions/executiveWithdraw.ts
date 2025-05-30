@@ -36,7 +36,8 @@ export interface ExecutiveWithdrawAccounts {
   poolTokenVaultB: Address
   tokenAMint: Address
   tokenBMint: Address
-  scopePrices: Address
+  scopePricesA: Address
+  scopePricesB: Address
   tokenInfos: Address
   tokenATokenProgram: Address
   tokenBTokenProgram: Address
@@ -75,7 +76,8 @@ export function executiveWithdraw(
     { address: accounts.poolTokenVaultB, role: 1 },
     { address: accounts.tokenAMint, role: 0 },
     { address: accounts.tokenBMint, role: 0 },
-    { address: accounts.scopePrices, role: 0 },
+    { address: accounts.scopePricesA, role: 0 },
+    { address: accounts.scopePricesB, role: 0 },
     { address: accounts.tokenInfos, role: 0 },
     { address: accounts.tokenATokenProgram, role: 0 },
     { address: accounts.tokenBTokenProgram, role: 0 },
