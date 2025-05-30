@@ -14,7 +14,6 @@ import { getFarmStakeIxs } from './utils/farms';
 import { fromLegacyTransactionInstruction } from '@solana/compat/';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
-import { getKeypair } from './utils/keypair';
 
 (async () => {
   // Create a new keypair for the user (in real world this is the wallet of the user who deposits into the strategy)
