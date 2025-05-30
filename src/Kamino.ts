@@ -411,6 +411,8 @@ export class Kamino {
 
   getConnection = () => this._rpc;
 
+  getLegacyConnection = () => this._legacyConnection;
+
   getProgramID = () => this._kliquidityProgramId;
 
   setGlobalConfig = (globalConfig: Address) => {

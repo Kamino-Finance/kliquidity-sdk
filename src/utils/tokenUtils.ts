@@ -52,7 +52,7 @@ export async function getAssociatedTokenAddress(
 
 export function createAssociatedTokenAccountInstruction(
   payer: TransactionSigner,
-  associatedToken: Address,
+  associatedTokenAddress: Address,
   owner: Address,
   mint: Address,
   programId: Address = TOKEN_PROGRAM_ADDRESS,
@@ -62,7 +62,7 @@ export function createAssociatedTokenAccountInstruction(
     {
       mint,
       owner,
-      ata: associatedToken,
+      ata: associatedTokenAddress,
       payer: payer,
       tokenProgram: programId,
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
