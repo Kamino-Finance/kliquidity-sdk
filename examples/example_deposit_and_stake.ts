@@ -1,36 +1,30 @@
 import Decimal from 'decimal.js';
+import { address, generateKeyPairSigner } from '@solana/kit';
 import {
-  address,
-  Address,
-  generateKeyPairSigner,
-  getAddressEncoder,
-  IInstruction,
-  isAddress,
-  Signature,
-  TransactionSigner,
-} from '@solana/kit';
-import {
+  createAssociatedTokenAccountInstruction,
   createComputeUnitLimitIx,
   getAssociatedTokenAddress,
   Kamino,
   StrategyWithAddress,
   U64_MAX,
 } from '@kamino-finance/kliquidity-sdk';
-import { getConnection, getLegacyConnection } from './utils/connection';
+import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
 import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
 import { getFarmStakeIxs } from './utils/farms';
-import { fromLegacyTransactionInstruction } from '@solana/compat/dist/types';
+import { fromLegacyTransactionInstruction } from '@solana/compat/';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
+import { getKeypair } from './utils/keypair';
 
-async () => {
+(async () => {
   // Create a new keypair for the user (in real world this is the wallet of the user who deposits into the strategy)
+  // to read from file you can use getKeypair()
   const keypair = await generateKeyPairSigner();
   // the strategy to deposit into
   const strategyWithFarm = address('BLP7UHUg1yNry94Qk3sM8pAfEyDhTZirwFghw9DoBjn7');
   // the amounts to deposit, in tokens
-  const amountA = new Decimal(0.01);
-  const amountB = new Decimal(0.01);
+  const amountA = new Decimal(0.5);
+  const amountB = new Decimal(0.5);
 
   const cluster = 'mainnet-beta';
   const kamino = new Kamino(cluster, getConnection(), getLegacyConnection());
@@ -47,18 +41,15 @@ async () => {
 
   const tx = [createComputeUnitLimitIx(1_400_000)];
 
-  // create the ATAs if needed
-  const createAtaIxs = await kamino.getCreateAssociatedTokenAccountInstructionsIfNotExist(
+  const sharesAta = await getAssociatedTokenAddress(strategyState.strategy.sharesMint, keypair.address);
+
+  const createAtaIx = createAssociatedTokenAccountInstruction(
     keypair,
-    strategyWithAddress,
-    null,
-    strategyState.strategy.tokenAMint,
-    null,
-    strategyState.strategy.tokenBMint,
-    null,
+    sharesAta,
+    keypair.address,
     strategyState.strategy.sharesMint
   );
-  tx.push(...createAtaIxs);
+  tx.push(createAtaIx);
 
   const depositIx = await kamino.deposit(strategyWithAddress, amountA, amountB, keypair);
   tx.push(depositIx);
@@ -75,7 +66,6 @@ async () => {
   }
 
   // optionally we can close the user shares ATA
-  const sharesAta = await getAssociatedTokenAddress(strategyState.strategy.sharesMint, keypair.address);
   const closeAtaIx = getCloseAccountInstruction({
     owner: keypair.address,
     account: sharesAta,
@@ -84,6 +74,15 @@ async () => {
   tx.push(closeAtaIx);
 
   // send the transaction using strategy's LUT so it fit in a single transaction
-  const wsConnection = 
-  await sendAndConfirmTx({ rpc: kamino.getConnection(), wsRpc: kamino.getWsConnection() }, keypair, tx);
-};
+  const signature = await sendAndConfirmTx(
+    { rpc: kamino.getConnection(), wsRpc: getWsConnection() },
+    keypair,
+    tx,
+    undefined,
+    [strategyState.strategy.strategyLookupTable]
+  );
+
+  console.log('signature', signature);
+})().catch(async (e) => {
+  console.error(e);
+});

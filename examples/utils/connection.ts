@@ -7,7 +7,9 @@ import {
   createSolanaRpcSubscriptions,
   DEFAULT_RPC_CONFIG,
   Rpc,
+  RpcSubscriptions,
   SolanaRpcApi,
+  SolanaRpcSubscriptionsApi,
 } from '@solana/kit';
 
 export function getLegacyConnection() {
@@ -27,4 +29,9 @@ export function getConnection(): Rpc<SolanaRpcApi> {
   return createRpc({ api, transport: createDefaultRpcTransport({ url: RPC_ENDPOINT }) });
 }
 
-export function 
+export function getWsConnection(): RpcSubscriptions<SolanaRpcSubscriptionsApi> {
+  const WS_ENDPOINT = getEnvOrThrow('WS_ENDPOINT');
+  console.log('WS_ENDPOINT:', WS_ENDPOINT);
+
+  return createSolanaRpcSubscriptions(WS_ENDPOINT);
+}
