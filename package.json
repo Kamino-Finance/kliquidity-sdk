@@ -1,6 +1,6 @@
 {
   "name": "@kamino-finance/kliquidity-sdk",
-  "version": "8.3.1",
+  "version": "8.3.2",
   "description": "Typescript SDK for interacting with the Kamino Liquidity (kliquidity) protocol",
   "repository": {
     "type": "git",
@@ -51,9 +51,9 @@
     "@hubbleprotocol/hubble-config": "^5.0.0",
     "@jup-ag/api": "6.0.39",
     "@kamino-finance/scope-sdk": "^9.0.0",
-    "@orca-so/whirlpools-core": "^2.0.0",
-    "@orca-so/whirlpools": "^2.0.0",
     "@orca-so/common-sdk": "^0.6.11",
+    "@orca-so/whirlpools": "^2.0.0",
+    "@orca-so/whirlpools-core": "^2.0.0",
     "@raydium-io/raydium-sdk-v2": "^0.1.126-alpha",
     "@solana-program/address-lookup-table": "^0.7.0",
     "@solana-program/compute-budget": "^0.7.0",
