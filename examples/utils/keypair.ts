@@ -1,7 +1,6 @@
 import { readFileSync } from 'fs';
 import { getEnvOrThrow } from './env';
-import { Keypair } from '@solana/web3.js';
-import { createKeyPairSignerFromBytes, createSignerFromKeyPair, TransactionSigner } from '@solana/kit';
+import { createKeyPairSignerFromBytes, TransactionSigner } from '@solana/kit';
 
 export async function getKeypair(): Promise<TransactionSigner> {
   const FILE_PATH = getEnvOrThrow('KEYPAIR_FILE');
