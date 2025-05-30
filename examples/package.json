@@ -1,0 +1,33 @@
+{
+  "name": "example-klend-sdk-client",
+  "description": "Example Typescript SDK client for interacting with the Kamino Lending (klend) protocol",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "author": "Kamino Finance",
+  "homepage": "https://kamino.finance",
+  "bugs": {
+    "url": "https://github.com/Kamino-Finance/klend-sdk/issues"
+  },
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "lint:fix": "yarn prettier --write .",
+    "deposit-and-stake": "tsx example_deposit_and_stake.ts"
+  },
+  "dependencies": {
+    "@kamino-finance/kliquidity-sdk": "link:../",
+    "@kamino-finance/farms-sdk": "^2.3.4",
+    "@solana/compat": "^2.1.0",
+    "@solana/kit": "^2.1.0",
+    "@solana/web3.js": "^1.98.0"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.6",
+    "@types/node": "^22.1.0",
+    "@types/node-fetch": "^2.6.7",
+    "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.1",
+    "typescript": "^5.4.5"
+  }
+}
