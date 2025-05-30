@@ -4,6 +4,8 @@
 
 - [How to run](#how-to-run)
   - [Setup](#setup)
+- [Examples](#examples)
+  - [Deposit and stake](#deposit-and-stake)
 
 ## How to run
 
@@ -20,7 +22,11 @@ export WS_ENDPOINT=YOUR_WS_ENDPOINT_HERE
 
 ## Examples
 
-### Deposit in strategy and stake shares in strategy's farm
+### Deposit and stake
+
+Deposit in strategy and stake shares in strategy's farm
+
+Example tx: <https://explorer.solana.com/tx/4cbd7Xzka1TnSBkxgH5Ex1ZsqGM4sNj2r1T9HzBHnsUj5a3kohKsK9tRsQKmvfVbrFD45Sh6WEz39ZM1gMEHLNVi>
 
 ```bash
 yarn deposit-and-stake
