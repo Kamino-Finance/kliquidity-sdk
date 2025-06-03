@@ -1,4 +1,4 @@
-import { Address, Rpc, GetProgramAccountsApi, Account, GetMultipleAccountsApi } from '@solana/kit';
+import { Address, Rpc, GetProgramAccountsApi, Account, GetMultipleAccountsApi, Base58EncodedBytes } from '@solana/kit';
 import { LUT_OWNER_KEY } from '../constants/pubkeys';
 import { SolanaCluster } from '@hubbleprotocol/hubble-config';
 import {
@@ -29,7 +29,7 @@ export async function getAllUserLookupTables(
         {
           memcmp: {
             offset: 22n,
-            bytes: user,
+            bytes: user.toString() as Base58EncodedBytes,
             encoding: 'base58',
           },
         },
