@@ -1,4 +1,4 @@
-import { address, Address, Rpc, SolanaRpcApi } from '@solana/kit';
+import { address, Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from '@solana/kit';
 import Decimal from 'decimal.js';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import {
@@ -256,7 +256,10 @@ export class MeteoraService {
     const rawPositions = await this._rpc
       .getProgramAccounts(METEORA_PROGRAM_ID, {
         commitment: 'confirmed',
-        filters: [{ dataSize: 8120n }, { memcmp: { bytes: pool, offset: 8n, encoding: 'base58' } }],
+        filters: [
+          { dataSize: 8120n },
+          { memcmp: { bytes: pool.toString() as Base58EncodedBytes, offset: 8n, encoding: 'base58' } },
+        ],
       })
       .send();
 
