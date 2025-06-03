@@ -1,4 +1,5 @@
 import {
+  AccountRole,
   address,
   Address,
   generateKeyPairSigner,
@@ -121,9 +122,27 @@ describe('Kamino SDK Tests', () => {
     const collateralInfo = await setUpCollateralInfo(env, kamino);
     await sleep(1000);
 
-    await updateCollateralInfoForToken(env, 1, USDH_SCOPE_CHAIN_ID, globalConfig, 'USDH', BigInt(1), tokenAMint);
+    await updateCollateralInfoForToken(
+      env,
+      1,
+      USDH_SCOPE_CHAIN_ID,
+      globalConfig,
+      'USDH',
+      BigInt(1),
+      tokenAMint,
+      fixtures.scopePrices
+    );
 
-    await updateCollateralInfoForToken(env, 0, USDC_SCOPE_CHAIN_ID, globalConfig, 'USDC', BigInt(1), tokenBMint);
+    await updateCollateralInfoForToken(
+      env,
+      0,
+      USDC_SCOPE_CHAIN_ID,
+      globalConfig,
+      'USDC',
+      BigInt(1),
+      tokenBMint,
+      fixtures.scopePrices
+    );
 
     await sleep(100);
     fixtures.tokenInfos = collateralInfo;
@@ -1927,9 +1946,10 @@ export async function setUpGlobalConfig(
     kamino,
     kamino.getGlobalConfig(),
     '0',
-    new GlobalConfigOption.ScopePriceId(),
+    new GlobalConfigOption.AddScopePriceId(),
     scopePrices.toString(),
-    'key'
+    'key',
+    scopePrices
   );
 
   return globalConfig.address;
@@ -1979,7 +1999,8 @@ export async function updateGlobalConfig(
   keyIndex: string,
   globalConfigOption: GlobalConfigOptionKind,
   flagValue: string,
-  flagValueType: string
+  flagValueType: string,
+  scopePrices?: Address
 ): Promise<Signature> {
   let value: bigint | Address | boolean;
   if (flagValueType == 'number') {
@@ -2012,7 +2033,13 @@ export async function updateGlobalConfig(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  const updateConfigIx = Instructions.updateGlobalConfig(args, accounts, kamino.getProgramID());
+  let updateConfigIx = Instructions.updateGlobalConfig(args, accounts, kamino.getProgramID());
+  if (scopePrices) {
+    updateConfigIx = {
+      ...updateConfigIx,
+      accounts: updateConfigIx.accounts?.concat({ address: scopePrices, role: AccountRole.READONLY }),
+    };
+  }
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateConfigIx]);
 
   console.log('Update Global Config ', globalConfigOption.toJSON(), sig);
@@ -2042,7 +2069,8 @@ export async function updateCollateralInfoForToken(
   globalConfig: Address,
   collateralToken: string,
   collInfoTwapId: bigint,
-  tokenMint: Address
+  tokenMint: Address,
+  scopePrices: Address
 ) {
   // Set Mint
   await updateCollateralInfo(env, globalConfig, collTokenIndex, new UpdateCollateralInfoMode.CollateralId(), tokenMint);
@@ -2054,6 +2082,15 @@ export async function updateCollateralInfoForToken(
     collTokenIndex,
     new UpdateCollateralInfoMode.UpdateName(),
     getCollInfoEncodedName(collateralToken)
+  );
+
+  // Set Scope Prices Feed
+  await updateCollateralInfo(
+    env,
+    globalConfig,
+    collTokenIndex,
+    new UpdateCollateralInfoMode.UpdateScopeFeed(),
+    scopePrices
   );
 
   // Set Twap

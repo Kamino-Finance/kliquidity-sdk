@@ -27,7 +27,7 @@ export interface GlobalConfigFields {
   blockEmergencySwap: number
   minWithdrawalFeeBps: BN
   scopeProgramId: Address
-  scopePriceId: Address
+  deprecated: Address
   swapRewardsDiscountBps: Array<BN>
   actionsAuthority: Address
   adminAuthority: Address
@@ -39,6 +39,7 @@ export interface GlobalConfigFields {
   minReferencePriceSlippageToleranceBps: BN
   actionsAfterRebalanceDelaySeconds: BN
   treasuryFeeVaultReceiver: Address
+  scopePriceIds: Array<Address>
   padding: Array<BN>
 }
 
@@ -54,7 +55,7 @@ export interface GlobalConfigJSON {
   blockEmergencySwap: number
   minWithdrawalFeeBps: string
   scopeProgramId: string
-  scopePriceId: string
+  deprecated: string
   swapRewardsDiscountBps: Array<string>
   actionsAuthority: string
   adminAuthority: string
@@ -66,6 +67,7 @@ export interface GlobalConfigJSON {
   minReferencePriceSlippageToleranceBps: string
   actionsAfterRebalanceDelaySeconds: string
   treasuryFeeVaultReceiver: string
+  scopePriceIds: Array<string>
   padding: Array<string>
 }
 
@@ -81,7 +83,7 @@ export class GlobalConfig {
   readonly blockEmergencySwap: number
   readonly minWithdrawalFeeBps: BN
   readonly scopeProgramId: Address
-  readonly scopePriceId: Address
+  readonly deprecated: Address
   readonly swapRewardsDiscountBps: Array<BN>
   readonly actionsAuthority: Address
   readonly adminAuthority: Address
@@ -93,6 +95,7 @@ export class GlobalConfig {
   readonly minReferencePriceSlippageToleranceBps: BN
   readonly actionsAfterRebalanceDelaySeconds: BN
   readonly treasuryFeeVaultReceiver: Address
+  readonly scopePriceIds: Array<Address>
   readonly padding: Array<BN>
 
   static readonly discriminator = Buffer.from([
@@ -111,7 +114,7 @@ export class GlobalConfig {
     borsh.u32("blockEmergencySwap"),
     borsh.u64("minWithdrawalFeeBps"),
     borshAddress("scopeProgramId"),
-    borshAddress("scopePriceId"),
+    borshAddress("deprecated"),
     borsh.array(borsh.u64(), 256, "swapRewardsDiscountBps"),
     borshAddress("actionsAuthority"),
     borshAddress("adminAuthority"),
@@ -123,7 +126,8 @@ export class GlobalConfig {
     borsh.u64("minReferencePriceSlippageToleranceBps"),
     borsh.u64("actionsAfterRebalanceDelaySeconds"),
     borshAddress("treasuryFeeVaultReceiver"),
-    borsh.array(borsh.u64(), 2035, "padding"),
+    borsh.array(borshAddress(), 16, "scopePriceIds"),
+    borsh.array(borsh.u64(), 1971, "padding"),
   ])
 
   constructor(fields: GlobalConfigFields) {
@@ -138,7 +142,7 @@ export class GlobalConfig {
     this.blockEmergencySwap = fields.blockEmergencySwap
     this.minWithdrawalFeeBps = fields.minWithdrawalFeeBps
     this.scopeProgramId = fields.scopeProgramId
-    this.scopePriceId = fields.scopePriceId
+    this.deprecated = fields.deprecated
     this.swapRewardsDiscountBps = fields.swapRewardsDiscountBps
     this.actionsAuthority = fields.actionsAuthority
     this.adminAuthority = fields.adminAuthority
@@ -153,6 +157,7 @@ export class GlobalConfig {
     this.actionsAfterRebalanceDelaySeconds =
       fields.actionsAfterRebalanceDelaySeconds
     this.treasuryFeeVaultReceiver = fields.treasuryFeeVaultReceiver
+    this.scopePriceIds = fields.scopePriceIds
     this.padding = fields.padding
   }
 
@@ -211,7 +216,7 @@ export class GlobalConfig {
       blockEmergencySwap: dec.blockEmergencySwap,
       minWithdrawalFeeBps: dec.minWithdrawalFeeBps,
       scopeProgramId: dec.scopeProgramId,
-      scopePriceId: dec.scopePriceId,
+      deprecated: dec.deprecated,
       swapRewardsDiscountBps: dec.swapRewardsDiscountBps,
       actionsAuthority: dec.actionsAuthority,
       adminAuthority: dec.adminAuthority,
@@ -224,6 +229,7 @@ export class GlobalConfig {
         dec.minReferencePriceSlippageToleranceBps,
       actionsAfterRebalanceDelaySeconds: dec.actionsAfterRebalanceDelaySeconds,
       treasuryFeeVaultReceiver: dec.treasuryFeeVaultReceiver,
+      scopePriceIds: dec.scopePriceIds,
       padding: dec.padding,
     })
   }
@@ -241,7 +247,7 @@ export class GlobalConfig {
       blockEmergencySwap: this.blockEmergencySwap,
       minWithdrawalFeeBps: this.minWithdrawalFeeBps.toString(),
       scopeProgramId: this.scopeProgramId,
-      scopePriceId: this.scopePriceId,
+      deprecated: this.deprecated,
       swapRewardsDiscountBps: this.swapRewardsDiscountBps.map((item) =>
         item.toString()
       ),
@@ -258,6 +264,7 @@ export class GlobalConfig {
       actionsAfterRebalanceDelaySeconds:
         this.actionsAfterRebalanceDelaySeconds.toString(),
       treasuryFeeVaultReceiver: this.treasuryFeeVaultReceiver,
+      scopePriceIds: this.scopePriceIds,
       padding: this.padding.map((item) => item.toString()),
     }
   }
@@ -275,7 +282,7 @@ export class GlobalConfig {
       blockEmergencySwap: obj.blockEmergencySwap,
       minWithdrawalFeeBps: new BN(obj.minWithdrawalFeeBps),
       scopeProgramId: address(obj.scopeProgramId),
-      scopePriceId: address(obj.scopePriceId),
+      deprecated: address(obj.deprecated),
       swapRewardsDiscountBps: obj.swapRewardsDiscountBps.map(
         (item) => new BN(item)
       ),
@@ -295,6 +302,7 @@ export class GlobalConfig {
         obj.actionsAfterRebalanceDelaySeconds
       ),
       treasuryFeeVaultReceiver: address(obj.treasuryFeeVaultReceiver),
+      scopePriceIds: obj.scopePriceIds.map((item) => address(item)),
       padding: obj.padding.map((item) => new BN(item)),
     })
   }

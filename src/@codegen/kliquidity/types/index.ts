@@ -206,12 +206,13 @@ export type GlobalConfigOptionKind =
   | GlobalConfigOption.BlockLocalAdmin
   | GlobalConfigOption.UpdateTokenInfos
   | GlobalConfigOption.ScopeProgramId
-  | GlobalConfigOption.ScopePriceId
+  | GlobalConfigOption.UpdateScopePriceId
   | GlobalConfigOption.MinPerformanceFeeBps
   | GlobalConfigOption.MinSwapUnevenSlippageToleranceBps
   | GlobalConfigOption.MinReferencePriceSlippageToleranceBps
   | GlobalConfigOption.ActionsAfterRebalanceDelaySeconds
   | GlobalConfigOption.TreasuryFeeVaultReceiver
+  | GlobalConfigOption.AddScopePriceId
 export type GlobalConfigOptionJSON =
   | GlobalConfigOption.EmergencyModeJSON
   | GlobalConfigOption.BlockDepositJSON
@@ -230,12 +231,13 @@ export type GlobalConfigOptionJSON =
   | GlobalConfigOption.BlockLocalAdminJSON
   | GlobalConfigOption.UpdateTokenInfosJSON
   | GlobalConfigOption.ScopeProgramIdJSON
-  | GlobalConfigOption.ScopePriceIdJSON
+  | GlobalConfigOption.UpdateScopePriceIdJSON
   | GlobalConfigOption.MinPerformanceFeeBpsJSON
   | GlobalConfigOption.MinSwapUnevenSlippageToleranceBpsJSON
   | GlobalConfigOption.MinReferencePriceSlippageToleranceBpsJSON
   | GlobalConfigOption.ActionsAfterRebalanceDelaySecondsJSON
   | GlobalConfigOption.TreasuryFeeVaultReceiverJSON
+  | GlobalConfigOption.AddScopePriceIdJSON
 
 export { StrategyConfigOption }
 
@@ -432,6 +434,7 @@ export type UpdateCollateralInfoModeKind =
   | UpdateCollateralInfoMode.UpdateDisabled
   | UpdateCollateralInfoMode.UpdateStakingRateChain
   | UpdateCollateralInfoMode.UpdateMaxIgnorableAmountAsReward
+  | UpdateCollateralInfoMode.UpdateScopeFeed
 export type UpdateCollateralInfoModeJSON =
   | UpdateCollateralInfoMode.CollateralIdJSON
   | UpdateCollateralInfoMode.LowerHeuristicJSON
@@ -446,6 +449,7 @@ export type UpdateCollateralInfoModeJSON =
   | UpdateCollateralInfoMode.UpdateDisabledJSON
   | UpdateCollateralInfoMode.UpdateStakingRateChainJSON
   | UpdateCollateralInfoMode.UpdateMaxIgnorableAmountAsRewardJSON
+  | UpdateCollateralInfoMode.UpdateScopeFeedJSON
 
 export { BalanceStatus }
 

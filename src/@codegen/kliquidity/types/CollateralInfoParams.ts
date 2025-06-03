@@ -18,6 +18,7 @@ export interface CollateralInfoParamsFields {
   maxIgnorableAmountAsReward: BN
   disabled: number
   scopeStakingRateChain: Array<number>
+  scopeFeed: Address
 }
 
 export interface CollateralInfoParamsJSON {
@@ -34,6 +35,7 @@ export interface CollateralInfoParamsJSON {
   maxIgnorableAmountAsReward: string
   disabled: number
   scopeStakingRateChain: Array<number>
+  scopeFeed: string
 }
 
 export class CollateralInfoParams {
@@ -50,6 +52,7 @@ export class CollateralInfoParams {
   readonly maxIgnorableAmountAsReward: BN
   readonly disabled: number
   readonly scopeStakingRateChain: Array<number>
+  readonly scopeFeed: Address
 
   constructor(fields: CollateralInfoParamsFields) {
     this.mint = fields.mint
@@ -65,6 +68,7 @@ export class CollateralInfoParams {
     this.maxIgnorableAmountAsReward = fields.maxIgnorableAmountAsReward
     this.disabled = fields.disabled
     this.scopeStakingRateChain = fields.scopeStakingRateChain
+    this.scopeFeed = fields.scopeFeed
   }
 
   static layout(property?: string) {
@@ -83,6 +87,7 @@ export class CollateralInfoParams {
         borsh.u64("maxIgnorableAmountAsReward"),
         borsh.u8("disabled"),
         borsh.array(borsh.u16(), 4, "scopeStakingRateChain"),
+        borshAddress("scopeFeed"),
       ],
       property
     )
@@ -104,6 +109,7 @@ export class CollateralInfoParams {
       maxIgnorableAmountAsReward: obj.maxIgnorableAmountAsReward,
       disabled: obj.disabled,
       scopeStakingRateChain: obj.scopeStakingRateChain,
+      scopeFeed: obj.scopeFeed,
     })
   }
 
@@ -122,6 +128,7 @@ export class CollateralInfoParams {
       maxIgnorableAmountAsReward: fields.maxIgnorableAmountAsReward,
       disabled: fields.disabled,
       scopeStakingRateChain: fields.scopeStakingRateChain,
+      scopeFeed: fields.scopeFeed,
     }
   }
 
@@ -140,6 +147,7 @@ export class CollateralInfoParams {
       maxIgnorableAmountAsReward: this.maxIgnorableAmountAsReward.toString(),
       disabled: this.disabled,
       scopeStakingRateChain: this.scopeStakingRateChain,
+      scopeFeed: this.scopeFeed,
     }
   }
 
@@ -158,6 +166,7 @@ export class CollateralInfoParams {
       maxIgnorableAmountAsReward: new BN(obj.maxIgnorableAmountAsReward),
       disabled: obj.disabled,
       scopeStakingRateChain: obj.scopeStakingRateChain,
+      scopeFeed: address(obj.scopeFeed),
     })
   }
 
