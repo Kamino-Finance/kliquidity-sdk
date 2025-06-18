@@ -446,7 +446,7 @@ let nonPeggedStrats = await kamino.getAllStrategiesWithFilters(filters);
 * `yarn codegen:kliquidity`
 
 ## Setup localnet 
-* Ensure `deps` contains the correct `.so` you want to test against (in `deps/kliquidity/kliquidity.so`). Either build it from the main repo or dump it from mainnet
+* Ensure `deps` contains the correct `.so` you want to test against (in `deps/kliquidity/kliquidity.so`). Either build it from the main repo (using CLUSTER=devnet) or dump it from devnet
 * `yarn start-validator`
 
 ## Run tests
