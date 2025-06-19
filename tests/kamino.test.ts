@@ -1,11 +1,8 @@
 import {
-  AccountRole,
   address,
   Address,
   generateKeyPairSigner,
-  getAddressEncoder,
   IInstruction,
-  isAddress,
   Signature,
   TransactionSigner,
 } from '@solana/kit';
@@ -1915,13 +1912,7 @@ export async function setUpGlobalConfig(
     BigInt(GlobalConfig.layout.span + 8)
   );
 
-  const accounts: Instructions.InitializeGlobalConfigAccounts = {
-    adminAuthority: env.admin,
-    globalConfig: globalConfig.address,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-  };
-
-  const initializeGlobalConfigIx = Instructions.initializeGlobalConfig(accounts, kamino.getProgramID());
+  const initializeGlobalConfigIx = kamino.initializeGlobalConfig(env.admin, globalConfig.address);
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createGlobalConfigIx, initializeGlobalConfigIx]);
 
@@ -1948,8 +1939,7 @@ export async function setUpGlobalConfig(
     '0',
     new GlobalConfigOption.AddScopePriceId(),
     scopePrices.toString(),
-    'key',
-    scopePrices
+    'key'
   );
 
   return globalConfig.address;
@@ -1999,8 +1989,7 @@ export async function updateGlobalConfig(
   keyIndex: string,
   globalConfigOption: GlobalConfigOptionKind,
   flagValue: string,
-  flagValueType: string,
-  scopePrices?: Address
+  flagValueType: string
 ): Promise<Signature> {
   let value: bigint | Address | boolean;
   if (flagValueType == 'number') {
@@ -2021,45 +2010,11 @@ export async function updateGlobalConfig(
   }
 
   const index = Number.parseInt(keyIndex);
-  const formatted_value = getGlobalConfigValue(value);
-  const args: Instructions.UpdateGlobalConfigArgs = {
-    key: globalConfigOption.discriminator,
-    index: index,
-    value: formatted_value,
-  };
-  const accounts: Instructions.UpdateGlobalConfigAccounts = {
-    adminAuthority: env.admin,
-    globalConfig: globalConfig,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-  };
-
-  let updateConfigIx = Instructions.updateGlobalConfig(args, accounts, kamino.getProgramID());
-  if (scopePrices) {
-    updateConfigIx = {
-      ...updateConfigIx,
-      accounts: updateConfigIx.accounts?.concat({ address: scopePrices, role: AccountRole.READONLY }),
-    };
-  }
+  const updateConfigIx = kamino.updateGlobalConfig(env.admin, globalConfig, globalConfigOption, index, value);
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateConfigIx]);
 
   console.log('Update Global Config ', globalConfigOption.toJSON(), sig);
   return sig;
-}
-
-export function getGlobalConfigValue(value: Address | bigint | boolean): number[] {
-  let buffer: Buffer;
-  if (typeof value === 'string' && isAddress(value)) {
-    buffer = Buffer.from(getAddressEncoder().encode(value));
-  } else if (typeof value == 'boolean') {
-    buffer = Buffer.alloc(32);
-    value ? buffer.writeUInt8(1, 0) : buffer.writeUInt8(0, 0);
-  } else if (typeof value == 'bigint') {
-    buffer = Buffer.alloc(32);
-    buffer.writeBigUInt64LE(value); // Because we send 32 bytes and a u64 has 8 bytes, we write it in LE
-  } else {
-    throw Error('wrong type for value');
-  }
-  return [...buffer];
 }
 
 export async function updateCollateralInfoForToken(

@@ -135,6 +135,8 @@ import {
   executiveWithdraw,
   ExecutiveWithdrawAccounts,
   ExecutiveWithdrawArgs,
+  initializeGlobalConfig,
+  InitializeGlobalConfigAccounts,
   initializeStrategy,
   InitializeStrategyAccounts,
   InitializeStrategyArgs,
@@ -149,6 +151,9 @@ import {
   singleTokenDepositWithMin,
   SingleTokenDepositWithMinAccounts,
   SingleTokenDepositWithMinArgs,
+  updateGlobalConfig,
+  UpdateGlobalConfigAccounts,
+  UpdateGlobalConfigArgs,
   updateRewardMapping,
   UpdateRewardMappingAccounts,
   UpdateRewardMappingArgs,
@@ -169,6 +174,8 @@ import { FRONTEND_KAMINO_STRATEGY_URL, METADATA_PROGRAM_ID, U64_MAX } from './co
 import {
   CollateralInfo,
   ExecutiveWithdrawActionKind,
+  GlobalConfigOption,
+  GlobalConfigOptionKind,
   KaminoRewardInfo,
   RebalanceType,
   RebalanceTypeKind,
@@ -513,14 +520,14 @@ export class Kamino {
   };
 
   /**
-   * Retunrs what type of rebalance method the fields represent
+   * Returns what type of rebalance method the fields represent
    */
   getRebalanceTypeFromRebalanceFields = (rebalanceFields: RebalanceFieldInfo[]): RebalanceTypeKind => {
     return getRebalanceTypeFromRebalanceFields(rebalanceFields);
   };
 
   /**
-   * Retunrs the rebalance method the fields represent with more details (description, enabled, etc)
+   * Returns the rebalance method the fields represent with more details (description, enabled, etc)
    */
   getRebalanceMethodFromRebalanceFields = (rebalanceFields: RebalanceFieldInfo[]): RebalanceMethod => {
     return getRebalanceMethodFromRebalanceFields(rebalanceFields);
@@ -3089,6 +3096,91 @@ export class Kamino {
       }),
     ]);
     return { treasuryFeeTokenAVault, treasuryFeeTokenBVault, treasuryFeeVaultAuthority };
+  };
+
+  private getGlobalConfigValue = (value: Address | bigint | boolean): number[] => {
+    let buffer: Buffer;
+    if (typeof value === 'string' && isAddress(value)) {
+      buffer = Buffer.from(getAddressEncoder().encode(value));
+    } else if (typeof value == 'boolean') {
+      buffer = Buffer.alloc(32);
+      value ? buffer.writeUInt8(1, 0) : buffer.writeUInt8(0, 0);
+    } else if (typeof value == 'bigint') {
+      buffer = Buffer.alloc(32);
+      buffer.writeBigUInt64LE(value); // Because we send 32 bytes and a u64 has 8 bytes, we write it in LE
+    } else {
+      throw Error('wrong type for value');
+    }
+    return [...buffer];
+  };
+
+  /**
+   * Get a transaction instruction to initialize global config
+   * @param owner public key of the strategy owner (admin authority)
+   * @param globalConfig the public key of the global config
+   * @returns transaction instruction
+   */
+  initializeGlobalConfig = (owner: TransactionSigner, globalConfig: Address): IInstruction => {
+    const accounts: InitializeGlobalConfigAccounts = {
+      adminAuthority: owner,
+      globalConfig: globalConfig,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+    };
+
+    const initializeGlobalConfigIx = initializeGlobalConfig(accounts, this.getProgramID());
+    return initializeGlobalConfigIx;
+  };
+
+  /**
+   * Get a transaction instruction to update global config with specified params
+   * @param owner public key of the strategy owner (admin authority)
+   * @param globalConfig the public key of the global config
+   * @param globalConfigOption the kind of update to make
+   * @param index if the kind of update we are making involves an array, the index at which we want to update
+   * @param value the value we want to update with
+   * @returns transaction instruction
+   */
+  updateGlobalConfig = (
+    owner: TransactionSigner,
+    globalConfig: Address,
+    globalConfigOption: GlobalConfigOptionKind,
+    index: number,
+    value: bigint | Address | boolean
+  ): IInstruction => {
+    const formattedValue = this.getGlobalConfigValue(value);
+    const args: UpdateGlobalConfigArgs = {
+      key: globalConfigOption.discriminator,
+      index,
+      value: formattedValue,
+    };
+    const accounts: UpdateGlobalConfigAccounts = {
+      adminAuthority: owner,
+      globalConfig: globalConfig,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+    };
+
+    let updateConfigIx = updateGlobalConfig(args, accounts, this.getProgramID());
+
+    // If we add or update a scope price feed, we need to pass the scope feed account
+    // as a remaining account
+    let scopePrices: Address | undefined = undefined;
+    if (
+      globalConfigOption instanceof GlobalConfigOption.UpdateScopePriceId ||
+      globalConfigOption instanceof GlobalConfigOption.AddScopePriceId
+    ) {
+      // This condition is always true in this case, but make compiler happy
+      if (typeof value === 'string' && isAddress(value)) {
+        scopePrices = value;
+      }
+    }
+    if (scopePrices) {
+      updateConfigIx = {
+        ...updateConfigIx,
+        accounts: updateConfigIx.accounts?.concat({ address: scopePrices, role: AccountRole.READONLY }),
+      };
+    }
+
+    return updateConfigIx;
   };
 
   /**
