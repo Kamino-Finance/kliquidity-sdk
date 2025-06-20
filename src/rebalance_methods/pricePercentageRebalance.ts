@@ -5,8 +5,7 @@ import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { Dex, readBigUint128LE } from '../utils';
 import { upsertManyRebalanceFieldInfos } from './utils';
-import { sqrtPriceX64ToPrice } from '@orca-so/whirlpool-sdk';
-import BN from 'bn.js';
+import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
 import { getPriceRangeFromPriceAndDiffBPS } from './math_utils';
 import { getPriceFromQ64Price } from '../utils/meteora';
 
@@ -131,11 +130,19 @@ export function readPricePercentageRebalanceStateFromStrategy(
   let lowerPrice: Decimal, upperPrice: Decimal;
 
   if (dex == 'ORCA') {
-    lowerPrice = sqrtPriceX64ToPrice(new BN(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
-    upperPrice = sqrtPriceX64ToPrice(new BN(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    lowerPrice = new Decimal(
+      orcaSqrtPriceToPrice(BigInt(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals)
+    );
+    upperPrice = new Decimal(
+      orcaSqrtPriceToPrice(BigInt(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals)
+    );
   } else if (dex == 'RAYDIUM') {
-    lowerPrice = sqrtPriceX64ToPrice(new BN(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
-    upperPrice = sqrtPriceX64ToPrice(new BN(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    lowerPrice = new Decimal(
+      orcaSqrtPriceToPrice(BigInt(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals)
+    );
+    upperPrice = new Decimal(
+      orcaSqrtPriceToPrice(BigInt(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals)
+    );
   } else if (dex == 'METEORA') {
     lowerPrice = getPriceFromQ64Price(new Decimal(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
     upperPrice = getPriceFromQ64Price(new Decimal(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);

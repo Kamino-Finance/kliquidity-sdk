@@ -1,4 +1,4 @@
-import { Address, Rpc, SolanaRpcApi } from '@solana/kit';
+import { Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from '@solana/kit';
 import {
   LiquidityDistribution as RaydiumLiquidityDistribuion,
   Pool,
@@ -319,7 +319,13 @@ export class RaydiumService {
         commitment: 'confirmed',
         filters: [
           { dataSize: BigInt(PositionInfoLayout.span) },
-          { memcmp: { bytes: pool, offset: BigInt(PositionInfoLayout.offsetOf('poolId')), encoding: 'base58' } },
+          {
+            memcmp: {
+              bytes: pool.toString() as Base58EncodedBytes,
+              offset: BigInt(PositionInfoLayout.offsetOf('poolId')),
+              encoding: 'base58',
+            },
+          },
         ],
       })
       .send();

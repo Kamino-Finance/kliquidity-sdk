@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
 import { Dex, readPriceOption } from '../utils';
-import { priceToTickIndex, sqrtPriceX64ToPrice, tickIndexToPrice } from '@orca-so/whirlpool-sdk';
+import { priceToTickIndex, sqrtPriceToPrice as orcaSqrtPriceToPrice, tickIndexToPrice } from '@orca-so/whirlpools-core';
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { upsertManyRebalanceFieldInfos } from './utils';
@@ -138,20 +138,24 @@ export function getPositionRangeFromAutodriftParams(
   const upperTickIndex = startMidTick.add(ticksAboveMid);
 
   if (dex == 'ORCA') {
-    const lowerPrice = tickIndexToPrice(lowerTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
-    const upperPrice = tickIndexToPrice(upperTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
+    const lowerPrice = new Decimal(tickIndexToPrice(lowerTickIndex.toNumber(), tokenADecimals, tokenBDecimals));
+    const upperPrice = new Decimal(tickIndexToPrice(upperTickIndex.toNumber(), tokenADecimals, tokenBDecimals));
     return { lowerPrice, upperPrice };
   } else if (dex == 'RAYDIUM') {
-    const lowerPrice = sqrtPriceX64ToPrice(
-      SqrtPriceMath.getSqrtPriceX64FromTick(lowerTickIndex.toNumber()),
-      tokenADecimals,
-      tokenBDecimals
+    const lowerPrice = new Decimal(
+      SqrtPriceMath.sqrtPriceX64ToPrice(
+        SqrtPriceMath.getSqrtPriceX64FromTick(lowerTickIndex.toNumber()),
+        tokenADecimals,
+        tokenBDecimals
+      )
     );
 
-    const upperPrice = sqrtPriceX64ToPrice(
-      SqrtPriceMath.getSqrtPriceX64FromTick(upperTickIndex.toNumber()),
-      tokenADecimals,
-      tokenBDecimals
+    const upperPrice = new Decimal(
+      SqrtPriceMath.sqrtPriceX64ToPrice(
+        SqrtPriceMath.getSqrtPriceX64FromTick(upperTickIndex.toNumber()),
+        tokenADecimals,
+        tokenBDecimals
+      )
     );
 
     return { lowerPrice, upperPrice };
@@ -184,7 +188,7 @@ export function getDefaultAutodriftRebalanceFieldInfos(
   tokenBDecimals: number,
   tickSpacing: number
 ): RebalanceFieldInfo[] {
-  const currentTickIndex = priceToTickIndex(price, tokenADecimals, tokenBDecimals);
+  const currentTickIndex = priceToTickIndex(price.toNumber(), tokenADecimals, tokenBDecimals);
   const startMidTick = new Decimal(currentTickIndex);
 
   return getAutodriftRebalanceFieldInfos(
@@ -262,19 +266,23 @@ export function readAutodriftRebalanceStateFromStrategy(
 
   let lowerPrice: Decimal, upperPrice: Decimal;
   if (dex == 'ORCA') {
-    lowerPrice = tickIndexToPrice(lowerTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
-    upperPrice = tickIndexToPrice(upperTickIndex.toNumber(), tokenADecimals, tokenBDecimals);
+    lowerPrice = new Decimal(tickIndexToPrice(lowerTickIndex.toNumber(), tokenADecimals, tokenBDecimals));
+    upperPrice = new Decimal(tickIndexToPrice(upperTickIndex.toNumber(), tokenADecimals, tokenBDecimals));
   } else if (dex == 'RAYDIUM') {
-    lowerPrice = sqrtPriceX64ToPrice(
-      SqrtPriceMath.getSqrtPriceX64FromTick(lowerTickIndex.toNumber()),
-      tokenADecimals,
-      tokenBDecimals
+    lowerPrice = new Decimal(
+      orcaSqrtPriceToPrice(
+        BigInt(SqrtPriceMath.getSqrtPriceX64FromTick(lowerTickIndex.toNumber()).toString()),
+        tokenADecimals,
+        tokenBDecimals
+      )
     );
 
-    upperPrice = sqrtPriceX64ToPrice(
-      SqrtPriceMath.getSqrtPriceX64FromTick(upperTickIndex.toNumber()),
-      tokenADecimals,
-      tokenBDecimals
+    upperPrice = new Decimal(
+      orcaSqrtPriceToPrice(
+        BigInt(SqrtPriceMath.getSqrtPriceX64FromTick(upperTickIndex.toNumber()).toString()),
+        tokenADecimals,
+        tokenBDecimals
+      )
     );
   } else if (dex == 'METEORA') {
     lowerPrice = getPriceOfBinByBinIdWithDecimals(
