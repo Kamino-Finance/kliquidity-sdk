@@ -38,7 +38,8 @@ export interface SingleTokenDepositWithMinAccounts {
   userSharesAta: Address
   sharesMint: Address
   sharesMintAuthority: Address
-  scopePrices: Address
+  scopePricesA: Address
+  scopePricesB: Address
   tokenInfos: Address
   tokenProgram: Address
   tokenATokenProgram: Address
@@ -74,7 +75,8 @@ export function singleTokenDepositWithMin(
     { address: accounts.userSharesAta, role: 1 },
     { address: accounts.sharesMint, role: 1 },
     { address: accounts.sharesMintAuthority, role: 0 },
-    { address: accounts.scopePrices, role: 0 },
+    { address: accounts.scopePricesA, role: 0 },
+    { address: accounts.scopePricesB, role: 0 },
     { address: accounts.tokenInfos, role: 0 },
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.tokenATokenProgram, role: 0 },

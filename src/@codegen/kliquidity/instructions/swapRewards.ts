@@ -41,7 +41,9 @@ export interface SwapRewardsAccounts {
   userTokenAAta: Address
   userTokenBAta: Address
   userRewardTokenAccount: Address
-  scopePrices: Address
+  scopePricesA: Address
+  scopePricesB: Address
+  scopePricesReward: Address
   tokenInfos: Address
   systemProgram: Address
   tokenATokenProgram: Address
@@ -81,7 +83,9 @@ export function swapRewards(
     { address: accounts.userTokenAAta, role: 1 },
     { address: accounts.userTokenBAta, role: 1 },
     { address: accounts.userRewardTokenAccount, role: 1 },
-    { address: accounts.scopePrices, role: 0 },
+    { address: accounts.scopePricesA, role: 0 },
+    { address: accounts.scopePricesB, role: 0 },
+    { address: accounts.scopePricesReward, role: 0 },
     { address: accounts.tokenInfos, role: 0 },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.tokenATokenProgram, role: 0 },

@@ -818,7 +818,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -1127,7 +1132,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -1277,7 +1287,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -1415,7 +1430,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -1718,7 +1738,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -2038,7 +2063,17 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesReward",
           "isMut": false,
           "isSigner": false
         },
@@ -2236,7 +2271,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -2387,7 +2427,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -2493,7 +2538,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -2617,7 +2667,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -2774,7 +2829,12 @@
           "isSigner": false
         },
         {
-          "name": "scopePrices",
+          "name": "scopePricesA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "scopePricesB",
           "isMut": false,
           "isSigner": false
         },
@@ -3778,11 +3838,11 @@
             "type": "u64"
           },
           {
-            "name": "scopePrices",
+            "name": "deprecated2",
             "type": "publicKey"
           },
           {
-            "name": "deprecated2",
+            "name": "deprecated3",
             "type": "publicKey"
           },
           {
@@ -4162,7 +4222,7 @@
             "type": "publicKey"
           },
           {
-            "name": "scopePriceId",
+            "name": "deprecated",
             "type": "publicKey"
           },
           {
@@ -4214,9 +4274,15 @@
             "type": "publicKey"
           },
           {
+            "name": "scopePriceIds",
+            "type": {
+              "array": ["publicKey", 16]
+            }
+          },
+          {
             "name": "padding",
             "type": {
-              "array": ["u64", 2035]
+              "array": ["u64", 1971]
             }
           }
         ]
@@ -4490,9 +4556,13 @@
             }
           },
           {
+            "name": "scopeFeed",
+            "type": "publicKey"
+          },
+          {
             "name": "padding",
             "type": {
-              "array": ["u64", 8]
+              "array": ["u64", 4]
             }
           }
         ]
@@ -4562,6 +4632,10 @@
             "type": {
               "array": ["u16", 4]
             }
+          },
+          {
+            "name": "scopeFeed",
+            "type": "publicKey"
           }
         ]
       }
@@ -5117,7 +5191,7 @@
             "name": "ScopeProgramId"
           },
           {
-            "name": "ScopePriceId"
+            "name": "UpdateScopePriceId"
           },
           {
             "name": "MinPerformanceFeeBps"
@@ -5133,6 +5207,9 @@
           },
           {
             "name": "TreasuryFeeVaultReceiver"
+          },
+          {
+            "name": "AddScopePriceId"
           }
         ]
       }
@@ -5452,6 +5529,9 @@
           },
           {
             "name": "UpdateMaxIgnorableAmountAsReward"
+          },
+          {
+            "name": "UpdateScopeFeed"
           }
         ]
       }
@@ -6743,6 +6823,41 @@
       "code": 6156,
       "name": "UnsupportedDexForToken22",
       "msg": "Cannot initialize strategy with this dex while having a mint with token22"
+    },
+    {
+      "code": 6157,
+      "name": "GlobalConfigInvalidScopePriceIndex",
+      "msg": "Scope price index is not present in global config"
+    },
+    {
+      "code": 6158,
+      "name": "GlobalConfigScopePricesIdsFull",
+      "msg": "Scope prices ids array in global config is full"
+    },
+    {
+      "code": 6159,
+      "name": "GlobalConfigAlreadyContainsScopePriceId",
+      "msg": "Scope prices ids array already contains given scope price id"
+    },
+    {
+      "code": 6160,
+      "name": "GlobalConfigExpectedScopePricesAccount",
+      "msg": "Expected scope prices account being passed in when adding or updating a scope prices feed"
+    },
+    {
+      "code": 6161,
+      "name": "RewardScopePriceAccountNotPresent",
+      "msg": "A reward scope price account should have been passed in, but it is missing"
+    },
+    {
+      "code": 6162,
+      "name": "IncorrectScopePricesAccountID",
+      "msg": "Incorrect scope prices account id passed in"
+    },
+    {
+      "code": 6163,
+      "name": "CouldNotCalculatePriceTwap",
+      "msg": "Could not calculate get_price_usd_unchecked()"
     }
   ]
 }

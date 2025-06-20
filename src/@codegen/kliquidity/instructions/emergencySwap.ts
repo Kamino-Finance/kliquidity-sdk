@@ -41,7 +41,8 @@ export interface EmergencySwapAccounts {
   tickArray2: Address
   oracle: Address
   poolProgram: Address
-  scopePrices: Address
+  scopePricesA: Address
+  scopePricesB: Address
   tokenInfos: Address
   tokenATokenProgram: Address
   tokenBTokenProgram: Address
@@ -80,7 +81,8 @@ export function emergencySwap(
     { address: accounts.tickArray2, role: 1 },
     { address: accounts.oracle, role: 1 },
     { address: accounts.poolProgram, role: 0 },
-    { address: accounts.scopePrices, role: 0 },
+    { address: accounts.scopePricesA, role: 0 },
+    { address: accounts.scopePricesB, role: 0 },
     { address: accounts.tokenInfos, role: 0 },
     { address: accounts.tokenATokenProgram, role: 0 },
     { address: accounts.tokenBTokenProgram, role: 0 },
