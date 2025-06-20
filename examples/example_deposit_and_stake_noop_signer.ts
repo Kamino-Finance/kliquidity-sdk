@@ -5,6 +5,7 @@ import {
   createComputeUnitLimitIx,
   getAssociatedTokenAddress,
   Kamino,
+  noopSigner,
   StrategyWithAddress,
   U64_MAX,
 } from '@kamino-finance/kliquidity-sdk';
@@ -15,10 +16,12 @@ import { fromLegacyTransactionInstruction } from '@solana/compat/';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
 
+// noopSigner is to be used for transaction construction when the actual signer is not available (e.g. for multisig proposals)
 (async () => {
   // Create a new keypair for the user (in real world this is the wallet of the user who deposits into the strategy)
   // to read from file you can use getKeypair()
-  const keypair: KeyPairSigner = await generateKeyPairSigner();
+  const keypairSigner: KeyPairSigner = await generateKeyPairSigner();
+  const noop = noopSigner(keypairSigner.address);
   // the strategy to deposit into
   const strategyWithFarm = address('BLP7UHUg1yNry94Qk3sM8pAfEyDhTZirwFghw9DoBjn7');
   // the amounts to deposit, in tokens
@@ -40,24 +43,24 @@ import { sendAndConfirmTx } from './utils/tx';
 
   const tx = [createComputeUnitLimitIx(1_400_000)];
 
-  const sharesAta = await getAssociatedTokenAddress(strategyState.strategy.sharesMint, keypair.address);
+  const sharesAta = await getAssociatedTokenAddress(strategyState.strategy.sharesMint, noop.address);
 
   const createAtaIx = createAssociatedTokenAccountInstruction(
-    keypair,
+    noop,
     sharesAta,
-    keypair.address,
+    noop.address,
     strategyState.strategy.sharesMint
   );
   tx.push(createAtaIx);
 
-  const depositIx = await kamino.deposit(strategyWithAddress, amountA, amountB, keypair);
+  const depositIx = await kamino.deposit(strategyWithAddress, amountA, amountB, noop);
   tx.push(depositIx);
 
   // if the strategy has farm, stake all user shares
   if (strategyState.strategy.farm !== DEFAULT_ADDRESS) {
     const stakeIxs = await getFarmStakeIxs(
       kamino.getLegacyConnection(),
-      keypair.address,
+      noop.address,
       new Decimal(U64_MAX.toString()),
       strategyState.strategy.farm
     );
@@ -66,9 +69,9 @@ import { sendAndConfirmTx } from './utils/tx';
 
   // optionally we can close the user shares ATA
   const closeAtaIx = getCloseAccountInstruction({
-    owner: keypair.address,
+    owner: noop.address,
     account: sharesAta,
-    destination: keypair.address,
+    destination: noop.address,
   });
   tx.push(closeAtaIx);
 
@@ -77,10 +80,11 @@ import { sendAndConfirmTx } from './utils/tx';
 
   const signature = await sendAndConfirmTx(
     { rpc: kamino.getConnection(), wsRpc: getWsConnection() },
-    keypair,
+    keypairSigner, // Noop signer for transaction construction
     tx,
     [],
-    [strategyState.strategy.strategyLookupTable]
+    [strategyState.strategy.strategyLookupTable],
+    noop
   );
 
   console.log('signature', signature);
