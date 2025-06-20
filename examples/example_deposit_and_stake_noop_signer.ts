@@ -1,11 +1,20 @@
 import Decimal from 'decimal.js';
-import { address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
+import {
+  Address,
+  address,
+  generateKeyPairSigner,
+  KeyPairSigner,
+  SignatureDictionary,
+  Transaction,
+  TransactionPartialSigner,
+  TransactionPartialSignerConfig,
+  TransactionSigner,
+} from '@solana/kit';
 import {
   createAssociatedTokenAccountInstruction,
   createComputeUnitLimitIx,
   getAssociatedTokenAddress,
   Kamino,
-  noopSigner,
   StrategyWithAddress,
   U64_MAX,
 } from '@kamino-finance/kliquidity-sdk';
@@ -91,3 +100,17 @@ import { sendAndConfirmTx } from './utils/tx';
 })().catch(async (e) => {
   console.error(e);
 });
+
+export function noopSigner(address: Address): TransactionSigner {
+  const signer: TransactionPartialSigner = {
+    address,
+    async signTransactions(
+      _transactions: readonly Transaction[],
+      _config?: TransactionPartialSignerConfig
+    ): Promise<readonly SignatureDictionary[]> {
+      // Return an array of empty SignatureDictionary objects — one per transaction
+      return [];
+    },
+  };
+  return signer;
+}
