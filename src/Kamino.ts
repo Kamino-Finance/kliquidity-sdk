@@ -111,6 +111,7 @@ import {
   rebalanceFieldsDictToInfo,
   StrategiesFilters,
   strategyCreationStatusToBase58,
+  StrategyTokenScopeFeeds,
   strategyTypeToBase58,
   stripTwapZeros,
   SwapperIxBuilder,
@@ -1405,40 +1406,61 @@ export class Kamino {
    * Get all scope prices feeds (token A, token B and rewards) for the specified strategy
    * @param strategy
    * @param collateralInfos the collateral infos array
+   * @returns the scope price feeds for the specified strategy
    */
-  getAllScopePriceFeedsForStrategy = (strategy: WhirlpoolStrategy, collateralInfos: CollateralInfo[]): Address[] => {
-    const res = [
-      collateralInfos[strategy.tokenACollateralId.toNumber()].scopeFeed,
-      collateralInfos[strategy.tokenBCollateralId.toNumber()].scopeFeed,
-    ];
+  getAllScopePriceFeedsForStrategy = (
+    strategy: WhirlpoolStrategy,
+    collateralInfos: CollateralInfo[]
+  ): StrategyTokenScopeFeeds => {
+    const res: StrategyTokenScopeFeeds = {
+      tokenAFeed: collateralInfos[strategy.tokenACollateralId.toNumber()].scopeFeed,
+      tokenBFeed: collateralInfos[strategy.tokenBCollateralId.toNumber()].scopeFeed,
+      rewardsFeeds: [undefined, undefined, undefined],
+      kaminoRewardsFeeds: [undefined, undefined, undefined],
+    };
 
     // Check whether reward vaults are initialized
     if (
       toLegacyPublicKey(strategy.reward0Vault) !== PublicKey.default &&
       strategy.reward0Vault !== strategy.baseVaultAuthority
     ) {
-      res.push(collateralInfos[strategy.reward0CollateralId.toNumber()].scopeFeed);
+      res.rewardsFeeds[0] = collateralInfos[strategy.reward0CollateralId.toNumber()].scopeFeed;
     }
     if (
       toLegacyPublicKey(strategy.reward1Vault) !== PublicKey.default &&
       strategy.reward1Vault !== strategy.baseVaultAuthority
     ) {
-      res.push(collateralInfos[strategy.reward1CollateralId.toNumber()].scopeFeed);
+      res.rewardsFeeds[1] = collateralInfos[strategy.reward1CollateralId.toNumber()].scopeFeed;
     }
     if (
       toLegacyPublicKey(strategy.reward2Vault) !== PublicKey.default &&
       strategy.reward2Vault !== strategy.baseVaultAuthority
     ) {
-      res.push(collateralInfos[strategy.reward2CollateralId.toNumber()].scopeFeed);
+      res.rewardsFeeds[2] = collateralInfos[strategy.reward2CollateralId.toNumber()].scopeFeed;
     }
 
     for (let i = 0; i < 3; i++) {
       const rewardInfo: KaminoRewardInfo = strategy.kaminoRewards[i];
       if (toLegacyPublicKey(rewardInfo.rewardMint) !== PublicKey.default && rewardInfo.decimals.toNumber() > 0) {
-        res.push(collateralInfos[rewardInfo.rewardCollateralId.toNumber()].scopeFeed);
+        res.kaminoRewardsFeeds[i] = collateralInfos[rewardInfo.rewardCollateralId.toNumber()].scopeFeed;
       }
     }
 
+    return res;
+  };
+
+  private strategyTokenScopeFeedsToArray = (feeds: StrategyTokenScopeFeeds): Address[] => {
+    const res = [feeds.tokenAFeed, feeds.tokenBFeed];
+    for (let i = 0; i < 3; i++) {
+      if (feeds.rewardsFeeds[i] !== undefined) {
+        res.push(feeds.rewardsFeeds[i]!);
+      }
+    }
+    for (let i = 0; i < 3; i++) {
+      if (feeds.kaminoRewardsFeeds[i] !== undefined) {
+        res.push(feeds.kaminoRewardsFeeds[i]!);
+      }
+    }
     return res;
   };
 
@@ -1461,7 +1483,7 @@ export class Kamino {
     const fetchBalances: Promise<StrategyBalanceWithAddress>[] = [];
     const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
     const allScopePrices = strategiesWithAddresses
-      .map((x) => this.getAllScopePriceFeedsForStrategy(x.strategy, collInfos))
+      .map((x) => this.strategyTokenScopeFeedsToArray(this.getAllScopePriceFeedsForStrategy(x.strategy, collInfos)))
       .reduce((acc, val) => acc.concat(val), []);
     const scopePrices = await this._scope.getMultipleOraclePrices(allScopePrices);
     const scopePricesMap: Record<Address, OraclePrices> = scopePrices.reduce(
@@ -2318,7 +2340,7 @@ export class Kamino {
       pricesMap = scopePricesMap;
     } else {
       const scopePrices = await this._scope.getMultipleOraclePrices(
-        this.getAllScopePriceFeedsForStrategy(strategy, collateralInfos)
+        this.strategyTokenScopeFeedsToArray(this.getAllScopePriceFeedsForStrategy(strategy, collateralInfos))
       );
       pricesMap = scopePrices.reduce((map: Record<Address, OraclePrices>, [address, price]) => {
         map[address] = price;
@@ -3254,8 +3276,8 @@ export class Kamino {
       tokenBAta,
       strategyState.strategy.sharesMint,
       strategyState.strategy.sharesMintAuthority,
-      scopePricesFeeds[0],
-      scopePricesFeeds[1],
+      scopePricesFeeds.tokenAFeed,
+      scopePricesFeeds.tokenBFeed,
       globalConfig.tokenInfos,
       TOKEN_PROGRAM_ADDRESS,
       keyOrDefault(strategyState.strategy.tokenATokenProgram, TOKEN_PROGRAM_ADDRESS),
@@ -3265,7 +3287,7 @@ export class Kamino {
       strategyState.strategy.tickArrayUpper,
     ];
     // Reward scope prices feeds are added as remaining accounts
-    accounts.concat(scopePricesFeeds.slice(2));
+    accounts.concat(this.strategyTokenScopeFeedsToArray(scopePricesFeeds).slice(2));
 
     return accounts;
   };
@@ -3334,8 +3356,8 @@ export class Kamino {
       userSharesAta: sharesAta,
       sharesMint: strategyState.strategy.sharesMint,
       sharesMintAuthority: strategyState.strategy.sharesMintAuthority,
-      scopePricesA: scopePricesFeeds[0],
-      scopePricesB: scopePricesFeeds[1],
+      scopePricesA: scopePricesFeeds.tokenAFeed,
+      scopePricesB: scopePricesFeeds.tokenBFeed,
       tokenInfos: globalConfig.tokenInfos,
       tokenProgram: TOKEN_PROGRAM_ADDRESS,
       instructionSysvarAccount: SYSVAR_INSTRUCTIONS_ADDRESS,
@@ -3349,8 +3371,15 @@ export class Kamino {
     const accounts = depositIx.accounts?.slice();
 
     // Add reward scope price feed accounts as remaining accounts
-    for (let i = 2; i < scopePricesFeeds.length; i++) {
-      accounts?.push({ address: scopePricesFeeds[i], role: AccountRole.READONLY });
+    for (let i = 0; i < 3; i++) {
+      if (scopePricesFeeds.rewardsFeeds[i] !== undefined) {
+        accounts?.push({ address: scopePricesFeeds.rewardsFeeds[i]!, role: AccountRole.READONLY });
+      }
+    }
+    for (let i = 0; i < 3; i++) {
+      if (scopePricesFeeds.kaminoRewardsFeeds[i] !== undefined) {
+        accounts?.push({ address: scopePricesFeeds.kaminoRewardsFeeds[i]!, role: AccountRole.READONLY });
+      }
     }
 
     const resIx: IInstruction = { ...depositIx, accounts };
@@ -3802,8 +3831,8 @@ export class Kamino {
       userSharesAta: sharesAta,
       sharesMint: strategyState.sharesMint,
       sharesMintAuthority: strategyState.sharesMintAuthority,
-      scopePricesA: scopePricesFeeds[0],
-      scopePricesB: scopePricesFeeds[1],
+      scopePricesA: scopePricesFeeds.tokenAFeed,
+      scopePricesB: scopePricesFeeds.tokenBFeed,
       tokenInfos: globalConfig!.tokenInfos,
       tokenProgram: TOKEN_PROGRAM_ADDRESS,
       instructionSysvarAccount: SYSVAR_INSTRUCTIONS_ADDRESS,
@@ -3817,8 +3846,18 @@ export class Kamino {
     const singleSidedDepositIxAccounts = singleSidedDepositIx.accounts?.slice();
 
     // Add reward scope price feed accounts as remaining accounts
-    for (let i = 2; i < scopePricesFeeds.length; i++) {
-      singleSidedDepositIxAccounts?.push({ address: scopePricesFeeds[i], role: AccountRole.READONLY });
+    for (let i = 0; i < 3; i++) {
+      if (scopePricesFeeds.rewardsFeeds[i] !== undefined) {
+        singleSidedDepositIxAccounts?.push({ address: scopePricesFeeds.rewardsFeeds[i]!, role: AccountRole.READONLY });
+      }
+    }
+    for (let i = 0; i < 3; i++) {
+      if (scopePricesFeeds.kaminoRewardsFeeds[i] !== undefined) {
+        singleSidedDepositIxAccounts?.push({
+          address: scopePricesFeeds.kaminoRewardsFeeds[i]!,
+          role: AccountRole.READONLY,
+        });
+      }
     }
 
     const singleSidedDepositIxWithRemainingAccounts: IInstruction = {
@@ -5020,8 +5059,8 @@ export class Kamino {
       tokenBVault,
       poolTokenVaultA: whirlpool.tokenVaultA,
       poolTokenVaultB: whirlpool.tokenVaultB,
-      scopePricesA: scopePricesFeeds[0],
-      scopePricesB: scopePricesFeeds[1],
+      scopePricesA: scopePricesFeeds.tokenAFeed,
+      scopePricesB: scopePricesFeeds.tokenBFeed,
       tokenInfos: globalConfig.tokenInfos,
       tokenAMint,
       tokenBMint,
@@ -5165,8 +5204,8 @@ export class Kamino {
       tokenBVault: tokenBVault,
       poolTokenVaultA: poolState.tokenVault0,
       poolTokenVaultB: poolState.tokenVault1,
-      scopePricesA: scopePricesFeeds[0],
-      scopePricesB: scopePricesFeeds[1],
+      scopePricesA: scopePricesFeeds.tokenAFeed,
+      scopePricesB: scopePricesFeeds.tokenBFeed,
       tokenInfos: globalConfig.tokenInfos,
       tokenAMint,
       tokenBMint,
@@ -5341,8 +5380,8 @@ export class Kamino {
       tokenBVault,
       poolTokenVaultA: lbPair.reserveX,
       poolTokenVaultB: lbPair.reserveY,
-      scopePricesA: scopePricesFeeds[0],
-      scopePricesB: scopePricesFeeds[1],
+      scopePricesA: scopePricesFeeds.tokenAFeed,
+      scopePricesB: scopePricesFeeds.tokenBFeed,
       tokenInfos: globalConfig.tokenInfos,
       tokenAMint,
       tokenBMint,
@@ -5417,8 +5456,8 @@ export class Kamino {
       poolTokenVaultB: strategyState.poolTokenVaultB,
       tokenAMint: strategyState.tokenAMint,
       tokenBMint: strategyState.tokenBMint,
-      scopePricesA: scopePricesFeeds[0],
-      scopePricesB: scopePricesFeeds[1],
+      scopePricesA: scopePricesFeeds.tokenAFeed,
+      scopePricesB: scopePricesFeeds.tokenBFeed,
       raydiumProtocolPositionOrBaseVaultAuthority: strategyState.raydiumProtocolPositionOrBaseVaultAuthority,
       poolProgram: programId,
       tokenInfos: globalConfig.tokenInfos,
@@ -5535,8 +5574,8 @@ export class Kamino {
       poolTokenVaultB: strategyState.poolTokenVaultB,
       tickArrayLower: strategyState.tickArrayLower,
       tickArrayUpper: strategyState.tickArrayUpper,
-      scopePricesA: scopePricesFeeds[0],
-      scopePricesB: scopePricesFeeds[1],
+      scopePricesA: scopePricesFeeds.tokenAFeed,
+      scopePricesB: scopePricesFeeds.tokenBFeed,
       raydiumProtocolPositionOrBaseVaultAuthority: strategyState.raydiumProtocolPositionOrBaseVaultAuthority,
       tokenInfos: globalConfig.tokenInfos,
       poolProgram: programId,
