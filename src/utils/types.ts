@@ -310,3 +310,10 @@ export interface InitPoolTickIfNeeded {
   tick: Address;
   initTickIx: IInstruction | undefined;
 }
+
+export interface StrategyTokenScopeFeeds {
+  tokenAFeed: Address;
+  tokenBFeed: Address;
+  rewardsFeeds: (Address | undefined)[];
+  kaminoRewardsFeeds: (Address | undefined)[];
+}
