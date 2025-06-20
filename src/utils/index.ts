@@ -4,3 +4,4 @@ export * from './utils';
 export * from './math';
 export * from './types';
 export * from './orca';
+export * from './compat';

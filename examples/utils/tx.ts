@@ -69,7 +69,7 @@ export async function sendAndConfirmTx(
     let tx;
     try {
       tx = await rpc
-        .getTransaction(sig, { maxSupportedTransactionVersion: 0, encoding: 'jsonParsed', commitment: 'confirmed' })
+        .getTransaction(sig, { maxSupportedTransactionVersion: 0, commitment: 'confirmed', encoding: 'json' })
         .send();
     } catch (e2) {
       console.error('Error fetching transaction logs:', e2);

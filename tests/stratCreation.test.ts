@@ -1147,7 +1147,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get orca pool liquidity distribution', async () => {
-    const orcaService = new OrcaService(env.c.rpc, env.legacyConnection, cluster);
+    const orcaService = new OrcaService(env.c.rpc, env.legacyConnection);
     const liquidityDistribution = await orcaService.getWhirlpoolLiquidityDistribution(
       address('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );
@@ -1156,7 +1156,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get orca positions for pool', async () => {
-    const orcaService = new OrcaService(env.c.rpc, env.legacyConnection, cluster);
+    const orcaService = new OrcaService(env.c.rpc, env.legacyConnection);
     const positionsCount = await orcaService.getPositionsCountByPool(
       address('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );

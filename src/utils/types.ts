@@ -1,3 +1,5 @@
+import { BN } from '@coral-xyz/anchor';
+
 import { address, Address, IInstruction, TransactionMessage, TransactionSigner } from '@solana/kit';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import { Dex, collToLamportsDecimal } from './utils';
@@ -317,3 +319,8 @@ export interface StrategyTokenScopeFeeds {
   rewardsFeeds: (Address | undefined)[];
   kaminoRewardsFeeds: (Address | undefined)[];
 }
+
+export type Percentage = {
+  numerator: BN;
+  denominator: BN;
+};

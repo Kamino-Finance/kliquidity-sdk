@@ -13,8 +13,6 @@ import * as WhirlpoolInstructions from '../../src/@codegen/whirlpools/instructio
 import * as anchor from '@coral-xyz/anchor';
 import { PROGRAM_ID_CLI as WHIRLPOOL_PROGRAM_ID } from '../../src/@codegen/whirlpools/programId';
 import { orderMints } from './raydium_utils';
-import Decimal from 'decimal.js';
-import { getStartTickIndex, priceToSqrtX64 } from '@orca-so/whirlpool-sdk';
 import { Whirlpool } from '../../src/@codegen/whirlpools/accounts';
 import { Env } from './env';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
@@ -22,6 +20,10 @@ import { sendAndConfirmTx } from './tx';
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token';
 import { SYSVAR_RENT_ADDRESS } from '@solana/sysvars';
 import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-derived-address';
+import {
+  getTickArrayStartTickIndex as orcaGetTickArrayStartTickIndex,
+  priceToSqrtPrice,
+} from '@orca-so/whirlpools-core';
 
 const addressEncoder = getAddressEncoder();
 
@@ -96,7 +98,7 @@ export async function initializeWhirlpool(
     const initialPrice = 1.0;
     const initialisePoolArgs: WhirlpoolInstructions.InitializePoolV2Args = {
       tickSpacing: tickSize,
-      initialSqrtPrice: new anchor.BN(priceToSqrtX64(new Decimal(initialPrice), 6, 6)),
+      initialSqrtPrice: new anchor.BN(priceToSqrtPrice(initialPrice, 6, 6).toString()),
     };
 
     const initializePoolAccounts: WhirlpoolInstructions.InitializePoolV2Accounts = {
@@ -164,7 +166,7 @@ export async function initTickArrayForTicks(
   tickSpacing: number,
   programId: Address
 ): Promise<IInstruction[]> {
-  const startTicks = ticks.map((tick) => getStartTickIndex(tick, tickSpacing));
+  const startTicks = ticks.map((tick) => orcaGetTickArrayStartTickIndex(tick, tickSpacing));
   const tx: IInstruction[] = [];
   const initializedArrayTicks: number[] = [];
 
@@ -237,8 +239,8 @@ export async function getTickArrayPubkeysFromRangeOrca(
     throw new Error(`Raydium Pool ${whirlpool} doesn't exist`);
   }
 
-  const startTickIndex = getStartTickIndex(tickLowerIndex, whirlpoolState.tickSpacing, 0);
-  const endTickIndex = getStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing, 0);
+  const startTickIndex = orcaGetTickArrayStartTickIndex(tickLowerIndex, whirlpoolState.tickSpacing);
+  const endTickIndex = orcaGetTickArrayStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing);
 
   const [startTickIndexPk] = await getProgramDerivedAddress({
     seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(startTickIndex.toString())],

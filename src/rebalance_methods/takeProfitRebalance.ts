@@ -2,7 +2,7 @@ import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
 import { FullBPSDecimal } from '../utils/CreationParameters';
 import { Dex, readBigUint128LE } from '../utils';
-import { sqrtPriceX64ToPrice } from '@orca-so/whirlpool-sdk';
+import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
 import BN from 'bn.js';
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { getPriceFromQ64Price } from '../utils/meteora';
@@ -60,12 +60,20 @@ export function getPositionRangeFromTakeProfitParams(
   upperSqrtPriceX64: Decimal
 ): PositionRange {
   if (dex == 'ORCA') {
-    const lowerPrice = sqrtPriceX64ToPrice(new BN(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
-    const upperPrice = sqrtPriceX64ToPrice(new BN(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    const lowerPrice = new Decimal(
+      orcaSqrtPriceToPrice(BigInt(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals)
+    );
+    const upperPrice = new Decimal(
+      orcaSqrtPriceToPrice(BigInt(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals)
+    );
     return { lowerPrice, upperPrice };
   } else if (dex == 'RAYDIUM') {
-    const lowerPrice = sqrtPriceX64ToPrice(new BN(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
-    const upperPrice = sqrtPriceX64ToPrice(new BN(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);
+    const lowerPrice = new Decimal(
+      orcaSqrtPriceToPrice(BigInt(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals)
+    );
+    const upperPrice = new Decimal(
+      orcaSqrtPriceToPrice(BigInt(upperSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals)
+    );
     return { lowerPrice, upperPrice };
   } else if (dex == 'METEORA') {
     const lowerPrice = getPriceFromQ64Price(new Decimal(lowerSqrtPriceX64.toString()), tokenADecimals, tokenBDecimals);

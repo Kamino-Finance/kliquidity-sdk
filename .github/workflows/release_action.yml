@@ -51,7 +51,7 @@ jobs:
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           echo "Current branch: $CURRENT_BRANCH"
-          
+
           if [ "$CURRENT_BRANCH" = "master" ]; then
             latest_version=$(npm view @kamino-finance/kliquidity-sdk version)
             echo "Using published npm version: $latest_version"
@@ -59,7 +59,7 @@ jobs:
             latest_version=$(jq -r '.version' package.json)
             echo "Using local package.json version: $latest_version"
           fi
-          
+
           echo "::set-output name=latest_version::$latest_version"
 
       - name: Bump version
@@ -83,10 +83,10 @@ jobs:
         run: |
           yarn config set version-git-message "@kamino-finance/kliquidity-sdk:%s"
           yarn version --new-version ${{ steps.semver.outputs.new_tag }}
-          
+
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           echo "Current branch: $CURRENT_BRANCH"
-          
+
           if [ "$CURRENT_BRANCH" = "master" ]; then
             echo "On master branch, pushing changes..."
             git push --force origin master
