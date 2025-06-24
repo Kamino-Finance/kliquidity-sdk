@@ -2892,8 +2892,6 @@ export class Kamino {
     return res;
   };
 
-  
-
   /**
    * Get transaction instructions that create associated token accounts if they don't exist (token A, B and share)
    * @param owner wallet owner (shareholder)
