@@ -11,7 +11,7 @@ import {
   UserState,
   WAD,
 } from '@kamino-finance/farms-sdk';
-import { toLegacyPublicKey } from '@kamino-finance/kliquidity-sdk';
+import { toLegacyPublicKey, U64_MAX } from '@kamino-finance/kliquidity-sdk';
 
 // Helper function to safely convert Decimal to BN for large numbers
 function decimalToBN(decimal: Decimal): BN {
@@ -28,8 +28,8 @@ function multiplyByWadSafely(amount: Decimal): string {
     const result = amountBN.mul(wadBN);
 
     // Additional safety check - ensure result doesn't exceed u64 max
-    const U64_MAX = new BN('18446744073709551615'); // 2^64 - 1
-    if (result.gt(U64_MAX)) {
+    const U64_MAX_BN = new BN(U64_MAX); // 2^64 - 1
+    if (result.gt(U64_MAX_BN)) {
       console.warn(`Warning: Result ${result.toString()} exceeds u64 max, clamping to u64 max`);
       return U64_MAX.toString();
     }
