@@ -1914,7 +1914,7 @@ export class Kamino {
     }
   };
 
-  private getTokenAccountBalance = async (tokenAccount: Address): Promise<Decimal> => {
+  getTokenAccountBalance = async (tokenAccount: Address): Promise<Decimal> => {
     const tokenAccountBalance = await this._rpc.getTokenAccountBalance(tokenAccount).send();
     if (!tokenAccountBalance.value) {
       throw new Error(`Could not get token account balance for ${tokenAccount.toString()}.`);
@@ -1926,7 +1926,7 @@ export class Kamino {
    * Get the balance of a token account or 0 if it doesn't exist
    * @param tokenAccount
    */
-  private getTokenAccountBalanceOrZero = async (tokenAccount: Address): Promise<Decimal> => {
+  getTokenAccountBalanceOrZero = async (tokenAccount: Address): Promise<Decimal> => {
     const tokenAccountExists = await checkIfAccountExists(this._rpc, tokenAccount);
     if (tokenAccountExists) {
       return await this.getTokenAccountBalance(tokenAccount);
@@ -2728,6 +2728,7 @@ export class Kamino {
         keyOrDefault(strategyState.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS)
       ),
     ]);
+    console.log('Shares ATA in withdraw: ', sharesAta.toString());
 
     const sharesAmountInLamports = sharesAmount.mul(
       new Decimal(10).pow(strategyState.strategy.sharesMintDecimals.toString())
@@ -2797,7 +2798,7 @@ export class Kamino {
         ...withdrawIx,
         accounts: withdrawIx.accounts?.concat([
           {
-            address: strategyState.strategy.raydiumPoolConfigOrBaseVaultAuthority,
+            address: strategyState.strategy.raydiumProtocolPositionOrBaseVaultAuthority,
             role: AccountRole.WRITABLE,
           },
         ]),
