@@ -1,4 +1,3 @@
-import Decimal from 'decimal.js';
 import { address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
 import {
   collToLamportsDecimal,
@@ -9,7 +8,7 @@ import {
 } from '@kamino-finance/kliquidity-sdk';
 import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
 import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
-import { getFarmUnstakeAndWithdrawIxs } from './utils/farms';
+import { getFarmUnstakeAndWithdrawIxs, getStakedTokens } from './utils/farms';
 import { fromLegacyTransactionInstruction } from '@solana/compat/';
 import { sendAndConfirmTx } from './utils/tx';
 
@@ -20,8 +19,6 @@ import { sendAndConfirmTx } from './utils/tx';
   const keypair: KeyPairSigner = await generateKeyPairSigner();
   // the strategy to deposit into
   const strategyWithFarm = address('BLP7UHUg1yNry94Qk3sM8pAfEyDhTZirwFghw9DoBjn7');
-  // the amounts to withdraw, in tokens; for full withdraw U64_MAX can be used
-  const sharesToBurn = new Decimal(0.00001);
 
   const cluster = 'mainnet-beta';
   const kamino = new Kamino(cluster, getConnection(), getLegacyConnection());
@@ -30,6 +27,11 @@ import { sendAndConfirmTx } from './utils/tx';
   if (!strategyState) {
     throw new Error('Strategy not found');
   }
+
+  const sharesStaked = await getStakedTokens(getLegacyConnection(), keypair.address, strategyState.strategy.farm);
+
+  // in this example we withdraw everything staked; if the user tries to withdraw more than the shares they have staked + the shares they have in the ATA, the txn will fail
+  const sharesToBurn = sharesStaked;
 
   const strategyWithAddress: StrategyWithAddress = {
     address: strategyWithFarm,
