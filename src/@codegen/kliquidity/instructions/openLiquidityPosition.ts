@@ -53,7 +53,8 @@ export interface OpenLiquidityPositionAccounts {
   tokenBMint: Address
   poolTokenVaultA: Address
   poolTokenVaultB: Address
-  scopePrices: Address
+  scopePricesA: Address
+  scopePricesB: Address
   tokenInfos: Address
   eventAuthority: Option<Address>
   consensusAccount: Address
@@ -106,7 +107,8 @@ export function openLiquidityPosition(
     { address: accounts.tokenBMint, role: 0 },
     { address: accounts.poolTokenVaultA, role: 1 },
     { address: accounts.poolTokenVaultB, role: 1 },
-    { address: accounts.scopePrices, role: 0 },
+    { address: accounts.scopePricesA, role: 0 },
+    { address: accounts.scopePricesB, role: 0 },
     { address: accounts.tokenInfos, role: 0 },
     isSome(accounts.eventAuthority)
       ? { address: accounts.eventAuthority.value, role: 0 }
