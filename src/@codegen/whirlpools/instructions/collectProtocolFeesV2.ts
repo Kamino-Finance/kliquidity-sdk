@@ -38,6 +38,12 @@ export const layout = borsh.struct([
   borsh.option(types.RemainingAccountsInfo.layout(), "remainingAccountsInfo"),
 ])
 
+/**
+ * Collect the protocol fees accrued in this Whirlpool
+ *
+ * ### Authority
+ * - `collect_protocol_fees_authority` - assigned authority in the WhirlpoolConfig that can collect protocol fees
+ */
 export function collectProtocolFeesV2(
   args: CollectProtocolFeesV2Args,
   accounts: CollectProtocolFeesV2Accounts,

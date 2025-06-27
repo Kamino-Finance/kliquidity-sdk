@@ -26,6 +26,7 @@ export interface OpenPositionWithMetadataAccounts {
   owner: Address
   position: Address
   positionMint: TransactionSigner
+  /** https://github.com/metaplex-foundation/mpl-token-metadata/blob/master/programs/token-metadata/program/src/utils/metadata.rs#L78 */
   positionMetadataAccount: Address
   positionTokenAccount: Address
   whirlpool: Address
@@ -43,6 +44,19 @@ export const layout = borsh.struct([
   borsh.i32("tickUpperIndex"),
 ])
 
+/**
+ * Open a position in a Whirlpool. A unique token will be minted to represent the position
+ * in the users wallet. Additional Metaplex metadata is appended to identify the token.
+ * The position will start off with 0 liquidity.
+ *
+ * ### Parameters
+ * - `tick_lower_index` - The tick specifying the lower end of the position range.
+ * - `tick_upper_index` - The tick specifying the upper end of the position range.
+ *
+ * #### Special Errors
+ * - `InvalidTickIndex` - If a provided tick is out of bounds, out of order or not a multiple of
+ * the tick-spacing in this pool.
+ */
 export function openPositionWithMetadata(
   args: OpenPositionWithMetadataArgs,
   accounts: OpenPositionWithMetadataAccounts,

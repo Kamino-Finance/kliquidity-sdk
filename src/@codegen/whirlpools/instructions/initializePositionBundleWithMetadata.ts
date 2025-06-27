@@ -18,6 +18,7 @@ import { PROGRAM_ID } from "../programId"
 export interface InitializePositionBundleWithMetadataAccounts {
   positionBundle: Address
   positionBundleMint: TransactionSigner
+  /** https://github.com/metaplex-foundation/metaplex-program-library/blob/773a574c4b34e5b9f248a81306ec24db064e255f/token-metadata/program/src/utils/metadata.rs#L100 */
   positionBundleMetadata: Address
   positionBundleTokenAccount: Address
   positionBundleOwner: Address
@@ -30,6 +31,11 @@ export interface InitializePositionBundleWithMetadataAccounts {
   metadataProgram: Address
 }
 
+/**
+ * Initializes a PositionBundle account that bundles several positions.
+ * A unique token will be minted to represent the position bundle in the users wallet.
+ * Additional Metaplex metadata is appended to identify the token.
+ */
 export function initializePositionBundleWithMetadata(
   accounts: InitializePositionBundleWithMetadataAccounts,
   programAddress: Address = PROGRAM_ID

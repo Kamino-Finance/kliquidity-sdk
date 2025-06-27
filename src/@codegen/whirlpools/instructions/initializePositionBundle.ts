@@ -27,6 +27,10 @@ export interface InitializePositionBundleAccounts {
   associatedTokenProgram: Address
 }
 
+/**
+ * Initializes a PositionBundle account that bundles several positions.
+ * A unique token will be minted to represent the position bundle in the users wallet.
+ */
 export function initializePositionBundle(
   accounts: InitializePositionBundleAccounts,
   programAddress: Address = PROGRAM_ID

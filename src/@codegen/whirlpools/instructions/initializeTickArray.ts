@@ -28,6 +28,17 @@ export interface InitializeTickArrayAccounts {
 
 export const layout = borsh.struct([borsh.i32("startTickIndex")])
 
+/**
+ * Initializes a fixed-length tick_array account to represent a tick-range in a Whirlpool.
+ *
+ * ### Parameters
+ * - `start_tick_index` - The starting tick index for this tick-array.
+ * Has to be a multiple of TickArray size & the tick spacing of this pool.
+ *
+ * #### Special Errors
+ * - `InvalidStartTick` - if the provided start tick is out of bounds or is not a multiple of
+ * TICK_ARRAY_SIZE * tick spacing.
+ */
 export function initializeTickArray(
   args: InitializeTickArrayArgs,
   accounts: InitializeTickArrayAccounts,

@@ -53,6 +53,18 @@ export type CustomError =
   | IntermediateTokenAmountMismatch
   | TransferFeeCalculationError
   | RemainingAccountsDuplicatedAccountsType
+  | FullRangeOnlyPool
+  | TooManySupplementalTickArrays
+  | DifferentWhirlpoolTickArrayAccount
+  | PartialFillError
+  | PositionNotLockable
+  | OperationNotAllowedOnLockedPosition
+  | SameTickRangeNotAllowed
+  | InvalidAdaptiveFeeConstants
+  | InvalidFeeTierIndex
+  | InvalidTradeEnableTimestamp
+  | TradeIsNotEnabled
+  | RentCalculationError
 
 export class InvalidEnum extends Error {
   static readonly code = 6000
@@ -657,6 +669,138 @@ export class RemainingAccountsDuplicatedAccountsType extends Error {
   }
 }
 
+export class FullRangeOnlyPool extends Error {
+  static readonly code = 6054
+  readonly code = 6054
+  readonly name = "FullRangeOnlyPool"
+  readonly msg = "This whirlpool only supports full-range positions"
+
+  constructor(readonly logs?: string[]) {
+    super("6054: This whirlpool only supports full-range positions")
+  }
+}
+
+export class TooManySupplementalTickArrays extends Error {
+  static readonly code = 6055
+  readonly code = 6055
+  readonly name = "TooManySupplementalTickArrays"
+  readonly msg = "Too many supplemental tick arrays provided"
+
+  constructor(readonly logs?: string[]) {
+    super("6055: Too many supplemental tick arrays provided")
+  }
+}
+
+export class DifferentWhirlpoolTickArrayAccount extends Error {
+  static readonly code = 6056
+  readonly code = 6056
+  readonly name = "DifferentWhirlpoolTickArrayAccount"
+  readonly msg = "TickArray account for different whirlpool provided"
+
+  constructor(readonly logs?: string[]) {
+    super("6056: TickArray account for different whirlpool provided")
+  }
+}
+
+export class PartialFillError extends Error {
+  static readonly code = 6057
+  readonly code = 6057
+  readonly name = "PartialFillError"
+  readonly msg = "Trade resulted in partial fill"
+
+  constructor(readonly logs?: string[]) {
+    super("6057: Trade resulted in partial fill")
+  }
+}
+
+export class PositionNotLockable extends Error {
+  static readonly code = 6058
+  readonly code = 6058
+  readonly name = "PositionNotLockable"
+  readonly msg = "Position is not lockable"
+
+  constructor(readonly logs?: string[]) {
+    super("6058: Position is not lockable")
+  }
+}
+
+export class OperationNotAllowedOnLockedPosition extends Error {
+  static readonly code = 6059
+  readonly code = 6059
+  readonly name = "OperationNotAllowedOnLockedPosition"
+  readonly msg = "Operation not allowed on locked position"
+
+  constructor(readonly logs?: string[]) {
+    super("6059: Operation not allowed on locked position")
+  }
+}
+
+export class SameTickRangeNotAllowed extends Error {
+  static readonly code = 6060
+  readonly code = 6060
+  readonly name = "SameTickRangeNotAllowed"
+  readonly msg = "Cannot reset position range with same tick range"
+
+  constructor(readonly logs?: string[]) {
+    super("6060: Cannot reset position range with same tick range")
+  }
+}
+
+export class InvalidAdaptiveFeeConstants extends Error {
+  static readonly code = 6061
+  readonly code = 6061
+  readonly name = "InvalidAdaptiveFeeConstants"
+  readonly msg = "Invalid adaptive fee constants"
+
+  constructor(readonly logs?: string[]) {
+    super("6061: Invalid adaptive fee constants")
+  }
+}
+
+export class InvalidFeeTierIndex extends Error {
+  static readonly code = 6062
+  readonly code = 6062
+  readonly name = "InvalidFeeTierIndex"
+  readonly msg = "Invalid fee tier index"
+
+  constructor(readonly logs?: string[]) {
+    super("6062: Invalid fee tier index")
+  }
+}
+
+export class InvalidTradeEnableTimestamp extends Error {
+  static readonly code = 6063
+  readonly code = 6063
+  readonly name = "InvalidTradeEnableTimestamp"
+  readonly msg = "Invalid trade enable timestamp"
+
+  constructor(readonly logs?: string[]) {
+    super("6063: Invalid trade enable timestamp")
+  }
+}
+
+export class TradeIsNotEnabled extends Error {
+  static readonly code = 6064
+  readonly code = 6064
+  readonly name = "TradeIsNotEnabled"
+  readonly msg = "Trade is not enabled yet"
+
+  constructor(readonly logs?: string[]) {
+    super("6064: Trade is not enabled yet")
+  }
+}
+
+export class RentCalculationError extends Error {
+  static readonly code = 6065
+  readonly code = 6065
+  readonly name = "RentCalculationError"
+  readonly msg = "Rent calculation error"
+
+  constructor(readonly logs?: string[]) {
+    super("6065: Rent calculation error")
+  }
+}
+
 export function fromCode(code: number, logs?: string[]): CustomError | null {
   switch (code) {
     case 6000:
@@ -767,6 +911,30 @@ export function fromCode(code: number, logs?: string[]): CustomError | null {
       return new TransferFeeCalculationError(logs)
     case 6053:
       return new RemainingAccountsDuplicatedAccountsType(logs)
+    case 6054:
+      return new FullRangeOnlyPool(logs)
+    case 6055:
+      return new TooManySupplementalTickArrays(logs)
+    case 6056:
+      return new DifferentWhirlpoolTickArrayAccount(logs)
+    case 6057:
+      return new PartialFillError(logs)
+    case 6058:
+      return new PositionNotLockable(logs)
+    case 6059:
+      return new OperationNotAllowedOnLockedPosition(logs)
+    case 6060:
+      return new SameTickRangeNotAllowed(logs)
+    case 6061:
+      return new InvalidAdaptiveFeeConstants(logs)
+    case 6062:
+      return new InvalidFeeTierIndex(logs)
+    case 6063:
+      return new InvalidTradeEnableTimestamp(logs)
+    case 6064:
+      return new TradeIsNotEnabled(logs)
+    case 6065:
+      return new RentCalculationError(logs)
   }
 
   return null

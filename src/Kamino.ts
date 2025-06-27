@@ -348,6 +348,7 @@ import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } 
 import { Connection } from '@solana/web3.js';
 import { toLegacyPublicKey } from './utils/compat';
 import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
+import { DynamicTickArray } from './@codegen/whirlpools/accounts/DynamicTickArray';
 
 const addressEncoder = getAddressEncoder();
 
@@ -7934,7 +7935,14 @@ export class Kamino {
       poolAddress,
       startTickIndex
     );
-    const tick = await TickArray.fetch(this._rpc, startTickIndexPk, this._orcaService.getWhirlpoolProgramId());
+    let tick;
+    try {
+      tick = await TickArray.fetch(this._rpc, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
+    } catch (err) {
+      tick = await DynamicTickArray.fetch(this._rpc, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
+    } finally {
+      tick = null;
+    }
     // initialize tick if it doesn't exist
     if (!tick) {
       const initTickArrayArgs: InitializeTickArrayArgs = {
@@ -7974,7 +7982,14 @@ export class Kamino {
       binArrayIndex,
       this._meteoraService.getMeteoraProgramId()
     );
-    const tick = await TickArray.fetch(this._rpc, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
+    let tick;
+    try {
+      tick = await TickArray.fetch(this._rpc, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
+    } catch (err) {
+      tick = await DynamicTickArray.fetch(this._rpc, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
+    } finally {
+      tick = null;
+    }
     // initialize tick if it doesn't exist
     if (!tick) {
       const initTickArrayArgs: InitializeBinArrayArgs = {

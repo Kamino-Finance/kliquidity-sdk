@@ -29,6 +29,7 @@ import { FullBPS } from './CreationParameters';
 import { fetchMaybeTickArray, getTickArrayAddress } from '@orca-so/whirlpools-client';
 import { sleep } from './utils';
 import { ZERO } from './math';
+import { DynamicTickArray } from '../@codegen/whirlpools/accounts/DynamicTickArray';
 
 export const defaultSlippagePercentageBPS = 10;
 const addressEncoder = getAddressEncoder();
@@ -307,31 +308,52 @@ export async function getLiquidityDistribution(
     whirlpoolProgramId
   );
   const tickArrays = await TickArray.fetchMultiple(rpc, tickArrayAddresses, whirlpoolProgramId);
+  const dynamicTickArrays = await DynamicTickArray.fetchMultiple(rpc, tickArrayAddresses, whirlpoolProgramId);
 
   const currentLiquidity = new Decimal(poolData.liquidity.toString());
   let relativeLiquidity = currentLiquidity;
   let minLiquidity = new Decimal(0);
   let liquidity = new Decimal(0);
 
-  tickArrays.forEach((tickArray) => {
-    if (!tickArray) {
+  tickArrays.forEach((tickArray, index) => {
+    const dynamicTickArray = dynamicTickArrays[index];
+    if (!tickArray && !dynamicTickArray) {
       return;
     }
 
-    const startIndex = tickArray.startTickIndex;
-    tickArray.ticks.forEach((tick, index) => {
-      const tickIndex = startIndex + index * poolData.tickSpacing;
-      const price = tickIndexToPrice(tickIndex, tokenDecimalsA, tokenDecimalsB);
-      const liquidityNet = new Decimal(tick.liquidityNet.toString());
-      liquidity = liquidity.add(liquidityNet);
-      datapoints.push({ liquidity: new Decimal(liquidity), price: new Decimal(price), tickIndex });
+    if (tickArray) {
+      const startIndex = tickArray.startTickIndex;
+      tickArray.ticks.forEach((tick, index) => {
+        const tickIndex = startIndex + index * poolData.tickSpacing;
+        const price = tickIndexToPrice(tickIndex, tokenDecimalsA, tokenDecimalsB);
+        const liquidityNet = new Decimal(tick.liquidityNet.toString());
+        liquidity = liquidity.add(liquidityNet);
+        datapoints.push({ liquidity: new Decimal(liquidity), price: new Decimal(price), tickIndex });
 
-      minLiquidity = liquidity.lt(minLiquidity) ? liquidity : minLiquidity;
+        minLiquidity = liquidity.lt(minLiquidity) ? liquidity : minLiquidity;
 
-      if (tickIndex === poolData.tickCurrentIndex) {
-        relativeLiquidity = relativeLiquidity.sub(liquidityNet);
-      }
-    });
+        if (tickIndex === poolData.tickCurrentIndex) {
+          relativeLiquidity = relativeLiquidity.sub(liquidityNet);
+        }
+      });
+    } else if (dynamicTickArray) {
+      const startIndex = dynamicTickArray.startTickIndex;
+      dynamicTickArray.ticks.forEach((tick, index) => {
+        const tickIndex = startIndex + index * poolData.tickSpacing;
+        const price = tickIndexToPrice(tickIndex, tokenDecimalsA, tokenDecimalsB);
+        if (tick.kind == 'Initialized') {
+          const liquidityNet = new Decimal(tick.value[0].liquidityNet.toString());
+          liquidity = liquidity.add(liquidityNet);
+          datapoints.push({ liquidity: new Decimal(liquidity), price: new Decimal(price), tickIndex });
+
+          minLiquidity = liquidity.lt(minLiquidity) ? liquidity : minLiquidity;
+
+          if (tickIndex === poolData.tickCurrentIndex) {
+            relativeLiquidity = relativeLiquidity.sub(liquidityNet);
+          }
+        }
+      });
+    }
   });
 
   if (!relativeLiquidity.eq(currentLiquidity)) {
