@@ -21,6 +21,15 @@ export interface SetFeeAuthorityAccounts {
   newFeeAuthority: Address
 }
 
+/**
+ * Sets the fee authority for a WhirlpoolConfig.
+ * The fee authority can set the fee & protocol fee rate for individual pools or
+ * set the default fee rate for newly minted pools.
+ * Only the current fee authority has permission to invoke this instruction.
+ *
+ * ### Authority
+ * - "fee_authority" - Set authority that can modify pool fees in the WhirlpoolConfig
+ */
 export function setFeeAuthority(
   accounts: SetFeeAuthorityAccounts,
   programAddress: Address = PROGRAM_ID

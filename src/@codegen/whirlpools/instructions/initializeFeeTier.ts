@@ -33,6 +33,21 @@ export const layout = borsh.struct([
   borsh.u16("defaultFeeRate"),
 ])
 
+/**
+ * Initializes a fee_tier account usable by Whirlpools in a WhirlpoolConfig space.
+ *
+ * ### Authority
+ * - "fee_authority" - Set authority in the WhirlpoolConfig
+ *
+ * ### Parameters
+ * - `tick_spacing` - The tick-spacing that this fee-tier suggests the default_fee_rate for.
+ * - `default_fee_rate` - The default fee rate that a pool will use if the pool uses this
+ * fee tier during initialization.
+ *
+ * #### Special Errors
+ * - `InvalidTickSpacing` - If the provided tick_spacing is 0.
+ * - `FeeRateMaxExceeded` - If the provided default_fee_rate exceeds MAX_FEE_RATE.
+ */
 export function initializeFeeTier(
   args: InitializeFeeTierArgs,
   accounts: InitializeFeeTierAccounts,
