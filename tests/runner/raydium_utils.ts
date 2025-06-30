@@ -3,9 +3,8 @@ import { Address, generateKeyPairSigner, getAddressEncoder, getProgramDerivedAdd
 import * as RaydiumInstructions from '../../src/@codegen/raydium/instructions';
 import { accountExist, DeployedPool } from './utils';
 import Decimal from 'decimal.js';
-import { PoolState } from '../../src/@codegen/raydium/accounts';
 import { BN } from 'bn.js';
-import { i32ToBytes, SqrtPriceMath, TickUtils } from '@raydium-io/raydium-sdk-v2/lib';
+import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
 import { getCreateAccountInstruction, SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { SYSVAR_RENT_ADDRESS } from '@solana/sysvars';
 import { sendAndConfirmTx } from './tx';
