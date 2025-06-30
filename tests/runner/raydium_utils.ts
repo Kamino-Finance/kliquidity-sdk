@@ -3,9 +3,8 @@ import { Address, generateKeyPairSigner, getAddressEncoder, getProgramDerivedAdd
 import * as RaydiumInstructions from '../../src/@codegen/raydium/instructions';
 import { accountExist, DeployedPool } from './utils';
 import Decimal from 'decimal.js';
-import { PoolState } from '../../src/@codegen/raydium/accounts';
 import { BN } from 'bn.js';
-import { i32ToBytes, SqrtPriceMath, TickUtils } from '@raydium-io/raydium-sdk-v2/lib';
+import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
 import { getCreateAccountInstruction, SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { SYSVAR_RENT_ADDRESS } from '@solana/sysvars';
 import { sendAndConfirmTx } from './tx';
@@ -199,30 +198,4 @@ export async function getPoolVaultAddress(
     seeds: [POOL_VAULT_SEED, addressEncoder.encode(pool), addressEncoder.encode(vaultTokenMint)],
     programAddress: programId,
   });
-}
-
-export async function getTickArrayPubkeysFromRangeRaydium(
-  env: Env,
-  pool: Address,
-  tickLowerIndex: number,
-  tickUpperIndex: number
-): Promise<[Address, Address]> {
-  const poolState = await PoolState.fetch(env.c.rpc, pool, env.raydiumProgramId);
-  if (poolState == null) {
-    throw new Error(`Error fetching ${poolState}`);
-  }
-
-  const startTickIndex = TickUtils.getTickArrayStartIndexByTick(tickLowerIndex, poolState.tickSpacing);
-  const endTickIndex = TickUtils.getTickArrayStartIndexByTick(tickUpperIndex, poolState.tickSpacing);
-
-  const [startTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(pool), i32ToBytes(startTickIndex)],
-    programAddress: env.raydiumProgramId,
-  });
-  const [endTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(pool), i32ToBytes(endTickIndex)],
-    programAddress: env.raydiumProgramId,
-  });
-
-  return [startTickIndexPk, endTickIndexPk];
 }

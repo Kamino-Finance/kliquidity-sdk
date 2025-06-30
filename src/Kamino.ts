@@ -4503,7 +4503,7 @@ export class Kamino {
     };
   };
 
-  private getStartEndTicketIndexProgramAddressesOrca = async (
+  getStartEndTickIndexProgramAddressesOrca = async (
     whirlpool: Address,
     whirlpoolState: Whirlpool,
     tickLowerIndex: number,
@@ -4775,14 +4775,8 @@ export class Kamino {
     const decimalsA = await getMintDecimals(this._rpc, whirlpool.tokenMintA);
     const decimalsB = await getMintDecimals(this._rpc, whirlpool.tokenMintB);
 
-    const tickLowerIndex = orcaGetTickArrayStartTickIndex(
-      orcaPriceToTickIndex(priceLower.toNumber(), decimalsA, decimalsB),
-      whirlpool.tickSpacing
-    );
-    const tickUpperIndex = orcaGetTickArrayStartTickIndex(
-      orcaPriceToTickIndex(priceUpper.toNumber(), decimalsA, decimalsB),
-      whirlpool.tickSpacing
-    );
+    const tickLowerIndex = orcaPriceToTickIndex(priceLower.toNumber(), decimalsA, decimalsB);
+    const tickUpperIndex = orcaPriceToTickIndex(priceUpper.toNumber(), decimalsA, decimalsB);
 
     const { position, positionBump, positionMetadata } = await this.getMetadataProgramAddressesOrca(
       positionMint.address
@@ -4796,8 +4790,12 @@ export class Kamino {
       bump: positionBump,
     };
 
-    const { lowerTick: startTickIndex, upperTick: endTickIndex } =
-      await this.getStartEndTicketIndexProgramAddressesOrca(pool, whirlpool, tickLowerIndex, tickUpperIndex);
+    const { lowerTick: startTickIndex, upperTick: endTickIndex } = await this.getStartEndTickIndexProgramAddressesOrca(
+      pool,
+      whirlpool,
+      tickLowerIndex,
+      tickUpperIndex
+    );
 
     const globalConfig = await this.getGlobalConfigState(this._globalConfig);
     if (!globalConfig) {
