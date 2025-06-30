@@ -47,13 +47,13 @@ export class MeteoraService {
       .getProgramAccounts(METEORA_PROGRAM_ID, {
         commitment: 'confirmed',
         filters: [{ dataSize: 904n }],
+        encoding: 'base64',
       })
       .send();
     const pools: MeteoraPool[] = [];
     for (let i = 0; i < rawPools.length; i++) {
       try {
-        const lbPair = LbPair.decode(Buffer.from(rawPools[i].account.data));
-        //const lbPair = LbPair.decode(Buffer.from(rawPools[i].account.data[0], 'base64'));
+        const lbPair = LbPair.decode(Buffer.from(rawPools[i].account.data[0], 'base64'));
         pools.push({ pool: lbPair, key: rawPools[i].pubkey });
       } catch (e) {
         console.log(e);
