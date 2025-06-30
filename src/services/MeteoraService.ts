@@ -53,6 +53,7 @@ export class MeteoraService {
     for (let i = 0; i < rawPools.length; i++) {
       try {
         const lbPair = LbPair.decode(Buffer.from(rawPools[i].account.data));
+        //const lbPair = LbPair.decode(Buffer.from(rawPools[i].account.data[0], 'base64'));
         pools.push({ pool: lbPair, key: rawPools[i].pubkey });
       } catch (e) {
         console.log(e);
