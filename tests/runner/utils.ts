@@ -25,15 +25,12 @@ import { CollateralInfos, GlobalConfig, WhirlpoolStrategy } from '../../src/@cod
 import {
   collToLamportsDecimal,
   DepositAmountsForSwap,
-  Dex,
   getAssociatedTokenAddress,
   getUpdateStrategyConfigIx,
   isSOLMint,
   sleep,
   ZERO,
 } from '../../src';
-import { getTickArrayPubkeysFromRangeRaydium } from './raydium_utils';
-import { getTickArrayPubkeysFromRangeOrca } from './orca_utils';
 import { collateralTokenToNumber, CollateralToken } from './token_utils';
 import { checkIfAccountExists } from '../../src/utils/transactions';
 import { FullBPS } from '../../src/utils/CreationParameters';
@@ -159,22 +156,6 @@ export async function updateTreasuryFeeVault(
     throw new Error('Hash for updateTreasuryFeeVault tx not found');
   }
   return hash;
-}
-
-export async function getTickArrayPubkeysFromRange(
-  env: Env,
-  dex: Dex,
-  pool: Address,
-  tickLowerIndex: number,
-  tickUpperIndex: number
-): Promise<[Address, Address]> {
-  if (dex == 'ORCA') {
-    return getTickArrayPubkeysFromRangeOrca(env.c.rpc, pool, tickLowerIndex, tickUpperIndex);
-  } else if (dex == 'RAYDIUM') {
-    return getTickArrayPubkeysFromRangeRaydium(env, pool, tickLowerIndex, tickUpperIndex);
-  } else {
-    throw new Error('Invalid dex');
-  }
 }
 
 export async function createUser(

@@ -80,6 +80,8 @@ describe('Kamino SDK Tests', () => {
     newTokenMintB: address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
     tokenInfos: address('3v6ootgJJZbSWEDfZMA1scfh7wcsVVfeocExRxPqCyWH'),
   };
+  const lowerPrice = new Decimal(0.97);
+  const upperPrice = new Decimal(1.03);
 
   before(async () => {
     env = await initEnv();
@@ -188,8 +190,18 @@ describe('Kamino SDK Tests', () => {
 
     fixtures.newOrcaStrategy = newOrcaStrategy.address;
 
-    await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateDepositCapIxn(), new Decimal(1000000000000000));
-    await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateDepositCap(), new Decimal(10000000000000000));
+    await updateStrategyConfig(
+      env,
+      fixtures.newOrcaStrategy,
+      new UpdateDepositCapIxn(),
+      new Decimal(1_000_000_000_000_000)
+    );
+    await updateStrategyConfig(
+      env,
+      fixtures.newOrcaStrategy,
+      new UpdateDepositCap(),
+      new Decimal(1_000_000_000_000_000)
+    );
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, new UpdateMaxDeviationBps(), new Decimal(1000));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, new AllowDepositWithoutInvest(), new Decimal(1));
 
@@ -197,18 +209,23 @@ describe('Kamino SDK Tests', () => {
       env,
       fixtures.newRaydiumStrategy,
       new UpdateDepositCapIxn(),
-      new Decimal(100000000000000)
+      new Decimal(1_000_000_000_000_000)
     );
-    await updateStrategyConfig(env, fixtures.newRaydiumStrategy, new UpdateDepositCap(), new Decimal(100000000000000));
+    await updateStrategyConfig(
+      env,
+      fixtures.newRaydiumStrategy,
+      new UpdateDepositCap(),
+      new Decimal(1_000_000_000_000_000)
+    );
     await updateStrategyConfig(env, fixtures.newRaydiumStrategy, new UpdateMaxDeviationBps(), new Decimal(2000));
     await updateStrategyConfig(env, fixtures.newRaydiumStrategy, new AllowDepositWithoutInvest(), new Decimal(1));
 
     await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address);
     await setupStrategyLookupTable(env, kamino, newRaydiumStrategy.address);
 
-    await openPosition(env, kamino, env.admin, newOrcaStrategy.address, new Decimal(0.97), new Decimal(1.03));
+    await openPosition(env, kamino, env.admin, newOrcaStrategy.address, lowerPrice, upperPrice);
     console.log('orca position opened');
-    await openPosition(env, kamino, env.admin, newRaydiumStrategy.address, new Decimal(0.97), new Decimal(1.03));
+    await openPosition(env, kamino, env.admin, newRaydiumStrategy.address, lowerPrice, upperPrice);
     console.log('raydium position opened');
   });
 
@@ -217,6 +234,38 @@ describe('Kamino SDK Tests', () => {
   //   const init = () => new Kamino('invalid-clusters', undefined);
   //   expect(init).to.throw(Error);
   // });
+
+  it('price range is close to initial range', async () => {
+    const kamino = new Kamino(
+      'localnet',
+      env.c.rpc,
+      env.legacyConnection,
+      fixtures.globalConfig,
+      env.kliquidityProgramId,
+      WHIRLPOOL_PROGRAM_ID,
+      env.raydiumProgramId
+    );
+
+    const orcaStrategy = await kamino.getStrategyByAddress(fixtures.newOrcaStrategy);
+    expect(orcaStrategy).not.to.be.null;
+    const orcaPositionRange = await kamino.getPositionRangeOrca(
+      orcaStrategy!.position,
+      orcaStrategy!.tokenAMintDecimals.toNumber(),
+      orcaStrategy!.tokenBMintDecimals.toNumber()
+    );
+    expect(orcaPositionRange.lowerPrice.toNumber()).to.be.approximately(lowerPrice.toNumber(), 0.001);
+    expect(orcaPositionRange.upperPrice.toNumber()).to.be.approximately(upperPrice.toNumber(), 0.001);
+
+    const raydiumStrategy = await kamino.getStrategyByAddress(fixtures.newRaydiumStrategy);
+    expect(raydiumStrategy).not.to.be.null;
+    const raydiumPositionRange = await kamino.getPositionRangeRaydium(
+      raydiumStrategy!.position,
+      raydiumStrategy!.tokenAMintDecimals.toNumber(),
+      raydiumStrategy!.tokenBMintDecimals.toNumber()
+    );
+    expect(raydiumPositionRange.lowerPrice.toNumber()).to.be.approximately(lowerPrice.toNumber(), 0.001);
+    expect(raydiumPositionRange.upperPrice.toNumber()).to.be.approximately(upperPrice.toNumber(), 0.001);
+  });
 
   it('should get all Kamino prices', async () => {
     const kamino = new Kamino(
