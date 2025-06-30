@@ -41,8 +41,8 @@ export interface WhirlpoolStrategyFields {
   tokenBAmounts: BN
   tokenACollateralId: BN
   tokenBCollateralId: BN
-  scopePrices: Address
   deprecated2: Address
+  deprecated3: Address
   sharesMint: Address
   sharesMintDecimals: BN
   sharesMintAuthority: Address
@@ -145,8 +145,8 @@ export interface WhirlpoolStrategyJSON {
   tokenBAmounts: string
   tokenACollateralId: string
   tokenBCollateralId: string
-  scopePrices: string
   deprecated2: string
+  deprecated3: string
   sharesMint: string
   sharesMintDecimals: string
   sharesMintAuthority: string
@@ -249,8 +249,8 @@ export class WhirlpoolStrategy {
   readonly tokenBAmounts: BN
   readonly tokenACollateralId: BN
   readonly tokenBCollateralId: BN
-  readonly scopePrices: Address
   readonly deprecated2: Address
+  readonly deprecated3: Address
   readonly sharesMint: Address
   readonly sharesMintDecimals: BN
   readonly sharesMintAuthority: Address
@@ -356,8 +356,8 @@ export class WhirlpoolStrategy {
     borsh.u64("tokenBAmounts"),
     borsh.u64("tokenACollateralId"),
     borsh.u64("tokenBCollateralId"),
-    borshAddress("scopePrices"),
     borshAddress("deprecated2"),
+    borshAddress("deprecated3"),
     borshAddress("sharesMint"),
     borsh.u64("sharesMintDecimals"),
     borshAddress("sharesMintAuthority"),
@@ -459,8 +459,8 @@ export class WhirlpoolStrategy {
     this.tokenBAmounts = fields.tokenBAmounts
     this.tokenACollateralId = fields.tokenACollateralId
     this.tokenBCollateralId = fields.tokenBCollateralId
-    this.scopePrices = fields.scopePrices
     this.deprecated2 = fields.deprecated2
+    this.deprecated3 = fields.deprecated3
     this.sharesMint = fields.sharesMint
     this.sharesMintDecimals = fields.sharesMintDecimals
     this.sharesMintAuthority = fields.sharesMintAuthority
@@ -616,8 +616,8 @@ export class WhirlpoolStrategy {
       tokenBAmounts: dec.tokenBAmounts,
       tokenACollateralId: dec.tokenACollateralId,
       tokenBCollateralId: dec.tokenBCollateralId,
-      scopePrices: dec.scopePrices,
       deprecated2: dec.deprecated2,
+      deprecated3: dec.deprecated3,
       sharesMint: dec.sharesMint,
       sharesMintDecimals: dec.sharesMintDecimals,
       sharesMintAuthority: dec.sharesMintAuthority,
@@ -728,8 +728,8 @@ export class WhirlpoolStrategy {
       tokenBAmounts: this.tokenBAmounts.toString(),
       tokenACollateralId: this.tokenACollateralId.toString(),
       tokenBCollateralId: this.tokenBCollateralId.toString(),
-      scopePrices: this.scopePrices,
       deprecated2: this.deprecated2,
+      deprecated3: this.deprecated3,
       sharesMint: this.sharesMint,
       sharesMintDecimals: this.sharesMintDecimals.toString(),
       sharesMintAuthority: this.sharesMintAuthority,
@@ -838,8 +838,8 @@ export class WhirlpoolStrategy {
       tokenBAmounts: new BN(obj.tokenBAmounts),
       tokenACollateralId: new BN(obj.tokenACollateralId),
       tokenBCollateralId: new BN(obj.tokenBCollateralId),
-      scopePrices: address(obj.scopePrices),
       deprecated2: address(obj.deprecated2),
+      deprecated3: address(obj.deprecated3),
       sharesMint: address(obj.sharesMint),
       sharesMintDecimals: new BN(obj.sharesMintDecimals),
       sharesMintAuthority: address(obj.sharesMintAuthority),

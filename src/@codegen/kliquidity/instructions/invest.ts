@@ -37,7 +37,8 @@ export interface InvestAccounts {
   poolTokenVaultB: Address
   tickArrayLower: Address
   tickArrayUpper: Address
-  scopePrices: Address
+  scopePricesA: Address
+  scopePricesB: Address
   tokenInfos: Address
   poolProgram: Address
   instructionSysvarAccount: Address
@@ -70,7 +71,8 @@ export function invest(
     { address: accounts.poolTokenVaultB, role: 1 },
     { address: accounts.tickArrayLower, role: 1 },
     { address: accounts.tickArrayUpper, role: 1 },
-    { address: accounts.scopePrices, role: 0 },
+    { address: accounts.scopePricesA, role: 0 },
+    { address: accounts.scopePricesB, role: 0 },
     { address: accounts.tokenInfos, role: 0 },
     { address: accounts.poolProgram, role: 0 },
     { address: accounts.instructionSysvarAccount, role: 0 },

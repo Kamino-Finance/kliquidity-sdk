@@ -442,11 +442,11 @@ let nonPeggedStrats = await kamino.getAllStrategiesWithFilters(filters);
 ## FAQ
 
 ## Codegen 
-* Copy the new `idl` from the kamino-liquidity program to `src/kamino-client/idl.json`
+* Copy the new `idl` from the kamino-liquidity program to `src/idl/kliquidity.json`
 * `yarn codegen:kliquidity`
 
 ## Setup localnet 
-* Ensure `deps` contains the correct `.so` you want to test against. Either build it from the main repo or dump it from mainnet
+* Ensure `deps` contains the correct `.so` you want to test against (in `deps/kliquidity/kliquidity.so`). Either build it from the main repo (using CLUSTER=devnet) or dump it from devnet
 * `yarn start-validator`
 
 ## Run tests

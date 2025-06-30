@@ -395,25 +395,25 @@ export class ScopeProgramId {
   }
 }
 
-export interface ScopePriceIdJSON {
-  kind: "ScopePriceId"
+export interface UpdateScopePriceIdJSON {
+  kind: "UpdateScopePriceId"
 }
 
-export class ScopePriceId {
+export class UpdateScopePriceId {
   static readonly discriminator = 17
-  static readonly kind = "ScopePriceId"
+  static readonly kind = "UpdateScopePriceId"
   readonly discriminator = 17
-  readonly kind = "ScopePriceId"
+  readonly kind = "UpdateScopePriceId"
 
-  toJSON(): ScopePriceIdJSON {
+  toJSON(): UpdateScopePriceIdJSON {
     return {
-      kind: "ScopePriceId",
+      kind: "UpdateScopePriceId",
     }
   }
 
   toEncodable() {
     return {
-      ScopePriceId: {},
+      UpdateScopePriceId: {},
     }
   }
 }
@@ -533,6 +533,29 @@ export class TreasuryFeeVaultReceiver {
   }
 }
 
+export interface AddScopePriceIdJSON {
+  kind: "AddScopePriceId"
+}
+
+export class AddScopePriceId {
+  static readonly discriminator = 23
+  static readonly kind = "AddScopePriceId"
+  readonly discriminator = 23
+  readonly kind = "AddScopePriceId"
+
+  toJSON(): AddScopePriceIdJSON {
+    return {
+      kind: "AddScopePriceId",
+    }
+  }
+
+  toEncodable() {
+    return {
+      AddScopePriceId: {},
+    }
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function fromDecoded(obj: any): types.GlobalConfigOptionKind {
   if (typeof obj !== "object") {
@@ -590,8 +613,8 @@ export function fromDecoded(obj: any): types.GlobalConfigOptionKind {
   if ("ScopeProgramId" in obj) {
     return new ScopeProgramId()
   }
-  if ("ScopePriceId" in obj) {
-    return new ScopePriceId()
+  if ("UpdateScopePriceId" in obj) {
+    return new UpdateScopePriceId()
   }
   if ("MinPerformanceFeeBps" in obj) {
     return new MinPerformanceFeeBps()
@@ -607,6 +630,9 @@ export function fromDecoded(obj: any): types.GlobalConfigOptionKind {
   }
   if ("TreasuryFeeVaultReceiver" in obj) {
     return new TreasuryFeeVaultReceiver()
+  }
+  if ("AddScopePriceId" in obj) {
+    return new AddScopePriceId()
   }
 
   throw new Error("Invalid enum object")
@@ -667,8 +693,8 @@ export function fromJSON(
     case "ScopeProgramId": {
       return new ScopeProgramId()
     }
-    case "ScopePriceId": {
-      return new ScopePriceId()
+    case "UpdateScopePriceId": {
+      return new UpdateScopePriceId()
     }
     case "MinPerformanceFeeBps": {
       return new MinPerformanceFeeBps()
@@ -684,6 +710,9 @@ export function fromJSON(
     }
     case "TreasuryFeeVaultReceiver": {
       return new TreasuryFeeVaultReceiver()
+    }
+    case "AddScopePriceId": {
+      return new AddScopePriceId()
     }
   }
 }
@@ -707,12 +736,13 @@ export function layout(property?: string) {
     borsh.struct([], "BlockLocalAdmin"),
     borsh.struct([], "UpdateTokenInfos"),
     borsh.struct([], "ScopeProgramId"),
-    borsh.struct([], "ScopePriceId"),
+    borsh.struct([], "UpdateScopePriceId"),
     borsh.struct([], "MinPerformanceFeeBps"),
     borsh.struct([], "MinSwapUnevenSlippageToleranceBps"),
     borsh.struct([], "MinReferencePriceSlippageToleranceBps"),
     borsh.struct([], "ActionsAfterRebalanceDelaySeconds"),
     borsh.struct([], "TreasuryFeeVaultReceiver"),
+    borsh.struct([], "AddScopePriceId"),
   ])
   if (property !== undefined) {
     return ret.replicate(property)
