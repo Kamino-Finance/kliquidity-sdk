@@ -5,15 +5,12 @@ import {
   generateKeyPairSigner,
   getProgramDerivedAddress,
   getAddressEncoder,
-  Rpc,
-  GetAccountInfoApi,
 } from '@solana/kit';
 import { DeployedPool, range } from './utils';
 import * as WhirlpoolInstructions from '../../src/@codegen/whirlpools/instructions';
 import * as anchor from '@coral-xyz/anchor';
 import { PROGRAM_ID_CLI as WHIRLPOOL_PROGRAM_ID } from '../../src/@codegen/whirlpools/programId';
 import { orderMints } from './raydium_utils';
-import { Whirlpool } from '../../src/@codegen/whirlpools/accounts';
 import { Env } from './env';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { sendAndConfirmTx } from './tx';
@@ -226,29 +223,4 @@ async function getTokenBadge(
     ],
     programAddress: programId,
   });
-}
-
-export async function getTickArrayPubkeysFromRangeOrca(
-  rpc: Rpc<GetAccountInfoApi>,
-  whirlpool: Address,
-  tickLowerIndex: number,
-  tickUpperIndex: number
-): Promise<[Address, Address]> {
-  const whirlpoolState = await Whirlpool.fetch(rpc, whirlpool);
-  if (whirlpoolState == null) {
-    throw new Error(`Raydium Pool ${whirlpool} doesn't exist`);
-  }
-
-  const startTickIndex = orcaGetTickArrayStartTickIndex(tickLowerIndex, whirlpoolState.tickSpacing);
-  const endTickIndex = orcaGetTickArrayStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing);
-
-  const [startTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(startTickIndex.toString())],
-    programAddress: WHIRLPOOL_PROGRAM_ID,
-  });
-  const [endTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(endTickIndex.toString())],
-    programAddress: WHIRLPOOL_PROGRAM_ID,
-  });
-  return [startTickIndexPk, endTickIndexPk];
 }

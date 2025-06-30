@@ -200,29 +200,3 @@ export async function getPoolVaultAddress(
     programAddress: programId,
   });
 }
-
-export async function getTickArrayPubkeysFromRangeRaydium(
-  env: Env,
-  pool: Address,
-  tickLowerIndex: number,
-  tickUpperIndex: number
-): Promise<[Address, Address]> {
-  const poolState = await PoolState.fetch(env.c.rpc, pool, env.raydiumProgramId);
-  if (poolState == null) {
-    throw new Error(`Error fetching ${poolState}`);
-  }
-
-  const startTickIndex = TickUtils.getTickArrayStartIndexByTick(tickLowerIndex, poolState.tickSpacing);
-  const endTickIndex = TickUtils.getTickArrayStartIndexByTick(tickUpperIndex, poolState.tickSpacing);
-
-  const [startTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(pool), i32ToBytes(startTickIndex)],
-    programAddress: env.raydiumProgramId,
-  });
-  const [endTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(pool), i32ToBytes(endTickIndex)],
-    programAddress: env.raydiumProgramId,
-  });
-
-  return [startTickIndexPk, endTickIndexPk];
-}
