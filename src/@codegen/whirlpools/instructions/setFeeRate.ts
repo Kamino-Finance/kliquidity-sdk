@@ -27,6 +27,20 @@ export interface SetFeeRateAccounts {
 
 export const layout = borsh.struct([borsh.u16("feeRate")])
 
+/**
+ * Sets the fee rate for a Whirlpool.
+ * Fee rate is represented as hundredths of a basis point.
+ * Only the current fee authority has permission to invoke this instruction.
+ *
+ * ### Authority
+ * - "fee_authority" - Set authority that can modify pool fees in the WhirlpoolConfig
+ *
+ * ### Parameters
+ * - `fee_rate` - The rate that the pool will use to calculate fees going onwards.
+ *
+ * #### Special Errors
+ * - `FeeRateMaxExceeded` - If the provided fee_rate exceeds MAX_FEE_RATE.
+ */
 export function setFeeRate(
   args: SetFeeRateArgs,
   accounts: SetFeeRateAccounts,

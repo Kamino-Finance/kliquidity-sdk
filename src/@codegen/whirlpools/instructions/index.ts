@@ -13,6 +13,11 @@ export type {
   InitializeTickArrayArgs,
   InitializeTickArrayAccounts,
 } from "./initializeTickArray"
+export { initializeDynamicTickArray } from "./initializeDynamicTickArray"
+export type {
+  InitializeDynamicTickArrayArgs,
+  InitializeDynamicTickArrayAccounts,
+} from "./initializeDynamicTickArray"
 export { initializeFeeTier } from "./initializeFeeTier"
 export type {
   InitializeFeeTierArgs,
@@ -108,6 +113,51 @@ export type {
   CloseBundledPositionArgs,
   CloseBundledPositionAccounts,
 } from "./closeBundledPosition"
+export { openPositionWithTokenExtensions } from "./openPositionWithTokenExtensions"
+export type {
+  OpenPositionWithTokenExtensionsArgs,
+  OpenPositionWithTokenExtensionsAccounts,
+} from "./openPositionWithTokenExtensions"
+export { closePositionWithTokenExtensions } from "./closePositionWithTokenExtensions"
+export type { ClosePositionWithTokenExtensionsAccounts } from "./closePositionWithTokenExtensions"
+export { lockPosition } from "./lockPosition"
+export type { LockPositionArgs, LockPositionAccounts } from "./lockPosition"
+export { resetPositionRange } from "./resetPositionRange"
+export type {
+  ResetPositionRangeArgs,
+  ResetPositionRangeAccounts,
+} from "./resetPositionRange"
+export { transferLockedPosition } from "./transferLockedPosition"
+export type { TransferLockedPositionAccounts } from "./transferLockedPosition"
+export { initializeAdaptiveFeeTier } from "./initializeAdaptiveFeeTier"
+export type {
+  InitializeAdaptiveFeeTierArgs,
+  InitializeAdaptiveFeeTierAccounts,
+} from "./initializeAdaptiveFeeTier"
+export { setDefaultBaseFeeRate } from "./setDefaultBaseFeeRate"
+export type {
+  SetDefaultBaseFeeRateArgs,
+  SetDefaultBaseFeeRateAccounts,
+} from "./setDefaultBaseFeeRate"
+export { setDelegatedFeeAuthority } from "./setDelegatedFeeAuthority"
+export type { SetDelegatedFeeAuthorityAccounts } from "./setDelegatedFeeAuthority"
+export { setInitializePoolAuthority } from "./setInitializePoolAuthority"
+export type { SetInitializePoolAuthorityAccounts } from "./setInitializePoolAuthority"
+export { setPresetAdaptiveFeeConstants } from "./setPresetAdaptiveFeeConstants"
+export type {
+  SetPresetAdaptiveFeeConstantsArgs,
+  SetPresetAdaptiveFeeConstantsAccounts,
+} from "./setPresetAdaptiveFeeConstants"
+export { initializePoolWithAdaptiveFee } from "./initializePoolWithAdaptiveFee"
+export type {
+  InitializePoolWithAdaptiveFeeArgs,
+  InitializePoolWithAdaptiveFeeAccounts,
+} from "./initializePoolWithAdaptiveFee"
+export { setFeeRateByDelegatedFeeAuthority } from "./setFeeRateByDelegatedFeeAuthority"
+export type {
+  SetFeeRateByDelegatedFeeAuthorityArgs,
+  SetFeeRateByDelegatedFeeAuthorityAccounts,
+} from "./setFeeRateByDelegatedFeeAuthority"
 export { collectFeesV2 } from "./collectFeesV2"
 export type { CollectFeesV2Args, CollectFeesV2Accounts } from "./collectFeesV2"
 export { collectProtocolFeesV2 } from "./collectProtocolFeesV2"
@@ -159,3 +209,5 @@ export { initializeTokenBadge } from "./initializeTokenBadge"
 export type { InitializeTokenBadgeAccounts } from "./initializeTokenBadge"
 export { deleteTokenBadge } from "./deleteTokenBadge"
 export type { DeleteTokenBadgeAccounts } from "./deleteTokenBadge"
+export { idlInclude } from "./idlInclude"
+export type { IdlIncludeAccounts } from "./idlInclude"

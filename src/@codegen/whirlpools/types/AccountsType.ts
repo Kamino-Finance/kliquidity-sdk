@@ -142,6 +142,75 @@ export class TransferHookOutput {
   }
 }
 
+export interface SupplementalTickArraysJSON {
+  kind: "SupplementalTickArrays"
+}
+
+export class SupplementalTickArrays {
+  static readonly discriminator = 6
+  static readonly kind = "SupplementalTickArrays"
+  readonly discriminator = 6
+  readonly kind = "SupplementalTickArrays"
+
+  toJSON(): SupplementalTickArraysJSON {
+    return {
+      kind: "SupplementalTickArrays",
+    }
+  }
+
+  toEncodable() {
+    return {
+      SupplementalTickArrays: {},
+    }
+  }
+}
+
+export interface SupplementalTickArraysOneJSON {
+  kind: "SupplementalTickArraysOne"
+}
+
+export class SupplementalTickArraysOne {
+  static readonly discriminator = 7
+  static readonly kind = "SupplementalTickArraysOne"
+  readonly discriminator = 7
+  readonly kind = "SupplementalTickArraysOne"
+
+  toJSON(): SupplementalTickArraysOneJSON {
+    return {
+      kind: "SupplementalTickArraysOne",
+    }
+  }
+
+  toEncodable() {
+    return {
+      SupplementalTickArraysOne: {},
+    }
+  }
+}
+
+export interface SupplementalTickArraysTwoJSON {
+  kind: "SupplementalTickArraysTwo"
+}
+
+export class SupplementalTickArraysTwo {
+  static readonly discriminator = 8
+  static readonly kind = "SupplementalTickArraysTwo"
+  readonly discriminator = 8
+  readonly kind = "SupplementalTickArraysTwo"
+
+  toJSON(): SupplementalTickArraysTwoJSON {
+    return {
+      kind: "SupplementalTickArraysTwo",
+    }
+  }
+
+  toEncodable() {
+    return {
+      SupplementalTickArraysTwo: {},
+    }
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function fromDecoded(obj: any): types.AccountsTypeKind {
   if (typeof obj !== "object") {
@@ -165,6 +234,15 @@ export function fromDecoded(obj: any): types.AccountsTypeKind {
   }
   if ("TransferHookOutput" in obj) {
     return new TransferHookOutput()
+  }
+  if ("SupplementalTickArrays" in obj) {
+    return new SupplementalTickArrays()
+  }
+  if ("SupplementalTickArraysOne" in obj) {
+    return new SupplementalTickArraysOne()
+  }
+  if ("SupplementalTickArraysTwo" in obj) {
+    return new SupplementalTickArraysTwo()
   }
 
   throw new Error("Invalid enum object")
@@ -190,6 +268,15 @@ export function fromJSON(obj: types.AccountsTypeJSON): types.AccountsTypeKind {
     case "TransferHookOutput": {
       return new TransferHookOutput()
     }
+    case "SupplementalTickArrays": {
+      return new SupplementalTickArrays()
+    }
+    case "SupplementalTickArraysOne": {
+      return new SupplementalTickArraysOne()
+    }
+    case "SupplementalTickArraysTwo": {
+      return new SupplementalTickArraysTwo()
+    }
   }
 }
 
@@ -201,6 +288,9 @@ export function layout(property?: string) {
     borsh.struct([], "TransferHookInput"),
     borsh.struct([], "TransferHookIntermediate"),
     borsh.struct([], "TransferHookOutput"),
+    borsh.struct([], "SupplementalTickArrays"),
+    borsh.struct([], "SupplementalTickArraysOne"),
+    borsh.struct([], "SupplementalTickArraysTwo"),
   ])
   if (property !== undefined) {
     return ret.replicate(property)

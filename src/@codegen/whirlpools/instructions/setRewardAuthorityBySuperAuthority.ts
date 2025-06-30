@@ -28,6 +28,18 @@ export interface SetRewardAuthorityBySuperAuthorityAccounts {
 
 export const layout = borsh.struct([borsh.u8("rewardIndex")])
 
+/**
+ * Set the whirlpool reward authority at the provided `reward_index`.
+ * Only the current reward super authority has permission to invoke this instruction.
+ *
+ * ### Authority
+ * - "reward_authority" - Set authority that can control reward emission for this particular reward.
+ *
+ * #### Special Errors
+ * - `InvalidRewardIndex` - If the provided reward index doesn't match the lowest uninitialized
+ * index in this pool, or exceeds NUM_REWARDS, or
+ * all reward slots for this pool has been initialized.
+ */
 export function setRewardAuthorityBySuperAuthority(
   args: SetRewardAuthorityBySuperAuthorityArgs,
   accounts: SetRewardAuthorityBySuperAuthorityAccounts,

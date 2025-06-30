@@ -24,6 +24,15 @@ export interface ClosePositionAccounts {
   tokenProgram: Address
 }
 
+/**
+ * Close a position in a Whirlpool. Burns the position token in the owner's wallet.
+ *
+ * ### Authority
+ * - "position_authority" - The authority that owns the position token.
+ *
+ * #### Special Errors
+ * - `ClosePositionNotEmpty` - The provided position account is not empty.
+ */
 export function closePosition(
   accounts: ClosePositionAccounts,
   programAddress: Address = PROGRAM_ID

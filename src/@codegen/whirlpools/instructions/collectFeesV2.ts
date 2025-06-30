@@ -39,6 +39,12 @@ export const layout = borsh.struct([
   borsh.option(types.RemainingAccountsInfo.layout(), "remainingAccountsInfo"),
 ])
 
+/**
+ * Collect fees accrued for this position.
+ *
+ * ### Authority
+ * - `position_authority` - authority that owns the token corresponding to this desired position.
+ */
 export function collectFeesV2(
   args: CollectFeesV2Args,
   accounts: CollectFeesV2Accounts,

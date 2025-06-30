@@ -19,7 +19,7 @@ export interface WhirlpoolFields {
   whirlpoolsConfig: Address
   whirlpoolBump: Array<number>
   tickSpacing: number
-  tickSpacingSeed: Array<number>
+  feeTierIndexSeed: Array<number>
   feeRate: number
   protocolFeeRate: number
   liquidity: BN
@@ -41,7 +41,7 @@ export interface WhirlpoolJSON {
   whirlpoolsConfig: string
   whirlpoolBump: Array<number>
   tickSpacing: number
-  tickSpacingSeed: Array<number>
+  feeTierIndexSeed: Array<number>
   feeRate: number
   protocolFeeRate: number
   liquidity: string
@@ -63,7 +63,7 @@ export class Whirlpool {
   readonly whirlpoolsConfig: Address
   readonly whirlpoolBump: Array<number>
   readonly tickSpacing: number
-  readonly tickSpacingSeed: Array<number>
+  readonly feeTierIndexSeed: Array<number>
   readonly feeRate: number
   readonly protocolFeeRate: number
   readonly liquidity: BN
@@ -88,7 +88,7 @@ export class Whirlpool {
     borshAddress("whirlpoolsConfig"),
     borsh.array(borsh.u8(), 1, "whirlpoolBump"),
     borsh.u16("tickSpacing"),
-    borsh.array(borsh.u8(), 2, "tickSpacingSeed"),
+    borsh.array(borsh.u8(), 2, "feeTierIndexSeed"),
     borsh.u16("feeRate"),
     borsh.u16("protocolFeeRate"),
     borsh.u128("liquidity"),
@@ -110,7 +110,7 @@ export class Whirlpool {
     this.whirlpoolsConfig = fields.whirlpoolsConfig
     this.whirlpoolBump = fields.whirlpoolBump
     this.tickSpacing = fields.tickSpacing
-    this.tickSpacingSeed = fields.tickSpacingSeed
+    this.feeTierIndexSeed = fields.feeTierIndexSeed
     this.feeRate = fields.feeRate
     this.protocolFeeRate = fields.protocolFeeRate
     this.liquidity = fields.liquidity
@@ -177,7 +177,7 @@ export class Whirlpool {
       whirlpoolsConfig: dec.whirlpoolsConfig,
       whirlpoolBump: dec.whirlpoolBump,
       tickSpacing: dec.tickSpacing,
-      tickSpacingSeed: dec.tickSpacingSeed,
+      feeTierIndexSeed: dec.feeTierIndexSeed,
       feeRate: dec.feeRate,
       protocolFeeRate: dec.protocolFeeRate,
       liquidity: dec.liquidity,
@@ -205,7 +205,7 @@ export class Whirlpool {
       whirlpoolsConfig: this.whirlpoolsConfig,
       whirlpoolBump: this.whirlpoolBump,
       tickSpacing: this.tickSpacing,
-      tickSpacingSeed: this.tickSpacingSeed,
+      feeTierIndexSeed: this.feeTierIndexSeed,
       feeRate: this.feeRate,
       protocolFeeRate: this.protocolFeeRate,
       liquidity: this.liquidity.toString(),
@@ -229,7 +229,7 @@ export class Whirlpool {
       whirlpoolsConfig: address(obj.whirlpoolsConfig),
       whirlpoolBump: obj.whirlpoolBump,
       tickSpacing: obj.tickSpacing,
-      tickSpacingSeed: obj.tickSpacingSeed,
+      feeTierIndexSeed: obj.feeTierIndexSeed,
       feeRate: obj.feeRate,
       protocolFeeRate: obj.protocolFeeRate,
       liquidity: new BN(obj.liquidity),
