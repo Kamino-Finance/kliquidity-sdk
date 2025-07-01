@@ -16,11 +16,8 @@ import { WhirlpoolAprApy } from './WhirlpoolAprApy';
 import { PROGRAM_ID as METEORA_PROGRAM_ID } from '../@codegen/meteora/programId';
 import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
-<<<<<<< HEAD
 import { decompress } from 'fzstd';
-=======
-import { MeteoraPoolsResponse, MeteoraPoolAPI } from './MeteoraPoolsResponse';
->>>>>>> 3b07d9b (read meteora pools from API)
+import { MeteoraPoolAPI, MeteoraPoolsResponse } from './MeteoraPoolsResponse';
 
 export interface MeteoraPool {
   key: Address;
