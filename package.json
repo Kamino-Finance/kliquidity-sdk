@@ -68,7 +68,8 @@
     "bn.js": "^5.2.1",
     "bs58": "^6.0.0",
     "buffer-layout": "^1.2.2",
-    "decimal.js": "^10.3.1"
+    "decimal.js": "^10.3.1",
+    "fzstd": "^0.1.1"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.5",

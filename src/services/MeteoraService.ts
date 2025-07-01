@@ -15,6 +15,8 @@ import { WhirlpoolAprApy } from './WhirlpoolAprApy';
 import { PROGRAM_ID as METEORA_PROGRAM_ID } from '../@codegen/meteora/programId';
 import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
+import { decompress } from 'fzstd';
+
 
 export interface MeteoraPool {
   key: Address;
@@ -47,12 +49,16 @@ export class MeteoraService {
       .getProgramAccounts(METEORA_PROGRAM_ID, {
         commitment: 'confirmed',
         filters: [{ dataSize: 904n }],
+        encoding: 'base64+zstd',
       })
       .send();
     const pools: MeteoraPool[] = [];
     for (let i = 0; i < rawPools.length; i++) {
       try {
-        const lbPair = LbPair.decode(Buffer.from(rawPools[i].account.data));
+        const compressedData = Buffer.from(rawPools[i].account.data[0], 'base64');
+        const decompressedData = decompress(compressedData);
+
+        const lbPair = LbPair.decode(Buffer.from(decompressedData));
         pools.push({ pool: lbPair, key: rawPools[i].pubkey });
       } catch (e) {
         console.log(e);
