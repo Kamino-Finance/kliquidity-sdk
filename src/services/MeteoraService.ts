@@ -17,7 +17,6 @@ import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
 import { decompress } from 'fzstd';
 
-
 export interface MeteoraPool {
   key: Address;
   pool: LbPair;
