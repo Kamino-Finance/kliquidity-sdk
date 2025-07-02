@@ -31,7 +31,8 @@ export interface FlashSwapUnevenVaultsStartAccounts {
   baseVaultAuthority: Address
   pool: Address
   position: Address
-  scopePrices: Address
+  scopePricesA: Address
+  scopePricesB: Address
   tokenInfos: Address
   tickArrayLower: Address
   tickArrayUpper: Address
@@ -72,7 +73,8 @@ export function flashSwapUnevenVaultsStart(
     { address: accounts.baseVaultAuthority, role: 1 },
     { address: accounts.pool, role: 1 },
     { address: accounts.position, role: 1 },
-    { address: accounts.scopePrices, role: 0 },
+    { address: accounts.scopePricesA, role: 0 },
+    { address: accounts.scopePricesB, role: 0 },
     { address: accounts.tokenInfos, role: 0 },
     { address: accounts.tickArrayLower, role: 0 },
     { address: accounts.tickArrayUpper, role: 0 },

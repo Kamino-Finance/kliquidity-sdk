@@ -2,9 +2,7 @@ import {
   address,
   Address,
   generateKeyPairSigner,
-  getAddressEncoder,
   IInstruction,
-  isAddress,
   Signature,
   TransactionSigner,
 } from '@solana/kit';
@@ -123,9 +121,27 @@ describe('Kamino SDK Tests', () => {
     const collateralInfo = await setUpCollateralInfo(env, kamino);
     await sleep(1000);
 
-    await updateCollateralInfoForToken(env, 1, USDH_SCOPE_CHAIN_ID, globalConfig, 'USDH', BigInt(1), tokenAMint);
+    await updateCollateralInfoForToken(
+      env,
+      1,
+      USDH_SCOPE_CHAIN_ID,
+      globalConfig,
+      'USDH',
+      BigInt(1),
+      tokenAMint,
+      fixtures.scopePrices
+    );
 
-    await updateCollateralInfoForToken(env, 0, USDC_SCOPE_CHAIN_ID, globalConfig, 'USDC', BigInt(1), tokenBMint);
+    await updateCollateralInfoForToken(
+      env,
+      0,
+      USDC_SCOPE_CHAIN_ID,
+      globalConfig,
+      'USDC',
+      BigInt(1),
+      tokenBMint,
+      fixtures.scopePrices
+    );
 
     await sleep(100);
     fixtures.tokenInfos = collateralInfo;
@@ -1945,13 +1961,7 @@ export async function setUpGlobalConfig(
     BigInt(GlobalConfig.layout.span + 8)
   );
 
-  const accounts: Instructions.InitializeGlobalConfigAccounts = {
-    adminAuthority: env.admin,
-    globalConfig: globalConfig.address,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-  };
-
-  const initializeGlobalConfigIx = Instructions.initializeGlobalConfig(accounts, kamino.getProgramID());
+  const initializeGlobalConfigIx = kamino.initializeGlobalConfig(env.admin, globalConfig.address);
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createGlobalConfigIx, initializeGlobalConfigIx]);
 
@@ -1976,7 +1986,7 @@ export async function setUpGlobalConfig(
     kamino,
     kamino.getGlobalConfig(),
     '0',
-    new GlobalConfigOption.ScopePriceId(),
+    new GlobalConfigOption.AddScopePriceId(),
     scopePrices.toString(),
     'key'
   );
@@ -2049,39 +2059,11 @@ export async function updateGlobalConfig(
   }
 
   const index = Number.parseInt(keyIndex);
-  const formatted_value = getGlobalConfigValue(value);
-  const args: Instructions.UpdateGlobalConfigArgs = {
-    key: globalConfigOption.discriminator,
-    index: index,
-    value: formatted_value,
-  };
-  const accounts: Instructions.UpdateGlobalConfigAccounts = {
-    adminAuthority: env.admin,
-    globalConfig: globalConfig,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-  };
-
-  const updateConfigIx = Instructions.updateGlobalConfig(args, accounts, kamino.getProgramID());
+  const updateConfigIx = kamino.updateGlobalConfig(env.admin, globalConfig, globalConfigOption, index, value);
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateConfigIx]);
 
   console.log('Update Global Config ', globalConfigOption.toJSON(), sig);
   return sig;
-}
-
-export function getGlobalConfigValue(value: Address | bigint | boolean): number[] {
-  let buffer: Buffer;
-  if (typeof value === 'string' && isAddress(value)) {
-    buffer = Buffer.from(getAddressEncoder().encode(value));
-  } else if (typeof value == 'boolean') {
-    buffer = Buffer.alloc(32);
-    value ? buffer.writeUInt8(1, 0) : buffer.writeUInt8(0, 0);
-  } else if (typeof value == 'bigint') {
-    buffer = Buffer.alloc(32);
-    buffer.writeBigUInt64LE(value); // Because we send 32 bytes and a u64 has 8 bytes, we write it in LE
-  } else {
-    throw Error('wrong type for value');
-  }
-  return [...buffer];
 }
 
 export async function updateCollateralInfoForToken(
@@ -2091,7 +2073,8 @@ export async function updateCollateralInfoForToken(
   globalConfig: Address,
   collateralToken: string,
   collInfoTwapId: bigint,
-  tokenMint: Address
+  tokenMint: Address,
+  scopePrices: Address
 ) {
   // Set Mint
   await updateCollateralInfo(env, globalConfig, collTokenIndex, new UpdateCollateralInfoMode.CollateralId(), tokenMint);
@@ -2103,6 +2086,15 @@ export async function updateCollateralInfoForToken(
     collTokenIndex,
     new UpdateCollateralInfoMode.UpdateName(),
     getCollInfoEncodedName(collateralToken)
+  );
+
+  // Set Scope Prices Feed
+  await updateCollateralInfo(
+    env,
+    globalConfig,
+    collTokenIndex,
+    new UpdateCollateralInfoMode.UpdateScopeFeed(),
+    scopePrices
   );
 
   // Set Twap

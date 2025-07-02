@@ -19,6 +19,7 @@ export interface CollateralInfoFields {
   disabled: number
   padding0: Array<number>
   scopeStakingRateChain: Array<number>
+  scopeFeed: Address
   padding: Array<BN>
 }
 
@@ -37,6 +38,7 @@ export interface CollateralInfoJSON {
   disabled: number
   padding0: Array<number>
   scopeStakingRateChain: Array<number>
+  scopeFeed: string
   padding: Array<string>
 }
 
@@ -55,6 +57,7 @@ export class CollateralInfo {
   readonly disabled: number
   readonly padding0: Array<number>
   readonly scopeStakingRateChain: Array<number>
+  readonly scopeFeed: Address
   readonly padding: Array<BN>
 
   constructor(fields: CollateralInfoFields) {
@@ -72,6 +75,7 @@ export class CollateralInfo {
     this.disabled = fields.disabled
     this.padding0 = fields.padding0
     this.scopeStakingRateChain = fields.scopeStakingRateChain
+    this.scopeFeed = fields.scopeFeed
     this.padding = fields.padding
   }
 
@@ -92,7 +96,8 @@ export class CollateralInfo {
         borsh.u8("disabled"),
         borsh.array(borsh.u8(), 7, "padding0"),
         borsh.array(borsh.u16(), 4, "scopeStakingRateChain"),
-        borsh.array(borsh.u64(), 8, "padding"),
+        borshAddress("scopeFeed"),
+        borsh.array(borsh.u64(), 4, "padding"),
       ],
       property
     )
@@ -115,6 +120,7 @@ export class CollateralInfo {
       disabled: obj.disabled,
       padding0: obj.padding0,
       scopeStakingRateChain: obj.scopeStakingRateChain,
+      scopeFeed: obj.scopeFeed,
       padding: obj.padding,
     })
   }
@@ -135,6 +141,7 @@ export class CollateralInfo {
       disabled: fields.disabled,
       padding0: fields.padding0,
       scopeStakingRateChain: fields.scopeStakingRateChain,
+      scopeFeed: fields.scopeFeed,
       padding: fields.padding,
     }
   }
@@ -155,6 +162,7 @@ export class CollateralInfo {
       disabled: this.disabled,
       padding0: this.padding0,
       scopeStakingRateChain: this.scopeStakingRateChain,
+      scopeFeed: this.scopeFeed,
       padding: this.padding.map((item) => item.toString()),
     }
   }
@@ -175,6 +183,7 @@ export class CollateralInfo {
       disabled: obj.disabled,
       padding0: obj.padding0,
       scopeStakingRateChain: obj.scopeStakingRateChain,
+      scopeFeed: address(obj.scopeFeed),
       padding: obj.padding.map((item) => new BN(item)),
     })
   }
