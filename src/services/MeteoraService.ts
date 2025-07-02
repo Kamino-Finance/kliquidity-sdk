@@ -94,40 +94,35 @@ export class MeteoraService {
         url.searchParams.set('token_y', tokens[1]);
       }
 
-      try {
-        const response = await axios.get<MeteoraPoolsResponse>(url.toString());
-        const data = response.data;
+      const response = await axios.get<MeteoraPoolsResponse>(url.toString());
+      const data = response.data;
 
-        // Add pools from this page to our collection
-        // The Meteora API returns { pairs: [...pools...], total: number }
-        if (data.pairs && Array.isArray(data.pairs) && data.pairs.length > 0) {
-          allPoolsAPI.push(...data.pairs);
-          offset += data.pairs.length;
-        }
+      // Add pools from this page to our collection
+      // The Meteora API returns { pairs: [...pools...], total: number }
+      if (data.pairs && Array.isArray(data.pairs) && data.pairs.length > 0) {
+        allPoolsAPI.push(...data.pairs);
+        offset += data.pairs.length;
+      }
 
-        // Check if there are more pages
-        const responseLength = data.pairs ? data.pairs.length : 0;
-        if (responseLength < maxPageSize) {
+      // Check if there are more pages
+      const responseLength = data.pairs ? data.pairs.length : 0;
+      if (responseLength < maxPageSize) {
+        hasMore = false;
+      }
+
+      // Check total if available
+      if (data.total && allPoolsAPI.length >= data.total) {
+        hasMore = false;
+      }
+
+      // Check pagination metadata if available
+      if (data.meta) {
+        if (data.meta.cursor && !data.meta.cursor.next) {
           hasMore = false;
         }
-
-        // Check total if available
-        if (data.total && allPoolsAPI.length >= data.total) {
+        if (data.meta.total && allPoolsAPI.length >= data.meta.total) {
           hasMore = false;
         }
-
-        // Check pagination metadata if available
-        if (data.meta) {
-          if (data.meta.cursor && !data.meta.cursor.next) {
-            hasMore = false;
-          }
-          if (data.meta.total && allPoolsAPI.length >= data.meta.total) {
-            hasMore = false;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching Meteora pools page:', error);
-        throw error;
       }
     }
 
