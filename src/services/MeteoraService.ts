@@ -1,5 +1,6 @@
 import { address, Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from '@solana/kit';
 import Decimal from 'decimal.js';
+import axios from 'axios';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import {
   aprToApy,
@@ -16,7 +17,7 @@ import { PROGRAM_ID as METEORA_PROGRAM_ID } from '../@codegen/meteora/programId'
 import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
 import { decompress } from 'fzstd';
-
+import { MeteoraPoolAPI, MeteoraPoolsResponse } from './MeteoraPoolsResponse';
 
 export interface MeteoraPool {
   key: Address;
@@ -26,10 +27,12 @@ export interface MeteoraPool {
 export class MeteoraService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
   private readonly _meteoraProgramId: Address;
+  private readonly _meteoraApiUrl: string;
 
   constructor(rpc: Rpc<SolanaRpcApi>, meteoraProgramId: Address = METEORA_PROGRAM_ID) {
     this._rpc = rpc;
     this._meteoraProgramId = meteoraProgramId;
+    this._meteoraApiUrl = 'https://dlmm-api.meteora.ag';
   }
 
   getMeteoraProgramId(): Address {
@@ -65,6 +68,66 @@ export class MeteoraService {
       }
     }
     return pools;
+  }
+
+  // Fetch all Meteora pools from their API with pagination support
+  async getMeteoraPoolsFromAPI(tokens: Address[] = [], maxPages = 300, maxPageSize = 100): Promise<MeteoraPoolAPI[]> {
+    const allPoolsAPI: MeteoraPoolAPI[] = [];
+    let offset = 0;
+    let hasMore = true;
+    let pageCount = 0;
+
+    // First, fetch all pool data from the API
+    while (hasMore && pageCount < maxPages) {
+      pageCount++;
+      const url = new URL(`${this._meteoraApiUrl}/pair/all_with_pagination`);
+      url.searchParams.set('limit', maxPageSize.toString());
+      url.searchParams.set('offset', offset.toString());
+
+      // Add token filtering if provided
+      if (tokens.length === 1) {
+        url.searchParams.set('token', tokens[0]);
+      } else if (tokens.length === 2) {
+        url.searchParams.set('token_x', tokens[0]);
+        url.searchParams.set('token_y', tokens[1]);
+      }
+
+      const response = await axios.get<MeteoraPoolsResponse>(url.toString());
+      const data = response.data;
+
+      // Add pools from this page to our collection
+      // The Meteora API returns { pairs: [...pools...], total: number }
+      if (data.pairs && Array.isArray(data.pairs) && data.pairs.length > 0) {
+        allPoolsAPI.push(...data.pairs);
+        offset += data.pairs.length;
+      }
+
+      // Check if there are more pages
+      const responseLength = data.pairs ? data.pairs.length : 0;
+      if (responseLength < maxPageSize) {
+        hasMore = false;
+      }
+
+      // Check total if available
+      if (data.total && allPoolsAPI.length >= data.total) {
+        hasMore = false;
+      }
+
+      // Check pagination metadata if available
+      if (data.meta) {
+        if (data.meta.cursor && !data.meta.cursor.next) {
+          hasMore = false;
+        }
+        if (data.meta.total && allPoolsAPI.length >= data.meta.total) {
+          hasMore = false;
+        }
+      }
+    }
+
+    if (pageCount >= maxPages) {
+      throw new Error(`Reached maximum page limit (${maxPages}). There might be more pools available.`);
+    }
+    return allPoolsAPI;
   }
 
   async getStrategyMeteoraPoolAprApy(strategy: WhirlpoolStrategy): Promise<WhirlpoolAprApy> {
