@@ -71,9 +71,7 @@ export class MeteoraService {
   }
 
   // Fetch all Meteora pools from their API with pagination support
-  async getMeteoraPoolsFromAPI(tokens: Address[] = []): Promise<MeteoraPoolAPI[]> {
-    const maxPageSize = 10;
-    const maxPages = 1; // Safety limit to prevent infinite loops
+  async getMeteoraPoolsFromAPI(tokens: Address[] = [], maxPages = 300, maxPageSize = 100): Promise<MeteoraPoolAPI[]> {
     const allPoolsAPI: MeteoraPoolAPI[] = [];
     let offset = 0;
     let hasMore = true;
@@ -127,7 +125,7 @@ export class MeteoraService {
     }
 
     if (pageCount >= maxPages) {
-      console.warn(`Reached maximum page limit (${maxPages}). There might be more pools available.`);
+      throw new Error(`Reached maximum page limit (${maxPages}). There might be more pools available.`);
     }
     return allPoolsAPI;
   }
