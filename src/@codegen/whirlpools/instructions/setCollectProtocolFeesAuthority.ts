@@ -21,6 +21,13 @@ export interface SetCollectProtocolFeesAuthorityAccounts {
   newCollectProtocolFeesAuthority: Address
 }
 
+/**
+ * Sets the fee authority to collect protocol fees for a WhirlpoolConfig.
+ * Only the current collect protocol fee authority has permission to invoke this instruction.
+ *
+ * ### Authority
+ * - "fee_authority" - Set authority that can collect protocol fees in the WhirlpoolConfig
+ */
 export function setCollectProtocolFeesAuthority(
   accounts: SetCollectProtocolFeesAuthorityAccounts,
   programAddress: Address = PROGRAM_ID

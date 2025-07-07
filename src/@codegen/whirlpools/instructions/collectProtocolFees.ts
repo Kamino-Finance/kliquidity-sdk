@@ -26,6 +26,12 @@ export interface CollectProtocolFeesAccounts {
   tokenProgram: Address
 }
 
+/**
+ * Collect the protocol fees accrued in this Whirlpool
+ *
+ * ### Authority
+ * - `collect_protocol_fees_authority` - assigned authority in the WhirlpoolConfig that can collect protocol fees
+ */
 export function collectProtocolFees(
   accounts: CollectProtocolFeesAccounts,
   programAddress: Address = PROGRAM_ID

@@ -12,7 +12,9 @@
   "private": false,
   "scripts": {
     "lint:fix": "yarn prettier --write .",
-    "deposit-and-stake": "tsx example_deposit_and_stake.ts"
+    "deposit-and-stake": "tsx example_deposit_and_stake.ts",
+    "deposit-and-stake-noop-signer": "tsx example_deposit_and_stake_noop_signer.ts",
+    "unstake-and-withdraw": "tsx example_unstake_and_withdraw.ts"
   },
   "dependencies": {
     "@kamino-finance/kliquidity-sdk": "link:../",

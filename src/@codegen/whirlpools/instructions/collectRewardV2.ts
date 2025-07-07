@@ -37,6 +37,12 @@ export const layout = borsh.struct([
   borsh.option(types.RemainingAccountsInfo.layout(), "remainingAccountsInfo"),
 ])
 
+/**
+ * Collect rewards accrued for this position.
+ *
+ * ### Authority
+ * - `position_authority` - authority that owns the token corresponding to this desired position.
+ */
 export function collectRewardV2(
   args: CollectRewardV2Args,
   accounts: CollectRewardV2Accounts,

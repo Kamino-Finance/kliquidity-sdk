@@ -24,6 +24,15 @@ export interface DeletePositionBundleAccounts {
   tokenProgram: Address
 }
 
+/**
+ * Delete a PositionBundle account. Burns the position bundle token in the owner's wallet.
+ *
+ * ### Authority
+ * - `position_bundle_owner` - The owner that owns the position bundle token.
+ *
+ * ### Special Errors
+ * - `PositionBundleNotDeletable` - The provided position bundle has open positions.
+ */
 export function deletePositionBundle(
   accounts: DeletePositionBundleAccounts,
   programAddress: Address = PROGRAM_ID

@@ -22,6 +22,13 @@ export interface UpdateFeesAndRewardsAccounts {
   tickArrayUpper: Address
 }
 
+/**
+ * Update the accrued fees and rewards for a position.
+ *
+ * #### Special Errors
+ * - `TickNotFound` - Provided tick array account does not contain the tick for this position.
+ * - `LiquidityZero` - Position has zero liquidity and therefore already has the most updated fees and reward values.
+ */
 export function updateFeesAndRewards(
   accounts: UpdateFeesAndRewardsAccounts,
   programAddress: Address = PROGRAM_ID

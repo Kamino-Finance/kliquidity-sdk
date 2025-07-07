@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { address, generateKeyPairSigner } from '@solana/kit';
+import { address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
 import {
   createAssociatedTokenAccountInstruction,
   createComputeUnitLimitIx,
@@ -18,12 +18,12 @@ import { sendAndConfirmTx } from './utils/tx';
 (async () => {
   // Create a new keypair for the user (in real world this is the wallet of the user who deposits into the strategy)
   // to read from file you can use getKeypair()
-  const keypair = await generateKeyPairSigner();
+  const keypair: KeyPairSigner = await generateKeyPairSigner();
   // the strategy to deposit into
   const strategyWithFarm = address('BLP7UHUg1yNry94Qk3sM8pAfEyDhTZirwFghw9DoBjn7');
   // the amounts to deposit, in tokens
-  const amountA = new Decimal(0.5);
-  const amountB = new Decimal(0.5);
+  const amountA = new Decimal(0.1);
+  const amountB = new Decimal(0.1);
 
   const cluster = 'mainnet-beta';
   const kamino = new Kamino(cluster, getConnection(), getLegacyConnection());
@@ -73,11 +73,13 @@ import { sendAndConfirmTx } from './utils/tx';
   tx.push(closeAtaIx);
 
   // send the transaction using strategy's LUT so it fit in a single transaction
+  // Use custom function that allows noop signer for construction but real signer for signing
+
   const signature = await sendAndConfirmTx(
     { rpc: kamino.getConnection(), wsRpc: getWsConnection() },
     keypair,
     tx,
-    undefined,
+    [],
     [strategyState.strategy.strategyLookupTable]
   );
 

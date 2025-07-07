@@ -26,6 +26,20 @@ export interface SetDefaultProtocolFeeRateAccounts {
 
 export const layout = borsh.struct([borsh.u16("defaultProtocolFeeRate")])
 
+/**
+ * Sets the default protocol fee rate for a WhirlpoolConfig
+ * Protocol fee rate is represented as a basis point.
+ * Only the current fee authority has permission to invoke this instruction.
+ *
+ * ### Authority
+ * - "fee_authority" - Set authority that can modify pool fees in the WhirlpoolConfig
+ *
+ * ### Parameters
+ * - `default_protocol_fee_rate` - Rate that is referenced during the initialization of a Whirlpool using this config.
+ *
+ * #### Special Errors
+ * - `ProtocolFeeRateMaxExceeded` - If the provided default_protocol_fee_rate exceeds MAX_PROTOCOL_FEE_RATE.
+ */
 export function setDefaultProtocolFeeRate(
   args: SetDefaultProtocolFeeRateArgs,
   accounts: SetDefaultProtocolFeeRateAccounts,

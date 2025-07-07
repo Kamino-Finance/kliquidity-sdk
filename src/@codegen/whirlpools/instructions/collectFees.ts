@@ -27,6 +27,12 @@ export interface CollectFeesAccounts {
   tokenProgram: Address
 }
 
+/**
+ * Collect fees accrued for this position.
+ *
+ * ### Authority
+ * - `position_authority` - authority that owns the token corresponding to this desired position.
+ */
 export function collectFees(
   accounts: CollectFeesAccounts,
   programAddress: Address = PROGRAM_ID

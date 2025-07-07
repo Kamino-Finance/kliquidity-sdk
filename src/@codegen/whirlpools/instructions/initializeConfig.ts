@@ -35,6 +35,15 @@ export const layout = borsh.struct([
   borsh.u16("defaultProtocolFeeRate"),
 ])
 
+/**
+ * Initializes a WhirlpoolsConfig account that hosts info & authorities
+ * required to govern a set of Whirlpools.
+ *
+ * ### Parameters
+ * - `fee_authority` - Authority authorized to initialize fee-tiers and set customs fees.
+ * - `collect_protocol_fees_authority` - Authority authorized to collect protocol fees.
+ * - `reward_emissions_super_authority` - Authority authorized to set reward authorities in pools.
+ */
 export function initializeConfig(
   args: InitializeConfigArgs,
   accounts: InitializeConfigAccounts,
