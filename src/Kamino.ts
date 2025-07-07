@@ -8204,13 +8204,11 @@ export class Kamino {
       poolAddress,
       startTickIndex
     );
-    let tick;
+    let tick = null;
     try {
       tick = await TickArray.fetch(this._rpc, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
     } catch (err) {
       tick = await DynamicTickArray.fetch(this._rpc, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
-    } finally {
-      tick = null;
     }
     // initialize tick if it doesn't exist
     if (!tick) {
@@ -8251,13 +8249,11 @@ export class Kamino {
       binArrayIndex,
       this._meteoraService.getMeteoraProgramId()
     );
-    let tick;
+    let tick = null;
     try {
       tick = await TickArray.fetch(this._rpc, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
     } catch (err) {
       tick = await DynamicTickArray.fetch(this._rpc, startTickIndexPk, this._meteoraService.getMeteoraProgramId());
-    } finally {
-      tick = null;
     }
     // initialize tick if it doesn't exist
     if (!tick) {
