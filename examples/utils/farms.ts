@@ -1,7 +1,6 @@
 import Decimal from 'decimal.js/decimal';
 import BN from 'bn.js';
-import { Address } from '@solana/kit';
-import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { Address, IInstruction, none, Rpc, SolanaRpcApi, TransactionSigner } from '@solana/kit';
 import {
   Farms,
   FarmState,
@@ -11,7 +10,6 @@ import {
   UserState,
   WAD,
 } from '@kamino-finance/farms-sdk';
-import { toLegacyPublicKey } from '@kamino-finance/kliquidity-sdk';
 
 // Helper function to safely convert Decimal to BN for large numbers
 function decimalToBN(decimal: Decimal): BN {
@@ -48,55 +46,41 @@ export function isSafeForWadMultiplication(amount: Decimal): boolean {
 }
 
 export async function getFarmStakeIxs(
-  connection: Connection,
-  user: Address,
+  connection: Rpc<SolanaRpcApi>,
+  user: TransactionSigner,
   lamportsToStake: Decimal,
   farmAddress: Address,
   fetchedFarmState?: FarmState
-): Promise<TransactionInstruction[]> {
-  const farmState = fetchedFarmState
-    ? fetchedFarmState
-    : await FarmState.fetch(connection, toLegacyPublicKey(farmAddress));
+): Promise<IInstruction[]> {
+  const farmState = fetchedFarmState ? fetchedFarmState : await FarmState.fetch(connection, farmAddress);
   if (!farmState) {
     throw new Error(`Farm state not found for ${farmAddress}`);
   }
 
   const farmClient = new Farms(connection);
-  const scopePricesArg = farmState.scopePrices.equals(PublicKey.default)
-    ? farmClient.getProgramID()
-    : farmState!.scopePrices;
-
-  const stakeIxs: TransactionInstruction[] = [];
-  const userState = getUserStatePDA(farmClient.getProgramID(), toLegacyPublicKey(farmAddress), toLegacyPublicKey(user));
-  const userStateExists = await connection.getAccountInfo(userState);
+  const stakeIxs: IInstruction[] = [];
+  const userState = await getUserStatePDA(farmClient.getProgramID(), farmAddress, user.address);
+  const userStateExists = await connection.getAccountInfo(userState).send();
   if (!userStateExists) {
-    const createUserIx = farmClient.createNewUserIx(toLegacyPublicKey(user), toLegacyPublicKey(farmAddress));
+    const createUserIx = await farmClient.createNewUserIx(user, farmAddress);
     stakeIxs.push(createUserIx);
   }
 
   // if lamportsToStake is U64::MAX the smart contract will stake everything
-  const stakeIx = farmClient.stakeIx(
-    toLegacyPublicKey(user),
-    toLegacyPublicKey(farmAddress),
-    lamportsToStake,
-    farmState.token.mint,
-    scopePricesArg
-  );
+  const stakeIx = await farmClient.stakeIx(user, farmAddress, lamportsToStake, farmState.token.mint, none());
   stakeIxs.push(stakeIx);
 
   return stakeIxs;
 }
 
 export async function getStakedTokens(
-  connection: Connection,
+  connection: Rpc<SolanaRpcApi>,
   user: Address,
   farmAddress: Address,
   fetchedFarmState?: FarmState,
   fetchedUserState?: UserState
 ): Promise<Decimal> {
-  const farmState = fetchedFarmState
-    ? fetchedFarmState
-    : await FarmState.fetch(connection, toLegacyPublicKey(farmAddress));
+  const farmState = fetchedFarmState ? fetchedFarmState : await FarmState.fetch(connection, farmAddress);
   if (!farmState) {
     throw new Error(`Farm state not found for ${farmAddress}`);
   }
@@ -105,11 +89,7 @@ export async function getStakedTokens(
   if (!userState) {
     const farmClient = new Farms(connection);
 
-    const userStateAddress = getUserStatePDA(
-      farmClient.getProgramID(),
-      toLegacyPublicKey(farmAddress),
-      toLegacyPublicKey(user)
-    );
+    const userStateAddress = await getUserStatePDA(farmClient.getProgramID(), farmAddress, user);
     const userStateFromChain = await UserState.fetch(connection, userStateAddress);
     if (!userStateFromChain) {
       return new Decimal(0);
@@ -124,27 +104,21 @@ export async function getStakedTokens(
 }
 
 export async function getFarmUnstakeAndWithdrawIxs(
-  connection: Connection,
-  user: Address,
+  connection: Rpc<SolanaRpcApi>,
+  user: TransactionSigner,
   farmAddress: Address,
   sharesToUnstake: Decimal,
   fetchedFarmState?: FarmState,
   fetchedUserState?: UserState
-): Promise<TransactionInstruction[]> {
-  const farmState = fetchedFarmState
-    ? fetchedFarmState
-    : await FarmState.fetch(connection, toLegacyPublicKey(farmAddress));
+): Promise<IInstruction[]> {
+  const farmState = fetchedFarmState ? fetchedFarmState : await FarmState.fetch(connection, farmAddress);
   if (!farmState) {
     throw new Error(`Farm state not found for ${farmAddress}`);
   }
 
   const farmClient = new Farms(connection);
 
-  const userStateAddress = getUserStatePDA(
-    farmClient.getProgramID(),
-    toLegacyPublicKey(farmAddress),
-    toLegacyPublicKey(user)
-  );
+  const userStateAddress = await getUserStatePDA(farmClient.getProgramID(), farmAddress, user.address);
 
   const userState = fetchedUserState ? fetchedUserState : await UserState.fetch(connection, userStateAddress);
 
@@ -155,20 +129,14 @@ export async function getFarmUnstakeAndWithdrawIxs(
   // Use BN for safe large number arithmetic instead of Decimal
   const unstakeAmountString = multiplyByWad(sharesToUnstake);
 
-  const unstakeIx = farmClient.unstakeIx(
-    toLegacyPublicKey(user),
-    toLegacyPublicKey(farmAddress),
-    unstakeAmountString,
-    farmClient.getProgramID()
-  );
-
-  const ixs: TransactionInstruction[] = [unstakeIx];
+  const unstakeIx = await farmClient.unstakeIx(user, farmAddress, new Decimal(unstakeAmountString), none());
+  const ixs: IInstruction[] = [unstakeIx];
 
   if (sharesToUnstake.gt(new Decimal(0))) {
-    const withdrawIx = farmClient.withdrawUnstakedDepositIx(
-      toLegacyPublicKey(user),
+    const withdrawIx = await farmClient.withdrawUnstakedDepositIx(
+      user,
       userStateAddress,
-      toLegacyPublicKey(farmAddress),
+      farmAddress,
       farmState.token.mint
     );
     ixs.push(withdrawIx);

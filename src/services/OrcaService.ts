@@ -21,7 +21,6 @@ import {
 import { PROGRAM_ID as WHIRLPOOLS_PROGRAM_ID } from '../@codegen/whirlpools/programId';
 import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { KaminoPrices } from '../models';
-import { Connection } from '@solana/web3.js';
 import { priceToTickIndex } from '@orca-so/whirlpools-core';
 
 export class OrcaService {
@@ -31,7 +30,6 @@ export class OrcaService {
 
   constructor(
     rpc: Rpc<SolanaRpcApi>,
-    legacyConnection: Connection,
     whirlpoolProgramId: Address = WHIRLPOOLS_PROGRAM_ID
   ) {
     this._rpc = rpc;

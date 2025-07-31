@@ -21,7 +21,6 @@ import {
 import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
 import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
 import { getFarmStakeIxs } from './utils/farms';
-import { fromLegacyTransactionInstruction } from '@solana/compat/';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
 
@@ -68,12 +67,12 @@ import { sendAndConfirmTx } from './utils/tx';
   // if the strategy has farm, stake all user shares
   if (strategyState.strategy.farm !== DEFAULT_ADDRESS) {
     const stakeIxs = await getFarmStakeIxs(
-      kamino.getLegacyConnection(),
-      noop.address,
+      kamino.getConnection(),
+      noop,
       new Decimal(U64_MAX.toString()),
       strategyState.strategy.farm
     );
-    tx.push(...stakeIxs.map(fromLegacyTransactionInstruction));
+    tx.push(...stakeIxs);
   }
 
   // optionally we can close the user shares ATA

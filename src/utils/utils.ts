@@ -1,4 +1,4 @@
-import { Address, IInstruction, TransactionSigner } from '@solana/kit';
+import { Address, IInstruction, Option, TransactionSigner } from '@solana/kit';
 import Decimal from 'decimal.js';
 import {
   DriftDirection,
@@ -296,4 +296,23 @@ export function keyOrDefault(key: Address, defaultKey: Address): Address {
     return defaultKey;
   }
   return key;
+}
+
+export function optionIsSome<T>(option: Option<T>): boolean {
+  return option.__option === 'Some';
+}
+
+// Extract value from Option if Some, otherwise return null
+export function optionGetValue<T>(option: Option<T>): T | null {
+  return optionIsSome(option) ? (option as any).value : null;
+}
+
+// Extract value from Option if Some, otherwise return undefined
+export function optionGetValueOrUndefined<T>(option: Option<T>): T | undefined {
+  return optionIsSome(option) ? (option as any).value : undefined;
+}
+
+// Extract value from Option if Some, otherwise return provided default
+export function optionGetValueOrDefault<T>(option: Option<T>, defaultValue: T): T {
+  return optionIsSome(option) ? (option as any).value : defaultValue;
 }

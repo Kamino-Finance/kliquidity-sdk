@@ -1,4 +1,13 @@
-import { Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from '@solana/kit';
+import {
+  address,
+  Address,
+  Base58EncodedBytes,
+  getAddressEncoder,
+  getProgramDerivedAddress,
+  ProgramDerivedAddress,
+  Rpc,
+  SolanaRpcApi,
+} from '@solana/kit';
 import {
   LiquidityDistribution as RaydiumLiquidityDistribuion,
   Pool,
@@ -12,8 +21,14 @@ import {
   aprToApy,
   GenericPoolInfo,
   getStrategyPriceRangeRaydium,
+  getTokenAccountBalanceRaw,
   LiquidityDistribution,
   LiquidityForPrice,
+  optionGetValue,
+  optionGetValueOrUndefined,
+  solToWSol,
+  toLegacyPublicKey,
+  WSOL_MINT,
   ZERO,
 } from '../utils';
 import axios from 'axios';
@@ -23,23 +38,32 @@ import { priceToTickIndexWithRounding } from '../utils/raydium';
 import {
   ApiV3PoolInfoConcentratedItem,
   Clmm,
+  ClmmConfigLayout,
+  ClmmRpcData,
+  ComputeClmmPoolInfo,
+  POOL_TICK_ARRAY_BITMAP_SEED,
+  PoolInfoLayout,
   PoolUtils,
   PositionInfoLayout,
   Raydium,
   RaydiumLoadParams,
+  ReturnTypeFetchExBitmaps,
+  ReturnTypeFetchMultipleMintInfos,
+  ReturnTypeGetTickPrice,
   SqrtPriceMath,
+  TickArrayBitmapExtensionLayout,
   TickMath,
 } from '@raydium-io/raydium-sdk-v2/lib';
-import { Connection } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { fromLegacyPublicKey } from '@solana/compat';
+import { fetchAllMint } from '@solana-program/token-2022';
 
 export class RaydiumService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
-  private readonly _legacyConnection: Connection;
   private readonly _raydiumProgramId: Address;
 
-  constructor(rpc: Rpc<SolanaRpcApi>, legacyConnection: Connection, raydiumProgramId: Address = RAYDIUM_PROGRAM_ID) {
+  constructor(rpc: Rpc<SolanaRpcApi>, raydiumProgramId: Address = RAYDIUM_PROGRAM_ID) {
     this._rpc = rpc;
-    this._legacyConnection = legacyConnection;
     this._raydiumProgramId = raydiumProgramId;
   }
 
@@ -52,12 +76,7 @@ export class RaydiumService {
   }
 
   async getRaydiumPoolInfo(poolPubkey: Address): Promise<ApiV3PoolInfoConcentratedItem> {
-    const raydiumLoadParams: RaydiumLoadParams = { connection: this._legacyConnection };
-    const raydium = await Raydium.load(raydiumLoadParams);
-    const rayClmm = new Clmm({ scope: raydium, moduleName: '' });
-    const otherPoolInfo = await rayClmm.getPoolInfoFromRpc(poolPubkey.toString());
-    console.log('otherPoolInfo', otherPoolInfo);
-    return otherPoolInfo.poolInfo;
+    return this.getPoolInfoFromRpc(poolPubkey.toString());
   }
 
   async getRaydiumPoolLiquidityDistribution(
@@ -179,7 +198,7 @@ export class RaydiumService {
     const { apr, feeApr, rewardsApr } = PoolUtils.estimateAprsForPriceRangeMultiplier(params);
     const totalApr = new Decimal(apr).div(100);
     const fee = new Decimal(feeApr).div(100);
-    const rewards = rewardsApr.map((reward) => new Decimal(reward).div(100));
+    const rewards = rewardsApr.map((reward: number) => new Decimal(reward).div(100));
 
     return {
       totalApr,
@@ -187,7 +206,7 @@ export class RaydiumService {
       feeApr: fee,
       feeApy: aprToApy(fee, 365),
       rewardsApr: rewards,
-      rewardsApy: rewards.map((x) => aprToApy(x, 365)),
+      rewardsApy: rewards.map((x: Decimal) => aprToApy(x, 365)),
       ...priceRange,
     };
   };
@@ -265,7 +284,7 @@ export class RaydiumService {
     const { apr, feeApr, rewardsApr } = PoolUtils.estimateAprsForPriceRangeMultiplier(params);
     const totalApr = new Decimal(apr).div(100);
     const fee = new Decimal(feeApr).div(100);
-    const rewards = rewardsApr.map((reward) => new Decimal(reward).div(100));
+    const rewards = rewardsApr.map((reward: number) => new Decimal(reward).div(100));
 
     return {
       totalApr,
@@ -273,7 +292,7 @@ export class RaydiumService {
       feeApr: fee,
       feeApy: aprToApy(fee, 365),
       rewardsApr: rewards,
-      rewardsApy: rewards.map((x) => aprToApy(x, 365)),
+      rewardsApy: rewards.map((x: Decimal) => aprToApy(x, 365)),
       ...priceRange,
     };
   };
@@ -332,4 +351,297 @@ export class RaydiumService {
 
     return positions.length;
   }
+
+  getTickPrice(
+    tick: number,
+    tokenADecimals: number,
+    tokenBDecimals: number,
+    baseIn: boolean = true
+  ): ReturnTypeGetTickPrice {
+    const tickSqrtPriceX64 = SqrtPriceMath.getSqrtPriceX64FromTick(tick);
+    const tickPrice = SqrtPriceMath.sqrtPriceX64ToPrice(tickSqrtPriceX64, tokenADecimals, tokenBDecimals);
+
+    return baseIn
+      ? { tick, price: tickPrice, tickSqrtPriceX64 }
+      : { tick, price: new Decimal(1).div(tickPrice), tickSqrtPriceX64 };
+  }
+
+  async getRpcClmmPoolInfo(poolId: string): Promise<ClmmRpcData> {
+    const poolAccountInfo = await this._rpc
+      .getAccountInfo(address(poolId), { commitment: 'confirmed', encoding: 'base64' })
+      .send();
+    if (!poolAccountInfo.value) {
+      throw Error(`Raydium pool state ${poolId} does not exist`);
+    }
+
+    const poolState = await PoolState.fetch(this._rpc, address(poolId));
+    if (!poolState) {
+      throw Error(`Raydium pool state ${poolId} does not exist`);
+    }
+
+    const rpc = PoolInfoLayout.decode(Buffer.from(poolAccountInfo.value.data[0], 'base64'));
+    const currentPrice = SqrtPriceMath.sqrtPriceX64ToPrice(
+      poolState.sqrtPriceX64,
+      poolState.mintDecimals0,
+      poolState.mintDecimals1
+    ).toNumber();
+
+    const data: ClmmRpcData = {
+      ...rpc,
+      currentPrice,
+      programId: toLegacyPublicKey(this._raydiumProgramId),
+    };
+
+    return data;
+  }
+
+  async fetchComputeClmmInfo(poolInfoWithAddress: ClmmRpcDataWithAddress): Promise<ComputeClmmPoolInfo> {
+    const { address: poolAddress } = poolInfoWithAddress;
+    return (await this.fetchComputeMultipleClmmInfo([poolInfoWithAddress]))[poolAddress.toString()];
+  }
+
+  async fetchExBitmaps(exBitmapAddress: Address[]): Promise<ReturnTypeFetchExBitmaps> {
+    const fetchedBitmapAccount = await this._rpc
+      .getMultipleAccounts(exBitmapAddress, { commitment: 'confirmed', encoding: 'base64' })
+      .send();
+    const fetchedBitmapAccountWithAddress = exBitmapAddress.map((address, index) => ({
+      address,
+      data: fetchedBitmapAccount.value[index]?.data,
+    }));
+
+    const returnTypeFetchExBitmaps: ReturnTypeFetchExBitmaps = {};
+    for (const { address, data } of fetchedBitmapAccountWithAddress) {
+      if (!data) continue;
+      returnTypeFetchExBitmaps[address.toString()] = TickArrayBitmapExtensionLayout.decode(
+        Buffer.from(data[0], 'base64')
+      );
+    }
+    return returnTypeFetchExBitmaps;
+  }
+
+  async fetchComputeMultipleClmmInfo(poolList: ClmmRpcDataWithAddress[]): Promise<Record<string, ComputeClmmPoolInfo>> {
+    const fetchRpcList = poolList.map((p) => p.address);
+    const rpcRes = await this._rpc
+      .getMultipleAccounts(fetchRpcList, { commitment: 'confirmed', encoding: 'base64' })
+      .send();
+    const rpcResWithAddress = fetchRpcList.map((address, index) => ({
+      address,
+      data: rpcRes.value[index]?.data,
+    }));
+
+    const rpcDataMap: Record<string, ReturnType<typeof PoolInfoLayout.decode>> = {};
+    for (const { address, data } of rpcResWithAddress) {
+      if (!data) continue;
+      rpcDataMap[address.toString()] = PoolInfoLayout.decode(Buffer.from(data[0], 'base64'));
+    }
+
+    // Fetch amm configs
+    const configSet = Array.from(new Set(poolList.map((p) => p.clmmPoolRpcInfo.ammConfig.toBase58())));
+    const configRes = await this._rpc
+      .getMultipleAccounts(
+        configSet.map((s) => address(s)),
+        { commitment: 'confirmed', encoding: 'base64' }
+      )
+      .send();
+
+    const clmmConfigs: Record<string, ReturnType<typeof ClmmConfigLayout.decode>> = {};
+    configSet.forEach((configAddress, index) => {
+      const data = configRes.value[index]?.data;
+      if (data) {
+        clmmConfigs[configAddress] = ClmmConfigLayout.decode(Buffer.from(data[0], 'base64'));
+      }
+    });
+
+    // Fetch mint infos
+    const allMints = Array.from(
+      new Set(poolList.flatMap((p) => [p.clmmPoolRpcInfo.mintA.toBase58(), p.clmmPoolRpcInfo.mintB.toBase58()]))
+    );
+    const mintInfos = await this.fetchMultipleMintInfos(allMints.map((m) => address(m)));
+
+    const pdaList = await Promise.all(
+      poolList.map(async (poolInfo) => {
+        const pda = await getPdaExBitmapAccount(
+          fromLegacyPublicKey(poolInfo.clmmPoolRpcInfo.programId),
+          poolInfo.address
+        );
+        return address(pda[0]);
+      })
+    );
+
+    const exBitData = await this.fetchExBitmaps(pdaList);
+
+    const result: Record<string, ComputeClmmPoolInfo> = {};
+    for (let i = 0; i < poolList.length; i++) {
+      const cur = poolList[i];
+      const pda = await getPdaExBitmapAccount(fromLegacyPublicKey(cur.clmmPoolRpcInfo.programId), cur.address);
+
+      const ammConfigKey = cur.clmmPoolRpcInfo.ammConfig.toBase58();
+      const ammConfigData = clmmConfigs[ammConfigKey];
+      const mintAKey = cur.clmmPoolRpcInfo.mintA.toBase58();
+      const mintBKey = cur.clmmPoolRpcInfo.mintB.toBase58();
+
+      result[cur.address.toString()] = {
+        ...rpcDataMap[cur.address.toString()],
+        id: new PublicKey(cur.address.toString()),
+        version: 6,
+        programId: fromLegacyPublicKey(cur.clmmPoolRpcInfo.programId),
+        mintA: {
+          chainId: 101,
+          address: mintAKey,
+          programId: mintInfos[mintAKey]?.programId.toBase58() || 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+          logoURI: '',
+          symbol: '',
+          name: '',
+          decimals: cur.clmmPoolRpcInfo.mintDecimalsA,
+          tags: [],
+          extensions: { feeConfig: mintInfos[mintAKey]?.feeConfig },
+        },
+        mintB: {
+          chainId: 101,
+          address: mintBKey,
+          programId: mintInfos[mintBKey]?.programId.toBase58() || 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+          logoURI: '',
+          symbol: '',
+          name: '',
+          decimals: cur.clmmPoolRpcInfo.mintDecimalsB,
+          tags: [],
+          extensions: { feeConfig: mintInfos[mintBKey]?.feeConfig },
+        },
+        ammConfig: {
+          ...ammConfigData,
+          id: new PublicKey(ammConfigKey),
+          fundFeeRate: 0,
+          description: '',
+          defaultRange: 0,
+          defaultRangePoint: [],
+          fundOwner: '',
+        },
+        currentPrice: new Decimal(cur.clmmPoolRpcInfo.currentPrice),
+        exBitmapAccount: toLegacyPublicKey(pda[0]),
+        exBitmapInfo: exBitData[pda[0].toString()],
+        startTime: rpcDataMap[cur.address.toString()].startTime.toNumber(),
+        rewardInfos: rpcDataMap[cur.address.toString()].rewardInfos,
+      } as any;
+    }
+    return result;
+  }
+
+  async fetchMultipleMintInfos(mints: Address[]): Promise<ReturnTypeFetchMultipleMintInfos> {
+    if (mints.length === 0) return {};
+
+    const cleanedMints = mints.map((i) => solToWSol(i));
+    const mintInfos = await fetchAllMint(this._rpc, cleanedMints);
+
+    const mintInfosWithAddress = cleanedMints.map((mint, index) => ({
+      address: mint,
+      data: mintInfos[index],
+    }));
+
+    const mintK: ReturnTypeFetchMultipleMintInfos = {};
+    for (const { address, data } of mintInfosWithAddress) {
+      if (!data) {
+        console.log('invalid mint account', address.toString());
+        continue;
+      }
+      mintK[address.toString()] = {
+        mintAuthority: optionGetValueOrUndefined(data.data.mintAuthority)
+          ? toLegacyPublicKey(optionGetValue(data.data.mintAuthority)!)
+          : null,
+        programId: toLegacyPublicKey(data.programAddress),
+        feeConfig: undefined,
+        address: toLegacyPublicKey(address),
+        isInitialized: true,
+        tlvData: Buffer.from([]),
+        supply: data.data.supply,
+        decimals: data.data.decimals,
+        freezeAuthority: optionGetValueOrUndefined(data.data.freezeAuthority)
+          ? toLegacyPublicKey(optionGetValue(data.data.freezeAuthority)!)
+          : null,
+      };
+    }
+    mintK[PublicKey.default.toString()] = mintK[WSOL_MINT.toString()];
+
+    return mintK;
+  }
+
+  public async getComputeClmmPoolInfo(
+    clmmPoolRpcInfoWithAddress: ClmmRpcDataWithAddress
+  ): Promise<ComputeClmmPoolInfo> {
+    const computeClmmPoolInfo = await this.fetchComputeClmmInfo(clmmPoolRpcInfoWithAddress);
+    return computeClmmPoolInfo;
+  }
+
+  async getPoolInfoFromRpc(poolId: string): Promise<ApiV3PoolInfoConcentratedItem> {
+    const rpcData = await this.getRpcClmmPoolInfo(poolId);
+
+    const poolInfoWithAddress = {
+      address: address(poolId),
+      clmmPoolRpcInfo: rpcData,
+    };
+    const computeClmmPoolInfo = await this.getComputeClmmPoolInfo(poolInfoWithAddress);
+
+    const poolInfo = this.clmmComputeInfoToApiInfo(computeClmmPoolInfo);
+
+    poolInfo.mintAmountA = await getTokenAccountBalanceRaw(this._rpc, fromLegacyPublicKey(rpcData.vaultA));
+    poolInfo.mintAmountB = await getTokenAccountBalanceRaw(this._rpc, fromLegacyPublicKey(rpcData.vaultB));
+
+    return poolInfo;
+  }
+
+  clmmComputeInfoToApiInfo(pool: ComputeClmmPoolInfo): ApiV3PoolInfoConcentratedItem {
+    return {
+      ...pool,
+      type: 'Concentrated',
+      programId: pool.programId.toString(),
+      id: pool.id.toString(),
+      rewardDefaultInfos: [],
+      rewardDefaultPoolInfos: 'Clmm',
+      price: pool.currentPrice.toNumber(),
+      mintAmountA: 0,
+      mintAmountB: 0,
+      feeRate: pool.ammConfig.tradeFeeRate,
+      openTime: pool.startTime.toString(),
+      tvl: 0,
+
+      day: mockRewardData,
+      week: mockRewardData,
+      month: mockRewardData,
+      pooltype: [],
+
+      farmUpcomingCount: 0,
+      farmOngoingCount: 0,
+      farmFinishedCount: 0,
+      burnPercent: 0,
+      config: {
+        ...pool.ammConfig,
+        id: pool.ammConfig.id.toString(),
+        defaultRange: 0,
+        defaultRangePoint: [],
+      },
+    };
+  }
 }
+
+export interface ClmmRpcDataWithAddress {
+  address: Address;
+  clmmPoolRpcInfo: ClmmRpcData;
+}
+
+export async function getPdaExBitmapAccount(programId: Address, poolId: Address): Promise<ProgramDerivedAddress> {
+  const addressEncoder = getAddressEncoder();
+  return getProgramDerivedAddress({
+    seeds: [POOL_TICK_ARRAY_BITMAP_SEED, addressEncoder.encode(poolId)],
+    programAddress: programId,
+  });
+}
+
+const mockRewardData = {
+  volume: 0,
+  volumeQuote: 0,
+  volumeFee: 0,
+  apr: 0,
+  feeApr: 0,
+  priceMin: 0,
+  priceMax: 0,
+  rewardApr: [],
+};

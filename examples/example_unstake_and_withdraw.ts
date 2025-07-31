@@ -9,7 +9,6 @@ import {
 import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
 import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
 import { getFarmUnstakeAndWithdrawIxs, getStakedTokens } from './utils/farms';
-import { fromLegacyTransactionInstruction } from '@solana/compat/';
 import { sendAndConfirmTx } from './utils/tx';
 
 (async () => {
@@ -28,7 +27,7 @@ import { sendAndConfirmTx } from './utils/tx';
     throw new Error('Strategy not found');
   }
 
-  const sharesStaked = await getStakedTokens(getLegacyConnection(), keypair.address, strategyState.strategy.farm);
+  const sharesStaked = await getStakedTokens(kamino.getConnection(), keypair.address, strategyState.strategy.farm);
 
   // in this example we withdraw everything staked; if the user tries to withdraw more than the shares they have staked + the shares they have in the ATA, the txn will fail
   const sharesToBurn = sharesStaked;
@@ -84,12 +83,12 @@ import { sendAndConfirmTx } from './utils/tx';
     );
     console.log('shareLamportsToUnstake', shareLamportsToUnstake.toString());
     const unstakeIxs = await getFarmUnstakeAndWithdrawIxs(
-      getLegacyConnection(),
-      keypair.address,
+      kamino.getConnection(),
+      keypair,
       strategyState.strategy.farm,
       shareLamportsToUnstake
     );
-    tx.push(...unstakeIxs.map(fromLegacyTransactionInstruction));
+    tx.push(...unstakeIxs);
   }
 
   const withdrawIx = await kamino.withdrawShares(strategyWithAddress, sharesToBurn, keypair);
