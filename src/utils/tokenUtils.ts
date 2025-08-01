@@ -177,7 +177,7 @@ export async function getMintDecimals(rpc: Rpc<GetAccountInfoApi>, mint: Address
 }
 
 export function solToWSol(mint: Address): Address {
-  if (mint.toString() === SOL_MINT.toString()) {
+  if (mint === SOL_MINT) {
     return WSOL_MINT;
   }
   return mint;
