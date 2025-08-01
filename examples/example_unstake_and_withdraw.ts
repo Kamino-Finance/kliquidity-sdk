@@ -6,7 +6,7 @@ import {
   Kamino,
   StrategyWithAddress,
 } from '@kamino-finance/kliquidity-sdk';
-import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
+import { getConnection, getWsConnection } from './utils/connection';
 import { getFarmUnstakeAndWithdrawIxs, getStakedTokens } from './utils/farms';
 import { sendAndConfirmTx } from './utils/tx';
 
@@ -21,7 +21,7 @@ const DEFAULT_PUBLIC_KEY: Address = address('11111111111111111111111111111111');
   const strategyWithFarm = address('BLP7UHUg1yNry94Qk3sM8pAfEyDhTZirwFghw9DoBjn7');
 
   const cluster = 'mainnet-beta';
-  const kamino = new Kamino(cluster, getConnection(), getLegacyConnection());
+  const kamino = new Kamino(cluster, getConnection());
 
   const strategyState = (await kamino.getStrategiesWithAddresses([strategyWithFarm]))[0];
   if (!strategyState) {

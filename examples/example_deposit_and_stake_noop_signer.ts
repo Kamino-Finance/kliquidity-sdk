@@ -18,7 +18,7 @@ import {
   StrategyWithAddress,
   U64_MAX,
 } from '@kamino-finance/kliquidity-sdk';
-import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
+import { getConnection, getWsConnection } from './utils/connection';
 import { getFarmStakeIxs } from './utils/farms';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
@@ -38,7 +38,7 @@ const DEFAULT_PUBLIC_KEY: Address = address('11111111111111111111111111111111');
   const amountB = new Decimal(0.1);
 
   const cluster = 'mainnet-beta';
-  const kamino = new Kamino(cluster, getConnection(), getLegacyConnection());
+  const kamino = new Kamino(cluster, getConnection());
 
   const strategyState = (await kamino.getStrategiesWithAddresses([strategyWithFarm]))[0];
   if (!strategyState) {
