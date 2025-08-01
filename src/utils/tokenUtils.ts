@@ -1,6 +1,6 @@
 import {
   Address,
-  IInstruction,
+  Instruction,
   address,
   TransactionSigner,
   Rpc,
@@ -66,7 +66,7 @@ export function createAssociatedTokenAccountInstruction(
   mint: Address,
   programId: Address = TOKEN_PROGRAM_ADDRESS,
   associatedTokenProgramId: Address = ASSOCIATED_TOKEN_PROGRAM_ADDRESS
-): IInstruction {
+): Instruction {
   return getCreateAssociatedTokenInstruction(
     {
       mint,
@@ -80,7 +80,7 @@ export function createAssociatedTokenAccountInstruction(
   );
 }
 
-export function createComputeUnitLimitIx(units: number = 400000): IInstruction {
+export function createComputeUnitLimitIx(units: number = 400000): Instruction {
   return getSetComputeUnitLimitInstruction({ units });
 }
 

@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js/decimal';
 import BN from 'bn.js';
-import { Address, IInstruction, none, Rpc, SolanaRpcApi, TransactionSigner } from '@solana/kit';
+import { Address, Instruction, none, Rpc, SolanaRpcApi, TransactionSigner } from '@solana/kit';
 import {
   Farms,
   FarmState,
@@ -51,14 +51,14 @@ export async function getFarmStakeIxs(
   lamportsToStake: Decimal,
   farmAddress: Address,
   fetchedFarmState?: FarmState
-): Promise<IInstruction[]> {
+): Promise<Instruction[]> {
   const farmState = fetchedFarmState ? fetchedFarmState : await FarmState.fetch(connection, farmAddress);
   if (!farmState) {
     throw new Error(`Farm state not found for ${farmAddress}`);
   }
 
   const farmClient = new Farms(connection);
-  const stakeIxs: IInstruction[] = [];
+  const stakeIxs: Instruction[] = [];
   const userState = await getUserStatePDA(farmClient.getProgramID(), farmAddress, user.address);
   const userStateExists = await connection.getAccountInfo(userState).send();
   if (!userStateExists) {
@@ -110,7 +110,7 @@ export async function getFarmUnstakeAndWithdrawIxs(
   sharesToUnstake: Decimal,
   fetchedFarmState?: FarmState,
   fetchedUserState?: UserState
-): Promise<IInstruction[]> {
+): Promise<Instruction[]> {
   const farmState = fetchedFarmState ? fetchedFarmState : await FarmState.fetch(connection, farmAddress);
   if (!farmState) {
     throw new Error(`Farm state not found for ${farmAddress}`);
@@ -130,7 +130,7 @@ export async function getFarmUnstakeAndWithdrawIxs(
   const unstakeAmountString = multiplyByWad(sharesToUnstake);
 
   const unstakeIx = await farmClient.unstakeIx(user, farmAddress, new Decimal(unstakeAmountString), none());
-  const ixs: IInstruction[] = [unstakeIx];
+  const ixs: Instruction[] = [unstakeIx];
 
   if (sharesToUnstake.gt(new Decimal(0))) {
     const withdrawIx = await farmClient.withdrawUnstakedDepositIx(

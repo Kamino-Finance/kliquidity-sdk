@@ -1,4 +1,4 @@
-import { Address, IInstruction, Option, TransactionSigner } from '@solana/kit';
+import { Address, Instruction, Option, TransactionSigner } from '@solana/kit';
 import Decimal from 'decimal.js';
 import {
   DriftDirection,
@@ -197,7 +197,7 @@ export async function getUpdateStrategyConfigIx(
   amount: Decimal,
   programId: Address,
   newAccount: Address = DEFAULT_PUBLIC_KEY
-): Promise<IInstruction> {
+): Promise<Instruction> {
   const args: UpdateStrategyConfigArgs = {
     mode: mode.discriminator,
     value: getStrategyConfigValue(amount),

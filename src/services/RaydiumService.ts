@@ -37,7 +37,6 @@ import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../@codegen/raydium/programId'
 import { priceToTickIndexWithRounding } from '../utils/raydium';
 import {
   ApiV3PoolInfoConcentratedItem,
-  Clmm,
   ClmmConfigLayout,
   ClmmRpcData,
   ComputeClmmPoolInfo,
@@ -45,8 +44,6 @@ import {
   PoolInfoLayout,
   PoolUtils,
   PositionInfoLayout,
-  Raydium,
-  RaydiumLoadParams,
   ReturnTypeFetchExBitmaps,
   ReturnTypeFetchMultipleMintInfos,
   ReturnTypeGetTickPrice,
@@ -54,9 +51,9 @@ import {
   TickArrayBitmapExtensionLayout,
   TickMath,
 } from '@raydium-io/raydium-sdk-v2/lib';
-import { Connection, PublicKey } from '@solana/web3.js';
 import { fromLegacyPublicKey } from '@solana/compat';
 import { fetchAllMint } from '@solana-program/token-2022';
+import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
 
 export class RaydiumService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
@@ -482,7 +479,7 @@ export class RaydiumService {
 
       result[cur.address.toString()] = {
         ...rpcDataMap[cur.address.toString()],
-        id: new PublicKey(cur.address.toString()),
+        id: toLegacyPublicKey(cur.address),
         version: 6,
         programId: fromLegacyPublicKey(cur.clmmPoolRpcInfo.programId),
         mintA: {
@@ -509,7 +506,7 @@ export class RaydiumService {
         },
         ammConfig: {
           ...ammConfigData,
-          id: new PublicKey(ammConfigKey),
+          id: toLegacyPublicKey(address(ammConfigKey)),
           fundFeeRate: 0,
           description: '',
           defaultRange: 0,
@@ -559,7 +556,7 @@ export class RaydiumService {
           : null,
       };
     }
-    mintK[PublicKey.default.toString()] = mintK[WSOL_MINT.toString()];
+    mintK[DEFAULT_ADDRESS.toString()] = mintK[WSOL_MINT.toString()];
 
     return mintK;
   }

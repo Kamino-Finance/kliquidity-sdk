@@ -2,7 +2,7 @@ import {
   Address,
   GetAccountInfoApi,
   GetTokenAccountBalanceApi,
-  IInstruction,
+  Instruction,
   Rpc,
   TransactionSigner,
 } from '@solana/kit';
@@ -27,8 +27,8 @@ import { getTransferSolInstruction } from '@solana-program/system';
 
 export const MAX_ACCOUNTS_PER_TRANSACTION = 64;
 
-export const getComputeBudgetAndPriorityFeeIxns = (units: number, priorityFeeLamports?: Decimal): IInstruction[] => {
-  const ixns: IInstruction[] = [];
+export const getComputeBudgetAndPriorityFeeIxns = (units: number, priorityFeeLamports?: Decimal): Instruction[] => {
+  const ixns: Instruction[] = [];
 
   ixns.push(getSetComputeUnitLimitInstruction({ units }));
 
@@ -45,7 +45,7 @@ export const createAtaIfMissingIx = async (
   mint: Address,
   owner: TransactionSigner,
   programId: Address
-): Promise<IInstruction | undefined> => {
+): Promise<Instruction | undefined> => {
   const ata = await getAssociatedTokenAddress(mint, owner.address, programId);
   const doesAtaExist = Boolean(await checkIfAccountExists(connection, ata));
   const createIxn = !doesAtaExist
@@ -58,7 +58,7 @@ export const getAtasWithCreateIxnsIfMissing = async (
   connection: Rpc<any>,
   mints: [Address, Address][],
   owner: TransactionSigner
-): Promise<IInstruction[]> => {
+): Promise<Instruction[]> => {
   const requests = mints.map(async ([mint, tokenProgram]) => {
     const createAtaIx = await createAtaIfMissingIx(connection, mint, owner, tokenProgram);
     if (createAtaIx) {
@@ -68,7 +68,7 @@ export const getAtasWithCreateIxnsIfMissing = async (
   });
   const result = (await Promise.all(requests.filter((x) => x !== undefined))).filter(
     (ix) => ix !== undefined
-  ) as IInstruction[];
+  ) as Instruction[];
 
   return result;
 };
@@ -79,8 +79,8 @@ export const createWsolAtaIfMissing = async (
   owner: TransactionSigner,
   method: 'deposit' | 'withdraw' = 'deposit'
 ): Promise<CreateAta> => {
-  const createIxns: IInstruction[] = [];
-  const closeIxns: IInstruction[] = [];
+  const createIxns: Instruction[] = [];
+  const closeIxns: Instruction[] = [];
 
   const wsolAta: Address = await getAssociatedTokenAddress(WRAPPED_SOL_MINT, owner.address);
 
@@ -157,7 +157,7 @@ export async function checkIfAccountExists(connection: Rpc<GetAccountInfoApi>, a
   return (await connection.getAccountInfo(account, { encoding: 'base64' }).send()).value != null;
 }
 
-export function removeBudgetAndAtaIxns(ixns: IInstruction[], mints: Address[]): IInstruction[] {
+export function removeBudgetAndAtaIxns(ixns: Instruction[], mints: Address[]): Instruction[] {
   return ixns.filter((ixn) => {
     const { programAddress, accounts } = ixn;
 

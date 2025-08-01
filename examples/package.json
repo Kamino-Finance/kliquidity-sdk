@@ -20,7 +20,7 @@
     "@kamino-finance/kliquidity-sdk": "link:../",
     "@kamino-finance/farms-sdk": "^3.2.11",
     "@solana/compat": "^2.1.0",
-    "@solana/kit": "^2.1.0"
+    "@solana/kit": "^2.1.1"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.6",
