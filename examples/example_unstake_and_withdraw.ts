@@ -1,4 +1,4 @@
-import { Address, address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
+import { address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
 import {
   collToLamportsDecimal,
   createComputeUnitLimitIx,

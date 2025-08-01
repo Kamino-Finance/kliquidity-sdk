@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { Address, address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
+import { address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
 import {
   createAssociatedTokenAccountInstruction,
   createComputeUnitLimitIx,
