@@ -11,7 +11,7 @@ import {
   GetProgramAccountsDatasizeFilter,
   GetProgramAccountsMemcmpFilter,
   getProgramDerivedAddress,
-  IInstruction,
+  Instruction,
   isAddress,
   isSome,
   JsonParsedTokenAccount,
@@ -345,7 +345,6 @@ import {
 } from '@solana-program/address-lookup-table';
 import { fetchMultipleLookupTableAccounts } from './utils/lookupTable';
 import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } from '@solana/rpc-types';
-import { Connection } from '@solana/web3.js';
 import { toLegacyPublicKey } from './utils/compat';
 import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
 
@@ -354,7 +353,6 @@ const addressEncoder = getAddressEncoder();
 export class Kamino {
   private readonly _cluster: SolanaCluster;
   private readonly _rpc: Rpc<SolanaRpcApi>;
-  private readonly _legacyConnection: Connection;
   readonly _config: HubbleConfig;
   private _globalConfig: Address;
   private readonly _scope: Scope;
@@ -368,7 +366,6 @@ export class Kamino {
    * Create a new instance of the Kamino SDK class.
    * @param cluster Name of the Solana cluster
    * @param rpc Connection to the Solana cluster
-   * @param legacyConnection Connection to the Solana cluster
    * @param globalConfig override kamino global config
    * @param programId override kamino program id
    * @param whirlpoolProgramId override whirlpool program id
@@ -379,7 +376,6 @@ export class Kamino {
   constructor(
     cluster: SolanaCluster,
     rpc: Rpc<SolanaRpcApi>,
-    legacyConnection: Connection,
     globalConfig?: Address,
     programId?: Address,
     whirlpoolProgramId?: Address,
@@ -389,7 +385,6 @@ export class Kamino {
   ) {
     this._cluster = cluster;
     this._rpc = rpc;
-    this._legacyConnection = legacyConnection;
     this._config = getConfigByCluster(cluster);
 
     if (programId && programId === STAGING_KAMINO_PROGRAM_ID) {
@@ -401,8 +396,8 @@ export class Kamino {
     }
 
     this._scope = new Scope(cluster, rpc);
-    this._orcaService = new OrcaService(rpc, legacyConnection, whirlpoolProgramId);
-    this._raydiumService = new RaydiumService(rpc, legacyConnection, raydiumProgramId);
+    this._orcaService = new OrcaService(rpc, whirlpoolProgramId);
+    this._raydiumService = new RaydiumService(rpc, raydiumProgramId);
     this._meteoraService = new MeteoraService(rpc, meteoraProgramId);
 
     if (jupBaseAPI) {
@@ -411,8 +406,6 @@ export class Kamino {
   }
 
   getConnection = () => this._rpc;
-
-  getLegacyConnection = () => this._legacyConnection;
 
   getProgramID = () => this._kliquidityProgramId;
 
@@ -2770,7 +2763,7 @@ export class Kamino {
     };
 
     let withdrawIx = withdraw(args, accounts, this.getProgramID());
-    let collectFeesAndRewardsIxns: IInstruction[] = [];
+    let collectFeesAndRewardsIxns: Instruction[] = [];
 
     //  for Raydium strats we need to collect fees and rewards before withdrawal
     //  add rewards vaults accounts to withdraw
@@ -2913,8 +2906,8 @@ export class Kamino {
     tokenBAta: Address,
     sharesMintData: Account<Token> | null,
     sharesAta: Address
-  ): Promise<IInstruction[]> => {
-    const instructions: IInstruction[] = [];
+  ): Promise<Instruction[]> => {
+    const instructions: Instruction[] = [];
     if (!tokenAData) {
       const tokenProgramA =
         strategyState.strategy.tokenATokenProgram === DEFAULT_PUBLIC_KEY
@@ -3130,7 +3123,7 @@ export class Kamino {
     amountA: Decimal,
     amountB: Decimal,
     owner: TransactionSigner
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     if (amountA.lessThanOrEqualTo(0) && amountB.lessThanOrEqualTo(0)) {
       throw Error('Token A and B amount cant be lower than or equal to 0.');
     }
@@ -3350,7 +3343,7 @@ export class Kamino {
           user: TransactionSigner,
           slippageBps: Decimal,
           allAccounts: Address[]
-        ): Promise<[IInstruction[], Address[]]> =>
+        ): Promise<[Instruction[], Address[]]> =>
           this.getJupSwapIxsV6(
             input,
             tokenAMint,
@@ -3477,8 +3470,8 @@ export class Kamino {
       tokenBMinPostDepositBalanceLamports
     );
 
-    const cleanupIxs: IInstruction[] = [];
-    const createWsolAtasIxns: IInstruction[] = [];
+    const cleanupIxs: Instruction[] = [];
+    const createWsolAtasIxns: Instruction[] = [];
 
     if (isSOLMint(strategyState.tokenAMint)) {
       // read how much SOL the user has and calculate the amount to deposit and balance based on it
@@ -3646,13 +3639,13 @@ export class Kamino {
 
     const singleSidedDepositIx = singleTokenDepositWithMin(args, accounts, this.getProgramID());
 
-    let result: IInstruction[] = [];
+    let result: Instruction[] = [];
     if (includeAtaIxns) {
       result.push(...createAtasIxns, ...createWsolAtasIxns);
     }
 
     // get all unique accounts in the tx so we can use the remaining space (MAX_ACCOUNTS_PER_TRANSACTION - accounts_used) for the swap
-    const extractKeys = (ixs: IInstruction[]) => ixs.flatMap((ix) => ix.accounts?.map((key) => key.address) || []);
+    const extractKeys = (ixs: Instruction[]) => ixs.flatMap((ix) => ix.accounts?.map((key) => key.address) || []);
 
     const allKeys = [
       ...extractKeys(result),
@@ -3715,7 +3708,7 @@ export class Kamino {
    * @param amountLamports Amount of SOL to deposit into topup vault
    * @returns transaction instruction for adding SOL to topup vault
    */
-  upkeepTopupVault = async (owner: TransactionSigner, amountLamports: Decimal): Promise<IInstruction> => {
+  upkeepTopupVault = async (owner: TransactionSigner, amountLamports: Decimal): Promise<Instruction> => {
     if (amountLamports.lessThanOrEqualTo(0)) {
       throw Error('Must deposit a positive amount of SOL.');
     }
@@ -3747,7 +3740,7 @@ export class Kamino {
    * @param amount Amount of SOL to withdraw from the topup vault
    * @returns transaction instruction for removing SOL from the topup vault
    */
-  withdrawTopupVault = async (owner: TransactionSigner, amount: Decimal): Promise<IInstruction> => {
+  withdrawTopupVault = async (owner: TransactionSigner, amount: Decimal): Promise<Instruction> => {
     if (amount.lessThanOrEqualTo(0)) {
       throw Error('Must withdraw a positive amount of SOL.');
     }
@@ -3785,7 +3778,7 @@ export class Kamino {
     maxAccounts: number,
     profiler: ProfiledFunctionExecution = noopProfiledFunctionExecution,
     onlyDirectRoutes?: boolean
-  ): Promise<[IInstruction[], Address[]]> => {
+  ): Promise<[Instruction[], Address[]]> => {
     const jupiterQuote = input.tokenAToSwapAmount.lt(ZERO)
       ? await profiler(
           JupService.getBestRouteV6(
@@ -3816,7 +3809,7 @@ export class Kamino {
           []
         );
 
-    const allJupIxs: IInstruction[] = [
+    const allJupIxs: Instruction[] = [
       ...(jupiterQuote.tokenLedgerInstruction ? [jupiterQuote.tokenLedgerInstruction] : []),
       ...removeBudgetAndAtaIxns(jupiterQuote.setupInstructions, [tokenAMint, tokenBMint]),
       jupiterQuote.swapInstruction,
@@ -3849,7 +3842,7 @@ export class Kamino {
     existingAccounts: Address[],
     profiledFunctionExecution: ProfiledFunctionExecution = noopProfiledFunctionExecution,
     onlyDirectRoutes?: boolean
-  ): Promise<[IInstruction[], Address[]]> => {
+  ): Promise<[Instruction[], Address[]]> => {
     console.log('getJupSwapIxsV6', JSON.stringify(input));
 
     let extraAccountsBuffer = 5;
@@ -3896,7 +3889,7 @@ export class Kamino {
     tokenAAta: Address,
     tokenBAta: Address,
     expectedTokensBalances?: MaybeTokensBalances
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const { strategy: strategyState, address: _ } = strategy;
 
     let expectedABalance: Decimal;
@@ -3956,7 +3949,7 @@ export class Kamino {
     pool: Address,
     owner: TransactionSigner,
     dex: Dex
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     let tokenAMint = DEFAULT_PUBLIC_KEY;
     let tokenBMint = DEFAULT_PUBLIC_KEY;
     if (dex === 'ORCA') {
@@ -4287,7 +4280,7 @@ export class Kamino {
    * @param newStrategy public key of the new strategy
    * @returns transaction instruction to create the account
    */
-  createStrategyAccount = async (payer: TransactionSigner, newStrategy: TransactionSigner): Promise<IInstruction> => {
+  createStrategyAccount = async (payer: TransactionSigner, newStrategy: TransactionSigner): Promise<Instruction> => {
     const accountSize = BigInt(WhirlpoolStrategy.layout.span + 8);
     return this.createAccountRentExempt(payer, newStrategy, accountSize);
   };
@@ -4296,7 +4289,7 @@ export class Kamino {
     payer: TransactionSigner,
     newAccount: TransactionSigner,
     size: bigint
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const lamports = await this._rpc.getMinimumBalanceForRentExemption(size).send();
     return getCreateAccountInstruction({
       newAccount,
@@ -4317,7 +4310,7 @@ export class Kamino {
   collectFeesAndRewards = async (
     strategy: Address | StrategyWithAddress,
     owner: TransactionSigner
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const { address: strategyPubkey, strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
     const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
@@ -4640,7 +4633,7 @@ export class Kamino {
     priceLower: Decimal,
     priceUpper: Decimal,
     status: StrategyStatusKind = new Uninitialized()
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const { strategy: strategyState, address: strategyAddress } = await this.getStrategyStateIfNotFetched(strategy);
     if (!strategyState) {
       throw Error(`Could not fetch strategy state with pubkey ${strategy.toString()}`);
@@ -4765,7 +4758,7 @@ export class Kamino {
     oldTickArrayLowerOrBaseVaultAuthority: Address,
     oldTickArrayUpperOrBaseVaultAuthority: Address,
     status: StrategyStatusKind = new Uninitialized()
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const whirlpool = await Whirlpool.fetch(this._rpc, pool, this._orcaService.getWhirlpoolProgramId());
     if (!whirlpool) {
       throw Error(`Could not fetch whirlpool state with pubkey ${pool.toString()}`);
@@ -4893,7 +4886,7 @@ export class Kamino {
     strategyRewardOVault?: Address,
     strategyReward1Vault?: Address,
     strategyReward2Vault?: Address
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const poolState = await PoolState.fetch(this._rpc, pool, this._raydiumService.getRaydiumProgramId());
     if (!poolState) {
       throw Error(`Could not fetch Raydium pool state with pubkey ${pool.toString()}`);
@@ -5067,7 +5060,7 @@ export class Kamino {
     oldTickArrayUpperOrBaseVaultAuthority: Address,
     eventAuthority: Option<Address>,
     status: StrategyStatusKind = new Uninitialized()
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const lbPair = await LbPair.fetch(this._rpc, pool, this._meteoraService.getMeteoraProgramId());
     if (!lbPair) {
       throw Error(`Could not fetch meteora lbpair state with pubkey ${pool.toString()}`);
@@ -5170,7 +5163,7 @@ export class Kamino {
     admin: TransactionSigner,
     strategy: Address | StrategyWithAddress,
     action: ExecutiveWithdrawActionKind
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const { address: strategyPubkey, strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
     const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
 
@@ -5265,7 +5258,7 @@ export class Kamino {
     admin: TransactionSigner,
     strategy: Address | StrategyWithAddress,
     referencePriceType: ReferencePriceTypeKind
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const { address } = await this.getStrategyStateIfNotFetched(strategy);
 
     return getUpdateStrategyConfigIx(
@@ -5283,7 +5276,7 @@ export class Kamino {
    * @param strategy strategy pubkey or object
    * @param payer transaction payer
    */
-  invest = async (strategy: Address | StrategyWithAddress, payer: TransactionSigner): Promise<IInstruction> => {
+  invest = async (strategy: Address | StrategyWithAddress, payer: TransactionSigner): Promise<Instruction> => {
     const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
     if (!strategyWithAddress || !strategyWithAddress.strategy) {
       throw Error(`Could not fetch strategy state with pubkey ${strategy.toString()}`);
@@ -5335,7 +5328,7 @@ export class Kamino {
    * @param strategy strategy pubkey or object
    * @param payer transaction payer
    */
-  compound = async (strategy: Address | StrategyWithAddress, payer: TransactionSigner): Promise<IInstruction[]> => {
+  compound = async (strategy: Address | StrategyWithAddress, payer: TransactionSigner): Promise<Instruction[]> => {
     // fetch here so the underlying instructions won't need to fetch
     const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
     if (!strategyWithAddress) {
@@ -5435,7 +5428,7 @@ export class Kamino {
     strategyAdmin: TransactionSigner,
     strategy: Address | StrategyWithAddress,
     rebalanceFieldInfos: RebalanceFieldInfo[]
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const rebalanceType = getRebalanceTypeFromRebalanceFields(rebalanceFieldInfos);
     const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
     if (!strategyWithAddress || !strategyWithAddress.strategy) {
@@ -5482,7 +5475,7 @@ export class Kamino {
     rebalanceType?: RebalanceTypeKind,
     tokenADecimals?: number,
     tokenBDecimals?: number
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const { address: strategyAddress, strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
     if (!rebalanceType) {
       rebalanceType = numberToRebalanceType(strategyState.rebalanceType);
@@ -5520,7 +5513,7 @@ export class Kamino {
     rebalanceType: RebalanceTypeKind,
     tokenADecimals: number,
     tokenBDecimals: number
-  ): Promise<IInstruction> => {
+  ): Promise<Instruction> => {
     const value = buildStrategyRebalanceParams(rebalanceParams, rebalanceType, tokenADecimals, tokenBDecimals);
     const args: UpdateStrategyConfigArgs = {
       mode: StrategyConfigOption.UpdateRebalanceParams.discriminator,
@@ -5624,7 +5617,7 @@ export class Kamino {
     const tokenATokenProgram = await this.getAccountOwner(tokenAMint);
     const tokenBTokenProgram = await this.getAccountOwner(tokenBMint);
 
-    const initStrategyIx: IInstruction = await this.createStrategy(strategy, pool, strategyAdmin, dex);
+    const initStrategyIx: Instruction = await this.createStrategy(strategy, pool, strategyAdmin, dex);
 
     const tokenADecimals = await getMintDecimals(this._rpc, tokenMintA);
     const tokenBDecimals = await getMintDecimals(this._rpc, tokenMintB);
@@ -5662,7 +5655,7 @@ export class Kamino {
       rebalanceParams
     );
 
-    const openPositionIxs: IInstruction[] = [];
+    const openPositionIxs: Instruction[] = [];
     const eventAuthority = await this.getEventAuthorityPDA(new BN(dexToNumber(dex)));
     if (dex === 'ORCA') {
       const whirlpoolWithAddress = await this.getWhirlpoolStateIfNotFetched(pool);
@@ -6382,7 +6375,7 @@ export class Kamino {
     }
   };
 
-  getInitLookupTableIx = async (authority: TransactionSigner, slot?: Slot): Promise<[IInstruction, Address]> => {
+  getInitLookupTableIx = async (authority: TransactionSigner, slot?: Slot): Promise<[Instruction, Address]> => {
     let recentSlot: Slot;
     if (slot) {
       recentSlot = slot;
@@ -6404,7 +6397,7 @@ export class Kamino {
     authority: TransactionSigner,
     lookupTable: Address,
     strategy: Address | StrategyWithAddress
-  ): Promise<IInstruction[]> => {
+  ): Promise<Instruction[]> => {
     const { strategy: strategyState, address } = await this.getStrategyStateIfNotFetched(strategy);
     if (!strategyState) {
       throw Error(`Could not fetch strategy state with pubkey ${strategy.toString()}`);
@@ -6439,9 +6432,9 @@ export class Kamino {
     authority: TransactionSigner,
     lookupTable: Address,
     entries: Address[]
-  ): IInstruction[] => {
+  ): Instruction[] => {
     const chunkSize = 20;
-    const txs: IInstruction[] = [];
+    const txs: Instruction[] = [];
     for (let i = 0; i < entries.length; i += chunkSize) {
       const chunk = entries.slice(i, i + chunkSize);
       txs.push(
@@ -6470,9 +6463,9 @@ export class Kamino {
     slot?: Slot
   ): Promise<{
     lookupTable: Address;
-    createLookupTableIx: IInstruction;
-    populateLookupTableIxs: IInstruction[];
-    updateStrategyLookupTableIx: IInstruction;
+    createLookupTableIx: Instruction;
+    populateLookupTableIxs: Instruction[];
+    updateStrategyLookupTableIx: Instruction;
   }> => {
     const [createLookupTableIx, lookupTable] = await this.getInitLookupTableIx(authority, slot);
     const populateLookupTableIxs = await this.getPopulateLookupTableIxs(authority, lookupTable, strategy);
@@ -6582,11 +6575,11 @@ export class Kamino {
     newPosition: TransactionSigner,
     priceLower: Decimal,
     priceUpper: Decimal
-  ): Promise<IInstruction[]> => {
+  ): Promise<Instruction[]> => {
     // todo: refactor this to return an object, not a list
     const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
 
     // if there are no invested tokens we don't need to collect fees and rewards
     const stratTokenBalances = await this.getStrategyTokensBalances(strategyWithAddress.strategy);
@@ -7458,7 +7451,7 @@ export class Kamino {
    * @param owner
    * @param signature
    */
-  async getUserTermsSignatureIx(owner: TransactionSigner, signature: Uint8Array): Promise<IInstruction> {
+  async getUserTermsSignatureIx(owner: TransactionSigner, signature: Uint8Array): Promise<Instruction> {
     const pdaSeed = [Buffer.from('signature'), addressEncoder.encode(owner.address)];
     const [signatureStateKey] = await getProgramDerivedAddress({ seeds: pdaSeed, programAddress: this.getProgramID() });
     const args: SignTermsArgs = {
@@ -7702,7 +7695,7 @@ export class Kamino {
     rebalanceType: Decimal,
     withdrawFeeBps?: Decimal,
     performanceFeeBps?: Decimal
-  ): Promise<IInstruction[]> => {
+  ): Promise<Instruction[]> => {
     const updateRebalanceTypeIx = await getUpdateStrategyConfigIx(
       strategyAdmin,
       this._globalConfig,
@@ -7712,7 +7705,7 @@ export class Kamino {
       this.getProgramID()
     );
 
-    let updateWithdrawalFeeIx: IInstruction | null = null;
+    let updateWithdrawalFeeIx: Instruction | null = null;
     if (withdrawFeeBps) {
       updateWithdrawalFeeIx = await getUpdateStrategyConfigIx(
         strategyAdmin,
@@ -7770,7 +7763,7 @@ export class Kamino {
   getUpdateRewardsIxs = async (
     strategyOwner: TransactionSigner,
     strategy: Address | StrategyWithAddress
-  ): Promise<[IInstruction, TransactionSigner][]> => {
+  ): Promise<[Instruction, TransactionSigner][]> => {
     const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
     const strategyState = strategyWithAddress.strategy;
     if (!strategyState) {
@@ -7781,7 +7774,7 @@ export class Kamino {
       throw Error(`Could not fetch global config with pubkey ${strategyState.globalConfig.toString()}`);
     }
     const collateralInfos = await this.getCollateralInfo(globalConfig.tokenInfos);
-    const result: [IInstruction, TransactionSigner][] = [];
+    const result: [Instruction, TransactionSigner][] = [];
     if (strategyState.strategyDex.toNumber() === dexToNumber('ORCA')) {
       const whirlpool = await Whirlpool.fetch(this._rpc, strategyState.pool, this._orcaService.getWhirlpoolProgramId());
       if (!whirlpool) {

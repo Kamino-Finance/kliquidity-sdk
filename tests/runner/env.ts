@@ -12,7 +12,6 @@ import {
   TransactionSigner,
 } from '@solana/kit';
 import { ConnectionPool } from './tx';
-import { Connection } from '@solana/web3.js';
 import { sleep } from '../../src';
 
 export const LOCAL_RAYDIUM_PROGRAM_ID: Address = address('devi51mZmdwUJGU9hjN27vEz64Gps7uUefqxg27EAtH');
@@ -20,7 +19,6 @@ export const LOCAL_RAYDIUM_PROGRAM_ID: Address = address('devi51mZmdwUJGU9hjN27v
 export type Env = {
   admin: TransactionSigner;
   c: ConnectionPool;
-  legacyConnection: Connection;
   kliquidityProgramId: Address;
   raydiumProgramId: Address;
 };
@@ -54,12 +52,9 @@ export async function initEnv({
   await sleep(2000);
   console.log(`Airdropping ${solAirdrop} SOL to admin: ${adminSigner.address}...`);
 
-  const legacyConnection = new Connection(rpcUrl, 'processed');
-
   const env: Env = {
     admin: adminSigner,
     c: { rpc, wsRpc: ws },
-    legacyConnection,
     kliquidityProgramId,
     raydiumProgramId,
   };

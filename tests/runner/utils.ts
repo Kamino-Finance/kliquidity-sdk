@@ -7,7 +7,7 @@ import {
   getAddressEncoder,
   GetBalanceApi,
   GetTokenAccountBalanceApi,
-  IInstruction,
+  Instruction,
   isAddress,
   lamports,
   Lamports,
@@ -234,7 +234,7 @@ export function getMintToIx(
   mint: Address,
   tokenAccount: Address,
   amount: number
-): IInstruction {
+): Instruction {
   return getMintToInstruction(
     {
       mint,
@@ -251,7 +251,7 @@ export function getBurnFromIx(
   mintPubkey: Address,
   tokenAccount: Address,
   amount: number
-): IInstruction {
+): Instruction {
   console.log(`burnFrom ${tokenAccount.toString()} mint ${mintPubkey.toString()} amount ${amount}`);
   return getBurnInstruction(
     {
@@ -295,7 +295,7 @@ export function createAtaInstruction(
   mint: Address,
   ata: Address,
   owner: Address = payer.address
-): IInstruction {
+): Instruction {
   return getCreateAssociatedTokenInstruction(
     {
       payer,
@@ -338,7 +338,7 @@ export async function createMintFromKeypair(env: Env, mint: TransactionSigner, d
   return mint.address;
 }
 
-async function createMintInstructions(env: Env, mint: TransactionSigner, decimals: number): Promise<IInstruction[]> {
+async function createMintInstructions(env: Env, mint: TransactionSigner, decimals: number): Promise<Instruction[]> {
   return [
     getCreateAccountInstruction({
       payer: env.admin,
@@ -493,8 +493,8 @@ export async function getLocalSwapIxs(
   user: TransactionSigner,
   slippageBps: Decimal,
   mintAuthority: TransactionSigner = user
-): Promise<[IInstruction[], Address[]]> {
-  let swapIxs: IInstruction[] = [];
+): Promise<[Instruction[], Address[]]> {
+  let swapIxs: Instruction[] = [];
   if (input.tokenAToSwapAmount.lt(ZERO)) {
     swapIxs = await getSwapAToBWithSlippageBPSIxs(input, tokenAMint, tokenBMint, slippageBps, user, mintAuthority);
   } else {
@@ -510,7 +510,7 @@ async function getSwapAToBWithSlippageBPSIxs(
   slippageBps: Decimal,
   user: TransactionSigner,
   mintAuthority: TransactionSigner
-): Promise<IInstruction[]> {
+): Promise<Instruction[]> {
   // multiply the tokens to swap by -1 to get the positive sign because we represent as negative numbers what we have to sell
   const tokensToBurn = -input.tokenAToSwapAmount.toNumber();
 

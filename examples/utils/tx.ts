@@ -10,7 +10,7 @@ import {
   GetLatestBlockhashApi,
   getSignatureFromTransaction,
   IAccountSignerMeta,
-  IInstruction,
+  Instruction,
   pipe,
   Rpc,
   RpcSubscriptions,
@@ -33,14 +33,14 @@ export type ConnectionPool = {
 export async function sendAndConfirmTx(
   { rpc, wsRpc }: ConnectionPool,
   payer: TransactionSigner,
-  ixs: IInstruction[],
+  ixs: Instruction[],
   signers: TransactionSigner[] = [],
   luts: Address[] = [],
   signerToBeReplaced?: TransactionSigner
 ): Promise<Signature> {
   const blockhash = await fetchBlockhash(rpc);
 
-  let newIxs: IInstruction[] = ixs;
+  let newIxs: Instruction[] = ixs;
   if (signerToBeReplaced) {
     newIxs = replaceSigner(ixs, signerToBeReplaced, payer);
   }
@@ -107,11 +107,11 @@ export async function fetchBlockhash(rpc: Rpc<GetLatestBlockhashApi>): Promise<B
 
 // replace a signer in the instructions with another signer. This is needed when the signer in the instructions is a noop signer and we need to replace it with a real signer which is able to sign the transaction.
 export function replaceSigner(
-  ixs: IInstruction[],
+  ixs: Instruction[],
   signerToBeReplaced: TransactionSigner,
   newSigner: TransactionSigner
-): IInstruction[] {
-  const newIxs: IInstruction[] = [];
+): Instruction[] {
+  const newIxs: Instruction[] = [];
 
   ixs.forEach((ix) => {
     const accounts = ix.accounts?.map((account) => {
@@ -133,7 +133,7 @@ export function replaceSigner(
       return account;
     });
 
-    const newIx: IInstruction = { accounts, programAddress: ix.programAddress, data: ix.data };
+    const newIx: Instruction = { accounts, programAddress: ix.programAddress, data: ix.data };
     newIxs.push(newIx);
   });
 

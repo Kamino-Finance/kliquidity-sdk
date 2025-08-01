@@ -2,14 +2,13 @@ import { address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
 import {
   collToLamportsDecimal,
   createComputeUnitLimitIx,
+  DEFAULT_PUBLIC_KEY,
   getAssociatedTokenAddressAndAccount,
   Kamino,
   StrategyWithAddress,
 } from '@kamino-finance/kliquidity-sdk';
-import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
-import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
+import { getConnection, getWsConnection } from './utils/connection';
 import { getFarmUnstakeAndWithdrawIxs, getStakedTokens } from './utils/farms';
-import { fromLegacyTransactionInstruction } from '@solana/compat/';
 import { sendAndConfirmTx } from './utils/tx';
 
 (async () => {
@@ -21,14 +20,14 @@ import { sendAndConfirmTx } from './utils/tx';
   const strategyWithFarm = address('BLP7UHUg1yNry94Qk3sM8pAfEyDhTZirwFghw9DoBjn7');
 
   const cluster = 'mainnet-beta';
-  const kamino = new Kamino(cluster, getConnection(), getLegacyConnection());
+  const kamino = new Kamino(cluster, getConnection());
 
   const strategyState = (await kamino.getStrategiesWithAddresses([strategyWithFarm]))[0];
   if (!strategyState) {
     throw new Error('Strategy not found');
   }
 
-  const sharesStaked = await getStakedTokens(getLegacyConnection(), keypair.address, strategyState.strategy.farm);
+  const sharesStaked = await getStakedTokens(kamino.getConnection(), keypair.address, strategyState.strategy.farm);
 
   // in this example we withdraw everything staked; if the user tries to withdraw more than the shares they have staked + the shares they have in the ATA, the txn will fail
   const sharesToBurn = sharesStaked;
@@ -70,7 +69,7 @@ import { sendAndConfirmTx } from './utils/tx';
 
   const tx = [createComputeUnitLimitIx(1_400_000)];
   tx.push(...createAtasIxs);
-  const stratHasFarm = strategyState.strategy.farm !== DEFAULT_ADDRESS;
+  const stratHasFarm = strategyState.strategy.farm !== DEFAULT_PUBLIC_KEY;
 
   // if the user has enough shares in their ATA withdraw them and not unstake the staked ones
 
@@ -84,12 +83,12 @@ import { sendAndConfirmTx } from './utils/tx';
     );
     console.log('shareLamportsToUnstake', shareLamportsToUnstake.toString());
     const unstakeIxs = await getFarmUnstakeAndWithdrawIxs(
-      getLegacyConnection(),
-      keypair.address,
+      kamino.getConnection(),
+      keypair,
       strategyState.strategy.farm,
       shareLamportsToUnstake
     );
-    tx.push(...unstakeIxs.map(fromLegacyTransactionInstruction));
+    tx.push(...unstakeIxs);
   }
 
   const withdrawIx = await kamino.withdrawShares(strategyWithAddress, sharesToBurn, keypair);

@@ -3,15 +3,14 @@ import { address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
 import {
   createAssociatedTokenAccountInstruction,
   createComputeUnitLimitIx,
+  DEFAULT_PUBLIC_KEY,
   getAssociatedTokenAddress,
   Kamino,
   StrategyWithAddress,
   U64_MAX,
 } from '@kamino-finance/kliquidity-sdk';
-import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
-import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
+import { getConnection, getWsConnection } from './utils/connection';
 import { getFarmStakeIxs } from './utils/farms';
-import { fromLegacyTransactionInstruction } from '@solana/compat/';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
 
@@ -26,7 +25,7 @@ import { sendAndConfirmTx } from './utils/tx';
   const amountB = new Decimal(0.1);
 
   const cluster = 'mainnet-beta';
-  const kamino = new Kamino(cluster, getConnection(), getLegacyConnection());
+  const kamino = new Kamino(cluster, getConnection());
 
   const strategyState = (await kamino.getStrategiesWithAddresses([strategyWithFarm]))[0];
   if (!strategyState) {
@@ -54,14 +53,14 @@ import { sendAndConfirmTx } from './utils/tx';
   tx.push(depositIx);
 
   // if the strategy has farm, stake all user shares
-  if (strategyState.strategy.farm !== DEFAULT_ADDRESS) {
+  if (strategyState.strategy.farm !== DEFAULT_PUBLIC_KEY) {
     const stakeIxs = await getFarmStakeIxs(
-      kamino.getLegacyConnection(),
-      keypair.address,
+      kamino.getConnection(),
+      keypair,
       new Decimal(U64_MAX.toString()),
       strategyState.strategy.farm
     );
-    tx.push(...stakeIxs.map(fromLegacyTransactionInstruction));
+    tx.push(...stakeIxs);
   }
 
   // optionally we can close the user shares ATA

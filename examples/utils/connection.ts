@@ -1,4 +1,3 @@
-import { Connection } from '@solana/web3.js';
 import { getEnvOrThrow } from './env';
 import {
   createDefaultRpcTransport,
@@ -11,12 +10,6 @@ import {
   SolanaRpcApi,
   SolanaRpcSubscriptionsApi,
 } from '@solana/kit';
-
-export function getLegacyConnection() {
-  const RPC_ENDPOINT = getEnvOrThrow('RPC_ENDPOINT');
-  console.log('RPC_ENDPOINT:', RPC_ENDPOINT);
-  return new Connection(RPC_ENDPOINT);
-}
 
 export function getConnection(): Rpc<SolanaRpcApi> {
   const RPC_ENDPOINT = getEnvOrThrow('RPC_ENDPOINT');

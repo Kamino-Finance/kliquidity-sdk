@@ -1,4 +1,13 @@
-import { Address, IInstruction, address, TransactionSigner, Rpc, GetAccountInfoApi, Account } from '@solana/kit';
+import {
+  Address,
+  Instruction,
+  address,
+  TransactionSigner,
+  Rpc,
+  GetAccountInfoApi,
+  Account,
+  SolanaRpcApi,
+} from '@solana/kit';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import Decimal from 'decimal.js';
 import { CollateralInfo } from '../@codegen/kliquidity/types';
@@ -16,10 +25,10 @@ import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { getSetComputeUnitLimitInstruction } from '@solana-program/compute-budget';
 import { tickIndexToPrice } from '@orca-so/whirlpools-core';
 
-export const SOL_MINTS = [
-  address('So11111111111111111111111111111111111111111'),
-  address('So11111111111111111111111111111111111111112'),
-];
+export const SOL_MINT = address('So11111111111111111111111111111111111111111');
+export const WSOL_MINT = address('So11111111111111111111111111111111111111112');
+
+export const SOL_MINTS = [SOL_MINT, WSOL_MINT];
 export const DECIMALS_SOL = 9;
 
 export async function getAssociatedTokenAddressAndAccount(
@@ -57,7 +66,7 @@ export function createAssociatedTokenAccountInstruction(
   mint: Address,
   programId: Address = TOKEN_PROGRAM_ADDRESS,
   associatedTokenProgramId: Address = ASSOCIATED_TOKEN_PROGRAM_ADDRESS
-): IInstruction {
+): Instruction {
   return getCreateAssociatedTokenInstruction(
     {
       mint,
@@ -71,7 +80,7 @@ export function createAssociatedTokenAccountInstruction(
   );
 }
 
-export function createComputeUnitLimitIx(units: number = 400000): IInstruction {
+export function createComputeUnitLimitIx(units: number = 400000): Instruction {
   return getSetComputeUnitLimitInstruction({ units });
 }
 
@@ -165,4 +174,27 @@ export async function getMintDecimals(rpc: Rpc<GetAccountInfoApi>, mint: Address
     throw new Error(`Mint ${mint} not found`);
   }
   return acc.data.decimals;
+}
+
+export function solToWSol(mint: Address): Address {
+  if (mint === SOL_MINT) {
+    return WSOL_MINT;
+  }
+  return mint;
+}
+
+export async function getTokenAccountBalance(rpc: Rpc<SolanaRpcApi>, tokenAccount: Address): Promise<Decimal> {
+  const tokenAccountBalance = await rpc.getTokenAccountBalance(tokenAccount).send();
+  if (!tokenAccountBalance.value) {
+    throw new Error(`Could not get token account balance for ${tokenAccount.toString()}.`);
+  }
+  return new Decimal(tokenAccountBalance.value.uiAmountString!);
+}
+
+export async function getTokenAccountBalanceLamports(rpc: Rpc<SolanaRpcApi>, tokenAccount: Address): Promise<number> {
+  const tokenAccountBalance = await rpc.getTokenAccountBalance(tokenAccount).send();
+  if (!tokenAccountBalance.value) {
+    throw new Error(`Could not get token account balance for ${tokenAccount.toString()}.`);
+  }
+  return Number(tokenAccountBalance.value.amount);
 }

@@ -1,6 +1,6 @@
 import { BN } from '@coral-xyz/anchor';
 
-import { address, Address, IInstruction, TransactionMessage, TransactionSigner } from '@solana/kit';
+import { address, Address, Instruction, TransactionMessage, TransactionSigner } from '@solana/kit';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import { Dex, collToLamportsDecimal } from './utils';
 import Decimal from 'decimal.js';
@@ -214,7 +214,7 @@ export interface SwapperIxBuilder {
     owner: TransactionSigner,
     slippage: Decimal,
     allKeys: Address[]
-  ): Promise<[IInstruction[], Address[]]>;
+  ): Promise<[Instruction[], Address[]]>;
 }
 
 export interface ProfiledFunctionExecution {
@@ -227,8 +227,8 @@ export function noopProfiledFunctionExecution(promise: Promise<any>): Promise<an
 
 export interface CreateAta {
   ata: Address;
-  createIxns: IInstruction[];
-  closeIxns: IInstruction[];
+  createIxns: Instruction[];
+  closeIxns: Instruction[];
 }
 
 export interface DeserializedVersionedTransaction {
@@ -237,7 +237,7 @@ export interface DeserializedVersionedTransaction {
 }
 
 export interface InstructionsWithLookupTables {
-  instructions: IInstruction[];
+  instructions: Instruction[];
   lookupTablesAddresses: Address[];
 }
 
@@ -269,16 +269,16 @@ export interface InputRebalanceFieldInfo {
 }
 
 export interface InitStrategyIxs {
-  initStrategyIx: IInstruction;
-  updateStrategyParamsIxs: IInstruction[];
-  updateRebalanceParamsIx: IInstruction;
-  openPositionIxs: IInstruction[];
+  initStrategyIx: Instruction;
+  updateStrategyParamsIxs: Instruction[];
+  updateRebalanceParamsIx: Instruction;
+  openPositionIxs: Instruction[];
 }
 
 export interface WithdrawShares {
-  prerequisiteIxs: IInstruction[];
-  withdrawIx: IInstruction;
-  closeSharesAtaIx?: IInstruction;
+  prerequisiteIxs: Instruction[];
+  withdrawIx: Instruction;
+  closeSharesAtaIx?: Instruction;
 }
 
 export interface MetadataProgramAddressesOrca {
@@ -304,13 +304,13 @@ export interface LowerAndUpperTickPubkeys {
   upperTickBump: number;
 }
 export interface WithdrawAllAndCloseIxns {
-  withdrawIxns: IInstruction[];
-  closeIxn: IInstruction;
+  withdrawIxns: Instruction[];
+  closeIxn: Instruction;
 }
 
 export interface InitPoolTickIfNeeded {
   tick: Address;
-  initTickIx: IInstruction | undefined;
+  initTickIx: Instruction | undefined;
 }
 
 export type Percentage = {

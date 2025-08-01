@@ -63,7 +63,6 @@
     "@solana/compat": "^2.1.1",
     "@solana/kit": "^2.1.1",
     "@solana/sysvars": "^2.1.1",
-    "@solana/web3.js": "^1.98.2",
     "axios": "^1.8.4",
     "bn.js": "^5.2.1",
     "bs58": "^6.0.0",
