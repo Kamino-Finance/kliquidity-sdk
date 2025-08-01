@@ -3,6 +3,7 @@ import { Address, address, generateKeyPairSigner, KeyPairSigner } from '@solana/
 import {
   createAssociatedTokenAccountInstruction,
   createComputeUnitLimitIx,
+  DEFAULT_PUBLIC_KEY,
   getAssociatedTokenAddress,
   Kamino,
   StrategyWithAddress,
@@ -12,8 +13,6 @@ import { getConnection, getWsConnection } from './utils/connection';
 import { getFarmStakeIxs } from './utils/farms';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
-
-const DEFAULT_PUBLIC_KEY: Address = address('11111111111111111111111111111111');
 
 (async () => {
   // Create a new keypair for the user (in real world this is the wallet of the user who deposits into the strategy)

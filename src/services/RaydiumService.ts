@@ -1,4 +1,5 @@
 import {
+  Account,
   address,
   Address,
   Base58EncodedBytes,
@@ -21,7 +22,7 @@ import {
   aprToApy,
   GenericPoolInfo,
   getStrategyPriceRangeRaydium,
-  getTokenAccountBalanceRaw,
+  getTokenAccountBalanceLamports,
   LiquidityDistribution,
   LiquidityForPrice,
   optionGetValue,
@@ -52,7 +53,7 @@ import {
   TickMath,
 } from '@raydium-io/raydium-sdk-v2/lib';
 import { fromLegacyPublicKey } from '@solana/compat';
-import { fetchAllMint } from '@solana-program/token-2022';
+import { fetchAllMint, Mint } from '@solana-program/token-2022';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
 
 export class RaydiumService {
@@ -527,7 +528,13 @@ export class RaydiumService {
     if (mints.length === 0) return {};
 
     const cleanedMints = mints.map((i) => solToWSol(i));
-    const mintInfos = await fetchAllMint(this._rpc, cleanedMints);
+    // fetch in chunks of 100
+    const mintInfos: Account<Mint>[] = [];
+    for (let i = 0; i < cleanedMints.length; i += 100) {
+      const chunk = cleanedMints.slice(i, i + 100);
+      const chunkMintInfos = await fetchAllMint(this._rpc, chunk);
+      mintInfos.push(...chunkMintInfos);
+    }
 
     const mintInfosWithAddress = cleanedMints.map((mint, index) => ({
       address: mint,
@@ -540,7 +547,7 @@ export class RaydiumService {
         console.log('invalid mint account', address.toString());
         continue;
       }
-      mintK[address.toString()] = {
+      mintK[address] = {
         mintAuthority: optionGetValueOrUndefined(data.data.mintAuthority)
           ? toLegacyPublicKey(optionGetValue(data.data.mintAuthority)!)
           : null,
@@ -579,8 +586,8 @@ export class RaydiumService {
 
     const poolInfo = this.clmmComputeInfoToApiInfo(computeClmmPoolInfo);
 
-    poolInfo.mintAmountA = await getTokenAccountBalanceRaw(this._rpc, fromLegacyPublicKey(rpcData.vaultA));
-    poolInfo.mintAmountB = await getTokenAccountBalanceRaw(this._rpc, fromLegacyPublicKey(rpcData.vaultB));
+    poolInfo.mintAmountA = await getTokenAccountBalanceLamports(this._rpc, fromLegacyPublicKey(rpcData.vaultA));
+    poolInfo.mintAmountB = await getTokenAccountBalanceLamports(this._rpc, fromLegacyPublicKey(rpcData.vaultB));
 
     return poolInfo;
   }

@@ -191,7 +191,7 @@ export async function getTokenAccountBalance(rpc: Rpc<SolanaRpcApi>, tokenAccoun
   return new Decimal(tokenAccountBalance.value.uiAmountString!);
 }
 
-export async function getTokenAccountBalanceRaw(rpc: Rpc<SolanaRpcApi>, tokenAccount: Address): Promise<number> {
+export async function getTokenAccountBalanceLamports(rpc: Rpc<SolanaRpcApi>, tokenAccount: Address): Promise<number> {
   const tokenAccountBalance = await rpc.getTokenAccountBalance(tokenAccount).send();
   if (!tokenAccountBalance.value) {
     throw new Error(`Could not get token account balance for ${tokenAccount.toString()}.`);

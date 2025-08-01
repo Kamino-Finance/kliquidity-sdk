@@ -13,6 +13,7 @@ import {
 import {
   createAssociatedTokenAccountInstruction,
   createComputeUnitLimitIx,
+  DEFAULT_PUBLIC_KEY,
   getAssociatedTokenAddress,
   Kamino,
   StrategyWithAddress,
@@ -22,8 +23,6 @@ import { getConnection, getWsConnection } from './utils/connection';
 import { getFarmStakeIxs } from './utils/farms';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
-
-const DEFAULT_PUBLIC_KEY: Address = address('11111111111111111111111111111111');
 
 // noopSigner is to be used for transaction construction when the actual signer is not available (e.g. for multisig proposals)
 (async () => {
