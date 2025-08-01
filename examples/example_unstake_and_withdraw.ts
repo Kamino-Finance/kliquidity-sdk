@@ -1,4 +1,4 @@
-import { address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
+import { Address, address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
 import {
   collToLamportsDecimal,
   createComputeUnitLimitIx,
@@ -7,9 +7,10 @@ import {
   StrategyWithAddress,
 } from '@kamino-finance/kliquidity-sdk';
 import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
-import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
 import { getFarmUnstakeAndWithdrawIxs, getStakedTokens } from './utils/farms';
 import { sendAndConfirmTx } from './utils/tx';
+
+const DEFAULT_PUBLIC_KEY: Address = address('11111111111111111111111111111111');
 
 (async () => {
   // Create a new keypair for the user (in real world this is the wallet of the user who deposits into the strategy)
@@ -69,7 +70,7 @@ import { sendAndConfirmTx } from './utils/tx';
 
   const tx = [createComputeUnitLimitIx(1_400_000)];
   tx.push(...createAtasIxs);
-  const stratHasFarm = strategyState.strategy.farm !== DEFAULT_ADDRESS;
+  const stratHasFarm = strategyState.strategy.farm !== DEFAULT_PUBLIC_KEY;
 
   // if the user has enough shares in their ATA withdraw them and not unstake the staked ones
 

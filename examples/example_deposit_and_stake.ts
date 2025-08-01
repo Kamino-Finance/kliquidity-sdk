@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
+import { Address, address, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
 import {
   createAssociatedTokenAccountInstruction,
   createComputeUnitLimitIx,
@@ -9,10 +9,11 @@ import {
   U64_MAX,
 } from '@kamino-finance/kliquidity-sdk';
 import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
-import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
 import { getFarmStakeIxs } from './utils/farms';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
+
+const DEFAULT_PUBLIC_KEY: Address = address('11111111111111111111111111111111');
 
 (async () => {
   // Create a new keypair for the user (in real world this is the wallet of the user who deposits into the strategy)
@@ -53,7 +54,7 @@ import { sendAndConfirmTx } from './utils/tx';
   tx.push(depositIx);
 
   // if the strategy has farm, stake all user shares
-  if (strategyState.strategy.farm !== DEFAULT_ADDRESS) {
+  if (strategyState.strategy.farm !== DEFAULT_PUBLIC_KEY) {
     const stakeIxs = await getFarmStakeIxs(
       kamino.getConnection(),
       keypair,

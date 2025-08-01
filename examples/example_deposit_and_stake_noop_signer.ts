@@ -19,10 +19,11 @@ import {
   U64_MAX,
 } from '@kamino-finance/kliquidity-sdk';
 import { getConnection, getLegacyConnection, getWsConnection } from './utils/connection';
-import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
 import { getFarmStakeIxs } from './utils/farms';
 import { getCloseAccountInstruction } from '@solana-program/token';
 import { sendAndConfirmTx } from './utils/tx';
+
+const DEFAULT_PUBLIC_KEY: Address = address('11111111111111111111111111111111');
 
 // noopSigner is to be used for transaction construction when the actual signer is not available (e.g. for multisig proposals)
 (async () => {
@@ -65,7 +66,7 @@ import { sendAndConfirmTx } from './utils/tx';
   tx.push(depositIx);
 
   // if the strategy has farm, stake all user shares
-  if (strategyState.strategy.farm !== DEFAULT_ADDRESS) {
+  if (strategyState.strategy.farm !== DEFAULT_PUBLIC_KEY) {
     const stakeIxs = await getFarmStakeIxs(
       kamino.getConnection(),
       noop,

@@ -53,7 +53,7 @@ import {
 } from '@raydium-io/raydium-sdk-v2/lib';
 import { fromLegacyPublicKey } from '@solana/compat';
 import { fetchAllMint } from '@solana-program/token-2022';
-import { DEFAULT_ADDRESS } from '@orca-so/whirlpools/dist';
+import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
 
 export class RaydiumService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
@@ -556,7 +556,7 @@ export class RaydiumService {
           : null,
       };
     }
-    mintK[DEFAULT_ADDRESS.toString()] = mintK[WSOL_MINT.toString()];
+    mintK[DEFAULT_PUBLIC_KEY.toString()] = mintK[WSOL_MINT.toString()];
 
     return mintK;
   }
