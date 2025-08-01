@@ -3,7 +3,7 @@ import {
   Address,
   generateKeyPairSigner,
   getAddressEncoder,
-  IInstruction,
+  Instruction,
   isAddress,
   Signature,
   TransactionSigner,
@@ -89,7 +89,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -239,7 +238,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -271,7 +269,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -304,7 +301,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -322,7 +318,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -337,7 +332,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -355,7 +349,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -377,7 +370,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -393,7 +385,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -431,7 +422,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -444,7 +434,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -457,7 +446,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -531,7 +519,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -567,7 +554,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -599,7 +585,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -679,7 +664,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -739,7 +723,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -784,7 +767,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -830,7 +812,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -863,7 +844,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -896,7 +876,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -933,7 +912,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -967,13 +945,7 @@ describe('Kamino SDK Tests', () => {
   });
 
   it('should rebalance an Orca strategy', async () => {
-    const kamino = new Kamino(
-      'localnet',
-      env.c.rpc,
-      env.legacyConnection,
-      fixtures.globalConfig,
-      env.kliquidityProgramId
-    );
+    const kamino = new Kamino('localnet', env.c.rpc, fixtures.globalConfig, env.kliquidityProgramId);
 
     // New position to rebalance into
     const newPosition = await generateKeyPairSigner();
@@ -1015,7 +987,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1055,7 +1026,7 @@ describe('Kamino SDK Tests', () => {
       new Decimal(1.01)
     );
 
-    let openPositionIx: IInstruction;
+    let openPositionIx: Instruction;
     if (rebalanceIxns.length == 1) {
       openPositionIx = rebalanceIxns[0];
     } else {
@@ -1092,7 +1063,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1151,7 +1121,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1170,7 +1139,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1189,7 +1157,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1209,7 +1176,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1228,7 +1194,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1247,7 +1212,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1278,7 +1242,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1313,7 +1276,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1337,7 +1299,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1355,7 +1316,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1379,7 +1339,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1402,7 +1361,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1425,7 +1383,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1448,7 +1405,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1471,7 +1427,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1494,7 +1449,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1538,7 +1492,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1598,7 +1551,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1630,7 +1582,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1662,7 +1613,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1694,7 +1644,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1726,14 +1675,13 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
       env.raydiumProgramId
     );
     // Create a new strategy
-    const txStrategyCreate: IInstruction[] = [createComputeUnitLimitIx()];
+    const txStrategyCreate: Instruction[] = [createComputeUnitLimitIx()];
     const newOrcaStrategy = await generateKeyPairSigner();
     const createStrategyAccountIx = await kamino.createStrategyAccount(env.admin, newOrcaStrategy);
     txStrategyCreate.push(createStrategyAccountIx);
@@ -1771,7 +1719,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1820,7 +1767,6 @@ describe('Kamino SDK Tests', () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
-      env.legacyConnection,
       fixtures.globalConfig,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1888,7 +1834,7 @@ describe('Kamino SDK Tests', () => {
       kliquidityProgramId: KLIQUIDITY_PROGRAM_ID,
       raydiumProgramId: RAYDIUM_PROGRAM_ID,
     });
-    const kamino = new Kamino('mainnet-beta', env.c.rpc, env.legacyConnection);
+    const kamino = new Kamino('mainnet-beta', env.c.rpc);
     const prices = await kamino.getAllPrices();
     expect(prices).not.to.be.undefined;
     expect(Object.keys(prices.spot)).to.have.length.greaterThan(0);

@@ -1,4 +1,4 @@
-import { address, generateKeyPairSigner, IInstruction } from '@solana/kit';
+import { address, generateKeyPairSigner, Instruction } from '@solana/kit';
 import {
   Dex,
   DriftRebalanceTypeName,
@@ -63,7 +63,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -89,19 +88,19 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    const strategySetupIxs: IInstruction[] = [];
+    const strategySetupIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
-    const strategySetupFeesIxs: IInstruction[] = [];
+    const strategySetupFeesIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupFeesIxs);
@@ -211,7 +210,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -240,7 +238,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       tokenBMint
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -248,13 +246,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    const strategySetupIxs: IInstruction[] = [];
+    const strategySetupIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
 
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
-    const strategySetupFeesIxs: IInstruction[] = [];
+    const strategySetupFeesIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
 
@@ -414,7 +412,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -447,7 +444,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       tokenBMint
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -455,13 +452,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    const strategySetupIxs: IInstruction[] = [];
+    const strategySetupIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
 
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
-    const strategySetupFeesIxs: IInstruction[] = [];
+    const strategySetupFeesIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
 
@@ -657,7 +654,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -688,7 +684,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       tokenBMint
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -696,13 +692,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    const strategySetupIxs: IInstruction[] = [];
+    const strategySetupIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
 
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
-    const strategySetupFeesIxs: IInstruction[] = [];
+    const strategySetupFeesIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
 
@@ -856,7 +852,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -887,7 +882,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       tokenBMint
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -895,13 +890,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    const strategySetupIxs: IInstruction[] = [];
+    const strategySetupIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
 
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
-    const strategySetupFeesIxs: IInstruction[] = [];
+    const strategySetupFeesIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
 
@@ -1037,7 +1032,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1080,7 +1074,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       tokenBMint
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -1088,13 +1082,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    const strategySetupIxs: IInstruction[] = [];
+    const strategySetupIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
 
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
-    const strategySetupFeesIxs: IInstruction[] = [];
+    const strategySetupFeesIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     try {
@@ -1351,7 +1345,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1390,7 +1383,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       tokenBMint
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -1398,13 +1391,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    const strategySetupIxs: IInstruction[] = [];
+    const strategySetupIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
 
     txHash = await sendAndConfirmTx(env.c, env.admin, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
-    const strategySetupFeesIxs: IInstruction[] = [];
+    const strategySetupFeesIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     try {
@@ -1595,7 +1588,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1621,19 +1613,19 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    const strategySetupIxs: IInstruction[] = [];
+    const strategySetupIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
-    const strategySetupFeesIxs: IInstruction[] = [];
+    const strategySetupFeesIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupFeesIxs);
@@ -1696,7 +1688,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1726,19 +1717,19 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       tokenBMint
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    const strategySetupIxs: IInstruction[] = [];
+    const strategySetupIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(0, 4).map((ix) => strategySetupIxs.push(ix));
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupIxs);
     console.log('setup strategy tx hash', txHash);
 
-    const strategySetupFeesIxs: IInstruction[] = [];
+    const strategySetupFeesIxs: Instruction[] = [];
     buildNewStrategyIxs.updateStrategyParamsIxs.slice(4).map((ix) => strategySetupFeesIxs.push(ix));
     strategySetupFeesIxs.push(buildNewStrategyIxs.updateRebalanceParamsIx);
     txHash = await sendAndConfirmTx(env.c, signer, strategySetupFeesIxs);

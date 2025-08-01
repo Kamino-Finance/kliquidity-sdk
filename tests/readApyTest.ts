@@ -24,7 +24,6 @@ describe('Read APY Test', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,

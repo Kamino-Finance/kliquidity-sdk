@@ -1,4 +1,4 @@
-import { address, Address, generateKeyPairSigner, IInstruction } from '@solana/kit';
+import { address, Address, generateKeyPairSigner, Instruction } from '@solana/kit';
 import {
   createComputeUnitLimitIx,
   getAssociatedTokenAddressAndAccount,
@@ -55,7 +55,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -63,7 +62,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     );
 
     const strategyState = await kamino.getStrategyByAddress(address('4TQ1DZtibQuy5ux33fcZprUmLcLoAdSNfwaUukc9kdXP'));
-    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
+    const raydiumService = new RaydiumService(env.c.rpc);
     const aprApy = await raydiumService.getStrategyWhirlpoolPoolAprApy(strategyState!);
     console.log('aprApy', aprApy);
 
@@ -104,7 +103,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -119,7 +117,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -134,7 +131,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -143,7 +139,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
 
     const upkeepIxn = await kamino.withdrawTopupVault(signer, new Decimal(U64_MAX));
 
-    const ixs: IInstruction[] = [upkeepIxn];
+    const ixs: Instruction[] = [upkeepIxn];
     console.log('ixs', ixs.length);
     const txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
@@ -153,7 +149,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -172,7 +167,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -189,7 +183,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -206,7 +199,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -223,7 +215,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -243,7 +234,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigStaging,
       KaminoProgramIdStaging,
       WHIRLPOOL_PROGRAM_ID,
@@ -270,7 +260,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const solToDeposit = new Decimal(0.01);
     const usdcToDeposit = new Decimal(2.0);
 
-    let depositIx: IInstruction;
+    let depositIx: Instruction;
     if (strategyState.tokenAMint === SOLMintMainnet) {
       depositIx = await kamino.deposit(strategyWithAddress, solToDeposit, usdcToDeposit, signer);
     } else {
@@ -319,7 +309,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -337,7 +326,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const solToDeposit = new Decimal(0.01);
     const wifToDeposit = new Decimal(10.0);
 
-    let depositIx: IInstruction;
+    let depositIx: Instruction;
     if (strategyState.tokenAMint === SOLMintMainnet) {
       depositIx = await kamino.deposit(strategyWithAddress, solToDeposit, wifToDeposit, signer);
     } else {
@@ -386,7 +375,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -407,7 +395,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -423,7 +410,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -439,7 +425,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -507,7 +492,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -573,7 +557,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       STAGING_GLOBAL_CONFIG,
       STAGING_KAMINO_PROGRAM_ID,
       WHIRLPOOL_PROGRAM_ID,
@@ -596,7 +579,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -614,7 +596,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -635,7 +616,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -656,7 +636,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -676,7 +655,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -696,7 +674,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -720,7 +697,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -753,7 +730,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -777,7 +753,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     console.log('ixs', ixs.length);
@@ -810,7 +786,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -834,7 +809,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
 
@@ -866,7 +841,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -890,7 +864,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       USDCMintMainnet
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
 
@@ -922,7 +896,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -946,7 +919,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       USDCMintMainnet
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
@@ -977,7 +950,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1001,7 +973,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
 
@@ -1033,7 +1005,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1057,7 +1028,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       USDCMintMainnet
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
@@ -1105,7 +1076,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium pool liquidity distribution', async () => {
-    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
+    const raydiumService = new RaydiumService(env.c.rpc);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       address('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv')
     );
@@ -1114,7 +1085,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium pool liquidity distribution with range', async () => {
-    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
+    const raydiumService = new RaydiumService(env.c.rpc);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       address('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv'),
       true,
@@ -1126,7 +1097,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium pool liquidity distribution with range inverse order', async () => {
-    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
+    const raydiumService = new RaydiumService(env.c.rpc);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       address('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv'),
       false,
@@ -1138,7 +1109,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium positions for live pool', async () => {
-    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
+    const raydiumService = new RaydiumService(env.c.rpc);
     const liquidityDistribution = await raydiumService.getRaydiumPoolLiquidityDistribution(
       address('61R1ndXxvsWXXkWSyNkCxnzwd3zUNB8Q2ibmkiLPC8ht')
     );
@@ -1147,7 +1118,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get orca pool liquidity distribution', async () => {
-    const orcaService = new OrcaService(env.c.rpc, env.legacyConnection);
+    const orcaService = new OrcaService(env.c.rpc);
     const liquidityDistribution = await orcaService.getWhirlpoolLiquidityDistribution(
       address('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );
@@ -1156,7 +1127,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get orca positions for pool', async () => {
-    const orcaService = new OrcaService(env.c.rpc, env.legacyConnection);
+    const orcaService = new OrcaService(env.c.rpc);
     const positionsCount = await orcaService.getPositionsCountByPool(
       address('7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm')
     );
@@ -1165,7 +1136,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
   });
 
   it.skip('get raydium positions for pool', async () => {
-    const raydiumService = new RaydiumService(env.c.rpc, env.legacyConnection);
+    const raydiumService = new RaydiumService(env.c.rpc);
     const positionsCount = await raydiumService.getPositionsCountByPool(
       address('2QdhepnKRTLjjSqPL1PtKNwqrUkoLee5Gqs8bvZhRdMv')
     );
@@ -1177,7 +1148,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1201,7 +1171,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
@@ -1245,7 +1215,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1273,7 +1242,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
 
@@ -1319,7 +1288,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1335,7 +1303,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1362,7 +1329,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     const txHash = await sendAndConfirmTx(env.c, signer, ixs);
@@ -1399,7 +1366,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1426,7 +1392,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       address('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263')
     );
 
-    const ixs: IInstruction[] = [];
+    const ixs: Instruction[] = [];
     ixs.push(createRaydiumStrategyAccountIx);
     ixs.push(buildNewStrategyIxs.initStrategyIx);
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
@@ -1457,7 +1423,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1475,7 +1440,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const amountToDeposit = new Decimal(0.1);
     const slippageBps = new Decimal(10);
 
-    let singleSidedDepositIxs: IInstruction[] = [];
+    let singleSidedDepositIxs: Instruction[] = [];
     const lookupTables: Address[] = [strategyState.strategyLookupTable];
 
     await kamino.getInitialUserTokenBalances(
@@ -1542,7 +1507,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1559,7 +1523,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const amountToDeposit = new Decimal(1.0);
     const slippageBps = new Decimal(100);
 
-    let singleSidedDepositIxs: IInstruction[] = [];
+    let singleSidedDepositIxs: Instruction[] = [];
     let lookupTables: Address[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === USDCMintMainnet.toString()) {
@@ -1596,7 +1560,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1613,7 +1576,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const amountToDeposit = new Decimal(0.01);
     const slippageBps = new Decimal(50);
 
-    let singleSidedDepositIxs: IInstruction[] = [];
+    let singleSidedDepositIxs: Instruction[] = [];
     let lookupTables: Address[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === SOLMintMainnet.toString()) {
@@ -1650,7 +1613,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1667,7 +1629,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const amountToDeposit = new Decimal(0.02);
     const slippageBps = new Decimal(50);
 
-    let singleSidedDepositIxs: IInstruction[] = [];
+    let singleSidedDepositIxs: Instruction[] = [];
     let lookupTables: Address[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === SOLMintMainnet.toString()) {
@@ -1708,7 +1670,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1730,7 +1691,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const amountToDeposit = new Decimal(0.1);
     const slippageBps = new Decimal(50);
 
-    let singleSidedDepositIxs: IInstruction[] = [];
+    let singleSidedDepositIxs: Instruction[] = [];
     let lookupTables: Address[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === SOLMintMainnet.toString()) {
@@ -1771,7 +1732,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1793,7 +1753,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const amountToDeposit = new Decimal(0.1);
     const slippageBps = new Decimal(50);
 
-    let singleSidedDepositIxs: IInstruction[] = [];
+    let singleSidedDepositIxs: Instruction[] = [];
     let lookupTables: Address[] = [];
     // if USDC is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint === USDCMintMainnet) {
@@ -1830,7 +1790,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1852,7 +1811,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const amountToDeposit = new Decimal(0.01);
     const slippageBps = new Decimal(50);
 
-    let singleSidedDepositIxs: IInstruction[] = [];
+    let singleSidedDepositIxs: Instruction[] = [];
     let lookupTables: Address[] = [];
     // if SOL is tokenA mint deposit tokenA, else deposit tokenB
     if (strategyState.tokenAMint.toString() === SOLMintMainnet.toString()) {
@@ -1893,7 +1852,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -1928,7 +1886,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
 
     const slippageBps = new Decimal(100);
 
-    let singleSidedDepositIxs: IInstruction[] = [];
+    let singleSidedDepositIxs: Instruction[] = [];
     let lookupTables: Address[] = [...(await kamino.getMainLookupTablePks())];
     if (strategyState.strategyLookupTable !== DEFAULT_PUBLIC_KEY) {
       lookupTables.push(strategyState.strategyLookupTable);
@@ -1992,7 +1950,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -2015,7 +1972,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const wsUrl: string = 'wss://api.devnet.solana.com';
     const env = await initEnv({ rpcUrl, wsUrl });
 
-    const kamino = new Kamino(cluster, env.c.rpc, env.legacyConnection);
+    const kamino = new Kamino(cluster, env.c.rpc);
 
     const shareData = await kamino.getStrategiesShareData({});
     console.log('shareData', shareData.length);
@@ -2025,7 +1982,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -2047,7 +2003,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
@@ -2070,7 +2025,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,

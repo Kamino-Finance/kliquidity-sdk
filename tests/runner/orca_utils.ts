@@ -1,6 +1,6 @@
 import {
   Address,
-  IInstruction,
+  Instruction,
   TransactionSigner,
   generateKeyPairSigner,
   getProgramDerivedAddress,
@@ -162,9 +162,9 @@ export async function initTickArrayForTicks(
   ticks: number[],
   tickSpacing: number,
   programId: Address
-): Promise<IInstruction[]> {
+): Promise<Instruction[]> {
   const startTicks = ticks.map((tick) => orcaGetTickArrayStartTickIndex(tick, tickSpacing));
-  const tx: IInstruction[] = [];
+  const tx: Instruction[] = [];
   const initializedArrayTicks: number[] = [];
 
   for (let i = 0; i < startTicks.length; i++) {
@@ -184,7 +184,7 @@ export async function initTickArrayInstruction(
   whirlpool: Address,
   startTick: number,
   programId: Address
-): Promise<IInstruction> {
+): Promise<Instruction> {
   const [tickArrayPda] = await getTickArray(programId, whirlpool, startTick);
 
   const initTickArrayArgs: WhirlpoolInstructions.InitializeTickArrayArgs = {

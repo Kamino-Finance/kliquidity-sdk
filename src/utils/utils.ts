@@ -1,4 +1,4 @@
-import { Address, IInstruction, TransactionSigner } from '@solana/kit';
+import { Address, Instruction, isSome, Option, TransactionSigner } from '@solana/kit';
 import Decimal from 'decimal.js';
 import {
   DriftDirection,
@@ -197,7 +197,7 @@ export async function getUpdateStrategyConfigIx(
   amount: Decimal,
   programId: Address,
   newAccount: Address = DEFAULT_PUBLIC_KEY
-): Promise<IInstruction> {
+): Promise<Instruction> {
   const args: UpdateStrategyConfigArgs = {
     mode: mode.discriminator,
     value: getStrategyConfigValue(amount),
@@ -296,4 +296,19 @@ export function keyOrDefault(key: Address, defaultKey: Address): Address {
     return defaultKey;
   }
   return key;
+}
+
+// Extract value from Option if Some, otherwise return null
+export function optionGetValue<T>(option: Option<T>): T | null {
+  return isSome(option) ? (option as any).value : null;
+}
+
+// Extract value from Option if Some, otherwise return undefined
+export function optionGetValueOrUndefined<T>(option: Option<T>): T | undefined {
+  return isSome(option) ? (option as any).value : undefined;
+}
+
+// Extract value from Option if Some, otherwise return provided default
+export function optionGetValueOrDefault<T>(option: Option<T>, defaultValue: T): T {
+  return isSome(option) ? (option as any).value : defaultValue;
 }

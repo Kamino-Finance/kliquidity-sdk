@@ -1,7 +1,12 @@
-import { AccountRole, address, Address, IInstruction } from '@solana/kit';
+import { AccountRole, address, Address, Instruction as SolanaInstruction } from '@solana/kit';
 import axios from 'axios';
 import Decimal from 'decimal.js';
-import { QuoteResponse, SwapInstructionsResponse, createJupiterApiClient, Instruction } from '@jup-ag/api';
+import {
+  QuoteResponse,
+  SwapInstructionsResponse as JupSwapInstructionsResponse,
+  createJupiterApiClient,
+  Instruction,
+} from '@jup-ag/api';
 
 const USDC_MINT = address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
@@ -18,12 +23,12 @@ export type SwapTransactionsResponse = {
   cleanupTransaction: string | undefined;
 };
 
-interface SwapIInstructionsResponse {
-  tokenLedgerInstruction?: IInstruction;
-  computeBudgetInstructions: Array<IInstruction>;
-  setupInstructions: Array<IInstruction>;
-  swapInstruction: IInstruction;
-  cleanupInstruction?: IInstruction;
+interface SwapInstructionsResponse {
+  tokenLedgerInstruction?: SolanaInstruction;
+  computeBudgetInstructions: Array<SolanaInstruction>;
+  setupInstructions: Array<SolanaInstruction>;
+  swapInstruction: SolanaInstruction;
+  cleanupInstruction?: SolanaInstruction;
   addressLookupTableAddresses: Array<Address>;
 }
 
@@ -38,7 +43,7 @@ export class JupService {
     asLegacyTransaction?: boolean,
     maxAccounts?: number,
     onlyDirectRoutes?: boolean
-  ): Promise<SwapIInstructionsResponse> => {
+  ): Promise<SwapInstructionsResponse> => {
     try {
       // https://lite-api.jup.ag/swap/v1/quote?inputMint=7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj&outputMint=mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So&amount=71101983&slippageBps=10&onlyDirectRoutes=false&asLegacyTransaction=false&maxAccounts=33
 
@@ -60,7 +65,7 @@ export class JupService {
         },
       });
 
-      const swapIxs: SwapIInstructionsResponse = {
+      const swapIxs: SwapInstructionsResponse = {
         tokenLedgerInstruction: ixsResponse.tokenLedgerInstruction
           ? transformResponseIx(ixsResponse.tokenLedgerInstruction)
           : undefined,
@@ -115,7 +120,7 @@ export class JupService {
     quote: QuoteResponse,
     wrapUnwrapSOL = true,
     asLegacyTransaction?: boolean
-  ): Promise<SwapInstructionsResponse> => {
+  ): Promise<JupSwapInstructionsResponse> => {
     try {
       return await jupiterSwapApi.swapInstructionsPost({
         swapRequest: {
@@ -196,7 +201,7 @@ export class JupService {
   };
 }
 
-export function transformResponseIx(ix: Instruction): IInstruction {
+export function transformResponseIx(ix: Instruction): SolanaInstruction {
   return {
     data: ix.data ? Buffer.from(ix.data, 'base64') : undefined,
     programAddress: address(ix.programId),

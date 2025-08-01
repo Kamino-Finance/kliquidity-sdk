@@ -8,7 +8,7 @@ import {
   createTransactionMessage,
   GetLatestBlockhashApi,
   getSignatureFromTransaction,
-  IInstruction,
+  Instruction,
   pipe,
   Rpc,
   RpcSubscriptions,
@@ -31,7 +31,7 @@ export type ConnectionPool = {
 export async function sendAndConfirmTx(
   { rpc, wsRpc }: ConnectionPool,
   payer: TransactionSigner,
-  ixs: IInstruction[],
+  ixs: Instruction[],
   signers: TransactionSigner[] = [],
   luts: Address[] = []
 ): Promise<Signature> {
