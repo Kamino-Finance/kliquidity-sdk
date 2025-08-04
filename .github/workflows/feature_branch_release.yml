@@ -1,0 +1,84 @@
+name: Publish Beta Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, by semver keyword.'
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      # NPM automation token (skips 2FA)
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Do not run on master branch
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          if [[ "$BRANCH_NAME" == "master" ]]; then
+            echo "This workflow cannot be run on the master branch, only on feature branches."
+            exit 1
+          fi
+        shell: bash
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          ref: ${{ github.sha }}
+          token: ${{ secrets.KAMINOBOT_WRITE_REPO_PAT }} # use bot to avoid branch protection
+      - name: Setup .npmrc file for publish
+        uses: actions/setup-node@v3
+        with:
+          node-version: '19'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Configure Git User
+        run: |
+          git config --global user.name "Kamino Bot"
+          git config --global user.username "kaminofinancebot"
+          git config --global user.email "dev@kamino.finance"
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+      - name: Build package
+        run: yarn build
+      - name: Get version of latest stable kamino-lending-sdk
+        id: get_latest_version
+        run: |
+          latest_version=$(npm view @kamino-finance/kliquidity-sdk version)
+          echo "Latest stable version: $latest_version"
+          echo "::set-output name=latest_version::$latest_version"
+      - name: Get version of latest beta kamino-lending-sdk
+        id: get_beta_version
+        run: |
+          beta_version=$(npm view @kamino-finance/kliquidity-sdk@beta version 2>/dev/null || echo "beta-tag-not-exist-yet")
+          echo "Latest beta version: $beta_version"
+          echo "::set-output name=beta_version::$beta_version"
+      - name: Publish to npm
+        env:
+          SEMVER_BUMP: ${{ inputs.version }}
+        run: |
+          if [[ "$SEMVER_BUMP" == "major" || "$SEMVER_BUMP" == "minor" || "$SEMVER_BUMP" == "patch" ]]; then
+            semver_action="pre$SEMVER_BUMP"
+          else
+            echo "SEMVER_BUMP action must be major/minor/patch"
+            exit 1
+          fi
+
+          yarn global add semver
+          echo "doing $semver_action bump"
+          new_version=$(semver -i $semver_action "${{ steps.get_latest_version.outputs.latest_version }}" --preid "beta")
+          if [[ "$new_version" == "${{ steps.get_beta_version.outputs.beta_version }}" ]]; then
+            echo "beta version $new_version already exists, bumping prerelease version"
+            new_version=$(semver -i prerelease "$new_version" --preid "beta")
+          fi
+          echo "Publishing version: $new_version";
+          yarn publish --new-version $new_version --tag beta
+        shell: bash
