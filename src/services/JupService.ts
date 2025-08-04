@@ -137,8 +137,8 @@ export class JupService {
     }
 
     const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
-    const res = await axios.get(`${baseURL}/price/v2`, { params });
-    return res.data.data[inputMint.toString()].price;
+    const res = await axios.get(`${baseURL}/price/v3`, { params });
+    return res.data[inputMint.toString()].usdPrice;
   };
 
   static getPrices = async (
@@ -161,10 +161,10 @@ export class JupService {
     const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
     const prices: PubkeyHashMap<PublicKey, Decimal> = new PubkeyHashMap();
     try {
-      const res = await axios.get(`${baseURL}/price/v2`, { params });
+      const res = await axios.get(`${baseURL}/price/v3`, { params });
       for (const mint of inputMints) {
         try {
-          prices.set(new PublicKey(mint), new Decimal(res.data.data[mint.toString()].price));
+          prices.set(new PublicKey(mint), new Decimal(res.data[mint.toString()].usdPrice));
         } catch (e) {
           prices.set(new PublicKey(mint), new Decimal(0));
         }
