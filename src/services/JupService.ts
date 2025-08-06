@@ -13,9 +13,7 @@ const USDC_MINT = address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 export const DEFAULT_JUP_API_ENDPOINT = 'https://lite-api.jup.ag';
 export const DEFAULT_JUP_SWAP_API = 'https://lite-api.jup.ag/swap/v1';
 
-const jupiterSwapApi = createJupiterApiClient({
-  basePath: DEFAULT_JUP_SWAP_API,
-});
+const jupiterSwapApi = createJupiterApiClient({ basePath: DEFAULT_JUP_SWAP_API });
 
 export type SwapTransactionsResponse = {
   setupTransaction: string | undefined;
@@ -58,11 +56,7 @@ export class JupService {
       );
 
       const ixsResponse = await jupiterSwapApi.swapInstructionsPost({
-        swapRequest: {
-          quoteResponse: res,
-          userPublicKey: userAddress,
-          wrapAndUnwrapSol: false,
-        },
+        swapRequest: { quoteResponse: res, userPublicKey: userAddress, wrapAndUnwrapSol: false },
       });
 
       const swapIxs: SwapInstructionsResponse = {
@@ -141,11 +135,7 @@ export class JupService {
     outputMint: Address | string,
     jupEndpoint?: string
   ): Promise<number> => {
-    const params = {
-      ids: inputMint.toString(),
-      vsToken: outputMint.toString(),
-      vsAmount: 1,
-    };
+    const params = { ids: inputMint.toString(), vsToken: outputMint.toString(), vsAmount: 1 };
 
     // BONK token
     if (outputMint.toString() === 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263') {
@@ -153,8 +143,8 @@ export class JupService {
     }
 
     const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
-    const res = await axios.get(`${baseURL}/price/v2`, { params });
-    return res.data.data[inputMint.toString()].price;
+    const res = await axios.get(`${baseURL}/price/v3`, { params });
+    return res.data[inputMint.toString()].usdPrice;
   };
 
   static getPrices = async (
@@ -163,11 +153,7 @@ export class JupService {
     jupEndpoint?: string
   ): Promise<Map<Address, Decimal>> => {
     const mintsCommaSeparated = inputMints.map((mint) => mint.toString()).join(',');
-    const params = {
-      ids: mintsCommaSeparated,
-      vsToken: outputMint.toString(),
-      vsAmount: 1,
-    };
+    const params = { ids: mintsCommaSeparated, vsToken: outputMint.toString(), vsAmount: 1 };
 
     // BONK token
     if (outputMint.toString() === 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263') {
@@ -177,10 +163,10 @@ export class JupService {
     const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
     const prices = new Map<Address, Decimal>();
     try {
-      const res = await axios.get(`${baseURL}/price/v2`, { params });
+      const res = await axios.get(`${baseURL}/price/v3`, { params });
       for (const mint of inputMints) {
         try {
-          prices.set(address(mint), new Decimal(res.data.data[mint.toString()].price));
+          prices.set(address(mint), new Decimal(res.data[mint.toString()].usdPrice));
         } catch (e) {
           prices.set(address(mint), new Decimal(0));
         }
