@@ -147,14 +147,14 @@
   resolved "https://registry.yarnpkg.com/@jup-ag/api/-/api-6.0.38.tgz#6a69c4e533cfe99a64c1ff9efb9c37f53d3caab5"
   integrity sha512-HSTYVzWtxs3Krd0nfRnTf0ahtbZRW7h1H7F/pDvDLFWZguCyQhAYyK7X5TW74zQQLhpdiL0zNtWLSGxGtqy8Hg==
 
-"@kamino-finance/scope-sdk@^8.0.2":
-  version "8.0.3"
-  resolved "https://registry.yarnpkg.com/@kamino-finance/scope-sdk/-/scope-sdk-8.0.3.tgz#4e2276f99c2f5d51628ba095d47b7dc170877c54"
-  integrity sha512-BEBjIOuWBJM2HTu6oJo5Uh10+5QEv0mcffbn7dlVBp7Exrcv/SXy8JjUhYH7+w5Jwhjz1zKc7VwCXhhHgHS2dw==
+"@kamino-finance/scope-sdk@^8.1.0-beta.4":
+  version "8.1.0-beta.4"
+  resolved "https://registry.yarnpkg.com/@kamino-finance/scope-sdk/-/scope-sdk-8.1.0-beta.4.tgz#3121a6c27525fdc1641c8553da611eaf522c7282"
+  integrity sha512-NWUTf1jNp3W3Qh3UL26amxsFPhmi8DDTqlo0JKEQuII2yZY+YGiw4dsuFiFAJ7+kKUxAz52aH00hyOoy+KW/iw==
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@solana/buffer-layout" "^4.0.1"
-    "@solana/web3.js" "1.95.8"
+    "@solana/web3.js" "^1.95.8"
     bn.js "^5.2.1"
     decimal.js "^10.3.1"
 
@@ -446,27 +446,6 @@
     "@solana/spl-token-group" "^0.0.7"
     "@solana/spl-token-metadata" "^0.1.6"
     buffer "^6.0.3"
-
-"@solana/web3.js@1.95.8":
-  version "1.95.8"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.95.8.tgz#2d49abda23f7a79a3cc499ab6680f7be11786ee1"
-  integrity sha512-sBHzNh7dHMrmNS5xPD1d0Xa2QffW/RXaxu/OysRXBfwTp+LYqGGmMtCYYwrHPrN5rjAmJCsQRNAwv4FM0t3B6g==
-  dependencies:
-    "@babel/runtime" "^7.25.0"
-    "@noble/curves" "^1.4.2"
-    "@noble/hashes" "^1.4.0"
-    "@solana/buffer-layout" "^4.0.1"
-    agentkeepalive "^4.5.0"
-    bigint-buffer "^1.1.5"
-    bn.js "^5.2.1"
-    borsh "^0.7.0"
-    bs58 "^4.0.1"
-    buffer "6.0.3"
-    fast-stable-stringify "^1.0.0"
-    jayson "^4.1.1"
-    node-fetch "^2.7.0"
-    rpc-websockets "^9.0.2"
-    superstruct "^2.0.2"
 
 "@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.31.0", "@solana/web3.js@^1.32.0", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.77.3", "@solana/web3.js@^1.95.3", "@solana/web3.js@^1.95.8":
   version "1.98.0"
