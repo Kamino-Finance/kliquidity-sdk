@@ -2139,7 +2139,8 @@ export class Kamino {
     };
   };
 
-  getAllOraclePrices = (): Promise<OraclePrices> => this._scope.getSingleOraclePrices({ feed: 'hubble' });
+  getAllOraclePrices = (): Promise<OraclePrices> =>
+    this._scope.getSingleOraclePrices({ prices: fromLegacyPublicKey(this._config.scope.oraclePrices) });
 
   /**
    * Get all Kamino token spot and twap prices

@@ -18,6 +18,7 @@ import {
   StrategiesFilters,
   SwapperIxBuilder,
   TokenAmounts,
+  toLegacyPublicKey,
   ZERO,
 } from '../src';
 import Decimal from 'decimal.js';
@@ -95,9 +96,9 @@ describe('Kamino SDK Tests', () => {
       env.raydiumProgramId
     );
     // @ts-ignore
-    kamino._scope._config.oraclePrices = fixtures.scopePrices;
+    kamino._config.scope.oraclePrices = toLegacyPublicKey(fixtures.scopePrices);
     // @ts-ignore
-    kamino._scope._config.programId = fixtures.scopeProgram;
+    kamino._config.scope.programId = toLegacyPublicKey(fixtures.scopeProgram);
 
     let tokenAMint = await createMint(env, 6);
     let tokenBMint = await createMint(env, 6);

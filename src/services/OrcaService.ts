@@ -28,10 +28,7 @@ export class OrcaService {
   private readonly _whirlpoolProgramId: Address;
   private readonly _orcaApiUrl: string;
 
-  constructor(
-    rpc: Rpc<SolanaRpcApi>,
-    whirlpoolProgramId: Address = WHIRLPOOLS_PROGRAM_ID
-  ) {
+  constructor(rpc: Rpc<SolanaRpcApi>, whirlpoolProgramId: Address = WHIRLPOOLS_PROGRAM_ID) {
     this._rpc = rpc;
     this._whirlpoolProgramId = whirlpoolProgramId;
     this._orcaApiUrl = `https://api.orca.so/v2/solana`;
