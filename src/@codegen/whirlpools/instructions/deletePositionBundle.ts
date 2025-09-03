@@ -26,6 +26,7 @@ export interface DeletePositionBundleAccounts {
 
 export function deletePositionBundle(
   accounts: DeletePositionBundleAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -39,6 +40,7 @@ export function deletePositionBundle(
     },
     { address: accounts.receiver, role: 1 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([100, 25, 99, 2, 217, 239, 124, 173])
   const data = identifier

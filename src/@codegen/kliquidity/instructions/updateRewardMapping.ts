@@ -34,7 +34,7 @@ export interface UpdateRewardMappingAccounts {
   tokenProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<UpdateRewardMappingArgs>([
   borsh.u8("rewardIndex"),
   borsh.u8("collateralToken"),
 ])
@@ -42,6 +42,7 @@ export const layout = borsh.struct([
 export function updateRewardMapping(
   args: UpdateRewardMappingArgs,
   accounts: UpdateRewardMappingAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -60,6 +61,7 @@ export function updateRewardMapping(
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([203, 37, 37, 96, 23, 85, 233, 42])
   const buffer = Buffer.alloc(1000)

@@ -21,10 +21,12 @@ export interface MigrateBinArrayAccounts {
 
 export function migrateBinArray(
   accounts: MigrateBinArrayAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.lbPair, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([17, 23, 159, 211, 101, 184, 41, 241])
   const data = identifier

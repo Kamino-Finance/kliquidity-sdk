@@ -18,6 +18,7 @@ import {
   StrategiesFilters,
   SwapperIxBuilder,
   TokenAmounts,
+  toLegacyPublicKey,
   ZERO,
 } from '../src';
 import Decimal from 'decimal.js';
@@ -95,9 +96,9 @@ describe('Kamino SDK Tests', () => {
       env.raydiumProgramId
     );
     // @ts-ignore
-    kamino._scope._config.oraclePrices = fixtures.scopePrices;
+    kamino._config.scope.oraclePrices = toLegacyPublicKey(fixtures.scopePrices);
     // @ts-ignore
-    kamino._scope._config.programId = fixtures.scopeProgram;
+    kamino._config.scope.programId = toLegacyPublicKey(fixtures.scopeProgram);
 
     let tokenAMint = await createMint(env, 6);
     let tokenBMint = await createMint(env, 6);
@@ -1897,7 +1898,7 @@ export async function setUpGlobalConfig(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  const initializeGlobalConfigIx = Instructions.initializeGlobalConfig(accounts, kamino.getProgramID());
+  const initializeGlobalConfigIx = Instructions.initializeGlobalConfig(accounts, undefined, kamino.getProgramID());
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createGlobalConfigIx, initializeGlobalConfigIx]);
 
@@ -1946,7 +1947,7 @@ export async function setUpCollateralInfo(env: Env, kamino: Kamino): Promise<Add
     collInfo: collInfo.address,
   };
 
-  const initializeCollateralInfosIx = Instructions.initializeCollateralInfo(accounts, kamino.getProgramID());
+  const initializeCollateralInfosIx = Instructions.initializeCollateralInfo(accounts, undefined, kamino.getProgramID());
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createCollateralInfoIx, initializeCollateralInfosIx]);
 
@@ -2007,7 +2008,7 @@ export async function updateGlobalConfig(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  const updateConfigIx = Instructions.updateGlobalConfig(args, accounts, kamino.getProgramID());
+  const updateConfigIx = Instructions.updateGlobalConfig(args, accounts, undefined, kamino.getProgramID());
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateConfigIx]);
 
   console.log('Update Global Config ', globalConfigOption.toJSON(), sig);

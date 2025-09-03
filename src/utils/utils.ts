@@ -211,7 +211,7 @@ export async function getUpdateStrategyConfigIx(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  return updateStrategyConfig(args, accounts, programId);
+  return updateStrategyConfig(args, accounts, undefined, programId);
 }
 
 export function collToLamportsDecimal(amount: Decimal, decimals: number): Decimal {

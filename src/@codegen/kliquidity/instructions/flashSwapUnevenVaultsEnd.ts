@@ -44,7 +44,7 @@ export interface FlashSwapUnevenVaultsEndAccounts {
   consensusAccount: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<FlashSwapUnevenVaultsEndArgs>([
   borsh.u64("minRepayAmount"),
   borsh.u64("amountToLeaveToUser"),
   borsh.bool("aToB"),
@@ -62,6 +62,7 @@ export const layout = borsh.struct([
 export function flashSwapUnevenVaultsEnd(
   args: FlashSwapUnevenVaultsEndArgs,
   accounts: FlashSwapUnevenVaultsEndAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -85,6 +86,7 @@ export function flashSwapUnevenVaultsEnd(
     { address: accounts.tokenBTokenProgram, role: 0 },
     { address: accounts.instructionSysvarAccount, role: 0 },
     { address: accounts.consensusAccount, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([226, 2, 190, 101, 202, 132, 156, 20])
   const buffer = Buffer.alloc(1000)

@@ -66,7 +66,9 @@ export class ObservationState {
       return null
     }
     if (info.programAddress !== programId) {
-      throw new Error("account doesn't belong to this program")
+      throw new Error(
+        `ObservationStateFields account ${address} belongs to wrong program ${info.programAddress}, expected ${programId}`
+      )
     }
 
     return this.decode(Buffer.from(info.data))
@@ -84,7 +86,9 @@ export class ObservationState {
         return null
       }
       if (info.programAddress !== programId) {
-        throw new Error("account doesn't belong to this program")
+        throw new Error(
+          `ObservationStateFields account ${info.address} belongs to wrong program ${info.programAddress}, expected ${programId}`
+        )
       }
 
       return this.decode(Buffer.from(info.data))

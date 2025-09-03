@@ -25,6 +25,7 @@ export interface CloseProgramAccountAccounts {
 
 export function closeProgramAccount(
   accounts: CloseProgramAccountAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -37,6 +38,7 @@ export function closeProgramAccount(
     { address: accounts.programData, role: 0 },
     { address: accounts.closingAccount, role: 1 },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([245, 14, 192, 211, 99, 42, 170, 187])
   const data = identifier

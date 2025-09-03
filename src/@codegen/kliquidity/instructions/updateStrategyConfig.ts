@@ -28,7 +28,7 @@ export interface UpdateStrategyConfigAccounts {
   systemProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<UpdateStrategyConfigArgs>([
   borsh.u16("mode"),
   borsh.array(borsh.u8(), 128, "value"),
 ])
@@ -36,6 +36,7 @@ export const layout = borsh.struct([
 export function updateStrategyConfig(
   args: UpdateStrategyConfigArgs,
   accounts: UpdateStrategyConfigAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -48,6 +49,7 @@ export function updateStrategyConfig(
     { address: accounts.strategy, role: 1 },
     { address: accounts.globalConfig, role: 0 },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([81, 217, 177, 65, 40, 227, 8, 165])
   const buffer = Buffer.alloc(1000)

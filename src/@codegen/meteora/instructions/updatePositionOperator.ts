@@ -26,11 +26,14 @@ export interface UpdatePositionOperatorAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([borshAddress("operator")])
+export const layout = borsh.struct<UpdatePositionOperatorArgs>([
+  borshAddress("operator"),
+])
 
 export function updatePositionOperator(
   args: UpdatePositionOperatorArgs,
   accounts: UpdatePositionOperatorAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -38,6 +41,7 @@ export function updatePositionOperator(
     { address: accounts.owner.address, role: 2, signer: accounts.owner },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([202, 184, 103, 143, 180, 191, 116, 217])
   const buffer = Buffer.alloc(1000)

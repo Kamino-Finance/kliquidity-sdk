@@ -26,7 +26,7 @@ export interface SetRewardEmissionsV2Accounts {
   rewardVault: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<SetRewardEmissionsV2Args>([
   borsh.u8("rewardIndex"),
   borsh.u128("emissionsPerSecondX64"),
 ])
@@ -34,6 +34,7 @@ export const layout = borsh.struct([
 export function setRewardEmissionsV2(
   args: SetRewardEmissionsV2Args,
   accounts: SetRewardEmissionsV2Accounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -44,6 +45,7 @@ export function setRewardEmissionsV2(
       signer: accounts.rewardAuthority,
     },
     { address: accounts.rewardVault, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([114, 228, 72, 32, 193, 48, 160, 102])
   const buffer = Buffer.alloc(1000)

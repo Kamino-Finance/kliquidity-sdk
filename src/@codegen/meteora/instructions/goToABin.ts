@@ -28,11 +28,12 @@ export interface GoToABinAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([borsh.i32("binId")])
+export const layout = borsh.struct<GoToABinArgs>([borsh.i32("binId")])
 
 export function goToABin(
   args: GoToABinArgs,
   accounts: GoToABinAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -48,6 +49,7 @@ export function goToABin(
       : { address: programAddress, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([146, 72, 174, 224, 40, 253, 84, 174])
   const buffer = Buffer.alloc(1000)

@@ -149,7 +149,7 @@ export async function updateTreasuryFeeVault(
     tokenProgram: TOKEN_PROGRAM_ADDRESS,
   };
 
-  const ix = Instructions.updateTreasuryFeeVault(args, accounts, env.kliquidityProgramId);
+  const ix = Instructions.updateTreasuryFeeVault(args, accounts, undefined, env.kliquidityProgramId);
   const hash = await sendAndConfirmTx(env.c, env.admin, [ix]);
   console.log('updateTreasuryFeeVault ix:', hash);
   if (!hash) {
@@ -435,7 +435,7 @@ export async function updateCollateralInfo(
     tokenInfos: config.tokenInfos,
   };
 
-  const ix = Instructions.updateCollateralInfo(args, accounts, env.kliquidityProgramId);
+  const ix = Instructions.updateCollateralInfo(args, accounts, undefined, env.kliquidityProgramId);
   const sig = await sendAndConfirmTx(env.c, env.admin, [ix]);
   console.log('Update Collateral Info txn: ' + sig.toString());
   return sig;

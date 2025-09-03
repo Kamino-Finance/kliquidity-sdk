@@ -28,7 +28,7 @@ export interface InitializeConfigAccounts {
   systemProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializeConfigArgs>([
   borshAddress("feeAuthority"),
   borshAddress("collectProtocolFeesAuthority"),
   borshAddress("rewardEmissionsSuperAuthority"),
@@ -38,12 +38,14 @@ export const layout = borsh.struct([
 export function initializeConfig(
   args: InitializeConfigArgs,
   accounts: InitializeConfigAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.config.address, role: 3, signer: accounts.config },
     { address: accounts.funder.address, role: 3, signer: accounts.funder },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([208, 127, 21, 1, 194, 190, 196, 70])
   const buffer = Buffer.alloc(1000)

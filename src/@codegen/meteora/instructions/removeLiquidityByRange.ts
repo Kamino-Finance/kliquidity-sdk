@@ -40,7 +40,7 @@ export interface RemoveLiquidityByRangeAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<RemoveLiquidityByRangeArgs>([
   borsh.i32("fromBinId"),
   borsh.i32("toBinId"),
   borsh.u16("bpsToRemove"),
@@ -49,6 +49,7 @@ export const layout = borsh.struct([
 export function removeLiquidityByRange(
   args: RemoveLiquidityByRangeArgs,
   accounts: RemoveLiquidityByRangeAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -70,6 +71,7 @@ export function removeLiquidityByRange(
     { address: accounts.tokenYProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([26, 82, 102, 152, 240, 74, 105, 26])
   const buffer = Buffer.alloc(1000)

@@ -43,7 +43,10 @@ export interface FlashSwapUnevenVaultsStartAccounts {
   consensusAccount: Address
 }
 
-export const layout = borsh.struct([borsh.u64("amount"), borsh.bool("aToB")])
+export const layout = borsh.struct<FlashSwapUnevenVaultsStartArgs>([
+  borsh.u64("amount"),
+  borsh.bool("aToB"),
+])
 
 /**
  * Start of a Flash swap uneven vaults.
@@ -59,6 +62,7 @@ export const layout = borsh.struct([borsh.u64("amount"), borsh.bool("aToB")])
 export function flashSwapUnevenVaultsStart(
   args: FlashSwapUnevenVaultsStartArgs,
   accounts: FlashSwapUnevenVaultsStartAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -82,6 +86,7 @@ export function flashSwapUnevenVaultsStart(
     { address: accounts.tokenBTokenProgram, role: 0 },
     { address: accounts.instructionSysvarAccount, role: 0 },
     { address: accounts.consensusAccount, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([129, 111, 174, 12, 10, 60, 149, 193])
   const buffer = Buffer.alloc(1000)

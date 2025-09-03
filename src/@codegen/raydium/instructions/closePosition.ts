@@ -26,6 +26,7 @@ export interface ClosePositionAccounts {
 
 export function closePosition(
   accounts: ClosePositionAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -35,6 +36,7 @@ export function closePosition(
     { address: accounts.personalPosition, role: 1 },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([123, 134, 81, 0, 49, 68, 98, 98])
   const data = identifier

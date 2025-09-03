@@ -54,6 +54,7 @@ export const layout = borsh.struct([
 export function swapV2(
   args: SwapV2Args,
   accounts: SwapV2Accounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -76,6 +77,7 @@ export function swapV2(
     { address: accounts.tickArray1, role: 1 },
     { address: accounts.tickArray2, role: 1 },
     { address: accounts.oracle, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([43, 4, 237, 11, 26, 201, 30, 98])
   const buffer = Buffer.alloc(1000)

@@ -59,7 +59,7 @@ export interface OpenLiquidityPositionAccounts {
   consensusAccount: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<OpenLiquidityPositionArgs>([
   borsh.i64("tickLowerIndex"),
   borsh.i64("tickUpperIndex"),
   borsh.u8("bump"),
@@ -68,6 +68,7 @@ export const layout = borsh.struct([
 export function openLiquidityPosition(
   args: OpenLiquidityPositionArgs,
   accounts: OpenLiquidityPositionAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -112,6 +113,7 @@ export function openLiquidityPosition(
       ? { address: accounts.eventAuthority.value, role: 0 }
       : { address: programAddress, role: 0 },
     { address: accounts.consensusAccount, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([204, 234, 204, 219, 6, 91, 96, 241])
   const buffer = Buffer.alloc(1000)

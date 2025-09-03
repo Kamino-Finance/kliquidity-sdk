@@ -28,7 +28,7 @@ export interface UpdateRewardDurationAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<UpdateRewardDurationArgs>([
   borsh.u64("rewardIndex"),
   borsh.u64("newDuration"),
 ])
@@ -36,6 +36,7 @@ export const layout = borsh.struct([
 export function updateRewardDuration(
   args: UpdateRewardDurationArgs,
   accounts: UpdateRewardDurationAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -44,6 +45,7 @@ export function updateRewardDuration(
     { address: accounts.binArray, role: 1 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([138, 174, 196, 169, 213, 235, 254, 107])
   const buffer = Buffer.alloc(1000)

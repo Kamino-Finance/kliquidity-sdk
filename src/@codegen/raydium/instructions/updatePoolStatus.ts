@@ -24,11 +24,12 @@ export interface UpdatePoolStatusAccounts {
   poolState: Address
 }
 
-export const layout = borsh.struct([borsh.u8("status")])
+export const layout = borsh.struct<UpdatePoolStatusArgs>([borsh.u8("status")])
 
 export function updatePoolStatus(
   args: UpdatePoolStatusArgs,
   accounts: UpdatePoolStatusAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -38,6 +39,7 @@ export function updatePoolStatus(
       signer: accounts.authority,
     },
     { address: accounts.poolState, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([130, 87, 108, 6, 46, 224, 117, 123])
   const buffer = Buffer.alloc(1000)

@@ -26,11 +26,14 @@ export interface SignTermsAccounts {
   rent: Address
 }
 
-export const layout = borsh.struct([borsh.array(borsh.u8(), 64, "signature")])
+export const layout = borsh.struct<SignTermsArgs>([
+  borsh.array(borsh.u8(), 64, "signature"),
+])
 
 export function signTerms(
   args: SignTermsArgs,
   accounts: SignTermsAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -38,6 +41,7 @@ export function signTerms(
     { address: accounts.ownerSignatureState, role: 1 },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([226, 42, 174, 143, 144, 159, 139, 1])
   const buffer = Buffer.alloc(1000)

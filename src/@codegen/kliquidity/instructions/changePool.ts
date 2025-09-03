@@ -28,6 +28,7 @@ export interface ChangePoolAccounts {
 
 export function changePool(
   accounts: ChangePoolAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -43,6 +44,7 @@ export function changePool(
     { address: accounts.strategyRewardVault0OrBaseVaultAuthority, role: 0 },
     { address: accounts.strategyRewardVault1OrBaseVaultAuthority, role: 0 },
     { address: accounts.strategyRewardVault2OrBaseVaultAuthority, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([141, 221, 123, 235, 35, 9, 145, 201])
   const data = identifier

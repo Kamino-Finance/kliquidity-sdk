@@ -22,11 +22,13 @@ export interface TogglePairStatusAccounts {
 
 export function togglePairStatus(
   accounts: TogglePairStatusAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.lbPair, role: 1 },
     { address: accounts.admin.address, role: 2, signer: accounts.admin },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([61, 115, 52, 23, 46, 13, 31, 144])
   const data = identifier

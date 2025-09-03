@@ -26,11 +26,14 @@ export interface UpdateFeeParametersAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([types.FeeParameter.layout("feeParameter")])
+export const layout = borsh.struct<UpdateFeeParametersArgs>([
+  types.FeeParameter.layout("feeParameter"),
+])
 
 export function updateFeeParameters(
   args: UpdateFeeParametersArgs,
   accounts: UpdateFeeParametersAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -38,6 +41,7 @@ export function updateFeeParameters(
     { address: accounts.admin.address, role: 2, signer: accounts.admin },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([128, 128, 208, 91, 246, 53, 31, 176])
   const buffer = Buffer.alloc(1000)

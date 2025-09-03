@@ -32,11 +32,15 @@ export interface WithdrawProtocolFeeAccounts {
   tokenYProgram: Address
 }
 
-export const layout = borsh.struct([borsh.u64("amountX"), borsh.u64("amountY")])
+export const layout = borsh.struct<WithdrawProtocolFeeArgs>([
+  borsh.u64("amountX"),
+  borsh.u64("amountY"),
+])
 
 export function withdrawProtocolFee(
   args: WithdrawProtocolFeeArgs,
   accounts: WithdrawProtocolFeeAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -49,6 +53,7 @@ export function withdrawProtocolFee(
     { address: accounts.receiverTokenY, role: 1 },
     { address: accounts.tokenXProgram, role: 0 },
     { address: accounts.tokenYProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([158, 201, 158, 189, 33, 93, 162, 103])
   const buffer = Buffer.alloc(1000)

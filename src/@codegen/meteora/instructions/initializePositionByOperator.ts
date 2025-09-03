@@ -35,7 +35,7 @@ export interface InitializePositionByOperatorAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializePositionByOperatorArgs>([
   borsh.i32("lowerBinId"),
   borsh.i32("width"),
   borshAddress("owner"),
@@ -45,6 +45,7 @@ export const layout = borsh.struct([
 export function initializePositionByOperator(
   args: InitializePositionByOperatorArgs,
   accounts: InitializePositionByOperatorAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -57,6 +58,7 @@ export function initializePositionByOperator(
     { address: accounts.rent, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([251, 189, 190, 244, 117, 254, 35, 148])
   const buffer = Buffer.alloc(1000)

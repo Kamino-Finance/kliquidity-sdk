@@ -38,7 +38,7 @@ export interface SwapV2Accounts {
   outputVaultMint: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<SwapV2Args>([
   borsh.u64("amount"),
   borsh.u64("otherAmountThreshold"),
   borsh.u128("sqrtPriceLimitX64"),
@@ -48,6 +48,7 @@ export const layout = borsh.struct([
 export function swapV2(
   args: SwapV2Args,
   accounts: SwapV2Accounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -64,6 +65,7 @@ export function swapV2(
     { address: accounts.memoProgram, role: 0 },
     { address: accounts.inputVaultMint, role: 0 },
     { address: accounts.outputVaultMint, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([43, 4, 237, 11, 26, 201, 30, 98])
   const buffer = Buffer.alloc(1000)

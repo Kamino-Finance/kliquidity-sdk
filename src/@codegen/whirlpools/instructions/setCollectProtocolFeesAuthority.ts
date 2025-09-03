@@ -23,6 +23,7 @@ export interface SetCollectProtocolFeesAuthorityAccounts {
 
 export function setCollectProtocolFeesAuthority(
   accounts: SetCollectProtocolFeesAuthorityAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -33,6 +34,7 @@ export function setCollectProtocolFeesAuthority(
       signer: accounts.collectProtocolFeesAuthority,
     },
     { address: accounts.newCollectProtocolFeesAuthority, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([34, 150, 93, 244, 139, 225, 233, 67])
   const data = identifier

@@ -31,7 +31,7 @@ export interface SetRewardParamsAccounts {
   tokenProgram2022: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<SetRewardParamsArgs>([
   borsh.u8("rewardIndex"),
   borsh.u128("emissionsPerSecondX64"),
   borsh.u64("openTime"),
@@ -41,6 +41,7 @@ export const layout = borsh.struct([
 export function setRewardParams(
   args: SetRewardParamsArgs,
   accounts: SetRewardParamsAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -54,6 +55,7 @@ export function setRewardParams(
     { address: accounts.operationState, role: 0 },
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.tokenProgram2022, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([112, 52, 167, 75, 32, 201, 211, 137])
   const buffer = Buffer.alloc(1000)

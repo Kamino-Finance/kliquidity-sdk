@@ -31,11 +31,14 @@ export interface WithdrawIneligibleRewardAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([borsh.u64("rewardIndex")])
+export const layout = borsh.struct<WithdrawIneligibleRewardArgs>([
+  borsh.u64("rewardIndex"),
+])
 
 export function withdrawIneligibleReward(
   args: WithdrawIneligibleRewardArgs,
   accounts: WithdrawIneligibleRewardAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -48,6 +51,7 @@ export function withdrawIneligibleReward(
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([148, 206, 42, 195, 247, 49, 103, 8])
   const buffer = Buffer.alloc(1000)

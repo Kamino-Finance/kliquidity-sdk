@@ -48,7 +48,7 @@ export interface EmergencySwapAccounts {
   memoProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<EmergencySwapArgs>([
   borsh.bool("aToB"),
   borsh.u64("targetLimitBps"),
 ])
@@ -56,6 +56,7 @@ export const layout = borsh.struct([
 export function emergencySwap(
   args: EmergencySwapArgs,
   accounts: EmergencySwapAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -85,6 +86,7 @@ export function emergencySwap(
     { address: accounts.tokenATokenProgram, role: 0 },
     { address: accounts.tokenBTokenProgram, role: 0 },
     { address: accounts.memoProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([73, 226, 248, 215, 5, 197, 211, 229])
   const buffer = Buffer.alloc(1000)

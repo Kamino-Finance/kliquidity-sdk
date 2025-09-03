@@ -34,13 +34,14 @@ export interface AddLiquidityOneSideAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<AddLiquidityOneSideArgs>([
   types.LiquidityOneSideParameter.layout("liquidityParameter"),
 ])
 
 export function addLiquidityOneSide(
   args: AddLiquidityOneSideArgs,
   accounts: AddLiquidityOneSideAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -58,6 +59,7 @@ export function addLiquidityOneSide(
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([94, 155, 103, 151, 70, 95, 220, 165])
   const buffer = Buffer.alloc(1000)

@@ -37,7 +37,7 @@ export interface OpenPositionWithMetadataAccounts {
   metadataUpdateAuth: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<OpenPositionWithMetadataArgs>([
   types.OpenPositionWithMetadataBumps.layout("bumps"),
   borsh.i32("tickLowerIndex"),
   borsh.i32("tickUpperIndex"),
@@ -46,6 +46,7 @@ export const layout = borsh.struct([
 export function openPositionWithMetadata(
   args: OpenPositionWithMetadataArgs,
   accounts: OpenPositionWithMetadataAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -66,6 +67,7 @@ export function openPositionWithMetadata(
     { address: accounts.associatedTokenProgram, role: 0 },
     { address: accounts.metadataProgram, role: 0 },
     { address: accounts.metadataUpdateAuth, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([242, 29, 134, 48, 58, 110, 14, 60])
   const buffer = Buffer.alloc(1000)

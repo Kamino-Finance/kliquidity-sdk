@@ -22,6 +22,7 @@ export interface UpdateStrategyAdminAccounts {
 
 export function updateStrategyAdmin(
   accounts: UpdateStrategyAdminAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -31,6 +32,7 @@ export function updateStrategyAdmin(
       signer: accounts.pendingAdmin,
     },
     { address: accounts.strategy, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([13, 227, 164, 236, 32, 39, 6, 255])
   const data = identifier

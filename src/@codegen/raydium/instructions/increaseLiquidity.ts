@@ -36,7 +36,7 @@ export interface IncreaseLiquidityAccounts {
   tokenProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<IncreaseLiquidityArgs>([
   borsh.u128("liquidity"),
   borsh.u64("amount0Max"),
   borsh.u64("amount1Max"),
@@ -45,6 +45,7 @@ export const layout = borsh.struct([
 export function increaseLiquidity(
   args: IncreaseLiquidityArgs,
   accounts: IncreaseLiquidityAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -60,6 +61,7 @@ export function increaseLiquidity(
     { address: accounts.tokenVault0, role: 1 },
     { address: accounts.tokenVault1, role: 1 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([46, 156, 243, 118, 13, 205, 251, 178])
   const buffer = Buffer.alloc(1000)

@@ -30,6 +30,7 @@ export interface MigratePositionAccounts {
 
 export function migratePosition(
   accounts: MigratePositionAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -47,6 +48,7 @@ export function migratePosition(
     { address: accounts.rentReceiver, role: 1 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([15, 132, 59, 50, 199, 6, 251, 46])
   const data = identifier

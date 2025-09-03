@@ -29,7 +29,7 @@ export interface SwapRouterBaseInAccounts {
   memoProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<SwapRouterBaseInArgs>([
   borsh.u64("amountIn"),
   borsh.u64("amountOutMinimum"),
 ])
@@ -37,6 +37,7 @@ export const layout = borsh.struct([
 export function swapRouterBaseIn(
   args: SwapRouterBaseInArgs,
   accounts: SwapRouterBaseInAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -46,6 +47,7 @@ export function swapRouterBaseIn(
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.tokenProgram2022, role: 0 },
     { address: accounts.memoProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([69, 125, 115, 218, 245, 186, 242, 196])
   const buffer = Buffer.alloc(1000)

@@ -34,6 +34,7 @@ export interface ClaimFeeAccounts {
 
 export function claimFee(
   accounts: ClaimFeeAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -51,6 +52,7 @@ export function claimFee(
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([169, 32, 79, 137, 136, 232, 70, 137])
   const data = identifier

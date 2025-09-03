@@ -36,13 +36,14 @@ export interface InitializePermissionLbPairAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializePermissionLbPairArgs>([
   types.InitPermissionPairIx.layout("ixData"),
 ])
 
 export function initializePermissionLbPair(
   args: InitializePermissionLbPairArgs,
   accounts: InitializePermissionLbPairAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -62,6 +63,7 @@ export function initializePermissionLbPair(
     { address: accounts.rent, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([108, 102, 213, 85, 251, 3, 53, 21])
   const buffer = Buffer.alloc(1000)

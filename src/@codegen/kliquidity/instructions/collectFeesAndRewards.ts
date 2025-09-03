@@ -59,6 +59,7 @@ export interface CollectFeesAndRewardsAccounts {
 
 export function collectFeesAndRewards(
   accounts: CollectFeesAndRewardsAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -97,6 +98,7 @@ export function collectFeesAndRewards(
     isSome(accounts.eventAuthority)
       ? { address: accounts.eventAuthority.value, role: 0 }
       : { address: programAddress, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([113, 18, 75, 8, 182, 31, 105, 186])
   const data = identifier

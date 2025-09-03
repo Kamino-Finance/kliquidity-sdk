@@ -25,11 +25,14 @@ export interface SetProtocolFeeRateAccounts {
   feeAuthority: TransactionSigner
 }
 
-export const layout = borsh.struct([borsh.u16("protocolFeeRate")])
+export const layout = borsh.struct<SetProtocolFeeRateArgs>([
+  borsh.u16("protocolFeeRate"),
+])
 
 export function setProtocolFeeRate(
   args: SetProtocolFeeRateArgs,
   accounts: SetProtocolFeeRateAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -40,6 +43,7 @@ export function setProtocolFeeRate(
       role: 2,
       signer: accounts.feeAuthority,
     },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([95, 7, 4, 50, 154, 79, 156, 131])
   const buffer = Buffer.alloc(1000)

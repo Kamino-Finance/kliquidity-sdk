@@ -26,7 +26,7 @@ export interface CheckExpectedVaultsBalancesAccounts {
   tokenBAta: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<CheckExpectedVaultsBalancesArgs>([
   borsh.u64("tokenAAtaBalance"),
   borsh.u64("tokenBAtaBalance"),
 ])
@@ -34,12 +34,14 @@ export const layout = borsh.struct([
 export function checkExpectedVaultsBalances(
   args: CheckExpectedVaultsBalancesArgs,
   accounts: CheckExpectedVaultsBalancesAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.user.address, role: 3, signer: accounts.user },
     { address: accounts.tokenAAta, role: 0 },
     { address: accounts.tokenBAta, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([75, 151, 187, 125, 50, 4, 11, 71])
   const buffer = Buffer.alloc(1000)

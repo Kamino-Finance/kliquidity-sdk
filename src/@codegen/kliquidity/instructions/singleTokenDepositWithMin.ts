@@ -46,7 +46,7 @@ export interface SingleTokenDepositWithMinAccounts {
   instructionSysvarAccount: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<SingleTokenDepositWithMinArgs>([
   borsh.u64("tokenAMinPostDepositBalance"),
   borsh.u64("tokenBMinPostDepositBalance"),
 ])
@@ -54,6 +54,7 @@ export const layout = borsh.struct([
 export function singleTokenDepositWithMin(
   args: SingleTokenDepositWithMinArgs,
   accounts: SingleTokenDepositWithMinAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -80,6 +81,7 @@ export function singleTokenDepositWithMin(
     { address: accounts.tokenATokenProgram, role: 0 },
     { address: accounts.tokenBTokenProgram, role: 0 },
     { address: accounts.instructionSysvarAccount, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([250, 142, 102, 160, 72, 12, 83, 139])
   const buffer = Buffer.alloc(1000)

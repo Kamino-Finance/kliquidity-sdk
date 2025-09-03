@@ -31,11 +31,14 @@ export interface InitializeRewardV2Accounts {
   rent: Address
 }
 
-export const layout = borsh.struct([borsh.u8("rewardIndex")])
+export const layout = borsh.struct<InitializeRewardV2Args>([
+  borsh.u8("rewardIndex"),
+])
 
 export function initializeRewardV2(
   args: InitializeRewardV2Args,
   accounts: InitializeRewardV2Accounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -56,6 +59,7 @@ export function initializeRewardV2(
     { address: accounts.rewardTokenProgram, role: 0 },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([91, 1, 77, 50, 235, 229, 133, 49])
   const buffer = Buffer.alloc(1000)

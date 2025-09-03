@@ -28,7 +28,7 @@ export interface InitializeFeeTierAccounts {
   systemProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializeFeeTierArgs>([
   borsh.u16("tickSpacing"),
   borsh.u16("defaultFeeRate"),
 ])
@@ -36,6 +36,7 @@ export const layout = borsh.struct([
 export function initializeFeeTier(
   args: InitializeFeeTierArgs,
   accounts: InitializeFeeTierAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -48,6 +49,7 @@ export function initializeFeeTier(
       signer: accounts.feeAuthority,
     },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([183, 74, 156, 160, 112, 2, 42, 30])
   const buffer = Buffer.alloc(1000)

@@ -31,7 +31,7 @@ export interface UpdateSharesMetadataAccounts {
   metadataProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<UpdateSharesMetadataArgs>([
   borsh.str("name"),
   borsh.str("symbol"),
   borsh.str("uri"),
@@ -40,6 +40,7 @@ export const layout = borsh.struct([
 export function updateSharesMetadata(
   args: UpdateSharesMetadataArgs,
   accounts: UpdateSharesMetadataAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -54,6 +55,7 @@ export function updateSharesMetadata(
     { address: accounts.sharesMetadata, role: 1 },
     { address: accounts.sharesMintAuthority, role: 0 },
     { address: accounts.metadataProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([155, 34, 122, 165, 245, 137, 147, 107])
   const buffer = Buffer.alloc(1000)

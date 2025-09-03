@@ -29,11 +29,12 @@ export interface CollectRewardAccounts {
   tokenProgram: Address
 }
 
-export const layout = borsh.struct([borsh.u8("rewardIndex")])
+export const layout = borsh.struct<CollectRewardArgs>([borsh.u8("rewardIndex")])
 
 export function collectReward(
   args: CollectRewardArgs,
   accounts: CollectRewardAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -48,6 +49,7 @@ export function collectReward(
     { address: accounts.rewardOwnerAccount, role: 1 },
     { address: accounts.rewardVault, role: 1 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([70, 5, 132, 87, 86, 235, 177, 34])
   const buffer = Buffer.alloc(1000)

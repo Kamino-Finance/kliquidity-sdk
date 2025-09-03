@@ -36,6 +36,7 @@ export interface RemoveAllLiquidityAccounts {
 
 export function removeAllLiquidity(
   accounts: RemoveAllLiquidityAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -57,6 +58,7 @@ export function removeAllLiquidity(
     { address: accounts.tokenYProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([10, 51, 61, 35, 112, 105, 24, 85])
   const data = identifier

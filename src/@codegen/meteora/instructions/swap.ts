@@ -38,7 +38,7 @@ export interface SwapAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<SwapArgs>([
   borsh.u64("amountIn"),
   borsh.u64("minAmountOut"),
 ])
@@ -46,6 +46,7 @@ export const layout = borsh.struct([
 export function swap(
   args: SwapArgs,
   accounts: SwapAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -68,6 +69,7 @@ export function swap(
     { address: accounts.tokenYProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([248, 198, 158, 145, 225, 117, 135, 200])
   const buffer = Buffer.alloc(1000)

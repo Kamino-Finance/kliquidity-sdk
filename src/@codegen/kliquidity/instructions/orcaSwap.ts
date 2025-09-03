@@ -43,7 +43,7 @@ export interface OrcaSwapAccounts {
   whirlpoolProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<OrcaSwapArgs>([
   borsh.u64("amount"),
   borsh.u64("otherAmountThreshold"),
   borsh.u128("sqrtPriceLimit"),
@@ -54,6 +54,7 @@ export const layout = borsh.struct([
 export function orcaSwap(
   args: OrcaSwapArgs,
   accounts: OrcaSwapAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -74,6 +75,7 @@ export function orcaSwap(
     { address: accounts.tickArray2, role: 0 },
     { address: accounts.oracle, role: 0 },
     { address: accounts.whirlpoolProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([33, 94, 249, 97, 250, 254, 198, 93])
   const buffer = Buffer.alloc(1000)

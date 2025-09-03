@@ -48,7 +48,7 @@ export interface TwoHopSwapAccounts {
   oracleTwo: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<TwoHopSwapArgs>([
   borsh.u64("amount"),
   borsh.u64("otherAmountThreshold"),
   borsh.bool("amountSpecifiedIsInput"),
@@ -61,6 +61,7 @@ export const layout = borsh.struct([
 export function twoHopSwap(
   args: TwoHopSwapArgs,
   accounts: TwoHopSwapAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -88,6 +89,7 @@ export function twoHopSwap(
     { address: accounts.tickArrayTwo2, role: 1 },
     { address: accounts.oracleOne, role: 0 },
     { address: accounts.oracleTwo, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([195, 96, 237, 108, 68, 162, 219, 230])
   const buffer = Buffer.alloc(1000)

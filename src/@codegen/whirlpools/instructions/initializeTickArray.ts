@@ -26,11 +26,14 @@ export interface InitializeTickArrayAccounts {
   systemProgram: Address
 }
 
-export const layout = borsh.struct([borsh.i32("startTickIndex")])
+export const layout = borsh.struct<InitializeTickArrayArgs>([
+  borsh.i32("startTickIndex"),
+])
 
 export function initializeTickArray(
   args: InitializeTickArrayArgs,
   accounts: InitializeTickArrayAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -38,6 +41,7 @@ export function initializeTickArray(
     { address: accounts.funder.address, role: 3, signer: accounts.funder },
     { address: accounts.tickArray, role: 1 },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([11, 188, 193, 214, 141, 91, 149, 184])
   const buffer = Buffer.alloc(1000)

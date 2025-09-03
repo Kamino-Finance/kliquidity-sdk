@@ -51,7 +51,9 @@ export class CollateralInfos {
       return null
     }
     if (info.programAddress !== programId) {
-      throw new Error("account doesn't belong to this program")
+      throw new Error(
+        `CollateralInfosFields account ${address} belongs to wrong program ${info.programAddress}, expected ${programId}`
+      )
     }
 
     return this.decode(Buffer.from(info.data))
@@ -69,7 +71,9 @@ export class CollateralInfos {
         return null
       }
       if (info.programAddress !== programId) {
-        throw new Error("account doesn't belong to this program")
+        throw new Error(
+          `CollateralInfosFields account ${info.address} belongs to wrong program ${info.programAddress}, expected ${programId}`
+        )
       }
 
       return this.decode(Buffer.from(info.data))

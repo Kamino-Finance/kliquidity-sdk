@@ -25,6 +25,7 @@ export interface InitializeConfigExtensionAccounts {
 
 export function initializeConfigExtension(
   accounts: InitializeConfigExtensionAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -37,6 +38,7 @@ export function initializeConfigExtension(
       signer: accounts.feeAuthority,
     },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([55, 9, 53, 9, 114, 57, 209, 52])
   const data = identifier

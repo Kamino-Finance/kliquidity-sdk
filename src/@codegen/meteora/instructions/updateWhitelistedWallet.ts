@@ -24,16 +24,20 @@ export interface UpdateWhitelistedWalletAccounts {
   creator: TransactionSigner
 }
 
-export const layout = borsh.struct([borshAddress("wallet")])
+export const layout = borsh.struct<UpdateWhitelistedWalletArgs>([
+  borshAddress("wallet"),
+])
 
 export function updateWhitelistedWallet(
   args: UpdateWhitelistedWalletArgs,
   accounts: UpdateWhitelistedWalletAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.lbPair, role: 1 },
     { address: accounts.creator.address, role: 2, signer: accounts.creator },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([4, 105, 92, 167, 132, 28, 9, 90])
   const buffer = Buffer.alloc(1000)

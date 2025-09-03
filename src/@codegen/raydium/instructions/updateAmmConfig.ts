@@ -25,16 +25,21 @@ export interface UpdateAmmConfigAccounts {
   ammConfig: Address
 }
 
-export const layout = borsh.struct([borsh.u8("param"), borsh.u32("value")])
+export const layout = borsh.struct<UpdateAmmConfigArgs>([
+  borsh.u8("param"),
+  borsh.u32("value"),
+])
 
 export function updateAmmConfig(
   args: UpdateAmmConfigArgs,
   accounts: UpdateAmmConfigAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.owner.address, role: 2, signer: accounts.owner },
     { address: accounts.ammConfig, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([49, 60, 174, 136, 154, 28, 116, 200])
   const buffer = Buffer.alloc(1000)

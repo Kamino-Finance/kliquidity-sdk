@@ -23,6 +23,7 @@ export interface SetFeeAuthorityAccounts {
 
 export function setFeeAuthority(
   accounts: SetFeeAuthorityAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -33,6 +34,7 @@ export function setFeeAuthority(
       signer: accounts.feeAuthority,
     },
     { address: accounts.newFeeAuthority, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([31, 1, 50, 87, 237, 101, 97, 132])
   const data = identifier

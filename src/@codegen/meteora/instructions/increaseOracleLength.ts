@@ -27,11 +27,14 @@ export interface IncreaseOracleLengthAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([borsh.u64("lengthToAdd")])
+export const layout = borsh.struct<IncreaseOracleLengthArgs>([
+  borsh.u64("lengthToAdd"),
+])
 
 export function increaseOracleLength(
   args: IncreaseOracleLengthArgs,
   accounts: IncreaseOracleLengthAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -40,6 +43,7 @@ export function increaseOracleLength(
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([190, 61, 125, 87, 103, 79, 158, 173])
   const buffer = Buffer.alloc(1000)

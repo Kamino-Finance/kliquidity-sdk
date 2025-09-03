@@ -26,11 +26,14 @@ export interface InitializePresetParameterAccounts {
   rent: Address
 }
 
-export const layout = borsh.struct([types.InitPresetParametersIx.layout("ix")])
+export const layout = borsh.struct<InitializePresetParameterArgs>([
+  types.InitPresetParametersIx.layout("ix"),
+])
 
 export function initializePresetParameter(
   args: InitializePresetParameterArgs,
   accounts: InitializePresetParameterAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -38,6 +41,7 @@ export function initializePresetParameter(
     { address: accounts.admin.address, role: 3, signer: accounts.admin },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([66, 188, 71, 211, 98, 109, 14, 186])
   const buffer = Buffer.alloc(1000)

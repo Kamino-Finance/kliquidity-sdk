@@ -41,6 +41,7 @@ export const layout = borsh.struct([
 export function addLiquidityByStrategyOneSide(
   args: AddLiquidityByStrategyOneSideArgs,
   accounts: AddLiquidityByStrategyOneSideAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -58,6 +59,7 @@ export function addLiquidityByStrategyOneSide(
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([41, 5, 238, 175, 100, 225, 6, 205])
   const buffer = Buffer.alloc(1000)

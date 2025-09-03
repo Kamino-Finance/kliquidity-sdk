@@ -25,11 +25,12 @@ export interface SetFeeRateAccounts {
   feeAuthority: TransactionSigner
 }
 
-export const layout = borsh.struct([borsh.u16("feeRate")])
+export const layout = borsh.struct<SetFeeRateArgs>([borsh.u16("feeRate")])
 
 export function setFeeRate(
   args: SetFeeRateArgs,
   accounts: SetFeeRateAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -40,6 +41,7 @@ export function setFeeRate(
       role: 2,
       signer: accounts.feeAuthority,
     },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([53, 243, 137, 65, 8, 140, 158, 6])
   const buffer = Buffer.alloc(1000)

@@ -25,11 +25,12 @@ export interface WithdrawFromTopupAccounts {
   system: Address
 }
 
-export const layout = borsh.struct([borsh.u64("amount")])
+export const layout = borsh.struct<WithdrawFromTopupArgs>([borsh.u64("amount")])
 
 export function withdrawFromTopup(
   args: WithdrawFromTopupArgs,
   accounts: WithdrawFromTopupAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -40,6 +41,7 @@ export function withdrawFromTopup(
     },
     { address: accounts.topupVault, role: 1 },
     { address: accounts.system, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([95, 227, 138, 220, 240, 95, 150, 113])
   const buffer = Buffer.alloc(1000)

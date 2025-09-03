@@ -27,11 +27,14 @@ export interface CloseBundledPositionAccounts {
   receiver: Address
 }
 
-export const layout = borsh.struct([borsh.u16("bundleIndex")])
+export const layout = borsh.struct<CloseBundledPositionArgs>([
+  borsh.u16("bundleIndex"),
+])
 
 export function closeBundledPosition(
   args: CloseBundledPositionArgs,
   accounts: CloseBundledPositionAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -44,6 +47,7 @@ export function closeBundledPosition(
       signer: accounts.positionBundleAuthority,
     },
     { address: accounts.receiver, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([41, 36, 216, 245, 27, 85, 103, 67])
   const buffer = Buffer.alloc(1000)
