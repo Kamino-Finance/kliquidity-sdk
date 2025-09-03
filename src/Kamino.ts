@@ -2139,7 +2139,7 @@ export class Kamino {
     };
   };
 
-  getAllOraclePrices = (): Promise<OraclePrices> => this._scope.getOraclePrices();
+  getAllOraclePrices = (): Promise<OraclePrices> => this._scope.getSingleOraclePrices({ feed: 'hubble' });
 
   /**
    * Get all Kamino token spot and twap prices
@@ -2247,7 +2247,7 @@ export class Kamino {
     if (scopePrices) {
       prices = scopePrices;
     } else {
-      prices = await this._scope.getOraclePrices({ prices: strategy.scopePrices });
+      prices = await this._scope.getSingleOraclePrices({ prices: strategy.scopePrices });
     }
 
     let jupPrices: Map<Address, Decimal>;
