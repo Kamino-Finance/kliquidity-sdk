@@ -37,7 +37,7 @@ export interface InitializeLbPairAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializeLbPairArgs>([
   borsh.i32("activeId"),
   borsh.u16("binStep"),
 ])
@@ -45,6 +45,7 @@ export const layout = borsh.struct([
 export function initializeLbPair(
   args: InitializeLbPairArgs,
   accounts: InitializeLbPairAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -64,6 +65,7 @@ export function initializeLbPair(
     { address: accounts.rent, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([45, 154, 237, 210, 221, 15, 166, 92])
   const buffer = Buffer.alloc(1000)

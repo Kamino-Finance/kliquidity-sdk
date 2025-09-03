@@ -24,6 +24,7 @@ export interface InitializeCollateralInfoAccounts {
 
 export function initializeCollateralInfo(
   accounts: InitializeCollateralInfoAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -35,6 +36,7 @@ export function initializeCollateralInfo(
     { address: accounts.globalConfig, role: 1 },
     { address: accounts.collInfo, role: 1 },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([74, 61, 216, 76, 244, 91, 18, 119])
   const data = identifier

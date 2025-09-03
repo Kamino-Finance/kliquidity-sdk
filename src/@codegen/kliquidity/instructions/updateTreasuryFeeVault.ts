@@ -31,11 +31,14 @@ export interface UpdateTreasuryFeeVaultAccounts {
   tokenProgram: Address
 }
 
-export const layout = borsh.struct([borsh.u16("collateralId")])
+export const layout = borsh.struct<UpdateTreasuryFeeVaultArgs>([
+  borsh.u16("collateralId"),
+])
 
 export function updateTreasuryFeeVault(
   args: UpdateTreasuryFeeVaultArgs,
   accounts: UpdateTreasuryFeeVaultAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -48,6 +51,7 @@ export function updateTreasuryFeeVault(
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([9, 241, 94, 91, 173, 74, 166, 119])
   const buffer = Buffer.alloc(1000)

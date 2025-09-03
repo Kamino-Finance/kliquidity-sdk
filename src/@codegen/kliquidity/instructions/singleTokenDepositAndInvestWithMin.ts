@@ -55,7 +55,7 @@ export interface SingleTokenDepositAndInvestWithMinAccounts {
   eventAuthority: Option<Address>
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<SingleTokenDepositAndInvestWithMinArgs>([
   borsh.u64("tokenAMinPostDepositBalance"),
   borsh.u64("tokenBMinPostDepositBalance"),
 ])
@@ -63,6 +63,7 @@ export const layout = borsh.struct([
 export function singleTokenDepositAndInvestWithMin(
   args: SingleTokenDepositAndInvestWithMinArgs,
   accounts: SingleTokenDepositAndInvestWithMinAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -99,6 +100,7 @@ export function singleTokenDepositAndInvestWithMin(
     isSome(accounts.eventAuthority)
       ? { address: accounts.eventAuthority.value, role: 0 }
       : { address: programAddress, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([118, 134, 143, 192, 188, 21, 131, 17])
   const buffer = Buffer.alloc(1000)

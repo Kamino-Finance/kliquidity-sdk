@@ -24,16 +24,20 @@ export interface SetPreActivationSwapAddressAccounts {
   creator: TransactionSigner
 }
 
-export const layout = borsh.struct([borshAddress("preActivationSwapAddress")])
+export const layout = borsh.struct<SetPreActivationSwapAddressArgs>([
+  borshAddress("preActivationSwapAddress"),
+])
 
 export function setPreActivationSwapAddress(
   args: SetPreActivationSwapAddressArgs,
   accounts: SetPreActivationSwapAddressAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.lbPair, role: 1 },
     { address: accounts.creator.address, role: 2, signer: accounts.creator },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([57, 139, 47, 123, 216, 80, 223, 10])
   const buffer = Buffer.alloc(1000)

@@ -32,7 +32,7 @@ export interface OpenBundledPositionAccounts {
   rent: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<OpenBundledPositionArgs>([
   borsh.u16("bundleIndex"),
   borsh.i32("tickLowerIndex"),
   borsh.i32("tickUpperIndex"),
@@ -41,6 +41,7 @@ export const layout = borsh.struct([
 export function openBundledPosition(
   args: OpenBundledPositionArgs,
   accounts: OpenBundledPositionAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -56,6 +57,7 @@ export function openBundledPosition(
     { address: accounts.funder.address, role: 3, signer: accounts.funder },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([169, 113, 126, 171, 213, 172, 212, 49])
   const buffer = Buffer.alloc(1000)

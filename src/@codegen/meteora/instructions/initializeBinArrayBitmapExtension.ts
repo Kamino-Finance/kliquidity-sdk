@@ -26,6 +26,7 @@ export interface InitializeBinArrayBitmapExtensionAccounts {
 
 export function initializeBinArrayBitmapExtension(
   accounts: InitializeBinArrayBitmapExtensionAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -34,6 +35,7 @@ export function initializeBinArrayBitmapExtension(
     { address: accounts.funder.address, role: 3, signer: accounts.funder },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([47, 157, 226, 180, 12, 240, 33, 71])
   const data = identifier

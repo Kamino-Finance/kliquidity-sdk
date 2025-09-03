@@ -23,6 +23,7 @@ export interface InitializeGlobalConfigAccounts {
 
 export function initializeGlobalConfig(
   accounts: InitializeGlobalConfigAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -33,6 +34,7 @@ export function initializeGlobalConfig(
     },
     { address: accounts.globalConfig, role: 1 },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([113, 216, 122, 131, 225, 209, 22, 55])
   const data = identifier

@@ -32,6 +32,7 @@ export interface InitializePositionBundleWithMetadataAccounts {
 
 export function initializePositionBundleWithMetadata(
   accounts: InitializePositionBundleWithMetadataAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -51,6 +52,7 @@ export function initializePositionBundleWithMetadata(
     { address: accounts.rent, role: 0 },
     { address: accounts.associatedTokenProgram, role: 0 },
     { address: accounts.metadataProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([93, 124, 16, 179, 249, 131, 115, 245])
   const data = identifier

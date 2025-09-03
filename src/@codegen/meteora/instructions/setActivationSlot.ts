@@ -24,16 +24,20 @@ export interface SetActivationSlotAccounts {
   admin: TransactionSigner
 }
 
-export const layout = borsh.struct([borsh.u64("activationSlot")])
+export const layout = borsh.struct<SetActivationSlotArgs>([
+  borsh.u64("activationSlot"),
+])
 
 export function setActivationSlot(
   args: SetActivationSlotArgs,
   accounts: SetActivationSlotAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.lbPair, role: 1 },
     { address: accounts.admin.address, role: 3, signer: accounts.admin },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([200, 227, 90, 83, 27, 79, 191, 88])
   const buffer = Buffer.alloc(1000)

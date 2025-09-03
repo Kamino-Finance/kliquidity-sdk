@@ -23,6 +23,7 @@ export interface SetRewardEmissionsSuperAuthorityAccounts {
 
 export function setRewardEmissionsSuperAuthority(
   accounts: SetRewardEmissionsSuperAuthorityAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -33,6 +34,7 @@ export function setRewardEmissionsSuperAuthority(
       signer: accounts.rewardEmissionsSuperAuthority,
     },
     { address: accounts.newRewardEmissionsSuperAuthority, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([207, 5, 200, 209, 122, 56, 82, 183])
   const data = identifier

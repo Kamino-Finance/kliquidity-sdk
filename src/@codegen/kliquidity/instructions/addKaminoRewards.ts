@@ -30,7 +30,7 @@ export interface AddKaminoRewardsAccounts {
   tokenProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<AddKaminoRewardsArgs>([
   borsh.u64("kaminoRewardIndex"),
   borsh.u64("amount"),
 ])
@@ -38,6 +38,7 @@ export const layout = borsh.struct([
 export function addKaminoRewards(
   args: AddKaminoRewardsArgs,
   accounts: AddKaminoRewardsAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -52,6 +53,7 @@ export function addKaminoRewards(
     { address: accounts.baseVaultAuthority, role: 1 },
     { address: accounts.rewardAta, role: 1 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([174, 174, 142, 193, 47, 77, 235, 65])
   const buffer = Buffer.alloc(1000)

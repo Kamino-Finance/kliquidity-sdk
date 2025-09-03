@@ -27,6 +27,7 @@ export interface PermisionlessWithdrawFromTreasuryAccounts {
 
 export function permisionlessWithdrawFromTreasury(
   accounts: PermisionlessWithdrawFromTreasuryAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -37,6 +38,7 @@ export function permisionlessWithdrawFromTreasury(
     { address: accounts.treasuryFeeVaultAuthority, role: 1 },
     { address: accounts.tokenAccount, role: 1 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([167, 36, 32, 79, 97, 170, 183, 108])
   const data = identifier

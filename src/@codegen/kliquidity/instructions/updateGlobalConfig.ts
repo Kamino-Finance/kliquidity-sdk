@@ -27,7 +27,7 @@ export interface UpdateGlobalConfigAccounts {
   systemProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<UpdateGlobalConfigArgs>([
   borsh.u16("key"),
   borsh.u16("index"),
   borsh.array(borsh.u8(), 32, "value"),
@@ -36,6 +36,7 @@ export const layout = borsh.struct([
 export function updateGlobalConfig(
   args: UpdateGlobalConfigArgs,
   accounts: UpdateGlobalConfigAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -46,6 +47,7 @@ export function updateGlobalConfig(
     },
     { address: accounts.globalConfig, role: 1 },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([164, 84, 130, 189, 111, 58, 250, 200])
   const buffer = Buffer.alloc(1000)

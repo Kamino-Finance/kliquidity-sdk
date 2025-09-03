@@ -36,7 +36,7 @@ export interface CreatePoolAccounts {
   rent: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<CreatePoolArgs>([
   borsh.u128("sqrtPriceX64"),
   borsh.u64("openTime"),
 ])
@@ -44,6 +44,7 @@ export const layout = borsh.struct([
 export function createPool(
   args: CreatePoolArgs,
   accounts: CreatePoolAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -64,6 +65,7 @@ export function createPool(
     { address: accounts.tokenProgram1, role: 0 },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([233, 146, 209, 142, 207, 104, 64, 188])
   const buffer = Buffer.alloc(1000)

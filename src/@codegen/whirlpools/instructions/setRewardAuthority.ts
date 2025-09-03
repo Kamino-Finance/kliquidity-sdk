@@ -25,11 +25,14 @@ export interface SetRewardAuthorityAccounts {
   newRewardAuthority: Address
 }
 
-export const layout = borsh.struct([borsh.u8("rewardIndex")])
+export const layout = borsh.struct<SetRewardAuthorityArgs>([
+  borsh.u8("rewardIndex"),
+])
 
 export function setRewardAuthority(
   args: SetRewardAuthorityArgs,
   accounts: SetRewardAuthorityAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -40,6 +43,7 @@ export function setRewardAuthority(
       signer: accounts.rewardAuthority,
     },
     { address: accounts.newRewardAuthority, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([34, 39, 183, 252, 83, 28, 85, 127])
   const buffer = Buffer.alloc(1000)

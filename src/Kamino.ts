@@ -2139,7 +2139,8 @@ export class Kamino {
     };
   };
 
-  getAllOraclePrices = (): Promise<OraclePrices> => this._scope.getOraclePrices();
+  getAllOraclePrices = (): Promise<OraclePrices> =>
+    this._scope.getSingleOraclePrices({ prices: fromLegacyPublicKey(this._config.scope.oraclePrices) });
 
   /**
    * Get all Kamino token spot and twap prices
@@ -2247,7 +2248,7 @@ export class Kamino {
     if (scopePrices) {
       prices = scopePrices;
     } else {
-      prices = await this._scope.getOraclePrices({ prices: strategy.scopePrices });
+      prices = await this._scope.getSingleOraclePrices({ prices: strategy.scopePrices });
     }
 
     let jupPrices: Map<Address, Decimal>;
@@ -2762,7 +2763,7 @@ export class Kamino {
       memoProgram: MEMO_PROGRAM_ID,
     };
 
-    let withdrawIx = withdraw(args, accounts, this.getProgramID());
+    let withdrawIx = withdraw(args, accounts, undefined, this.getProgramID());
     let collectFeesAndRewardsIxns: Instruction[] = [];
 
     //  for Raydium strats we need to collect fees and rewards before withdrawal
@@ -3182,7 +3183,7 @@ export class Kamino {
       tokenBTokenProgram: keyOrDefault(strategyState.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS),
     };
 
-    return deposit(depositArgs, depositAccounts, this.getProgramID());
+    return deposit(depositArgs, depositAccounts, undefined, this.getProgramID());
   };
 
   singleSidedDepositTokenA = async (
@@ -3637,7 +3638,7 @@ export class Kamino {
       tokenBTokenProgram: keyOrDefault(strategyWithAddress.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS),
     };
 
-    const singleSidedDepositIx = singleTokenDepositWithMin(args, accounts, this.getProgramID());
+    const singleSidedDepositIx = singleTokenDepositWithMin(args, accounts, undefined, this.getProgramID());
 
     let result: Instruction[] = [];
     if (includeAtaIxns) {
@@ -3763,7 +3764,7 @@ export class Kamino {
       system: SYSTEM_PROGRAM_ADDRESS,
     };
 
-    const withdrawIxn = withdrawFromTopup(args, accounts, this.getProgramID());
+    const withdrawIxn = withdrawFromTopup(args, accounts, undefined, this.getProgramID());
     return withdrawIxn;
   };
 
@@ -3930,7 +3931,7 @@ export class Kamino {
       tokenBAta,
     };
 
-    return checkExpectedVaultsBalances(args, accounts, this.getProgramID());
+    return checkExpectedVaultsBalances(args, accounts, undefined, this.getProgramID());
   };
 
   /**
@@ -4019,7 +4020,7 @@ export class Kamino {
       tokenBTokenProgram,
     };
 
-    let ix = initializeStrategy(strategyArgs, strategyAccounts, this.getProgramID());
+    let ix = initializeStrategy(strategyArgs, strategyAccounts, undefined, this.getProgramID());
     ix = {
       ...ix,
       accounts: ix.accounts?.concat([
@@ -4198,7 +4199,7 @@ export class Kamino {
       tokenBMint: strategyState.tokenBMint,
     };
 
-    let ix = closeStrategy(strategyAccounts, this.getProgramID());
+    let ix = closeStrategy(strategyAccounts, undefined, this.getProgramID());
 
     for (let i = 0; i < 6; i++) {
       ix = {
@@ -4408,7 +4409,7 @@ export class Kamino {
       tokenProgram2022: TOKEN_2022_PROGRAM_ADDRESS,
     };
 
-    let ix = collectFeesAndRewards(accounts, this.getProgramID());
+    let ix = collectFeesAndRewards(accounts, undefined, this.getProgramID());
     const pairs: [number, Address][] = [
       [strategyState.reward0Decimals.toNumber(), rewardMint0],
       [strategyState.reward1Decimals.toNumber(), rewardMint1],
@@ -4835,7 +4836,7 @@ export class Kamino {
       memoProgram: MEMO_PROGRAM_ID,
     };
 
-    const ix = openLiquidityPosition(args, accounts, this.getProgramID());
+    const ix = openLiquidityPosition(args, accounts, undefined, this.getProgramID());
 
     const accs = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === positionMint.address);
@@ -4973,7 +4974,7 @@ export class Kamino {
       programAddress: this._raydiumService.getRaydiumProgramId(),
     });
 
-    let ix = openLiquidityPosition(args, accounts, this.getProgramID());
+    let ix = openLiquidityPosition(args, accounts, undefined, this.getProgramID());
 
     ix = {
       ...ix,
@@ -5135,7 +5136,7 @@ export class Kamino {
       memoProgram: MEMO_PROGRAM_ID,
     };
 
-    const ix = openLiquidityPosition(args, accounts, this.getProgramID());
+    const ix = openLiquidityPosition(args, accounts, undefined, this.getProgramID());
 
     const accs = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === position.address);
@@ -5205,7 +5206,7 @@ export class Kamino {
       tokenProgram2022: TOKEN_2022_PROGRAM_ADDRESS,
     };
 
-    let executiveWithdrawIx = executiveWithdraw(args, accounts, this.getProgramID());
+    let executiveWithdrawIx = executiveWithdraw(args, accounts, undefined, this.getProgramID());
 
     //  for Raydium strats we need to collect fees and rewards before withdrawal
     //  add rewards vaults accounts to withdraw
@@ -5320,7 +5321,7 @@ export class Kamino {
       tokenProgram2022: TOKEN_2022_PROGRAM_ADDRESS,
     };
 
-    return invest(accounts, this.getProgramID());
+    return invest(accounts, undefined, this.getProgramID());
   };
 
   /**
@@ -5503,7 +5504,7 @@ export class Kamino {
       strategy: strategyAddress,
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
     };
-    return updateStrategyConfig(args, accounts, this.getProgramID());
+    return updateStrategyConfig(args, accounts, undefined, this.getProgramID());
   };
 
   getUpdateRebalancingParamsForUninitializedStratIx = async (
@@ -5527,7 +5528,7 @@ export class Kamino {
       strategy,
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
     };
-    return updateStrategyConfig(args, accounts, this.getProgramID());
+    return updateStrategyConfig(args, accounts, undefined, this.getProgramID());
   };
 
   buildStrategyRebalanceParams = async (strategy: Address | StrategyWithAddress): Promise<number[]> => {
@@ -7465,7 +7466,7 @@ export class Kamino {
       rent: SYSVAR_RENT_ADDRESS,
     };
 
-    return signTerms(args, accounts, this.getProgramID());
+    return signTerms(args, accounts, undefined, this.getProgramID());
   }
 
   private async getDepositRatioFromAOrca(
@@ -7808,7 +7809,7 @@ export class Kamino {
             tokenInfos: globalConfig.tokenInfos,
           };
 
-          const ix = updateRewardMapping(args, accounts, this.getProgramID());
+          const ix = updateRewardMapping(args, accounts, undefined, this.getProgramID());
           result.push([ix, rewardVault]);
         }
       }
@@ -7850,7 +7851,7 @@ export class Kamino {
             tokenInfos: globalConfig.tokenInfos,
           };
 
-          const ix = updateRewardMapping(args, accounts, this.getProgramID());
+          const ix = updateRewardMapping(args, accounts, undefined, this.getProgramID());
           result.push([ix, rewardVault]);
         }
       }
@@ -7888,7 +7889,7 @@ export class Kamino {
             tokenInfos: globalConfig.tokenInfos,
           };
 
-          const ix = updateRewardMapping(args, accounts, this.getProgramID());
+          const ix = updateRewardMapping(args, accounts, undefined, this.getProgramID());
           result.push([ix, rewardVault]);
         }
       }

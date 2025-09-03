@@ -33,7 +33,7 @@ export interface InitializeSharesMetadataAccounts {
   metadataProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializeSharesMetadataArgs>([
   borsh.str("name"),
   borsh.str("symbol"),
   borsh.str("uri"),
@@ -42,6 +42,7 @@ export const layout = borsh.struct([
 export function initializeSharesMetadata(
   args: InitializeSharesMetadataArgs,
   accounts: InitializeSharesMetadataAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -58,6 +59,7 @@ export function initializeSharesMetadata(
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
     { address: accounts.metadataProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([3, 15, 172, 114, 200, 0, 131, 32])
   const buffer = Buffer.alloc(1000)

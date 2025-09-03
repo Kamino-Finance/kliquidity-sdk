@@ -29,6 +29,7 @@ export interface CollectFeesAccounts {
 
 export function collectFees(
   accounts: CollectFeesAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -45,6 +46,7 @@ export function collectFees(
     { address: accounts.tokenOwnerAccountB, role: 1 },
     { address: accounts.tokenVaultB, role: 1 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([164, 152, 207, 99, 30, 186, 19, 182])
   const data = identifier

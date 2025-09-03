@@ -23,12 +23,14 @@ export interface CreateOperationAccountAccounts {
 
 export function createOperationAccount(
   accounts: CreateOperationAccountAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.owner.address, role: 3, signer: accounts.owner },
     { address: accounts.operationState, role: 1 },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([63, 87, 148, 33, 109, 35, 8, 104])
   const data = identifier

@@ -46,6 +46,7 @@ export interface InvestAccounts {
 
 export function invest(
   accounts: InvestAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -77,6 +78,7 @@ export function invest(
     isSome(accounts.eventAuthority)
       ? { address: accounts.eventAuthority.value, role: 0 }
       : { address: programAddress, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([13, 245, 180, 103, 254, 182, 121, 4])
   const data = identifier

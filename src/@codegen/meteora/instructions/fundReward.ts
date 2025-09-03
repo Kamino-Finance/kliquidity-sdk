@@ -33,7 +33,7 @@ export interface FundRewardAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<FundRewardArgs>([
   borsh.u64("rewardIndex"),
   borsh.u64("amount"),
   borsh.bool("carryForward"),
@@ -42,6 +42,7 @@ export const layout = borsh.struct([
 export function fundReward(
   args: FundRewardArgs,
   accounts: FundRewardAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -54,6 +55,7 @@ export function fundReward(
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([188, 50, 249, 165, 93, 151, 38, 63])
   const buffer = Buffer.alloc(1000)

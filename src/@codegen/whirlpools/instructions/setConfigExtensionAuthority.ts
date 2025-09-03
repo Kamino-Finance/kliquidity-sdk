@@ -24,6 +24,7 @@ export interface SetConfigExtensionAuthorityAccounts {
 
 export function setConfigExtensionAuthority(
   accounts: SetConfigExtensionAuthorityAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -35,6 +36,7 @@ export function setConfigExtensionAuthority(
       signer: accounts.configExtensionAuthority,
     },
     { address: accounts.newConfigExtensionAuthority, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([44, 94, 241, 116, 24, 188, 60, 143])
   const data = identifier

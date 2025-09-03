@@ -42,7 +42,7 @@ export interface InitializeStrategyAccounts {
   strategy: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializeStrategyArgs>([
   borsh.u64("strategyType"),
   borsh.u64("tokenACollateralId"),
   borsh.u64("tokenBCollateralId"),
@@ -51,6 +51,7 @@ export const layout = borsh.struct([
 export function initializeStrategy(
   args: InitializeStrategyArgs,
   accounts: InitializeStrategyAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -75,6 +76,7 @@ export function initializeStrategy(
     { address: accounts.tokenATokenProgram, role: 0 },
     { address: accounts.tokenBTokenProgram, role: 0 },
     { address: accounts.strategy, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([208, 119, 144, 145, 178, 57, 105, 252])
   const buffer = Buffer.alloc(1000)

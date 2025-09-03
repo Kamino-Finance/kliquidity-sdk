@@ -33,7 +33,7 @@ export interface InitializePositionPdaAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializePositionPdaArgs>([
   borsh.i32("lowerBinId"),
   borsh.i32("width"),
 ])
@@ -41,6 +41,7 @@ export const layout = borsh.struct([
 export function initializePositionPda(
   args: InitializePositionPdaArgs,
   accounts: InitializePositionPdaAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -53,6 +54,7 @@ export function initializePositionPda(
     { address: accounts.rent, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([46, 82, 125, 146, 85, 141, 228, 153])
   const buffer = Buffer.alloc(1000)

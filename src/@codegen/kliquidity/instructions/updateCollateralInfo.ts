@@ -27,7 +27,7 @@ export interface UpdateCollateralInfoAccounts {
   tokenInfos: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<UpdateCollateralInfoArgs>([
   borsh.u64("index"),
   borsh.u64("mode"),
   borsh.array(borsh.u8(), 32, "value"),
@@ -36,6 +36,7 @@ export const layout = borsh.struct([
 export function updateCollateralInfo(
   args: UpdateCollateralInfoArgs,
   accounts: UpdateCollateralInfoAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -46,6 +47,7 @@ export function updateCollateralInfo(
     },
     { address: accounts.globalConfig, role: 0 },
     { address: accounts.tokenInfos, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([76, 94, 131, 44, 137, 61, 161, 110])
   const buffer = Buffer.alloc(1000)

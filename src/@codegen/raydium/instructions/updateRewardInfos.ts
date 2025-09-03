@@ -21,10 +21,12 @@ export interface UpdateRewardInfosAccounts {
 
 export function updateRewardInfos(
   accounts: UpdateRewardInfosAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.poolState, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([163, 172, 224, 52, 11, 154, 106, 223])
   const data = identifier

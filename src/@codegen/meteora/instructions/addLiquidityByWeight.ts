@@ -38,13 +38,14 @@ export interface AddLiquidityByWeightAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<AddLiquidityByWeightArgs>([
   types.LiquidityParameterByWeight.layout("liquidityParameter"),
 ])
 
 export function addLiquidityByWeight(
   args: AddLiquidityByWeightArgs,
   accounts: AddLiquidityByWeightAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -66,6 +67,7 @@ export function addLiquidityByWeight(
     { address: accounts.tokenYProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([28, 140, 238, 99, 231, 162, 21, 149])
   const buffer = Buffer.alloc(1000)

@@ -33,7 +33,7 @@ export interface InitializeKaminoRewardAccounts {
   tokenProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializeKaminoRewardArgs>([
   borsh.u64("kaminoRewardIndex"),
   borsh.u64("collateralToken"),
 ])
@@ -41,6 +41,7 @@ export const layout = borsh.struct([
 export function initializeKaminoReward(
   args: InitializeKaminoRewardArgs,
   accounts: InitializeKaminoRewardAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -62,6 +63,7 @@ export function initializeKaminoReward(
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
     { address: accounts.tokenProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([203, 212, 8, 90, 91, 118, 111, 50])
   const buffer = Buffer.alloc(1000)

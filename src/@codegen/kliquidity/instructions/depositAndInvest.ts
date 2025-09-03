@@ -55,7 +55,7 @@ export interface DepositAndInvestAccounts {
   eventAuthority: Option<Address>
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<DepositAndInvestArgs>([
   borsh.u64("tokenMaxA"),
   borsh.u64("tokenMaxB"),
 ])
@@ -63,6 +63,7 @@ export const layout = borsh.struct([
 export function depositAndInvest(
   args: DepositAndInvestArgs,
   accounts: DepositAndInvestAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -99,6 +100,7 @@ export function depositAndInvest(
     isSome(accounts.eventAuthority)
       ? { address: accounts.eventAuthority.value, role: 0 }
       : { address: programAddress, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([22, 157, 173, 6, 187, 25, 86, 109])
   const buffer = Buffer.alloc(1000)

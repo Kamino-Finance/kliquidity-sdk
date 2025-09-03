@@ -24,16 +24,20 @@ export interface SetPreActivationSlotDurationAccounts {
   creator: TransactionSigner
 }
 
-export const layout = borsh.struct([borsh.u16("preActivationSlotDuration")])
+export const layout = borsh.struct<SetPreActivationSlotDurationArgs>([
+  borsh.u16("preActivationSlotDuration"),
+])
 
 export function setPreActivationSlotDuration(
   args: SetPreActivationSlotDurationArgs,
   accounts: SetPreActivationSlotDurationAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.lbPair, role: 1 },
     { address: accounts.creator.address, role: 2, signer: accounts.creator },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([24, 213, 73, 145, 1, 149, 127, 37])
   const buffer = Buffer.alloc(1000)
