@@ -25,6 +25,7 @@ export interface UpdateFeesAndRewardsAccounts {
 
 export function updateFeesAndRewards(
   accounts: UpdateFeesAndRewardsAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -33,6 +34,7 @@ export function updateFeesAndRewards(
     { address: accounts.binArrayLower, role: 1 },
     { address: accounts.binArrayUpper, role: 1 },
     { address: accounts.owner.address, role: 2, signer: accounts.owner },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([154, 230, 250, 13, 236, 209, 75, 223])
   const data = identifier

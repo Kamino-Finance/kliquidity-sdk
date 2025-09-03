@@ -46,7 +46,7 @@ export interface DepositAccounts {
   instructionSysvarAccount: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<DepositArgs>([
   borsh.u64("tokenMaxA"),
   borsh.u64("tokenMaxB"),
 ])
@@ -54,6 +54,7 @@ export const layout = borsh.struct([
 export function deposit(
   args: DepositArgs,
   accounts: DepositAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -80,6 +81,7 @@ export function deposit(
     { address: accounts.tokenATokenProgram, role: 0 },
     { address: accounts.tokenBTokenProgram, role: 0 },
     { address: accounts.instructionSysvarAccount, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([242, 35, 198, 137, 82, 225, 242, 182])
   const buffer = Buffer.alloc(1000)

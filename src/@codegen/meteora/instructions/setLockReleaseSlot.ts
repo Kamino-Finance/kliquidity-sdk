@@ -27,11 +27,14 @@ export interface SetLockReleaseSlotAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([borsh.u64("newLockReleaseSlot")])
+export const layout = borsh.struct<SetLockReleaseSlotArgs>([
+  borsh.u64("newLockReleaseSlot"),
+])
 
 export function setLockReleaseSlot(
   args: SetLockReleaseSlotArgs,
   accounts: SetLockReleaseSlotAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -40,6 +43,7 @@ export function setLockReleaseSlot(
     { address: accounts.sender.address, role: 2, signer: accounts.sender },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([207, 224, 170, 143, 189, 159, 46, 150])
   const buffer = Buffer.alloc(1000)

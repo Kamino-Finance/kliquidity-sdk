@@ -1897,7 +1897,7 @@ export async function setUpGlobalConfig(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  const initializeGlobalConfigIx = Instructions.initializeGlobalConfig(accounts, kamino.getProgramID());
+  const initializeGlobalConfigIx = Instructions.initializeGlobalConfig(accounts, undefined, kamino.getProgramID());
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createGlobalConfigIx, initializeGlobalConfigIx]);
 
@@ -1946,7 +1946,7 @@ export async function setUpCollateralInfo(env: Env, kamino: Kamino): Promise<Add
     collInfo: collInfo.address,
   };
 
-  const initializeCollateralInfosIx = Instructions.initializeCollateralInfo(accounts, kamino.getProgramID());
+  const initializeCollateralInfosIx = Instructions.initializeCollateralInfo(accounts, undefined, kamino.getProgramID());
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createCollateralInfoIx, initializeCollateralInfosIx]);
 
@@ -2007,7 +2007,7 @@ export async function updateGlobalConfig(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  const updateConfigIx = Instructions.updateGlobalConfig(args, accounts, kamino.getProgramID());
+  const updateConfigIx = Instructions.updateGlobalConfig(args, accounts, undefined, kamino.getProgramID());
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateConfigIx]);
 
   console.log('Update Global Config ', globalConfigOption.toJSON(), sig);

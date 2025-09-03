@@ -24,6 +24,7 @@ export interface SetTokenBadgeAuthorityAccounts {
 
 export function setTokenBadgeAuthority(
   accounts: SetTokenBadgeAuthorityAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -35,6 +36,7 @@ export function setTokenBadgeAuthority(
       signer: accounts.configExtensionAuthority,
     },
     { address: accounts.newTokenBadgeAuthority, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([207, 202, 4, 32, 205, 79, 13, 178])
   const data = identifier

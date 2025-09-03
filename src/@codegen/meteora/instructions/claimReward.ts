@@ -33,11 +33,12 @@ export interface ClaimRewardAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([borsh.u64("rewardIndex")])
+export const layout = borsh.struct<ClaimRewardArgs>([borsh.u64("rewardIndex")])
 
 export function claimReward(
   args: ClaimRewardArgs,
   accounts: ClaimRewardAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -52,6 +53,7 @@ export function claimReward(
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([149, 95, 181, 242, 94, 90, 158, 162])
   const buffer = Buffer.alloc(1000)

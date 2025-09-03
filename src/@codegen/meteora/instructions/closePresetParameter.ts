@@ -23,12 +23,14 @@ export interface ClosePresetParameterAccounts {
 
 export function closePresetParameter(
   accounts: ClosePresetParameterAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.presetParameter, role: 1 },
     { address: accounts.admin.address, role: 3, signer: accounts.admin },
     { address: accounts.rentReceiver, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([4, 148, 145, 100, 134, 26, 181, 61])
   const data = identifier

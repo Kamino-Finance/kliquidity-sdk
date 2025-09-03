@@ -26,11 +26,12 @@ export interface InitializeBinArrayAccounts {
   systemProgram: Address
 }
 
-export const layout = borsh.struct([borsh.i64("index")])
+export const layout = borsh.struct<InitializeBinArrayArgs>([borsh.i64("index")])
 
 export function initializeBinArray(
   args: InitializeBinArrayArgs,
   accounts: InitializeBinArrayAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -38,6 +39,7 @@ export function initializeBinArray(
     { address: accounts.binArray, role: 1 },
     { address: accounts.funder.address, role: 3, signer: accounts.funder },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([35, 86, 19, 185, 78, 212, 75, 211])
   const buffer = Buffer.alloc(1000)

@@ -27,7 +27,7 @@ export interface UpdateRewardFunderAccounts {
   program: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<UpdateRewardFunderArgs>([
   borsh.u64("rewardIndex"),
   borshAddress("newFunder"),
 ])
@@ -35,6 +35,7 @@ export const layout = borsh.struct([
 export function updateRewardFunder(
   args: UpdateRewardFunderArgs,
   accounts: UpdateRewardFunderAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -42,6 +43,7 @@ export function updateRewardFunder(
     { address: accounts.admin.address, role: 2, signer: accounts.admin },
     { address: accounts.eventAuthority, role: 0 },
     { address: accounts.program, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([211, 28, 48, 32, 215, 160, 35, 23])
   const buffer = Buffer.alloc(1000)

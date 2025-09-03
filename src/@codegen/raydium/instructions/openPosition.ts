@@ -47,7 +47,7 @@ export interface OpenPositionAccounts {
   metadataProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<OpenPositionArgs>([
   borsh.i32("tickLowerIndex"),
   borsh.i32("tickUpperIndex"),
   borsh.i32("tickArrayLowerStartIndex"),
@@ -60,6 +60,7 @@ export const layout = borsh.struct([
 export function openPosition(
   args: OpenPositionArgs,
   accounts: OpenPositionAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -86,6 +87,7 @@ export function openPosition(
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.associatedTokenProgram, role: 0 },
     { address: accounts.metadataProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([135, 128, 47, 77, 15, 152, 240, 49])
   const buffer = Buffer.alloc(1000)

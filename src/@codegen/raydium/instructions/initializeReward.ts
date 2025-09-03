@@ -32,13 +32,14 @@ export interface InitializeRewardAccounts {
   rent: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializeRewardArgs>([
   types.InitializeRewardParam.layout("param"),
 ])
 
 export function initializeReward(
   args: InitializeRewardArgs,
   accounts: InitializeRewardAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -56,6 +57,7 @@ export function initializeReward(
     { address: accounts.rewardTokenProgram, role: 0 },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([95, 135, 192, 196, 242, 129, 230, 68])
   const buffer = Buffer.alloc(1000)

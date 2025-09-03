@@ -51,11 +51,12 @@ export interface WithdrawAccounts {
   eventAuthority: Option<Address>
 }
 
-export const layout = borsh.struct([borsh.u64("sharesAmount")])
+export const layout = borsh.struct<WithdrawArgs>([borsh.u64("sharesAmount")])
 
 export function withdraw(
   args: WithdrawArgs,
   accounts: WithdrawAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -90,6 +91,7 @@ export function withdraw(
     isSome(accounts.eventAuthority)
       ? { address: accounts.eventAuthority.value, role: 0 }
       : { address: programAddress, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([183, 18, 70, 156, 148, 109, 161, 34])
   const buffer = Buffer.alloc(1000)

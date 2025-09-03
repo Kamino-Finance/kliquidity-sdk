@@ -26,7 +26,7 @@ export interface InsertCollateralInfoAccounts {
   tokenInfos: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InsertCollateralInfoArgs>([
   borsh.u64("index"),
   types.CollateralInfoParams.layout("params"),
 ])
@@ -34,6 +34,7 @@ export const layout = borsh.struct([
 export function insertCollateralInfo(
   args: InsertCollateralInfoArgs,
   accounts: InsertCollateralInfoAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -44,6 +45,7 @@ export function insertCollateralInfo(
     },
     { address: accounts.globalConfig, role: 0 },
     { address: accounts.tokenInfos, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([22, 97, 4, 78, 166, 188, 51, 190])
   const buffer = Buffer.alloc(1000)

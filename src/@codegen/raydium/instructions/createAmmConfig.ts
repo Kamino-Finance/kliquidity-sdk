@@ -29,7 +29,7 @@ export interface CreateAmmConfigAccounts {
   systemProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<CreateAmmConfigArgs>([
   borsh.u16("index"),
   borsh.u16("tickSpacing"),
   borsh.u32("tradeFeeRate"),
@@ -40,12 +40,14 @@ export const layout = borsh.struct([
 export function createAmmConfig(
   args: CreateAmmConfigArgs,
   accounts: CreateAmmConfigAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
     { address: accounts.owner.address, role: 3, signer: accounts.owner },
     { address: accounts.ammConfig, role: 1 },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([137, 52, 237, 212, 215, 117, 108, 104])
   const buffer = Buffer.alloc(1000)

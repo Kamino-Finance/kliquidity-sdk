@@ -24,11 +24,14 @@ export interface TransferRewardOwnerAccounts {
   poolState: Address
 }
 
-export const layout = borsh.struct([borshAddress("newOwner")])
+export const layout = borsh.struct<TransferRewardOwnerArgs>([
+  borshAddress("newOwner"),
+])
 
 export function transferRewardOwner(
   args: TransferRewardOwnerArgs,
   accounts: TransferRewardOwnerAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -38,6 +41,7 @@ export function transferRewardOwner(
       signer: accounts.authority,
     },
     { address: accounts.poolState, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([7, 22, 12, 83, 242, 43, 48, 121])
   const buffer = Buffer.alloc(1000)

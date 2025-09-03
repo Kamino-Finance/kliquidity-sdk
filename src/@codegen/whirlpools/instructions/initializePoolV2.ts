@@ -37,7 +37,7 @@ export interface InitializePoolV2Accounts {
   rent: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<InitializePoolV2Args>([
   borsh.u16("tickSpacing"),
   borsh.u128("initialSqrtPrice"),
 ])
@@ -45,6 +45,7 @@ export const layout = borsh.struct([
 export function initializePoolV2(
   args: InitializePoolV2Args,
   accounts: InitializePoolV2Accounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -70,6 +71,7 @@ export function initializePoolV2(
     { address: accounts.tokenProgramB, role: 0 },
     { address: accounts.systemProgram, role: 0 },
     { address: accounts.rent, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([207, 45, 87, 242, 27, 63, 204, 67])
   const buffer = Buffer.alloc(1000)

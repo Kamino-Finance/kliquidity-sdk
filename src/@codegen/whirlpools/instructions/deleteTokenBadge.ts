@@ -26,6 +26,7 @@ export interface DeleteTokenBadgeAccounts {
 
 export function deleteTokenBadge(
   accounts: DeleteTokenBadgeAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -39,6 +40,7 @@ export function deleteTokenBadge(
     { address: accounts.tokenMint, role: 0 },
     { address: accounts.tokenBadge, role: 1 },
     { address: accounts.receiver, role: 1 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([53, 146, 68, 8, 18, 117, 17, 185])
   const data = identifier

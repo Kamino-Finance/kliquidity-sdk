@@ -65,6 +65,7 @@ export interface CloseStrategyAccounts {
 
 export function closeStrategy(
   accounts: CloseStrategyAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -107,6 +108,7 @@ export function closeStrategy(
     isSome(accounts.eventAuthority)
       ? { address: accounts.eventAuthority.value, role: 0 }
       : { address: programAddress, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([56, 247, 170, 246, 89, 221, 134, 200])
   const data = identifier

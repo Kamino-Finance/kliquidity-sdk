@@ -92,7 +92,12 @@ export async function initializeRaydiumPool(
       tokenProgram1: TOKEN_PROGRAM_ADDRESS,
     };
 
-    const initializeTx = RaydiumInstructions.createPool(createPoolArgs, createPoolAccounts, env.raydiumProgramId);
+    const initializeTx = RaydiumInstructions.createPool(
+      createPoolArgs,
+      createPoolAccounts,
+      undefined,
+      env.raydiumProgramId
+    );
     const sig = await sendAndConfirmTx(env.c, env.admin, [initializeTx]);
     console.log('Initialize Raydium pool: ', sig);
   }
@@ -153,7 +158,12 @@ async function createAmmConfig(
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
   };
 
-  const initializeTx = RaydiumInstructions.createAmmConfig(initConfigArgs, initConfigAccounts, env.raydiumProgramId);
+  const initializeTx = RaydiumInstructions.createAmmConfig(
+    initConfigArgs,
+    initConfigAccounts,
+    undefined,
+    env.raydiumProgramId
+  );
   const sig = await sendAndConfirmTx(env.c, env.admin, [initializeTx]);
   console.log('InitializeConfig:', sig);
   return sig;

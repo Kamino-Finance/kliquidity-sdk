@@ -34,7 +34,7 @@ export interface CollectProtocolFeeAccounts {
   tokenProgram2022: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<CollectProtocolFeeArgs>([
   borsh.u64("amount0Requested"),
   borsh.u64("amount1Requested"),
 ])
@@ -42,6 +42,7 @@ export const layout = borsh.struct([
 export function collectProtocolFee(
   args: CollectProtocolFeeArgs,
   accounts: CollectProtocolFeeAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -56,6 +57,7 @@ export function collectProtocolFee(
     { address: accounts.recipientTokenAccount1, role: 1 },
     { address: accounts.tokenProgram, role: 0 },
     { address: accounts.tokenProgram2022, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([136, 136, 252, 221, 194, 66, 126, 89])
   const buffer = Buffer.alloc(1000)

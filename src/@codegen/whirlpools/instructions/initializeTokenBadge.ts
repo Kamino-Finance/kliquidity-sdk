@@ -27,6 +27,7 @@ export interface InitializeTokenBadgeAccounts {
 
 export function initializeTokenBadge(
   accounts: InitializeTokenBadgeAccounts,
+  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
   const keys: Array<IAccountMeta | IAccountSignerMeta> = [
@@ -41,6 +42,7 @@ export function initializeTokenBadge(
     { address: accounts.tokenBadge, role: 1 },
     { address: accounts.funder.address, role: 3, signer: accounts.funder },
     { address: accounts.systemProgram, role: 0 },
+    ...remainingAccounts,
   ]
   const identifier = Buffer.from([253, 77, 205, 95, 27, 224, 89, 223])
   const data = identifier
