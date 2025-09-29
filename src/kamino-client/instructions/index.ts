@@ -84,11 +84,6 @@ export { collectFeesAndRewards } from "./collectFeesAndRewards"
 export type { CollectFeesAndRewardsAccounts } from "./collectFeesAndRewards"
 export { swapRewards } from "./swapRewards"
 export type { SwapRewardsArgs, SwapRewardsAccounts } from "./swapRewards"
-export { swapUnevenVaults } from "./swapUnevenVaults"
-export type {
-  SwapUnevenVaultsArgs,
-  SwapUnevenVaultsAccounts,
-} from "./swapUnevenVaults"
 export { checkExpectedVaultsBalances } from "./checkExpectedVaultsBalances"
 export type {
   CheckExpectedVaultsBalancesArgs,
@@ -138,3 +133,5 @@ export { signTerms } from "./signTerms"
 export type { SignTermsArgs, SignTermsAccounts } from "./signTerms"
 export { updateStrategyAdmin } from "./updateStrategyAdmin"
 export type { UpdateStrategyAdminAccounts } from "./updateStrategyAdmin"
+export { resizeTokenInfos } from "./resizeTokenInfos"
+export type { ResizeTokenInfosAccounts } from "./resizeTokenInfos"
