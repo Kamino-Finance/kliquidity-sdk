@@ -35,7 +35,7 @@ export interface CollectFeesV2Accounts {
   memoProgram: Address
 }
 
-export const layout = borsh.struct<CollectFeesV2Args>([
+export const layout = borsh.struct([
   borsh.option(types.RemainingAccountsInfo.layout(), "remainingAccountsInfo"),
 ])
 

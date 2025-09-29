@@ -53,7 +53,7 @@ export interface TwoHopSwapV2Accounts {
   memoProgram: Address
 }
 
-export const layout = borsh.struct<TwoHopSwapV2Args>([
+export const layout = borsh.struct([
   borsh.u64("amount"),
   borsh.u64("otherAmountThreshold"),
   borsh.bool("amountSpecifiedIsInput"),

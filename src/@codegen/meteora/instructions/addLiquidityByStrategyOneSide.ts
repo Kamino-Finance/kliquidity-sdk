@@ -34,7 +34,7 @@ export interface AddLiquidityByStrategyOneSideAccounts {
   program: Address
 }
 
-export const layout = borsh.struct<AddLiquidityByStrategyOneSideArgs>([
+export const layout = borsh.struct([
   types.LiquidityParameterByStrategyOneSide.layout("liquidityParameter"),
 ])
 
