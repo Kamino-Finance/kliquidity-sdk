@@ -31,7 +31,7 @@ export class CollateralInfos {
   ])
 
   static readonly layout = borsh.struct<CollateralInfos>([
-    borsh.array(types.CollateralInfo.layout(), 256, "infos"),
+    borsh.array(types.CollateralInfo.layout(), 303, "infos"),
   ])
 
   constructor(fields: CollateralInfosFields) {

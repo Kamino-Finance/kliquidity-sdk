@@ -32,7 +32,7 @@ export interface CollectRewardV2Accounts {
   memoProgram: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<CollectRewardV2Args>([
   borsh.u8("rewardIndex"),
   borsh.option(types.RemainingAccountsInfo.layout(), "remainingAccountsInfo"),
 ])

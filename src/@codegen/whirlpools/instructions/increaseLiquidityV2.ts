@@ -40,7 +40,7 @@ export interface IncreaseLiquidityV2Accounts {
   tickArrayUpper: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<IncreaseLiquidityV2Args>([
   borsh.u128("liquidityAmount"),
   borsh.u64("tokenMaxA"),
   borsh.u64("tokenMaxB"),

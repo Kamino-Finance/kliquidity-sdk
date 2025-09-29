@@ -42,7 +42,7 @@ export interface SwapV2Accounts {
   oracle: Address
 }
 
-export const layout = borsh.struct([
+export const layout = borsh.struct<SwapV2Args>([
   borsh.u64("amount"),
   borsh.u64("otherAmountThreshold"),
   borsh.u128("sqrtPriceLimit"),
