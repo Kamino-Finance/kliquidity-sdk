@@ -40,7 +40,7 @@ export interface DecreaseLiquidityV2Accounts {
   tickArrayUpper: Address
 }
 
-export const layout = borsh.struct<DecreaseLiquidityV2Args>([
+export const layout = borsh.struct([
   borsh.u128("liquidityAmount"),
   borsh.u64("tokenMinA"),
   borsh.u64("tokenMinB"),
