@@ -66,7 +66,7 @@ jobs:
         uses: anothrNick/github-tag-action@1.55.0
         id: semver
         env:
-          GITHUB_TOKEN: ${{ secrets.HUBBLEPROTOCOLBOT_WRITE_REPO_PAT }}
+          GITHUB_TOKEN: ${{ secrets.KAMINOBOT_WRITE_REPO_PAT }}
           DEFAULT_BUMP: ${{ inputs.version }}
           DEFAULT_BRANCH: master
           INITIAL_VERSION: ${{ steps.get_latest_version.outputs.latest_version }}
