@@ -25,7 +25,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-          token: ${{ secrets.HUBBLEPROTOCOLBOT_WRITE_REPO_PAT }} # use bot to avoid branch protection
+          token: ${{ secrets.KAMINOBOT_WRITE_REPO_PAT }} # use bot to avoid branch protection
 
       - name: Setup .npmrc file for publish
         uses: actions/setup-node@v3
@@ -35,9 +35,9 @@ jobs:
 
       - name: Configure Git User
         run: |
-          git config --global user.name "Hubble Bot"
-          git config --global user.username "hubbleprotocolbot"
-          git config --global user.email "dev@hubbleprotocol.io"
+          git config --global user.name "Kamino Bot"
+          git config --global user.username "kaminofinancebo"
+          git config --global user.email "dev@kamino.finance"
 
       - name: Install dependencies
         run: |
