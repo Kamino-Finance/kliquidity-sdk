@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish, by semver keyword.'
+        description: "Version to publish, by semver keyword."
         required: true
         default: patch
         type: choice
@@ -30,8 +30,8 @@ jobs:
       - name: Setup .npmrc file for publish
         uses: actions/setup-node@v3
         with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Configure Git User
         run: |
@@ -60,7 +60,7 @@ jobs:
             echo "Using local package.json version: $latest_version"
           fi
 
-          echo "::set-output name=latest_version::$latest_version"
+          echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
 
       - name: Bump version
         uses: anothrNick/github-tag-action@1.55.0

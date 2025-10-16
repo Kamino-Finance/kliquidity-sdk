@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish, by semver keyword.'
+        description: "Version to publish, by semver keyword."
         required: true
         default: patch
         type: choice
@@ -37,8 +37,8 @@ jobs:
       - name: Setup .npmrc file for publish
         uses: actions/setup-node@v3
         with:
-          node-version: '19'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "19"
+          registry-url: "https://registry.npmjs.org"
       - name: Configure Git User
         run: |
           git config --global user.name "Kamino Bot"
@@ -54,13 +54,13 @@ jobs:
         run: |
           latest_version=$(npm view @kamino-finance/kliquidity-sdk version)
           echo "Latest stable version: $latest_version"
-          echo "::set-output name=latest_version::$latest_version"
+          echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
       - name: Get version of latest beta kamino-lending-sdk
         id: get_beta_version
         run: |
           beta_version=$(npm view @kamino-finance/kliquidity-sdk@beta version 2>/dev/null || echo "beta-tag-not-exist-yet")
           echo "Latest beta version: $beta_version"
-          echo "::set-output name=beta_version::$beta_version"
+          echo "beta_version=$beta_version" >> $GITHUB_OUTPUT
       - name: Publish to npm
         env:
           SEMVER_BUMP: ${{ inputs.version }}
