@@ -350,6 +350,9 @@ import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
 
 const addressEncoder = getAddressEncoder();
 
+export const HUBBLE_SCOPE_FEED_ID = address('3NJYftD5sjVfxSnUdZ1wVML8f3aC6mp1CXCL6L7TnU8C');
+export const KAMINO_SCOPE_FEED_ID = address('3t4JZcueEzTbVP6kLxXrL3VpWx45jDer4eqysweBchNH');
+
 export class Kamino {
   private readonly _cluster: SolanaCluster;
   private readonly _rpc: Rpc<SolanaRpcApi>;
@@ -2139,8 +2142,7 @@ export class Kamino {
     };
   };
 
-  getAllOraclePrices = (): Promise<OraclePrices> =>
-    this._scope.getSingleOraclePrices({ prices: fromLegacyPublicKey(this._config.scope.oraclePrices) });
+  getAllOraclePrices = (prices: Address[]): Promise<[Address, OraclePrices][]> => this._scope.getOraclePrices(prices);
 
   /**
    * Get all Kamino token spot and twap prices
@@ -2157,15 +2159,21 @@ export class Kamino {
     const twaps: MintToPriceMap = {};
 
     const disabledTokens: Address[] = [];
-    ({ oraclePrices, collateralInfos } = await this.getOraclePricesAndCollateralInfos(oraclePrices, collateralInfos));
-    for (const collateralInfo of collateralInfos) {
+    const oraclePricesAndCollateralInfos = await this.getOraclePricesAndCollateralInfos(
+      oraclePrices ? [[HUBBLE_SCOPE_FEED_ID, oraclePrices]] : undefined,
+      collateralInfos,
+      true
+    );
+    const { oraclePrices: allOraclePrices, collateralInfos: hubbleCollateralInfos } = oraclePricesAndCollateralInfos;
+    for (const collateralInfo of hubbleCollateralInfos) {
       if (
         collateralInfo.scopePriceChain &&
         Scope.isScopeChainValid(collateralInfo.scopePriceChain) &&
         collateralInfo.disabled === 0
       ) {
         const collInfoMintString = collateralInfo.mint.toString();
-        const spotPrice = await this._scope.getPriceFromChain(collateralInfo.scopePriceChain, oraclePrices);
+        const hubbleOraclePrices = allOraclePrices?.find((x) => x[0] === HUBBLE_SCOPE_FEED_ID)?.[1];
+        const spotPrice = await this._scope.getPriceFromChain(collateralInfo.scopePriceChain, hubbleOraclePrices!);
         spotPrices[collInfoMintString] = {
           price: spotPrice.price,
           name: getTokenNameFromCollateralInfo(collateralInfo),
@@ -2173,7 +2181,7 @@ export class Kamino {
 
         const filteredTwapChain = collateralInfo?.scopeTwapPriceChain?.filter((x) => x > 0);
         if (filteredTwapChain && Scope.isScopeChainValid(filteredTwapChain)) {
-          const twap = await this._scope.getPriceFromChain(filteredTwapChain, oraclePrices);
+          const twap = await this._scope.getPriceFromChain(filteredTwapChain, hubbleOraclePrices!);
           twaps[collInfoMintString] = {
             price: twap.price,
             name: getTokenNameFromCollateralInfo(collateralInfo),
@@ -2192,7 +2200,7 @@ export class Kamino {
         ? disabledTokensPrices
         : await JupService.getDollarPrices(disabledTokens, this._jupBaseAPI);
       for (const [token, price] of tokensPrices) {
-        const collInfo = collateralInfos.find((x) => x.mint === token);
+        const collInfo = hubbleCollateralInfos.find((x) => x.mint === token);
         if (!collInfo) {
           console.log(`Could not find collateral info for token ${token.toString()}`);
           continue;
@@ -2214,11 +2222,13 @@ export class Kamino {
   };
 
   private async getOraclePricesAndCollateralInfos(
-    oraclePrices?: OraclePrices,
-    collateralInfos?: CollateralInfo[]
+    oraclePrices?: [Address, OraclePrices][],
+    collateralInfos?: CollateralInfo[],
+    readAllFeeds: boolean = false
   ): Promise<OraclePricesAndCollateralInfos> {
     if (!oraclePrices) {
-      oraclePrices = await this.getAllOraclePrices();
+      const allFeeds = readAllFeeds ? [HUBBLE_SCOPE_FEED_ID, KAMINO_SCOPE_FEED_ID] : [HUBBLE_SCOPE_FEED_ID];
+      oraclePrices = await this.getAllOraclePrices(allFeeds);
     }
     if (!collateralInfos) {
       collateralInfos = await this.getCollateralInfos();

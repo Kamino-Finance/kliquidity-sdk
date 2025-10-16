@@ -246,10 +246,10 @@
   resolved "https://registry.yarnpkg.com/@jup-ag/api/-/api-6.0.39.tgz#540c898c1ee74291450a71d8f4a5d36bb7e1287d"
   integrity sha512-cejW4IWf3dKM5ucmqu5jWtlPZ46LJJOCrx3s5vKmEIB+0X9ykSZsKkcIHFBCOqf3/lSbGyU7THZqXuxjKK9//g==
 
-"@kamino-finance/scope-sdk@^10.0.4":
-  version "10.0.4"
-  resolved "https://registry.yarnpkg.com/@kamino-finance/scope-sdk/-/scope-sdk-10.0.4.tgz#0bfedab0d90b606c626c12f36c1dc424ca162563"
-  integrity sha512-hqBc315ZPyZ+lMKnj0HaclEhisuG+8JpYE/3xOcSxtGdkRWoDyatKtZMuylSEBwWyhWdt/T7txBGFn/YUnLSlg==
+"@kamino-finance/scope-sdk@^10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@kamino-finance/scope-sdk/-/scope-sdk-10.1.0.tgz#ee309530030d3f17430a1c8db53404bf711a55c8"
+  integrity sha512-FYUYCXavHUfbIX2DhVccacytxYYelFtUkBsLWkUZ5mIOWJ6foWT7uG66LTj80J1GQQ0iXJzj2i09iak8oanvQA==
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@coral-xyz/borsh" "^0.29.0"
