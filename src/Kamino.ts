@@ -1413,31 +1413,56 @@ export class Kamino {
       {}
     );
 
-    const raydiumStrategies = strategiesWithAddresses.filter(
-      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM') && x.strategy.position !== DEFAULT_PUBLIC_KEY
+    const activeStrategies = strategiesWithAddresses.filter(
+      (x) => x.strategy.position !== DEFAULT_PUBLIC_KEY
     );
-    const raydiumPoolsPromise = this.getRaydiumPools(raydiumStrategies.map((x) => x.strategy.pool));
-    const raydiumPositionsPromise = this.getRaydiumPositions(raydiumStrategies.map((x) => x.strategy.position));
-    const orcaStrategies = strategiesWithAddresses.filter(
-      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('ORCA') && x.strategy.position !== DEFAULT_PUBLIC_KEY
-    );
-    const orcaPoolsPromise = this.getWhirlpools(orcaStrategies.map((x) => x.strategy.pool));
-    const orcaPositionsPromise = this.getOrcaPositions(orcaStrategies.map((x) => x.strategy.position));
-    const meteoraStrategies = strategiesWithAddresses.filter(
-      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('METEORA') && x.strategy.position !== DEFAULT_PUBLIC_KEY
-    );
-    const meteoraPoolsPromise = this.getMeteoraPools(meteoraStrategies.map((x) => x.strategy.pool));
-    const meteoraPositionsPromise = this.getMeteoraPositions(meteoraStrategies.map((x) => x.strategy.position));
 
-    const [raydiumPools, raydiumPositions, orcaPools, orcaPositions, meteoraPools, meteoraPositions] =
-      await Promise.all([
-        raydiumPoolsPromise,
-        raydiumPositionsPromise,
-        orcaPoolsPromise,
-        orcaPositionsPromise,
-        meteoraPoolsPromise,
-        meteoraPositionsPromise,
-      ]);
+    const all = await batchFetch([...activeStrategies.map((x) => x.strategy.pool), ...activeStrategies.map((x) => x.strategy.position)], chunk => fetchEncodedAccounts(this._rpc, chunk));
+    const pools = all.slice(0, activeStrategies.length);
+    const positions = all.slice(activeStrategies.length);
+
+    const raydiumStrategies = activeStrategies.filter(
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM')
+    );
+    const orcaStrategies = activeStrategies.filter(
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('ORCA')
+    );
+    const meteoraStrategies = activeStrategies.filter(
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('METEORA')
+    );
+
+    const raydiumPools: Map<Address, PoolState> = new Map();
+    const orcaPools: Map<Address, Whirlpool> = new Map();
+    const meteoraPools: Map<Address, LbPair> = new Map();
+
+    const raydiumPositions: (PersonalPositionState | null)[] = [];
+    const orcaPositions: (OrcaPosition | null)[] = [];
+    const meteoraPositions: (PositionV2 | null)[] = [];
+
+    for(let i = 0; i < activeStrategies.length; i++) {
+      const poolBuffer = pools[i];
+      const positionBuffer = positions[i];
+      if(!poolBuffer.exists || !positionBuffer.exists) {
+        continue
+      }
+      const strategy = activeStrategies[i];
+      switch(strategy.strategy.strategyDex.toNumber()) {
+        case dexToNumber('RAYDIUM'):
+          raydiumPools.set(strategy.strategy.pool, PoolState.decode(Buffer.from(poolBuffer.data)));
+          raydiumPositions.push(PersonalPositionState.decode(Buffer.from(positionBuffer.data)));
+          break;
+        case dexToNumber('ORCA'):
+          orcaPools.set(strategy.strategy.pool, Whirlpool.decode(Buffer.from(poolBuffer.data)));
+          orcaPositions.push(OrcaPosition.decode(Buffer.from(positionBuffer.data)));
+          break;
+        case dexToNumber('METEORA'):
+          meteoraPools.set(strategy.strategy.pool, LbPair.decode(Buffer.from(poolBuffer.data)));
+          meteoraPositions.push(PositionV2.decode(Buffer.from(positionBuffer.data)));
+          break;
+        default:
+          throw new Error(`Dex ${strategy.strategy.strategyDex.toNumber()} is not supported`);
+      }
+    }
 
     const inactiveStrategies = strategiesWithAddresses.filter((x) => x.strategy.position === DEFAULT_PUBLIC_KEY);
     const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
@@ -1652,7 +1677,7 @@ export class Kamino {
   ): Promise<StrategyBalances> => {
     const strategyPricesPromise = this.getStrategyPrices(strategy, collateralInfos, prices, disabledTokensPrices);
     const rebalanceKind = numberToRebalanceType(strategy.rebalanceType);
-    const tokenHoldingsPromise = this.getMeteoraTokensBalances(strategy);
+    const tokenHoldingsPromise = this.getMeteoraTokensBalances(strategy, pool, position);
     const [strategyPrices, tokenHoldings] = await Promise.all([strategyPricesPromise, tokenHoldingsPromise]);
 
     const computedHoldings: Holdings = this.getStrategyHoldingsUsd(
@@ -1749,11 +1774,11 @@ export class Kamino {
     return holdings;
   };
 
-  private getMeteoraTokensBalances = async (strategy: WhirlpoolStrategy): Promise<TokenHoldings> => {
+  private getMeteoraTokensBalances = async (strategy: WhirlpoolStrategy, pool?: LbPair, position?: PositionV2): Promise<TokenHoldings> => {
     let aInvested = ZERO;
     let bInvested = ZERO;
     try {
-      const userPosition = await this.readMeteoraPosition(strategy.pool, strategy.position);
+      const userPosition = await this.readMeteoraPosition(strategy.pool, strategy.position, pool, position);
 
       if (!userPosition?.amountX.isNaN() && !userPosition?.amountY.isNaN()) {
         aInvested = userPosition.amountX;
@@ -4557,9 +4582,9 @@ export class Kamino {
     };
   };
 
-  private readMeteoraPosition = async (poolPk: Address, positionPk: Address): Promise<MeteoraPosition> => {
-    const pool = await LbPair.fetch(this._rpc, poolPk, this._meteoraService.getMeteoraProgramId());
-    const position = await PositionV2.fetch(this._rpc, positionPk, this._meteoraService.getMeteoraProgramId());
+  private readMeteoraPosition = async (poolPk: Address, positionPk: Address, pool?: LbPair | null, position?: PositionV2 | null): Promise<MeteoraPosition> => {
+    pool = pool ?? await LbPair.fetch(this._rpc, poolPk, this._meteoraService.getMeteoraProgramId());
+    position = position ?? await PositionV2.fetch(this._rpc, positionPk, this._meteoraService.getMeteoraProgramId());
     if (!pool || !position) {
       return {
         Address: positionPk,
@@ -4572,16 +4597,15 @@ export class Kamino {
       poolPk,
       position.lowerBinId
     );
-    const lowerBinArray = await BinArray.fetch(this._rpc, lowerTickPk, this._meteoraService.getMeteoraProgramId());
-    const upperBinArray = await BinArray.fetch(this._rpc, upperTickPk, this._meteoraService.getMeteoraProgramId());
-    if (!lowerBinArray || !upperBinArray) {
+    const binArray = await BinArray.fetchMultiple(this._rpc, [lowerTickPk, upperTickPk], this._meteoraService.getMeteoraProgramId());
+    if (!binArray || !binArray[0] || !binArray[1]) {
       return {
         Address: positionPk,
         amountX: new Decimal(0),
         amountY: new Decimal(0),
       };
     }
-    const binArrays = [lowerBinArray, upperBinArray];
+    const binArrays = [binArray[0], binArray[1]];
     let totalAmountX = new Decimal(0);
     let totalAmountY = new Decimal(0);
     for (let idx = position.lowerBinId; idx <= position.upperBinId; idx++) {
