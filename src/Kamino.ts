@@ -1439,7 +1439,7 @@ export class Kamino {
     const orcaPositions: (OrcaPosition | null)[] = [];
     const meteoraPositions: (PositionV2 | null)[] = [];
 
-    for(let i = 0; i < activeStrategies.length; i++) {
+    for (let i = 0; i < activeStrategies.length; i++) {
       const poolBuffer = pools[i];
       const positionBuffer = positions[i];
       if(!poolBuffer.exists || !positionBuffer.exists) {
