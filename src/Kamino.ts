@@ -1440,24 +1440,27 @@ export class Kamino {
     const meteoraPositions: (PositionV2 | null)[] = [];
 
     for (let i = 0; i < activeStrategies.length; i++) {
-      const poolBuffer = pools[i];
-      const positionBuffer = positions[i];
-      if(!poolBuffer.exists || !positionBuffer.exists) {
+      const pool = pools[i];
+      const position = positions[i];
+      if(!pool.exists || !position.exists) {
         continue
       }
+      const positionBuffer = Buffer.from(position.data);
+      const poolBuffer = Buffer.from(pool.data);
+
       const strategy = activeStrategies[i];
       switch(strategy.strategy.strategyDex.toNumber()) {
         case dexToNumber('RAYDIUM'):
-          raydiumPools.set(strategy.strategy.pool, PoolState.decode(Buffer.from(poolBuffer.data)));
-          raydiumPositions.push(PersonalPositionState.decode(Buffer.from(positionBuffer.data)));
+          raydiumPools.set(strategy.strategy.pool, PoolState.decode(poolBuffer));
+          raydiumPositions.push(PersonalPositionState.decode(positionBuffer));
           break;
         case dexToNumber('ORCA'):
-          orcaPools.set(strategy.strategy.pool, Whirlpool.decode(Buffer.from(poolBuffer.data)));
-          orcaPositions.push(OrcaPosition.decode(Buffer.from(positionBuffer.data)));
+          orcaPools.set(strategy.strategy.pool, Whirlpool.decode(poolBuffer));
+          orcaPositions.push(OrcaPosition.decode(positionBuffer));
           break;
         case dexToNumber('METEORA'):
-          meteoraPools.set(strategy.strategy.pool, LbPair.decode(Buffer.from(poolBuffer.data)));
-          meteoraPositions.push(PositionV2.decode(Buffer.from(positionBuffer.data)));
+          meteoraPools.set(strategy.strategy.pool, LbPair.decode(poolBuffer));
+          meteoraPositions.push(PositionV2.decode(positionBuffer));
           break;
         default:
           throw new Error(`Dex ${strategy.strategy.strategyDex.toNumber()} is not supported`);
