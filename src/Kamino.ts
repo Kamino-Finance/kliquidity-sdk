@@ -1387,6 +1387,144 @@ export class Kamino {
   };
 
   /**
+   * Used only for testing
+   * @param strategyFilters strategy filters or a list of strategy public keys
+   * @deprecated use getStrategiesShareData instead
+   */
+  legacyGetStrategiesShareData = async (
+    strategyFilters: StrategiesFilters | Address[],
+    stratsWithAddresses?: StrategyWithAddress[],
+    collateralInfos?: CollateralInfo[],
+    disabledTokensPrices?: Map<Address, Decimal>
+  ): Promise<Array<ShareDataWithAddress>> => {
+    const result: Array<ShareDataWithAddress> = [];
+    const strategiesWithAddresses = stratsWithAddresses
+      ? stratsWithAddresses
+      : Array.isArray(strategyFilters)
+        ? await this.getStrategiesWithAddresses(strategyFilters)
+        : await this.getAllStrategiesWithFilters(strategyFilters);
+    const fetchBalances: Promise<StrategyBalanceWithAddress>[] = [];
+    const allScopePrices = strategiesWithAddresses.map((x) => x.strategy.scopePrices);
+    const scopePrices = await this._scope.getMultipleOraclePrices(allScopePrices);
+    const scopePricesMap: Record<Address, OraclePrices> = scopePrices.reduce(
+      (map: Record<Address, OraclePrices>, [address, price]) => {
+        map[address] = price;
+        return map;
+      },
+      {}
+    );
+
+    const raydiumStrategies = strategiesWithAddresses.filter(
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM') && x.strategy.position !== DEFAULT_PUBLIC_KEY
+    );
+    const raydiumPoolsPromise = this.getRaydiumPools(raydiumStrategies.map((x) => x.strategy.pool));
+    const raydiumPositionsPromise = this.getRaydiumPositions(raydiumStrategies.map((x) => x.strategy.position));
+    const orcaStrategies = strategiesWithAddresses.filter(
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('ORCA') && x.strategy.position !== DEFAULT_PUBLIC_KEY
+    );
+    const orcaPoolsPromise = this.getWhirlpools(orcaStrategies.map((x) => x.strategy.pool));
+    const orcaPositionsPromise = this.getOrcaPositions(orcaStrategies.map((x) => x.strategy.position));
+    const meteoraStrategies = strategiesWithAddresses.filter(
+      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('METEORA') && x.strategy.position !== DEFAULT_PUBLIC_KEY
+    );
+    const meteoraPoolsPromise = this.getMeteoraPools(meteoraStrategies.map((x) => x.strategy.pool));
+    const meteoraPositionsPromise = this.getMeteoraPositions(meteoraStrategies.map((x) => x.strategy.position));
+
+    const [raydiumPools, raydiumPositions, orcaPools, orcaPositions, meteoraPools, meteoraPositions] =
+      await Promise.all([
+        raydiumPoolsPromise,
+        raydiumPositionsPromise,
+        orcaPoolsPromise,
+        orcaPositionsPromise,
+        meteoraPoolsPromise,
+        meteoraPositionsPromise,
+      ]);
+
+    const inactiveStrategies = strategiesWithAddresses.filter((x) => x.strategy.position === DEFAULT_PUBLIC_KEY);
+    const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
+    const disabledPrices = disabledTokensPrices ? disabledTokensPrices : await this.getDisabledTokensPrices(collInfos);
+    for (const { strategy, address } of inactiveStrategies) {
+      const strategyPrices = await this.getStrategyPrices(
+        strategy,
+        collInfos,
+        scopePricesMap[strategy.scopePrices],
+        disabledPrices
+      );
+      result.push({
+        address,
+        strategy,
+        shareData: getEmptyShareData({
+          ...strategyPrices,
+          poolPrice: ZERO,
+          upperPrice: ZERO,
+          lowerPrice: ZERO,
+          twapPrice: ZERO,
+          lowerResetPrice: ZERO,
+          upperResetPrice: ZERO,
+        }),
+      });
+    }
+
+    fetchBalances.push(
+      ...this.getBalance<PoolState, PersonalPositionState>(
+        raydiumStrategies,
+        raydiumPools,
+        raydiumPositions,
+        this.getRaydiumBalances,
+        collInfos,
+        scopePricesMap,
+        disabledPrices
+      )
+    );
+
+    fetchBalances.push(
+      ...this.getBalance<Whirlpool, OrcaPosition>(
+        orcaStrategies,
+        orcaPools,
+        orcaPositions,
+        this.getOrcaBalances,
+        collInfos,
+        scopePricesMap,
+        disabledPrices
+      )
+    );
+
+    fetchBalances.push(
+      ...this.getBalance<LbPair, PositionV2>(
+        meteoraStrategies,
+        meteoraPools,
+        meteoraPositions,
+        this.getMeteoraBalances,
+        collInfos,
+        scopePricesMap,
+        disabledPrices
+      )
+    );
+
+    const strategyBalances = await Promise.all(fetchBalances);
+
+    for (const { balance, strategyWithAddress } of strategyBalances) {
+      const sharesFactor = Decimal.pow(10, strategyWithAddress.strategy.sharesMintDecimals.toString());
+      const sharesIssued = new Decimal(strategyWithAddress.strategy.sharesIssued.toString());
+      if (sharesIssued.isZero()) {
+        result.push({
+          address: strategyWithAddress.address,
+          strategy: strategyWithAddress.strategy,
+          shareData: { price: new Decimal(1), balance },
+        });
+      } else {
+        result.push({
+          address: strategyWithAddress.address,
+          strategy: strategyWithAddress.strategy,
+          shareData: { price: balance.computedHoldings.totalSum.div(sharesIssued).mul(sharesFactor), balance },
+        });
+      }
+    }
+
+    return result;
+  };
+
+  /**
    * Batch fetch share data for all or a filtered list of strategies
    * @param strategyFilters strategy filters or a list of strategy public keys
    */
