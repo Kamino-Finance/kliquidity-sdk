@@ -1421,23 +1421,17 @@ export class Kamino {
     const pools = all.slice(0, activeStrategies.length);
     const positions = all.slice(activeStrategies.length);
 
-    const raydiumStrategies = activeStrategies.filter(
-      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('RAYDIUM')
-    );
-    const orcaStrategies = activeStrategies.filter(
-      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('ORCA')
-    );
-    const meteoraStrategies = activeStrategies.filter(
-      (x) => x.strategy.strategyDex.toNumber() === dexToNumber('METEORA')
-    );
+    const raydiumStrategies: StrategyWithAddress[] = []
+    const orcaStrategies: StrategyWithAddress[] = []
+    const meteoraStrategies: StrategyWithAddress[] = []
 
     const raydiumPools: Map<Address, PoolState> = new Map();
     const orcaPools: Map<Address, Whirlpool> = new Map();
     const meteoraPools: Map<Address, LbPair> = new Map();
 
-    const raydiumPositions: (PersonalPositionState | null)[] = [];
-    const orcaPositions: (OrcaPosition | null)[] = [];
-    const meteoraPositions: (PositionV2 | null)[] = [];
+    const raydiumPositions: PersonalPositionState[] = [];
+    const orcaPositions: OrcaPosition[] = [];
+    const meteoraPositions: PositionV2[] = [];
 
     for (let i = 0; i < activeStrategies.length; i++) {
       const pool = pools[i];
@@ -1453,14 +1447,17 @@ export class Kamino {
         case dexToNumber('RAYDIUM'):
           raydiumPools.set(strategy.strategy.pool, PoolState.decode(poolBuffer));
           raydiumPositions.push(PersonalPositionState.decode(positionBuffer));
+          raydiumStrategies .push(strategy);
           break;
         case dexToNumber('ORCA'):
           orcaPools.set(strategy.strategy.pool, Whirlpool.decode(poolBuffer));
           orcaPositions.push(OrcaPosition.decode(positionBuffer));
+          orcaStrategies .push(strategy);
           break;
         case dexToNumber('METEORA'):
           meteoraPools.set(strategy.strategy.pool, LbPair.decode(poolBuffer));
           meteoraPositions.push(PositionV2.decode(positionBuffer));
+          meteoraStrategies.push(strategy);
           break;
         default:
           throw new Error(`Dex ${strategy.strategy.strategyDex.toNumber()} is not supported`);
