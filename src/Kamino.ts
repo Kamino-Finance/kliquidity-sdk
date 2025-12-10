@@ -1387,10 +1387,11 @@ export class Kamino {
   };
 
   /**
-   * Batch fetch share data for all or a filtered list of strategies
+   * Used only for testing
    * @param strategyFilters strategy filters or a list of strategy public keys
+   * @deprecated use getStrategiesShareData instead
    */
-  getStrategiesShareData = async (
+  legacyGetStrategiesShareData = async (
     strategyFilters: StrategiesFilters | Address[],
     stratsWithAddresses?: StrategyWithAddress[],
     collateralInfos?: CollateralInfo[],
@@ -1438,6 +1439,169 @@ export class Kamino {
         meteoraPoolsPromise,
         meteoraPositionsPromise,
       ]);
+
+    const inactiveStrategies = strategiesWithAddresses.filter((x) => x.strategy.position === DEFAULT_PUBLIC_KEY);
+    const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
+    const disabledPrices = disabledTokensPrices ? disabledTokensPrices : await this.getDisabledTokensPrices(collInfos);
+    for (const { strategy, address } of inactiveStrategies) {
+      const strategyPrices = await this.getStrategyPrices(
+        strategy,
+        collInfos,
+        scopePricesMap[strategy.scopePrices],
+        disabledPrices
+      );
+      result.push({
+        address,
+        strategy,
+        shareData: getEmptyShareData({
+          ...strategyPrices,
+          poolPrice: ZERO,
+          upperPrice: ZERO,
+          lowerPrice: ZERO,
+          twapPrice: ZERO,
+          lowerResetPrice: ZERO,
+          upperResetPrice: ZERO,
+        }),
+      });
+    }
+
+    fetchBalances.push(
+      ...this.getBalance<PoolState, PersonalPositionState>(
+        raydiumStrategies,
+        raydiumPools,
+        raydiumPositions,
+        this.getRaydiumBalances,
+        collInfos,
+        scopePricesMap,
+        disabledPrices
+      )
+    );
+
+    fetchBalances.push(
+      ...this.getBalance<Whirlpool, OrcaPosition>(
+        orcaStrategies,
+        orcaPools,
+        orcaPositions,
+        this.getOrcaBalances,
+        collInfos,
+        scopePricesMap,
+        disabledPrices
+      )
+    );
+
+    fetchBalances.push(
+      ...this.getBalance<LbPair, PositionV2>(
+        meteoraStrategies,
+        meteoraPools,
+        meteoraPositions,
+        this.getMeteoraBalances,
+        collInfos,
+        scopePricesMap,
+        disabledPrices
+      )
+    );
+
+    const strategyBalances = await Promise.all(fetchBalances);
+
+    for (const { balance, strategyWithAddress } of strategyBalances) {
+      const sharesFactor = Decimal.pow(10, strategyWithAddress.strategy.sharesMintDecimals.toString());
+      const sharesIssued = new Decimal(strategyWithAddress.strategy.sharesIssued.toString());
+      if (sharesIssued.isZero()) {
+        result.push({
+          address: strategyWithAddress.address,
+          strategy: strategyWithAddress.strategy,
+          shareData: { price: new Decimal(1), balance },
+        });
+      } else {
+        result.push({
+          address: strategyWithAddress.address,
+          strategy: strategyWithAddress.strategy,
+          shareData: { price: balance.computedHoldings.totalSum.div(sharesIssued).mul(sharesFactor), balance },
+        });
+      }
+    }
+
+    return result;
+  };
+
+  /**
+   * Batch fetch share data for all or a filtered list of strategies
+   * @param strategyFilters strategy filters or a list of strategy public keys
+   */
+  getStrategiesShareData = async (
+    strategyFilters: StrategiesFilters | Address[],
+    stratsWithAddresses?: StrategyWithAddress[],
+    collateralInfos?: CollateralInfo[],
+    disabledTokensPrices?: Map<Address, Decimal>
+  ): Promise<Array<ShareDataWithAddress>> => {
+    const result: Array<ShareDataWithAddress> = [];
+    const strategiesWithAddresses = stratsWithAddresses
+      ? stratsWithAddresses
+      : Array.isArray(strategyFilters)
+        ? await this.getStrategiesWithAddresses(strategyFilters)
+        : await this.getAllStrategiesWithFilters(strategyFilters);
+    const fetchBalances: Promise<StrategyBalanceWithAddress>[] = [];
+    const allScopePrices = strategiesWithAddresses.map((x) => x.strategy.scopePrices);
+    const scopePrices = await this._scope.getMultipleOraclePrices(allScopePrices);
+    const scopePricesMap: Record<Address, OraclePrices> = scopePrices.reduce(
+      (map: Record<Address, OraclePrices>, [address, price]) => {
+        map[address] = price;
+        return map;
+      },
+      {}
+    );
+
+    const activeStrategies = strategiesWithAddresses.filter(
+      (x) => x.strategy.position !== DEFAULT_PUBLIC_KEY
+    );
+
+    const poolsAndPositions = await batchFetch([...activeStrategies.map((x) => x.strategy.pool), ...activeStrategies.map((x) => x.strategy.position)], chunk => fetchEncodedAccounts(this._rpc, chunk));
+    const pools = poolsAndPositions.slice(0, activeStrategies.length);
+    const positions = poolsAndPositions.slice(activeStrategies.length);
+
+    const raydiumStrategies: StrategyWithAddress[] = [];
+    const orcaStrategies: StrategyWithAddress[] = [];
+    const meteoraStrategies: StrategyWithAddress[] = [];
+
+    const raydiumPools: Map<Address, PoolState> = new Map();
+    const orcaPools: Map<Address, Whirlpool> = new Map();
+    const meteoraPools: Map<Address, LbPair> = new Map();
+
+    const raydiumPositions: PersonalPositionState[] = [];
+    const orcaPositions: OrcaPosition[] = [];
+    const meteoraPositions: PositionV2[] = [];
+
+    for (let i = 0; i < activeStrategies.length; i++) {
+      const pool = pools[i];
+      const position = positions[i];
+      const strategy = activeStrategies[i];
+      if (!pool.exists || !position.exists) {
+        console.error(`Pool or position does not exist for strategy ${strategy.address.toString()}, skipping`);
+        continue;
+      }
+      const positionBuffer = Buffer.from(position.data);
+      const poolBuffer = Buffer.from(pool.data);
+
+      switch (strategy.strategy.strategyDex.toNumber()) {
+        case dexToNumber('RAYDIUM'):
+          raydiumPools.set(strategy.strategy.pool, PoolState.decode(poolBuffer));
+          raydiumPositions.push(PersonalPositionState.decode(positionBuffer));
+          raydiumStrategies.push(strategy);
+          break;
+        case dexToNumber('ORCA'):
+          orcaPools.set(strategy.strategy.pool, Whirlpool.decode(poolBuffer));
+          orcaPositions.push(OrcaPosition.decode(positionBuffer));
+          orcaStrategies.push(strategy);
+          break;
+        case dexToNumber('METEORA'):
+          meteoraPools.set(strategy.strategy.pool, LbPair.decode(poolBuffer));
+          meteoraPositions.push(PositionV2.decode(positionBuffer));
+          meteoraStrategies.push(strategy);
+          break;
+        default:
+          throw new Error(`Dex ${strategy.strategy.strategyDex.toNumber()} is not supported`);
+      }
+    }
 
     const inactiveStrategies = strategiesWithAddresses.filter((x) => x.strategy.position === DEFAULT_PUBLIC_KEY);
     const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
@@ -1652,7 +1816,7 @@ export class Kamino {
   ): Promise<StrategyBalances> => {
     const strategyPricesPromise = this.getStrategyPrices(strategy, collateralInfos, prices, disabledTokensPrices);
     const rebalanceKind = numberToRebalanceType(strategy.rebalanceType);
-    const tokenHoldingsPromise = this.getMeteoraTokensBalances(strategy);
+    const tokenHoldingsPromise = this.getMeteoraTokensBalances(strategy, pool, position);
     const [strategyPrices, tokenHoldings] = await Promise.all([strategyPricesPromise, tokenHoldingsPromise]);
 
     const computedHoldings: Holdings = this.getStrategyHoldingsUsd(
@@ -1749,11 +1913,11 @@ export class Kamino {
     return holdings;
   };
 
-  private getMeteoraTokensBalances = async (strategy: WhirlpoolStrategy): Promise<TokenHoldings> => {
+  private getMeteoraTokensBalances = async (strategy: WhirlpoolStrategy, pool?: LbPair, position?: PositionV2): Promise<TokenHoldings> => {
     let aInvested = ZERO;
     let bInvested = ZERO;
     try {
-      const userPosition = await this.readMeteoraPosition(strategy.pool, strategy.position);
+      const userPosition = await this.readMeteoraPosition(strategy.pool, strategy.position, pool, position);
 
       if (!userPosition?.amountX.isNaN() && !userPosition?.amountY.isNaN()) {
         aInvested = userPosition.amountX;
@@ -4557,9 +4721,9 @@ export class Kamino {
     };
   };
 
-  private readMeteoraPosition = async (poolPk: Address, positionPk: Address): Promise<MeteoraPosition> => {
-    const pool = await LbPair.fetch(this._rpc, poolPk, this._meteoraService.getMeteoraProgramId());
-    const position = await PositionV2.fetch(this._rpc, positionPk, this._meteoraService.getMeteoraProgramId());
+  private readMeteoraPosition = async (poolPk: Address, positionPk: Address, pool?: LbPair | null, position?: PositionV2 | null): Promise<MeteoraPosition> => {
+    pool = pool ?? await LbPair.fetch(this._rpc, poolPk, this._meteoraService.getMeteoraProgramId());
+    position = position ?? await PositionV2.fetch(this._rpc, positionPk, this._meteoraService.getMeteoraProgramId());
     if (!pool || !position) {
       return {
         Address: positionPk,
@@ -4572,16 +4736,15 @@ export class Kamino {
       poolPk,
       position.lowerBinId
     );
-    const lowerBinArray = await BinArray.fetch(this._rpc, lowerTickPk, this._meteoraService.getMeteoraProgramId());
-    const upperBinArray = await BinArray.fetch(this._rpc, upperTickPk, this._meteoraService.getMeteoraProgramId());
-    if (!lowerBinArray || !upperBinArray) {
+    const binArray = await BinArray.fetchMultiple(this._rpc, [lowerTickPk, upperTickPk], this._meteoraService.getMeteoraProgramId());
+    if (!binArray || !binArray[0] || !binArray[1]) {
       return {
         Address: positionPk,
         amountX: new Decimal(0),
         amountY: new Decimal(0),
       };
     }
-    const binArrays = [lowerBinArray, upperBinArray];
+    const binArrays = [binArray[0], binArray[1]];
     let totalAmountX = new Decimal(0);
     let totalAmountY = new Decimal(0);
     for (let idx = position.lowerBinId; idx <= position.upperBinId; idx++) {
