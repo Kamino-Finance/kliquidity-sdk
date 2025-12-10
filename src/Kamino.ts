@@ -1559,9 +1559,9 @@ export class Kamino {
     const pools = poolsAndPositions.slice(0, activeStrategies.length);
     const positions = poolsAndPositions.slice(activeStrategies.length);
 
-    const raydiumStrategies: StrategyWithAddress[] = []
-    const orcaStrategies: StrategyWithAddress[] = []
-    const meteoraStrategies: StrategyWithAddress[] = []
+    const raydiumStrategies: StrategyWithAddress[] = [];
+    const orcaStrategies: StrategyWithAddress[] = [];
+    const meteoraStrategies: StrategyWithAddress[] = [];
 
     const raydiumPools: Map<Address, PoolState> = new Map();
     const orcaPools: Map<Address, Whirlpool> = new Map();
@@ -1574,14 +1574,15 @@ export class Kamino {
     for (let i = 0; i < activeStrategies.length; i++) {
       const pool = pools[i];
       const position = positions[i];
-      if(!pool.exists || !position.exists) {
-        continue
+      const strategy = activeStrategies[i];
+      if (!pool.exists || !position.exists) {
+        console.error(`Pool or position does not exist for strategy ${strategy.address.toString()}, skipping`);
+        continue;
       }
       const positionBuffer = Buffer.from(position.data);
       const poolBuffer = Buffer.from(pool.data);
 
-      const strategy = activeStrategies[i];
-      switch(strategy.strategy.strategyDex.toNumber()) {
+      switch (strategy.strategy.strategyDex.toNumber()) {
         case dexToNumber('RAYDIUM'):
           raydiumPools.set(strategy.strategy.pool, PoolState.decode(poolBuffer));
           raydiumPositions.push(PersonalPositionState.decode(positionBuffer));

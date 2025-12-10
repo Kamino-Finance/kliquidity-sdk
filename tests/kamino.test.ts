@@ -1826,7 +1826,7 @@ describe('Kamino SDK Tests', () => {
     }
   });
 
-  it('should bahave correctly as the old getStrategiesShareData', async () => {
+  it('should behave correctly as the old getStrategiesShareData', async () => {
     const kamino = new Kamino(
       'localnet',
       env.c.rpc,
