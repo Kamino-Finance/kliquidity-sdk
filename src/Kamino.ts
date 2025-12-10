@@ -1555,9 +1555,9 @@ export class Kamino {
       (x) => x.strategy.position !== DEFAULT_PUBLIC_KEY
     );
 
-    const all = await batchFetch([...activeStrategies.map((x) => x.strategy.pool), ...activeStrategies.map((x) => x.strategy.position)], chunk => fetchEncodedAccounts(this._rpc, chunk));
-    const pools = all.slice(0, activeStrategies.length);
-    const positions = all.slice(activeStrategies.length);
+    const poolsAndPositions = await batchFetch([...activeStrategies.map((x) => x.strategy.pool), ...activeStrategies.map((x) => x.strategy.position)], chunk => fetchEncodedAccounts(this._rpc, chunk));
+    const pools = poolsAndPositions.slice(0, activeStrategies.length);
+    const positions = poolsAndPositions.slice(activeStrategies.length);
 
     const raydiumStrategies: StrategyWithAddress[] = []
     const orcaStrategies: StrategyWithAddress[] = []
@@ -1585,12 +1585,12 @@ export class Kamino {
         case dexToNumber('RAYDIUM'):
           raydiumPools.set(strategy.strategy.pool, PoolState.decode(poolBuffer));
           raydiumPositions.push(PersonalPositionState.decode(positionBuffer));
-          raydiumStrategies .push(strategy);
+          raydiumStrategies.push(strategy);
           break;
         case dexToNumber('ORCA'):
           orcaPools.set(strategy.strategy.pool, Whirlpool.decode(poolBuffer));
           orcaPositions.push(OrcaPosition.decode(positionBuffer));
-          orcaStrategies .push(strategy);
+          orcaStrategies.push(strategy);
           break;
         case dexToNumber('METEORA'):
           meteoraPools.set(strategy.strategy.pool, LbPair.decode(poolBuffer));
