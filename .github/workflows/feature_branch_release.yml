@@ -28,14 +28,14 @@ jobs:
           fi
         shell: bash
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
         with:
           fetch-depth: 0
           submodules: recursive
           ref: ${{ github.sha }}
           token: ${{ secrets.KAMINOBOT_WRITE_REPO_PAT }} # use bot to avoid branch protection
       - name: Setup .npmrc file for publish
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
           node-version: '19'
           registry-url: 'https://registry.npmjs.org'
