@@ -21,14 +21,14 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
         with:
           fetch-depth: 0
           submodules: recursive
           token: ${{ secrets.KAMINOBOT_WRITE_REPO_PAT }} # use bot to avoid branch protection
 
       - name: Setup .npmrc file for publish
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
@@ -63,7 +63,7 @@ jobs:
           echo "::set-output name=latest_version::$latest_version"
 
       - name: Bump version
-        uses: anothrNick/github-tag-action@1.55.0
+        uses: anothrNick/github-tag-action@2fa498388d20664f4474176ac45845e037377886
         id: semver
         env:
           GITHUB_TOKEN: ${{ secrets.KAMINOBOT_WRITE_REPO_PAT }}
