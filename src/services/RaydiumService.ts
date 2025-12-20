@@ -180,7 +180,6 @@ export class RaydiumService {
     }
 
     const raydiumPoolInfo = await this.getRaydiumPoolInfo(strategy.pool);
-    console.log('raydiumPoolInfo', raydiumPoolInfo);
     const params: {
       poolInfo: ApiV3PoolInfoConcentratedItem;
       aprType: 'day' | 'week' | 'month';
