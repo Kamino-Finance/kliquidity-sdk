@@ -347,11 +347,13 @@ import { fetchMultipleLookupTableAccounts } from './utils/lookupTable';
 import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } from '@solana/rpc-types';
 import { toLegacyPublicKey } from './utils/compat';
 import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
+import { getTokensPrices } from './services/kSwap';
 
 const addressEncoder = getAddressEncoder();
 
 export const HUBBLE_SCOPE_FEED_ID = address('3NJYftD5sjVfxSnUdZ1wVML8f3aC6mp1CXCL6L7TnU8C');
 export const KAMINO_SCOPE_FEED_ID = address('3t4JZcueEzTbVP6kLxXrL3VpWx45jDer4eqysweBchNH');
+export const KSWAP_BASE_API = "https://api.kamino.finance/kswap";
 
 export class Kamino {
   private readonly _cluster: SolanaCluster;
@@ -364,6 +366,7 @@ export class Kamino {
   private readonly _raydiumService: RaydiumService;
   private readonly _meteoraService: MeteoraService;
   private readonly _jupBaseAPI: string = DEFAULT_JUP_API_ENDPOINT;
+  private readonly _kSwapBaseAPI: string = KSWAP_BASE_API;
 
   /**
    * Create a new instance of the Kamino SDK class.
@@ -384,7 +387,8 @@ export class Kamino {
     whirlpoolProgramId?: Address,
     raydiumProgramId?: Address,
     meteoraProgramId?: Address,
-    jupBaseAPI?: string
+    jupBaseAPI?: string,
+    kSwapBaseAPI?: string
   ) {
     this._cluster = cluster;
     this._rpc = rpc;
@@ -405,6 +409,10 @@ export class Kamino {
 
     if (jupBaseAPI) {
       this._jupBaseAPI = jupBaseAPI;
+    }
+
+    if (kSwapBaseAPI) {
+      this._kSwapBaseAPI = kSwapBaseAPI;
     }
   }
 
@@ -431,13 +439,15 @@ export class Kamino {
     return this.getCollateralInfo(config.tokenInfos);
   };
 
-  getDisabledTokensPrices = async (collateralInfos?: CollateralInfo[]) => {
+  /**
+   * Get the prices of all disabled tokens in the specified collateral infos
+   * @param collateralInfos
+   * @returns {Map<Address, Decimal>} - token prices by mint address
+   */
+  getDisabledTokensPrices = async (collateralInfos?: CollateralInfo[]): Promise<Map<Address, Decimal>> => {
     const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
-    const disabledTokens = collInfos.filter((x) => x.disabled && x.mint !== DEFAULT_PUBLIC_KEY);
-    return JupService.getDollarPrices(
-      disabledTokens.map((x) => x.mint),
-      this._jupBaseAPI
-    );
+    const disabledTokensMints = collInfos.filter((x) => x.disabled && x.mint !== DEFAULT_PUBLIC_KEY).map((x) => x.mint);
+    return getTokensPrices(this._kSwapBaseAPI, disabledTokensMints);
   };
 
   getSupportedDexes = (): Dex[] => ['ORCA', 'RAYDIUM', 'METEORA'];
