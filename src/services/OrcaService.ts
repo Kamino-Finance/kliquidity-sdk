@@ -412,6 +412,7 @@ export class OrcaService {
           { dataSize: 216n },
           { memcmp: { bytes: pool.toString() as Base58EncodedBytes, offset: 8n, encoding: 'base58' } },
         ],
+        encoding: 'base64+zstd',
       })
       .send();
 

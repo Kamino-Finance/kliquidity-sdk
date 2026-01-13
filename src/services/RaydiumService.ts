@@ -343,6 +343,7 @@ export class RaydiumService {
             },
           },
         ],
+        encoding: 'base64+zstd',
       })
       .send();
 
