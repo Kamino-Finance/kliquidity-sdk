@@ -1248,7 +1248,6 @@ export class Kamino {
       memcmp: {
         offset: 0n,
         bytes: bs58.encode(WhirlpoolStrategy.discriminator) as Base58EncodedBytes,
-        encoding: 'base58',
       },
     });
 
@@ -1257,8 +1256,7 @@ export class Kamino {
         memcmp: {
           offset: 8n,
           bytes: strategyFilters.owner.toString() as Base58EncodedBytes,
-          encoding: 'base58',
-        },
+          },
       });
     }
 
@@ -1267,8 +1265,7 @@ export class Kamino {
         memcmp: {
           offset: 1625n,
           bytes: strategyCreationStatusToBase58(strategyFilters.strategyCreationStatus) as Base58EncodedBytes,
-          encoding: 'base58',
-        },
+          },
       });
     }
     if (strategyFilters.strategyType) {
@@ -1276,8 +1273,7 @@ export class Kamino {
         memcmp: {
           offset: 1120n,
           bytes: strategyTypeToBase58(strategyFilters.strategyType).toString() as Base58EncodedBytes,
-          encoding: 'base58',
-        },
+          },
       });
     }
 
@@ -1287,8 +1283,7 @@ export class Kamino {
         memcmp: {
           offset: 1664n,
           bytes: value as Base58EncodedBytes,
-          encoding: 'base58',
-        },
+          },
       });
     }
 
@@ -1327,15 +1322,13 @@ export class Kamino {
         memcmp: {
           offset: 0n,
           bytes: bs58.encode(WhirlpoolStrategy.discriminator) as Base58EncodedBytes,
-          encoding: 'base58',
-        },
+          },
       },
       {
         memcmp: {
           bytes: kTokenMint.toString() as Base58EncodedBytes,
           offset: 720n,
-          encoding: 'base58',
-        },
+          },
       },
     ];
     const matchingStrategies = await this._rpc
@@ -2505,7 +2498,7 @@ export class Kamino {
       .getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
         filters: [
           { dataSize: 165n },
-          { memcmp: { offset: 0n, bytes: shareMint.toString() as Base58EncodedBytes, encoding: 'base58' } },
+          { memcmp: { offset: 0n, bytes: shareMint.toString() as Base58EncodedBytes } },
         ],
         encoding: 'jsonParsed',
       })
@@ -2523,7 +2516,7 @@ export class Kamino {
       .getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
         filters: [
           { dataSize: 165n },
-          { memcmp: { offset: 32n, bytes: wallet.toString() as Base58EncodedBytes, encoding: 'base58' } },
+          { memcmp: { offset: 32n, bytes: wallet.toString() as Base58EncodedBytes } },
         ],
         encoding: 'jsonParsed',
       })
@@ -6536,7 +6529,7 @@ export class Kamino {
       return await this._rpc
         .getProgramAccounts(ADDRESS_LOOKUP_TABLE_PROGRAM_ADDRESS, {
           filters: [
-            { memcmp: { offset: 22n, bytes: LUT_OWNER_KEY.toString() as Base58EncodedBytes, encoding: 'base58' } },
+            { memcmp: { offset: 22n, bytes: LUT_OWNER_KEY.toString() as Base58EncodedBytes } },
           ],
           dataSlice: { length: 0, offset: 0 },
         })

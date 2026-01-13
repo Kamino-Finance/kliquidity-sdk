@@ -410,7 +410,7 @@ export class OrcaService {
         filters: [
           // account LAYOUT: https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/position.rs#L20
           { dataSize: 216n },
-          { memcmp: { bytes: pool.toString() as Base58EncodedBytes, offset: 8n, encoding: 'base58' } },
+          { memcmp: { bytes: pool.toString() as Base58EncodedBytes, offset: 8n } },
         ],
         encoding: 'base64+zstd',
       })

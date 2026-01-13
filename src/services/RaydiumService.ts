@@ -339,7 +339,6 @@ export class RaydiumService {
             memcmp: {
               bytes: pool.toString() as Base58EncodedBytes,
               offset: BigInt(PositionInfoLayout.offsetOf('poolId')),
-              encoding: 'base58',
             },
           },
         ],

@@ -30,7 +30,6 @@ export async function getAllUserLookupTables(
           memcmp: {
             offset: 22n,
             bytes: user.toString() as Base58EncodedBytes,
-            encoding: 'base58',
           },
         },
       ],
