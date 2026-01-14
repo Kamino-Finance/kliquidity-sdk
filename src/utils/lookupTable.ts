@@ -1,4 +1,5 @@
-import { Address, Rpc, GetProgramAccountsApi, Account, GetMultipleAccountsApi, Base58EncodedBytes } from '@solana/kit';
+import { Address, Rpc, GetProgramAccountsApi, Account, GetMultipleAccountsApi } from '@solana/kit';
+import { createMemcmpFilter } from './rpcFilters';
 import { LUT_OWNER_KEY } from '../constants/pubkeys';
 import { SolanaCluster } from '@hubbleprotocol/hubble-config';
 import {
@@ -25,15 +26,7 @@ export async function getAllUserLookupTables(
 ): Promise<Account<AddressLookupTable>[]> {
   const accountInfos = await c
     .getProgramAccounts(ADDRESS_LOOKUP_TABLE_PROGRAM_ADDRESS, {
-      filters: [
-        {
-          memcmp: {
-            offset: 22n,
-            bytes: user.toString() as Base58EncodedBytes,
-            encoding: 'base58',
-          },
-        },
-      ],
+      filters: [createMemcmpFilter(user.toString(), 22n)],
       encoding: 'base64',
     })
     .send();

@@ -4,7 +4,6 @@ import {
   AccountRole,
   address,
   Address,
-  Base58EncodedBytes,
   fetchEncodedAccounts,
   generateKeyPairSigner,
   getAddressEncoder,
@@ -344,6 +343,7 @@ import {
   getExtendLookupTableInstruction,
 } from '@solana-program/address-lookup-table';
 import { fetchMultipleLookupTableAccounts } from './utils/lookupTable';
+import { createMemcmpFilter } from './utils/rpcFilters';
 import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } from '@solana/rpc-types';
 import { toLegacyPublicKey } from './utils/compat';
 import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
@@ -1244,52 +1244,22 @@ export class Kamino {
     filters.push({
       dataSize: BigInt(WhirlpoolStrategy.layout.span + 8),
     });
-    filters.push({
-      memcmp: {
-        offset: 0n,
-        bytes: bs58.encode(WhirlpoolStrategy.discriminator) as Base58EncodedBytes,
-        encoding: 'base58',
-      },
-    });
+    filters.push(createMemcmpFilter(bs58.encode(WhirlpoolStrategy.discriminator), 0n));
 
     if (strategyFilters.owner) {
-      filters.push({
-        memcmp: {
-          offset: 8n,
-          bytes: strategyFilters.owner.toString() as Base58EncodedBytes,
-          encoding: 'base58',
-        },
-      });
+      filters.push(createMemcmpFilter(strategyFilters.owner.toString(), 8n));
     }
 
     if (strategyFilters.strategyCreationStatus) {
-      filters.push({
-        memcmp: {
-          offset: 1625n,
-          bytes: strategyCreationStatusToBase58(strategyFilters.strategyCreationStatus) as Base58EncodedBytes,
-          encoding: 'base58',
-        },
-      });
+      filters.push(createMemcmpFilter(strategyCreationStatusToBase58(strategyFilters.strategyCreationStatus), 1625n));
     }
     if (strategyFilters.strategyType) {
-      filters.push({
-        memcmp: {
-          offset: 1120n,
-          bytes: strategyTypeToBase58(strategyFilters.strategyType).toString() as Base58EncodedBytes,
-          encoding: 'base58',
-        },
-      });
+      filters.push(createMemcmpFilter(strategyTypeToBase58(strategyFilters.strategyType).toString(), 1120n));
     }
 
     if (strategyFilters.isCommunity !== undefined && strategyFilters.isCommunity !== null) {
       const value = !strategyFilters.isCommunity ? '1' : '2';
-      filters.push({
-        memcmp: {
-          offset: 1664n,
-          bytes: value as Base58EncodedBytes,
-          encoding: 'base58',
-        },
-      });
+      filters.push(createMemcmpFilter(value, 1664n));
     }
 
     return (
@@ -1323,20 +1293,8 @@ export class Kamino {
       {
         dataSize: BigInt(WhirlpoolStrategy.layout.span + 8),
       },
-      {
-        memcmp: {
-          offset: 0n,
-          bytes: bs58.encode(WhirlpoolStrategy.discriminator) as Base58EncodedBytes,
-          encoding: 'base58',
-        },
-      },
-      {
-        memcmp: {
-          bytes: kTokenMint.toString() as Base58EncodedBytes,
-          offset: 720n,
-          encoding: 'base58',
-        },
-      },
+      createMemcmpFilter(bs58.encode(WhirlpoolStrategy.discriminator), 0n),
+      createMemcmpFilter(kTokenMint.toString(), 720n),
     ];
     const matchingStrategies = await this._rpc
       .getProgramAccounts(this.getProgramID(), {
@@ -2505,7 +2463,7 @@ export class Kamino {
       .getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
         filters: [
           { dataSize: 165n },
-          { memcmp: { offset: 0n, bytes: shareMint.toString() as Base58EncodedBytes, encoding: 'base58' } },
+          createMemcmpFilter(shareMint.toString(), 0n),
         ],
         encoding: 'jsonParsed',
       })
@@ -2523,7 +2481,7 @@ export class Kamino {
       .getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
         filters: [
           { dataSize: 165n },
-          { memcmp: { offset: 32n, bytes: wallet.toString() as Base58EncodedBytes, encoding: 'base58' } },
+          createMemcmpFilter(wallet.toString(), 32n),
         ],
         encoding: 'jsonParsed',
       })
@@ -6536,7 +6494,7 @@ export class Kamino {
       return await this._rpc
         .getProgramAccounts(ADDRESS_LOOKUP_TABLE_PROGRAM_ADDRESS, {
           filters: [
-            { memcmp: { offset: 22n, bytes: LUT_OWNER_KEY.toString() as Base58EncodedBytes, encoding: 'base58' } },
+            createMemcmpFilter(LUT_OWNER_KEY.toString(), 22n),
           ],
           dataSlice: { length: 0, offset: 0 },
         })

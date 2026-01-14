@@ -1,4 +1,5 @@
-import { address, Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from '@solana/kit';
+import { address, Address, Rpc, SolanaRpcApi } from '@solana/kit';
+import { createMemcmpFilter } from '../utils/rpcFilters';
 import Decimal from 'decimal.js';
 import axios from 'axios';
 import { OrcaWhirlpoolsResponse, Whirlpool as WhirlpoolAPIResponse } from './OrcaWhirlpoolsResponse';
@@ -410,7 +411,7 @@ export class OrcaService {
         filters: [
           // account LAYOUT: https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/position.rs#L20
           { dataSize: 216n },
-          { memcmp: { bytes: pool.toString() as Base58EncodedBytes, offset: 8n, encoding: 'base58' } },
+          createMemcmpFilter(pool.toString(), 8n),
         ],
         encoding: 'base64+zstd',
       })

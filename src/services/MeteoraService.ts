@@ -1,4 +1,5 @@
-import { address, Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from '@solana/kit';
+import { address, Address, Rpc, SolanaRpcApi } from '@solana/kit';
+import { createMemcmpFilter } from '../utils/rpcFilters';
 import Decimal from 'decimal.js';
 import axios from 'axios';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
@@ -327,7 +328,7 @@ export class MeteoraService {
         commitment: 'confirmed',
         filters: [
           { dataSize: 8120n },
-          { memcmp: { bytes: pool.toString() as Base58EncodedBytes, offset: 8n, encoding: 'base58' } },
+          createMemcmpFilter(pool.toString(), 8n),
         ],
         encoding: 'base64+zstd',
       })

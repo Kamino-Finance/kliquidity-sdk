@@ -2,13 +2,13 @@ import {
   Account,
   address,
   Address,
-  Base58EncodedBytes,
   getAddressEncoder,
   getProgramDerivedAddress,
   ProgramDerivedAddress,
   Rpc,
   SolanaRpcApi,
 } from '@solana/kit';
+import { createMemcmpFilter } from '../utils/rpcFilters';
 import {
   LiquidityDistribution as RaydiumLiquidityDistribuion,
   Pool,
@@ -335,13 +335,7 @@ export class RaydiumService {
         commitment: 'confirmed',
         filters: [
           { dataSize: BigInt(PositionInfoLayout.span) },
-          {
-            memcmp: {
-              bytes: pool.toString() as Base58EncodedBytes,
-              offset: BigInt(PositionInfoLayout.offsetOf('poolId')),
-              encoding: 'base58',
-            },
-          },
+          createMemcmpFilter(pool.toString(), BigInt(PositionInfoLayout.offsetOf('poolId'))),
         ],
         encoding: 'base64+zstd',
       })
