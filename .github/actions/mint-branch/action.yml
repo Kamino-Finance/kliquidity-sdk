@@ -1,0 +1,67 @@
+name: Mint Lane Branch
+description: Mint or fast-forward a protected lane branch (e.g. feature/<lane>) from a trusted base ref.
+
+inputs:
+  lane:
+    description: "Lane suffix, e.g. kswap-sdk -> feature/kswap-sdk"
+    required: true
+  base_ref:
+    description: "Trusted base ref (default: master). master | refs/tags/<tag> | <tag> | <commit-sha>"
+    required: false
+    default: "master"
+  lane_prefix:
+    description: "Lane branch prefix"
+    required: false
+    default: "feature"
+  tag_prefix:
+    description: "Trusted tag prefix; trusted tags are refs/tags/<tag_prefix>*"
+    required: false
+    default: "v"
+  sync_mode:
+    description: "How to sync to the trusted base rate if the lane branch already exists. reset | rebase"
+    required: true
+    default: "rebase"
+  dry_run:
+    description: "If true, do not push; only print what would happen"
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        set -euo pipefail
+        test -n "${{ inputs.lane }}" || (echo "lane is required" && exit 1)
+
+        case "${{ inputs.sync_mode }}" in
+          rebase|reset) ;;
+          *) echo "sync_mode must be 'rebase' or 'reset'"; exit 1 ;;
+        esac
+
+        case "${{ inputs.dry_run }}" in
+          true|false) ;;
+          *) echo "dry_run must be 'true' or 'false'"; exit 1 ;;
+        esac
+
+        # Basic hardening: prevent obvious ref injection / path tricks in lane.
+        case "${{ inputs.lane }}" in
+          *".."*|*~*|*^*|*:*|*" "*|*"\"*"|*"'"* )
+            echo "lane contains disallowed characters"
+            exit 1
+            ;;
+        esac
+
+    - name: Mint lane branch
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        args=(--lane "${{ inputs.lane }}" --base-ref "${{ inputs.base_ref }}" --lane-prefix "${{ inputs.lane_prefix }}" --tag-prefix "${{ inputs.tag_prefix }}")
+
+        if [ "${{ inputs.dry_run }}" = "true" ]; then
+          args+=(--dry-run)
+        fi
+
+        bash "${GITHUB_ACTION_PATH}/mint-lane.sh" "${args[@]}"
