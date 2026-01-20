@@ -1,0 +1,168 @@
+name: Release NPM Package
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, by semver keyword.'
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+  push:
+    branches:
+      - "beta/**"
+
+permissions:
+  id-token: write # required for OIDC
+
+jobs:
+  release:
+    name: "Build + Release"
+    environment: master
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set Build Variables
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ref="${GITHUB_REF_NAME}"
+
+          is_beta="false"
+          npm_tag="latest"
+          if [[ "$ref" == beta/* ]]; then
+            is_beta="true"
+            npm_tag="beta"
+          fi
+
+          echo "ref=$ref"
+          echo "is_beta=$is_beta"
+          echo "npm_tag=$npm_tag"
+          
+          echo "is_beta=$is_beta" >> "$GITHUB_OUTPUT"
+          echo "npm_tag=$npm_tag" >> "$GITHUB_OUTPUT"
+
+      # minimal checkout to import the app-checkout action
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      # app-checkout to bypass branch protection rules
+      - name: Checkout
+        uses: ./.github/actions/app-checkout
+        with:
+          enforce_master: ${{ steps.vars.outputs.is_beta != 'true' }}
+        env:
+          GH_APP_ID: ${{ secrets.GH_APP_ID }}
+          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Skip beta publish if branch just minted from master
+        id: beta_gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Default: run publish
+          should_publish="true"
+
+          if [ "${{ steps.vars.outputs.is_beta }}" = "true" ] && [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            git fetch --prune origin master
+
+            beta_head="$(git rev-parse HEAD)"
+            master_head="$(git rev-parse origin/master)"
+
+            echo "beta_head=$beta_head"
+            echo "master_head=$master_head"
+
+            if [ "$beta_head" = "$master_head" ]; then
+              echo "Beta branch equals master (freshly minted). Skipping publish."
+              should_publish="false"
+            fi
+          fi
+
+          echo "should_publish=$should_publish" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js and NPM Auth
+        if: ${{ steps.beta_gate.outputs.should_publish == 'true' }}
+        uses: actions/setup-node@2951748f4c016b747952f8ca7e75fc64f2f62b53
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install Dependencies
+        if: ${{ steps.beta_gate.outputs.should_publish == 'true' }}
+        run: |
+          yarn install --frozen-lockfile
+
+      - name: Build Package
+        if: ${{ steps.beta_gate.outputs.should_publish == 'true' }}
+        run: |
+          yarn build
+
+      - name: Get Latest Version of kliquidity-sdk
+        if: ${{ steps.beta_gate.outputs.should_publish == 'true' }}
+        id: semver
+        run: |
+          set -euo pipefail
+
+          pkg="@kamino-finance/kliquidity-sdk"
+
+          # bump comes from workflow_dispatch input; default to "patch" for push runs
+          bump="${{ inputs.version || 'patch' }}"
+
+          latest_stable="$(npm view "$pkg" version)"
+          echo "Latest stable: $latest_stable"
+
+          if [ "${{ steps.vars.outputs.is_beta }}" = "true" ]; then
+            # beta is derived from latest stable using pre{major|minor|patch}
+            case "$bump" in
+              major|minor|patch) semver_action="pre$bump" ;;
+              *) echo "SEMVER bump must be major/minor/patch"; exit 1 ;;
+            esac
+
+            beta_version="$(npm view "${pkg}@beta" version 2>/dev/null || echo "beta-tag-not-exist-yet")"
+            echo "Latest beta: $beta_version"
+
+            new_version="$(npx semver -i "$semver_action" "$latest_stable" --preid beta)"
+
+            if [ "$new_version" = "$beta_version" ]; then
+              echo "Computed beta $new_version already exists; bumping prerelease"
+              new_version="$(npx semver -i prerelease "$new_version" --preid beta)"
+            fi
+          else
+            # stable logic
+            new_version="$(npx semver -i "$bump" "$latest_stable")"
+          fi
+
+          echo "New version: $new_version"
+          echo "latest_version=$latest_stable" >> "$GITHUB_OUTPUT"
+          echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to NPM, commit, tag + push
+        if: ${{ steps.beta_gate.outputs.should_publish == 'true' }}
+        uses: ./.github/actions/yarn-publish
+        with:
+          public: 'true'
+          package: '.'
+          commit_msg: "Release @kamino-finance/kliquidity-sdk v%s"
+          version: ${{ steps.semver.outputs.new_version }}
+          npm_tag: ${{ steps.vars.outputs.npm_tag }}
+
+      - name: Push Git Commit and Tag
+        if: ${{ steps.beta_gate.outputs.should_publish == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          
+          if [ "${{ steps.vars.outputs.is_beta }}" = "false" ]; then
+            git push origin master --follow-tags
+          else
+            echo "Not pushing tags for beta release"
+          fi

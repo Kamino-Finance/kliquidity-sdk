@@ -1,0 +1,128 @@
+name: Yarn NPM Publish
+description: Publish to npm with checks to assert a commit and tag were made
+
+inputs:
+  version:
+    description: "Semver version"
+    required: true
+  package:
+    description: "Package path"
+    required: true
+  tag_prefix:
+    description: "Git tag prefix"
+    default: 'v'
+  commit_msg:
+    description: "Git commit message format"
+    default: 'Release v%s'
+  public:
+    description: "If true, publish without --access restricted"
+    required: true
+    default: "false"
+  npm_tag:
+    description: "NPM tag, e.g. beta, or latest (default)"
+    required: true
+    default: "latest"
+
+runs:
+  using: composite
+  steps:
+
+    - name: Publish to NPM
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Ensure OIDC - in the previous steps we somehow gain a read token which will fail when we attempt to publish with it
+        # unset to ensure OIDC is always used
+        unset NODE_AUTH_TOKEN
+        unset NPM_TOKEN
+        rm -f "$(npm config get userconfig)" || true
+        rm -f "${NPM_CONFIG_USERCONFIG:-}" || true
+
+        ver="${{ inputs.version }}"
+        tag_prefix="${{ inputs.tag_prefix }}"
+        commit_msg="${{ inputs.commit_msg }}"
+        package="${{ inputs.package }}"
+        npm_tag="${{ inputs.npm_tag }}"
+        
+        # reject empty and anything with whitespace or leading dash
+        if [ -z "$npm_tag" ] || [[ "$npm_tag" =~ [[:space:]] ]] || [[ "$npm_tag" == -* ]]; then
+          echo "ERROR: invalid npm_tag: '$npm_tag'"
+          exit 1
+        fi
+
+        # Record current HEAD so we can prove npm version created a commit
+        before_sha="$(git rev-parse HEAD)"
+
+        # Bump version + commit + tag
+        yarn config set version-tag-prefix "${tag_prefix}"
+        yarn config set version-git-message "${commit_msg}"
+        yarn version --new-version "${ver}" --cwd "${package}"
+
+        after_sha="$(git rev-parse HEAD)"
+
+        echo "Validating commit and tag"
+
+        if [ "$before_sha" = "$after_sha" ]; then
+          echo "ERROR: npm version did not create a new commit (HEAD unchanged)."
+          echo
+          echo "=== git status ==="
+          git status
+          echo
+          echo "=== git status --porcelain ==="
+          git status --porcelain
+          echo
+          echo "=== git diff (working tree) ==="
+          git diff || true
+          echo
+          echo "=== git diff --stat (working tree) ==="
+          git diff --stat || true
+          echo
+          echo "=== git diff --name-status (working tree) ==="
+          git diff --name-status || true
+          echo
+          echo "=== last 5 commits ==="
+          git --no-pager log -5 --oneline --decorate
+          echo
+          exit 1
+        fi
+
+        tag="${tag_prefix}${ver}"
+        if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+          echo "ERROR: expected tag '$tag' was not created."
+          echo
+          echo "=== tags near HEAD ==="
+          git tag --points-at HEAD || true
+          echo
+          echo "=== last 20 tags ==="
+          git tag -l --sort=-creatordate | head -n 20 || true
+          echo
+          exit 1
+        fi
+        
+        # Publish only after we know the version bump is real
+        echo "Validated commit and tag"
+        
+        access_flag="--access restricted"
+        if [ "${{ inputs.public }}" = "true" ]; then
+          access_flag="--access public"
+        fi
+        
+        is_workspace=false
+        
+        if jq -e '
+          (.workspaces | type == "array") or
+          (.workspaces.packages | type == "array")
+        ' package.json >/dev/null 2>&1; then
+          echo "Publishing workspace package"
+          is_workspace=true
+        fi
+        
+        # Yarn classic does not support OIDC so we use npm instead
+        if [ "$is_workspace" = "true" ]; then
+          npm publish -w "${package}" ${access_flag} --tag "${npm_tag}"
+        else
+          pushd "$package" >/dev/null
+          npm publish ${access_flag} --tag "${npm_tag}"
+          popd >/dev/null
+        fi

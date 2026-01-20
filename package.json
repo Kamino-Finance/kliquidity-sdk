@@ -4,7 +4,7 @@
   "description": "Typescript SDK for interacting with the Kamino Liquidity (kliquidity) protocol",
   "repository": {
     "type": "git",
-    "url": "git+github.com:Kamino-Finance/kliquidity-sdk.git"
+    "url": "https://github.com/Kamino-Finance/kliquidity-sdk"
   },
   "author": "Kamino Finance",
   "homepage": "https://kamino.finance",

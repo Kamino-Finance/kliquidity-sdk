@@ -1,0 +1,92 @@
+name: Create or Sync SDK Beta Branch + PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      head_branch:
+        description: "Developer branch to PR from (e.g. feature/foo). Must exist on origin."
+        required: true
+        type: string
+      sync_mode:
+        description: "How to sync to the trusted base rate if the lane branch already exists. reset | rebase"
+        required: true
+        default: "rebase"
+        type: choice
+        options: [rebase, reset]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create_lane_pr:
+    name: Create Lane Branch + PR
+    runs-on: ubuntu-latest
+    environment: master
+    steps:
+
+      # minimal checkout to import the app-checkout action
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      # app-checkout to bypass branch protection rules
+      - name: Checkout
+        uses: ./.github/actions/app-checkout
+        env:
+          GH_APP_ID: ${{ secrets.GH_APP_ID }}
+          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Validate head branch exists
+        shell: bash
+        env:
+          HEAD: ${{ inputs.head_branch }}
+        run: |
+          set -euo pipefail
+          git fetch --prune origin "+refs/heads/*:refs/remotes/origin/*" --tags
+
+          if ! git show-ref --verify --quiet "refs/remotes/origin/${HEAD}"; then
+            echo "ERROR: origin/${HEAD} does not exist."
+            echo "Heads:"
+            git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's|^origin/||'
+            exit 1
+          fi
+
+      - name: Create Beta Branch
+        uses: ./.github/actions/mint-branch
+        with:
+          lane: ${{ inputs.head_branch }}
+          lane_prefix: "beta"
+          sync_mode: ${{ inputs.sync_mode }}
+
+      - name: Create pull request (head -> lane)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LANE_PREFIX: "beta"
+          LANE: ${{ inputs.head_branch }}
+          HEAD: ${{ inputs.head_branch }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          base="${LANE_PREFIX}/${LANE}"
+
+          if [ "${HEAD}" = "${base}" ]; then
+            echo "ERROR: head_branch cannot equal base branch (${base})."
+            exit 1
+          fi
+
+          # Avoid duplicate PRs
+          if gh pr list --repo "${REPO}" --state open --base "${base}" --head "${HEAD}" --json number --jq 'length' | grep -qv '^0$'; then
+            echo "PR already exists: ${HEAD} -> ${base}"
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "${REPO}" \
+            --base "${base}" \
+            --head "${HEAD}" \
+            --title "SDK beta: ${HEAD} -> ${base}" \
+            --body "Auto-generated PR to publish SDK beta from \`${HEAD}\` into protected lane \`${base}\`."
