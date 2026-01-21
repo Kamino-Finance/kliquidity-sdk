@@ -3,9 +3,11 @@ on:
   pull_request:
     branches:
       - master
+      - 'beta/**'
   push:
     branches:
       - master
+      - 'beta/**'
 
 env:
   solana_version: 'v1.18.15'

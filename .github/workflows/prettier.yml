@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - master
+      - 'beta/**'
       - 'release/**'
   pull_request:
     branches:
       - master
+      - 'beta/**'
       - 'release/**'
 
 concurrency:
