@@ -389,7 +389,8 @@ export class Kamino {
     raydiumProgramId?: Address,
     meteoraProgramId?: Address,
     jupBaseAPI?: string, // unused, kept for backwards compatibility
-    kSwapBaseAPI?: string
+    kSwapBaseAPI?: string,
+    logger?: Logger
   ) {
     this._cluster = cluster;
     this._rpc = rpc;
@@ -412,7 +413,7 @@ export class Kamino {
       this._kSwapBaseAPI = kSwapBaseAPI;
     }
 
-    this.logger = console;
+    this.logger = logger ? logger : console;
   }
 
   getConnection = () => this._rpc;
