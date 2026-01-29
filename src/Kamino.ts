@@ -214,7 +214,7 @@ import {
   TakeProfitMethod,
 } from './utils/CreationParameters';
 import { DOLLAR_BASED, PROPORTION_BASED } from './constants/deposit_method';
-import { DEFAULT_JUP_API_ENDPOINT, JupService } from './services/JupService';
+import { JupService } from './services/JupService';
 import {
   simulateManualPool,
   simulatePercentagePool,
@@ -348,12 +348,13 @@ import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } 
 import { toLegacyPublicKey } from './utils/compat';
 import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
 import { getTokensPrices } from './services/kSwap';
+import { Logger } from './utils/Logger';
 
 const addressEncoder = getAddressEncoder();
 
 export const HUBBLE_SCOPE_FEED_ID = address('3NJYftD5sjVfxSnUdZ1wVML8f3aC6mp1CXCL6L7TnU8C');
 export const KAMINO_SCOPE_FEED_ID = address('3t4JZcueEzTbVP6kLxXrL3VpWx45jDer4eqysweBchNH');
-export const KSWAP_BASE_API = "https://api.kamino.finance/kswap";
+export const KSWAP_BASE_API = 'https://api.kamino.finance/kswap';
 
 export class Kamino {
   private readonly _cluster: SolanaCluster;
@@ -365,8 +366,8 @@ export class Kamino {
   private readonly _orcaService: OrcaService;
   private readonly _raydiumService: RaydiumService;
   private readonly _meteoraService: MeteoraService;
-  private readonly _jupBaseAPI: string = DEFAULT_JUP_API_ENDPOINT;
   private readonly _kSwapBaseAPI: string = KSWAP_BASE_API;
+  private readonly logger: Logger;
 
   /**
    * Create a new instance of the Kamino SDK class.
@@ -387,8 +388,9 @@ export class Kamino {
     whirlpoolProgramId?: Address,
     raydiumProgramId?: Address,
     meteoraProgramId?: Address,
-    jupBaseAPI?: string,
-    kSwapBaseAPI?: string
+    jupBaseAPI?: string, // unused, kept for backwards compatibility
+    kSwapBaseAPI?: string,
+    logger?: Logger
   ) {
     this._cluster = cluster;
     this._rpc = rpc;
@@ -407,13 +409,11 @@ export class Kamino {
     this._raydiumService = new RaydiumService(rpc, raydiumProgramId);
     this._meteoraService = new MeteoraService(rpc, meteoraProgramId);
 
-    if (jupBaseAPI) {
-      this._jupBaseAPI = jupBaseAPI;
-    }
-
     if (kSwapBaseAPI) {
       this._kSwapBaseAPI = kSwapBaseAPI;
     }
+
+    this.logger = logger ? logger : console;
   }
 
   getConnection = () => this._rpc;
@@ -1561,11 +1561,12 @@ export class Kamino {
       {}
     );
 
-    const activeStrategies = strategiesWithAddresses.filter(
-      (x) => x.strategy.position !== DEFAULT_PUBLIC_KEY
-    );
+    const activeStrategies = strategiesWithAddresses.filter((x) => x.strategy.position !== DEFAULT_PUBLIC_KEY);
 
-    const poolsAndPositions = await batchFetch([...activeStrategies.map((x) => x.strategy.pool), ...activeStrategies.map((x) => x.strategy.position)], chunk => fetchEncodedAccounts(this._rpc, chunk));
+    const poolsAndPositions = await batchFetch(
+      [...activeStrategies.map((x) => x.strategy.pool), ...activeStrategies.map((x) => x.strategy.position)],
+      (chunk) => fetchEncodedAccounts(this._rpc, chunk)
+    );
     const pools = poolsAndPositions.slice(0, activeStrategies.length);
     const positions = poolsAndPositions.slice(activeStrategies.length);
 
@@ -1586,7 +1587,7 @@ export class Kamino {
       const position = positions[i];
       const strategy = activeStrategies[i];
       if (!pool.exists || !position.exists) {
-        console.error(`Pool or position does not exist for strategy ${strategy.address.toString()}, skipping`);
+        this.logger.error(`Pool or position does not exist for strategy ${strategy.address.toString()}, skipping`);
         continue;
       }
       const positionBuffer = Buffer.from(position.data);
@@ -1923,7 +1924,11 @@ export class Kamino {
     return holdings;
   };
 
-  private getMeteoraTokensBalances = async (strategy: WhirlpoolStrategy, pool?: LbPair, position?: PositionV2): Promise<TokenHoldings> => {
+  private getMeteoraTokensBalances = async (
+    strategy: WhirlpoolStrategy,
+    pool?: LbPair,
+    position?: PositionV2
+  ): Promise<TokenHoldings> => {
     let aInvested = ZERO;
     let bInvested = ZERO;
     try {
@@ -2372,11 +2377,11 @@ export class Kamino {
     try {
       const tokensPrices = disabledTokensPrices
         ? disabledTokensPrices
-        : await JupService.getDollarPrices(disabledTokens, this._jupBaseAPI);
+        : await getTokensPrices(this._kSwapBaseAPI, disabledTokens);
       for (const [token, price] of tokensPrices) {
         const collInfo = hubbleCollateralInfos.find((x) => x.mint === token);
         if (!collInfo) {
-          console.log(`Could not find collateral info for token ${token.toString()}`);
+          this.logger.warn(`Could not find collateral info for token ${token.toString()}`);
           continue;
         }
         // if there already is a spot price for this token, skip it
@@ -2389,7 +2394,7 @@ export class Kamino {
         };
       }
     } catch (e) {
-      console.error('Failed to get prices for disabled tokens from Jup', e);
+      this.logger.error('Failed to get prices for disabled tokens from Jup', e);
     }
 
     return { spot: spotPrices, twap: twaps };
@@ -2906,7 +2911,7 @@ export class Kamino {
         keyOrDefault(strategyState.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS)
       ),
     ]);
-    console.log('Shares ATA in withdraw: ', sharesAta.toString());
+    this.logger.info('Shares ATA in withdraw: ', sharesAta.toString());
 
     const sharesAmountInLamports = sharesAmount.mul(
       new Decimal(10).pow(strategyState.strategy.sharesMintDecimals.toString())
@@ -3446,8 +3451,8 @@ export class Kamino {
             onlyDirectRoutes
           );
 
-    console.log('single sided deposit tokenA tokenAMinPostDepositBalance', tokenAMinPostDepositBalance);
-    console.log('single sided deposit tokenA userTokenBalances.b', userTokenBalances.b);
+    this.logger.info('single sided deposit tokenA tokenAMinPostDepositBalance', tokenAMinPostDepositBalance);
+    this.logger.info('single sided deposit tokenA userTokenBalances.b', userTokenBalances.b);
     return await profiler(
       this.getSingleSidedDepositIxs(
         strategyWithAddress,
@@ -4005,9 +4010,9 @@ export class Kamino {
     const allAccounts = new Set<Address>([...existingAccounts, ...allJupAccounts]);
 
     const prefix = 'getSingleSidedJupRoute:';
-    console.log(`${prefix} All distinct existing accounts number ${new Set<Address>(existingAccounts).size}`);
-    console.log(`${prefix} All distinct Jup accounts number ${new Set<Address>(allJupAccounts).size}`);
-    console.log(`${prefix} All accounts number ${allAccounts.size}`);
+    this.logger.info(`${prefix} All distinct existing accounts number ${new Set<Address>(existingAccounts).size}`);
+    this.logger.info(`${prefix} All distinct Jup accounts number ${new Set<Address>(allJupAccounts).size}`);
+    this.logger.info(`${prefix} All accounts number ${allAccounts.size}`);
 
     if (allAccounts.size < MAX_ACCOUNTS_PER_TRANSACTION) {
       return [allJupIxs, jupiterQuote.addressLookupTableAddresses];
@@ -4028,7 +4033,7 @@ export class Kamino {
     profiledFunctionExecution: ProfiledFunctionExecution = noopProfiledFunctionExecution,
     onlyDirectRoutes?: boolean
   ): Promise<[Instruction[], Address[]]> => {
-    console.log('getJupSwapIxsV6', JSON.stringify(input));
+    this.logger.info('getJupSwapIxsV6', JSON.stringify(input));
 
     let extraAccountsBuffer = 5;
 
@@ -4060,11 +4065,11 @@ export class Kamino {
         return result;
       } catch (error) {
         extraAccountsBuffer += 2;
-        console.log(`getJupSwapIxs: ${error}`);
+        this.logger.error(`getJupSwapIxs: ${error}`);
       }
     }
 
-    console.log('getJupSwapIxs: Could not find a route with less than 64 total accounts');
+    this.logger.error('getJupSwapIxs: Could not find a route with less than 64 total accounts');
     throw new Error(`Oops. Failed to find a route. Try again or unselect single-sided deposit.`);
   };
 
@@ -4099,8 +4104,8 @@ export class Kamino {
       expectedBBalance,
       strategyState.tokenBMintDecimals.toNumber()
     );
-    console.log('expectedALamportsDecimal ', expectedALamportsDecimal.toString());
-    console.log('expectedBLamportsDecimal ', expectedBLamportsDecimal.toString());
+    this.logger.info('expectedALamportsDecimal ', expectedALamportsDecimal.toString());
+    this.logger.info('expectedBLamportsDecimal ', expectedBLamportsDecimal.toString());
     const expectedALamports = expectedALamportsDecimal.floor();
     const expectedBLamports = expectedBLamportsDecimal.floor();
 
@@ -4731,9 +4736,14 @@ export class Kamino {
     };
   };
 
-  private readMeteoraPosition = async (poolPk: Address, positionPk: Address, pool?: LbPair | null, position?: PositionV2 | null): Promise<MeteoraPosition> => {
-    pool = pool ?? await LbPair.fetch(this._rpc, poolPk, this._meteoraService.getMeteoraProgramId());
-    position = position ?? await PositionV2.fetch(this._rpc, positionPk, this._meteoraService.getMeteoraProgramId());
+  private readMeteoraPosition = async (
+    poolPk: Address,
+    positionPk: Address,
+    pool?: LbPair | null,
+    position?: PositionV2 | null
+  ): Promise<MeteoraPosition> => {
+    pool = pool ?? (await LbPair.fetch(this._rpc, poolPk, this._meteoraService.getMeteoraProgramId()));
+    position = position ?? (await PositionV2.fetch(this._rpc, positionPk, this._meteoraService.getMeteoraProgramId()));
     if (!pool || !position) {
       return {
         Address: positionPk,
@@ -4746,7 +4756,11 @@ export class Kamino {
       poolPk,
       position.lowerBinId
     );
-    const binArray = await BinArray.fetchMultiple(this._rpc, [lowerTickPk, upperTickPk], this._meteoraService.getMeteoraProgramId());
+    const binArray = await BinArray.fetchMultiple(
+      this._rpc,
+      [lowerTickPk, upperTickPk],
+      this._meteoraService.getMeteoraProgramId()
+    );
     if (!binArray || !binArray[0] || !binArray[1]) {
       return {
         Address: positionPk,
