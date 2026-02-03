@@ -2199,7 +2199,7 @@ export class Kamino {
   };
 
   getAccountOwner = async (pk: Address): Promise<Address> => {
-    const acc = await this.getConnection().getAccountInfo(pk).send();
+    const acc = await this.getConnection().getAccountInfo(pk, { encoding: 'base64' }).send();
     if (acc.value === null) {
       throw Error(`Could not fetch mint ${pk}`);
     }
