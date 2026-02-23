@@ -1,0 +1,44 @@
+# @kamino-finance/kliquidity-sdk
+
+> TypeScript SDK for Kamino Liquidity automated CLMM vaults on Solana (Orca Whirlpools, Raydium CLMM, Meteora DLMM). Rebalancing, fee compounding, deposits, withdrawals, and position management.
+
+## Source
+
+- [Kamino.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/src/Kamino.ts): Main class — all public SDK methods (strategy reads, deposits, withdrawals, pricing, rebalance config)
+- [index.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/src/index.ts): Public exports
+
+## Models
+
+- [models/](https://github.com/Kamino-Finance/kliquidity-sdk/tree/master/src/models): StrategyWithAddress, ShareData, StrategyBalances, Holdings, PriceData, KaminoPosition, PositionRange, DepositAmountsForSwap
+
+## Constants
+
+- [constants/pubkeys.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/src/constants/pubkeys.ts): Program IDs, WRAPPED_SOL_MINT, token infos
+- [constants/numericalValues.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/src/constants/numericalValues.ts): U64_MAX, ZERO_BN, ONE_BN
+
+## Rebalance methods
+
+- [rebalance_methods/](https://github.com/Kamino-Finance/kliquidity-sdk/tree/master/src/rebalance_methods): Manual, PricePercentage, PricePercentageWithReset, Drift, TakeProfit, Periodic, Expander, Autodrift
+
+## DEX services
+
+- [services/OrcaService.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/src/services/OrcaService.ts): Orca Whirlpool interactions
+- [services/RaydiumService.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/src/services/RaydiumService.ts): Raydium CLMM interactions
+- [services/MeteoraService.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/src/services/MeteoraService.ts): Meteora DLMM interactions
+- [services/JupService.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/src/services/JupService.ts): Jupiter swap routing
+- [services/kSwap.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/src/services/kSwap.ts): Kamino swap API
+
+## Codegen (on-chain program bindings)
+
+- [kliquidity/](https://github.com/Kamino-Finance/kliquidity-sdk/tree/master/src/@codegen/kliquidity): Kamino program accounts, instructions, types, errors
+- [whirlpools/](https://github.com/Kamino-Finance/kliquidity-sdk/tree/master/src/@codegen/whirlpools): Orca program
+- [raydium/](https://github.com/Kamino-Finance/kliquidity-sdk/tree/master/src/@codegen/raydium): Raydium program
+- [meteora/](https://github.com/Kamino-Finance/kliquidity-sdk/tree/master/src/@codegen/meteora): Meteora program
+
+## Utils
+
+- [utils/](https://github.com/Kamino-Finance/kliquidity-sdk/tree/master/src/utils): Transaction building, token helpers, DEX-specific math, type definitions
+
+## Tests
+
+- [tests/kamino.test.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/tests/kamino.test.ts): Usage examples for reads, deposits, withdrawals, single-sided deposits
