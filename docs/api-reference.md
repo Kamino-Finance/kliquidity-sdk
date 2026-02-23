@@ -256,7 +256,7 @@ Returns all historical rewards for a wallet across all strategies:
 ### Get User Transactions
 
 ```
-GET /shareholders/:walletAddress/transactions?env=mainnet-beta
+GET /v2/shareholders/:walletAddress/transactions?env=mainnet-beta
 ```
 
 Returns all deposit, withdrawal, and claim transactions for a wallet:
