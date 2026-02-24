@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -21,13 +20,13 @@ export interface PersonalPositionStateFields {
   poolId: Address
   tickLowerIndex: number
   tickUpperIndex: number
-  liquidity: BN
-  feeGrowthInside0LastX64: BN
-  feeGrowthInside1LastX64: BN
-  tokenFeesOwed0: BN
-  tokenFeesOwed1: BN
+  liquidity: bigint
+  feeGrowthInside0LastX64: bigint
+  feeGrowthInside1LastX64: bigint
+  tokenFeesOwed0: bigint
+  tokenFeesOwed1: bigint
   rewardInfos: Array<types.PositionRewardInfoFields>
-  padding: Array<BN>
+  padding: Array<bigint>
 }
 
 export interface PersonalPositionStateJSON {
@@ -51,15 +50,15 @@ export class PersonalPositionState {
   readonly poolId: Address
   readonly tickLowerIndex: number
   readonly tickUpperIndex: number
-  readonly liquidity: BN
-  readonly feeGrowthInside0LastX64: BN
-  readonly feeGrowthInside1LastX64: BN
-  readonly tokenFeesOwed0: BN
-  readonly tokenFeesOwed1: BN
+  readonly liquidity: bigint
+  readonly feeGrowthInside0LastX64: bigint
+  readonly feeGrowthInside1LastX64: bigint
+  readonly tokenFeesOwed0: bigint
+  readonly tokenFeesOwed1: bigint
   readonly rewardInfos: Array<types.PositionRewardInfo>
-  readonly padding: Array<BN>
+  readonly padding: Array<bigint>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     70, 111, 150, 126, 230, 15, 25, 117,
   ])
 
@@ -111,7 +110,7 @@ export class PersonalPositionState {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -131,16 +130,23 @@ export class PersonalPositionState {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): PersonalPositionState {
-    if (!data.slice(0, 8).equals(PersonalPositionState.discriminator)) {
+  static decode(data: Uint8Array): PersonalPositionState {
+    if (data.length < PersonalPositionState.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < PersonalPositionState.discriminator.length; i++) {
+      if (data[i] !== PersonalPositionState.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = PersonalPositionState.layout.decode(data.slice(8))
+    const dec = PersonalPositionState.layout.decode(
+      data.subarray(PersonalPositionState.discriminator.length)
+    )
 
     return new PersonalPositionState({
       bump: dec.bump,
@@ -186,15 +192,15 @@ export class PersonalPositionState {
       poolId: address(obj.poolId),
       tickLowerIndex: obj.tickLowerIndex,
       tickUpperIndex: obj.tickUpperIndex,
-      liquidity: new BN(obj.liquidity),
-      feeGrowthInside0LastX64: new BN(obj.feeGrowthInside0LastX64),
-      feeGrowthInside1LastX64: new BN(obj.feeGrowthInside1LastX64),
-      tokenFeesOwed0: new BN(obj.tokenFeesOwed0),
-      tokenFeesOwed1: new BN(obj.tokenFeesOwed1),
+      liquidity: BigInt(obj.liquidity),
+      feeGrowthInside0LastX64: BigInt(obj.feeGrowthInside0LastX64),
+      feeGrowthInside1LastX64: BigInt(obj.feeGrowthInside1LastX64),
+      tokenFeesOwed0: BigInt(obj.tokenFeesOwed0),
+      tokenFeesOwed1: BigInt(obj.tokenFeesOwed1),
       rewardInfos: obj.rewardInfos.map((item) =>
         types.PositionRewardInfo.fromJSON(item)
       ),
-      padding: obj.padding.map((item) => new BN(item)),
+      padding: obj.padding.map((item) => BigInt(item)),
     })
   }
 }

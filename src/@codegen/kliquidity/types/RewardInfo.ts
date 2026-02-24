@@ -1,24 +1,24 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface RewardInfoFields {
   /** Reward state */
   rewardState: number
   /** Reward open time */
-  openTime: BN
+  openTime: bigint
   /** Reward end time */
-  endTime: BN
+  endTime: bigint
   /** Reward last update time */
-  lastUpdateTime: BN
+  lastUpdateTime: bigint
   /** Q64.64 number indicates how many tokens per second are earned per unit of liquidity. */
-  emissionsPerSecondX64: BN
+  emissionsPerSecondX64: bigint
   /** The total amount of reward emissioned */
-  rewardTotalEmissioned: BN
+  rewardTotalEmissioned: bigint
   /** The total amount of claimed reward */
-  rewardClaimed: BN
+  rewardClaimed: bigint
   /** Reward token mint. */
   tokenMint: Address
   /** Reward vault token account. */
@@ -29,7 +29,7 @@ export interface RewardInfoFields {
    * Q64.64 number that tracks the total tokens earned per unit of liquidity since the reward
    * emissions were turned on.
    */
-  rewardGrowthGlobalX64: BN
+  rewardGrowthGlobalX64: bigint
 }
 
 export interface RewardInfoJSON {
@@ -64,17 +64,17 @@ export class RewardInfo {
   /** Reward state */
   readonly rewardState: number
   /** Reward open time */
-  readonly openTime: BN
+  readonly openTime: bigint
   /** Reward end time */
-  readonly endTime: BN
+  readonly endTime: bigint
   /** Reward last update time */
-  readonly lastUpdateTime: BN
+  readonly lastUpdateTime: bigint
   /** Q64.64 number indicates how many tokens per second are earned per unit of liquidity. */
-  readonly emissionsPerSecondX64: BN
+  readonly emissionsPerSecondX64: bigint
   /** The total amount of reward emissioned */
-  readonly rewardTotalEmissioned: BN
+  readonly rewardTotalEmissioned: bigint
   /** The total amount of claimed reward */
-  readonly rewardClaimed: BN
+  readonly rewardClaimed: bigint
   /** Reward token mint. */
   readonly tokenMint: Address
   /** Reward vault token account. */
@@ -85,7 +85,7 @@ export class RewardInfo {
    * Q64.64 number that tracks the total tokens earned per unit of liquidity since the reward
    * emissions were turned on.
    */
-  readonly rewardGrowthGlobalX64: BN
+  readonly rewardGrowthGlobalX64: bigint
 
   constructor(fields: RewardInfoFields) {
     this.rewardState = fields.rewardState
@@ -172,16 +172,16 @@ export class RewardInfo {
   static fromJSON(obj: RewardInfoJSON): RewardInfo {
     return new RewardInfo({
       rewardState: obj.rewardState,
-      openTime: new BN(obj.openTime),
-      endTime: new BN(obj.endTime),
-      lastUpdateTime: new BN(obj.lastUpdateTime),
-      emissionsPerSecondX64: new BN(obj.emissionsPerSecondX64),
-      rewardTotalEmissioned: new BN(obj.rewardTotalEmissioned),
-      rewardClaimed: new BN(obj.rewardClaimed),
+      openTime: BigInt(obj.openTime),
+      endTime: BigInt(obj.endTime),
+      lastUpdateTime: BigInt(obj.lastUpdateTime),
+      emissionsPerSecondX64: BigInt(obj.emissionsPerSecondX64),
+      rewardTotalEmissioned: BigInt(obj.rewardTotalEmissioned),
+      rewardClaimed: BigInt(obj.rewardClaimed),
       tokenMint: address(obj.tokenMint),
       tokenVault: address(obj.tokenVault),
       authority: address(obj.authority),
-      rewardGrowthGlobalX64: new BN(obj.rewardGrowthGlobalX64),
+      rewardGrowthGlobalX64: BigInt(obj.rewardGrowthGlobalX64),
     })
   }
 

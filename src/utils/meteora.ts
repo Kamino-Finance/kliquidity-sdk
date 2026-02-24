@@ -3,7 +3,6 @@ import Decimal from 'decimal.js';
 import { U64_MAX } from '../constants/numericalValues';
 import { BinArray } from '../@codegen/meteora/accounts';
 import { Bin } from '../@codegen/meteora/types';
-import { BN } from '@coral-xyz/anchor';
 import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-derived-address';
 
 const BASIS_POINT_MAX = 10000;
@@ -57,7 +56,7 @@ export function getBinArrayLowerUpperBinId(binArrayIndex: number): [number, numb
 }
 
 export function getBinFromBinArray(binIndex: number, binArray: BinArray): Bin | null {
-  const [lowerBinId] = getBinArrayLowerUpperBinId(binArray.index.toNumber());
+  const [lowerBinId] = getBinArrayLowerUpperBinId(Number(binArray.index));
   const offset = binIndex - lowerBinId;
   if (offset >= 0 && offset < binArray.bins.length) {
     return binArray.bins[offset];
@@ -75,17 +74,26 @@ export function getBinFromBinArrays(binIndex: number, binArrays: BinArray[]): Bi
   return null;
 }
 
-export function binIdToBinArrayIndex(binId: BN): BN {
-  const { div: idx, mod } = binId.divmod(new BN(MAX_BIN_ARRAY_SIZE));
-  return binId.isNeg() && !mod.isZero() ? idx.sub(new BN(1)) : idx;
+export function binIdToBinArrayIndex(binId: bigint): bigint {
+  const idx = binId / BigInt(MAX_BIN_ARRAY_SIZE);
+  const mod = binId % BigInt(MAX_BIN_ARRAY_SIZE);
+  return binId < 0n && mod !== 0n ? idx - 1n : idx;
 }
 
-export async function deriveBinArray(lbPair: Address, index: BN, programId: Address): Promise<ProgramDerivedAddress> {
+export async function deriveBinArray(lbPair: Address, index: bigint, programId: Address): Promise<ProgramDerivedAddress> {
   let binArrayBytes: Uint8Array;
-  if (index.isNeg()) {
-    binArrayBytes = new Uint8Array(index.toTwos(64).toBuffer('le', 8));
+  if (index < 0n) {
+    const mask = (1n << 64n) - 1n;
+    const encoded = ((~(-index) + 1n) & mask);
+    const buf = new Uint8Array(8);
+    const dv = new DataView(buf.buffer);
+    dv.setBigUint64(0, encoded, true);
+    binArrayBytes = buf;
   } else {
-    binArrayBytes = new Uint8Array(index.toBuffer('le', 8));
+    const buf = new Uint8Array(8);
+    const dv = new DataView(buf.buffer);
+    dv.setBigUint64(0, index, true);
+    binArrayBytes = buf;
   }
   const pda = await getProgramDerivedAddress({
     seeds: [Buffer.from('bin_array'), addressEncoder.encode(lbPair), binArrayBytes],

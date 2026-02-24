@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -49,9 +48,9 @@ export interface LbPairFields {
   /** Oracle pubkey */
   oracle: Address
   /** Packed initialized bin array state */
-  binArrayBitmap: Array<BN>
+  binArrayBitmap: Array<bigint>
   /** Last time the pool fee parameter was updated */
-  lastUpdatedAt: BN
+  lastUpdatedAt: bigint
   /** Whitelisted wallet */
   whitelistedWallet: Address
   /** Address allowed to swap when the current slot is greater than or equal to the pre-activation slot. The pre-activation slot is calculated as `activation_slot - pre_activation_slot_duration`. */
@@ -59,13 +58,13 @@ export interface LbPairFields {
   /** Base keypair. Only required for permission pair */
   baseKey: Address
   /** Slot to enable the pair. Only applicable for permission pair. */
-  activationSlot: BN
+  activationSlot: bigint
   /** Number of slot before activation slot. Used to calculate pre-activation slot for pre_activation_swap_address */
-  preActivationSlotDuration: BN
+  preActivationSlotDuration: bigint
   /** _padding2 is reclaimed free space from swap_cap_deactivate_slot and swap_cap_amount before, BE CAREFUL FOR TOMBSTONE WHEN REUSE !! */
   padding2: Array<number>
   /** Liquidity lock duration for positions which created before activate. Only applicable for permission pair. */
-  lockDurationsInSlot: BN
+  lockDurationsInSlot: bigint
   /** Pool creator */
   creator: Address
   /** Reserved space for future use */
@@ -163,9 +162,9 @@ export class LbPair {
   /** Oracle pubkey */
   readonly oracle: Address
   /** Packed initialized bin array state */
-  readonly binArrayBitmap: Array<BN>
+  readonly binArrayBitmap: Array<bigint>
   /** Last time the pool fee parameter was updated */
-  readonly lastUpdatedAt: BN
+  readonly lastUpdatedAt: bigint
   /** Whitelisted wallet */
   readonly whitelistedWallet: Address
   /** Address allowed to swap when the current slot is greater than or equal to the pre-activation slot. The pre-activation slot is calculated as `activation_slot - pre_activation_slot_duration`. */
@@ -173,19 +172,19 @@ export class LbPair {
   /** Base keypair. Only required for permission pair */
   readonly baseKey: Address
   /** Slot to enable the pair. Only applicable for permission pair. */
-  readonly activationSlot: BN
+  readonly activationSlot: bigint
   /** Number of slot before activation slot. Used to calculate pre-activation slot for pre_activation_swap_address */
-  readonly preActivationSlotDuration: BN
+  readonly preActivationSlotDuration: bigint
   /** _padding2 is reclaimed free space from swap_cap_deactivate_slot and swap_cap_amount before, BE CAREFUL FOR TOMBSTONE WHEN REUSE !! */
   readonly padding2: Array<number>
   /** Liquidity lock duration for positions which created before activate. Only applicable for permission pair. */
-  readonly lockDurationsInSlot: BN
+  readonly lockDurationsInSlot: bigint
   /** Pool creator */
   readonly creator: Address
   /** Reserved space for future use */
   readonly reserved: Array<number>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     33, 11, 49, 98, 181, 101, 177, 13,
   ])
 
@@ -273,7 +272,7 @@ export class LbPair {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -293,16 +292,21 @@ export class LbPair {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): LbPair {
-    if (!data.slice(0, 8).equals(LbPair.discriminator)) {
+  static decode(data: Uint8Array): LbPair {
+    if (data.length < LbPair.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < LbPair.discriminator.length; i++) {
+      if (data[i] !== LbPair.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = LbPair.layout.decode(data.slice(8))
+    const dec = LbPair.layout.decode(data.subarray(LbPair.discriminator.length))
 
     return new LbPair({
       parameters: types.StaticParameters.fromDecoded(dec.parameters),
@@ -400,15 +404,15 @@ export class LbPair {
         types.RewardInfo.fromJSON(item)
       ),
       oracle: address(obj.oracle),
-      binArrayBitmap: obj.binArrayBitmap.map((item) => new BN(item)),
-      lastUpdatedAt: new BN(obj.lastUpdatedAt),
+      binArrayBitmap: obj.binArrayBitmap.map((item) => BigInt(item)),
+      lastUpdatedAt: BigInt(obj.lastUpdatedAt),
       whitelistedWallet: address(obj.whitelistedWallet),
       preActivationSwapAddress: address(obj.preActivationSwapAddress),
       baseKey: address(obj.baseKey),
-      activationSlot: new BN(obj.activationSlot),
-      preActivationSlotDuration: new BN(obj.preActivationSlotDuration),
+      activationSlot: BigInt(obj.activationSlot),
+      preActivationSlotDuration: BigInt(obj.preActivationSlotDuration),
       padding2: obj.padding2,
-      lockDurationsInSlot: new BN(obj.lockDurationsInSlot),
+      lockDurationsInSlot: BigInt(obj.lockDurationsInSlot),
       creator: address(obj.creator),
       reserved: obj.reserved,
     })

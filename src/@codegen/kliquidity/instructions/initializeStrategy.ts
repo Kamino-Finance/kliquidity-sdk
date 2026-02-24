@@ -2,23 +2,26 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  208, 119, 144, 145, 178, 57, 105, 252,
+])
+
 export interface InitializeStrategyArgs {
-  strategyType: BN
-  tokenACollateralId: BN
-  tokenBCollateralId: BN
+  strategyType: bigint
+  tokenACollateralId: bigint
+  tokenBCollateralId: bigint
 }
 
 export interface InitializeStrategyAccounts {
@@ -42,7 +45,7 @@ export interface InitializeStrategyAccounts {
   strategy: Address
 }
 
-export const layout = borsh.struct<InitializeStrategyArgs>([
+export const layout = borsh.struct([
   borsh.u64("strategyType"),
   borsh.u64("tokenACollateralId"),
   borsh.u64("tokenBCollateralId"),
@@ -51,10 +54,10 @@ export const layout = borsh.struct<InitializeStrategyArgs>([
 export function initializeStrategy(
   args: InitializeStrategyArgs,
   accounts: InitializeStrategyAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     {
       address: accounts.adminAuthority.address,
       role: 3,
@@ -78,8 +81,7 @@ export function initializeStrategy(
     { address: accounts.strategy, role: 1 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([208, 119, 144, 145, 178, 57, 105, 252])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       strategyType: args.strategyType,
@@ -88,7 +90,12 @@ export function initializeStrategy(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

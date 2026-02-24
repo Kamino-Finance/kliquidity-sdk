@@ -249,8 +249,8 @@ describe('Kamino SDK Tests', () => {
     expect(orcaStrategy).not.to.be.null;
     const orcaPositionRange = await kamino.getPositionRangeOrca(
       orcaStrategy!.position,
-      orcaStrategy!.tokenAMintDecimals.toNumber(),
-      orcaStrategy!.tokenBMintDecimals.toNumber()
+      Number(orcaStrategy!.tokenAMintDecimals),
+      Number(orcaStrategy!.tokenBMintDecimals)
     );
     expect(orcaPositionRange.lowerPrice.toNumber()).to.be.approximately(lowerPrice.toNumber(), 0.001);
     expect(orcaPositionRange.upperPrice.toNumber()).to.be.approximately(upperPrice.toNumber(), 0.001);
@@ -259,8 +259,8 @@ describe('Kamino SDK Tests', () => {
     expect(raydiumStrategy).not.to.be.null;
     const raydiumPositionRange = await kamino.getPositionRangeRaydium(
       raydiumStrategy!.position,
-      raydiumStrategy!.tokenAMintDecimals.toNumber(),
-      raydiumStrategy!.tokenBMintDecimals.toNumber()
+      Number(raydiumStrategy!.tokenAMintDecimals),
+      Number(raydiumStrategy!.tokenBMintDecimals)
     );
     expect(raydiumPositionRange.lowerPrice.toNumber()).to.be.approximately(lowerPrice.toNumber(), 0.001);
     expect(raydiumPositionRange.upperPrice.toNumber()).to.be.approximately(upperPrice.toNumber(), 0.001);
@@ -1707,8 +1707,8 @@ describe('Kamino SDK Tests', () => {
     try {
       const position = await kamino.getPositionRangeOrca(
         strategyBefore.position,
-        strategyBefore.tokenAMintDecimals.toNumber(),
-        strategyBefore.tokenBMintDecimals.toNumber()
+        Number(strategyBefore.tokenAMintDecimals),
+        Number(strategyBefore.tokenBMintDecimals)
       );
       expect(position).to.be.null;
     } catch (error) {
@@ -1755,8 +1755,8 @@ describe('Kamino SDK Tests', () => {
     try {
       const position = await kamino.getPositionRangeOrca(
         strategyState.position,
-        strategyState.tokenAMintDecimals.toNumber(),
-        strategyState.tokenBMintDecimals.toNumber()
+        Number(strategyState.tokenAMintDecimals),
+        Number(strategyState.tokenBMintDecimals)
       );
       expect(position).to.be.null;
     } catch (error) {
@@ -1817,8 +1817,8 @@ describe('Kamino SDK Tests', () => {
     try {
       const position = await kamino.getPositionRangeOrca(
         strategyState.position,
-        strategyState.tokenAMintDecimals.toNumber(),
-        strategyState.tokenBMintDecimals.toNumber()
+        Number(strategyState.tokenAMintDecimals),
+        Number(strategyState.tokenBMintDecimals)
       );
       expect(position).to.be.null;
     } catch (error) {

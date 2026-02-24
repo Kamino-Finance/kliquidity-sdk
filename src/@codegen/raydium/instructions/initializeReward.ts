@@ -2,18 +2,21 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([
+  95, 135, 192, 196, 242, 129, 230, 68,
+])
 
 export interface InitializeRewardArgs {
   param: types.InitializeRewardParamFields
@@ -32,17 +35,17 @@ export interface InitializeRewardAccounts {
   rent: Address
 }
 
-export const layout = borsh.struct<InitializeRewardArgs>([
+export const layout = borsh.struct([
   types.InitializeRewardParam.layout("param"),
 ])
 
 export function initializeReward(
   args: InitializeRewardArgs,
   accounts: InitializeRewardAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     {
       address: accounts.rewardFunder.address,
       role: 3,
@@ -59,15 +62,19 @@ export function initializeReward(
     { address: accounts.rent, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([95, 135, 192, 196, 242, 129, 230, 68])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       param: types.InitializeRewardParam.toEncodable(args.param),
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

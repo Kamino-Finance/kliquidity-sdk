@@ -1,15 +1,15 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface WhirlpoolRewardInfoFields {
   mint: Address
   vault: Address
   authority: Address
-  emissionsPerSecondX64: BN
-  growthGlobalX64: BN
+  emissionsPerSecondX64: bigint
+  growthGlobalX64: bigint
 }
 
 export interface WhirlpoolRewardInfoJSON {
@@ -24,8 +24,8 @@ export class WhirlpoolRewardInfo {
   readonly mint: Address
   readonly vault: Address
   readonly authority: Address
-  readonly emissionsPerSecondX64: BN
-  readonly growthGlobalX64: BN
+  readonly emissionsPerSecondX64: bigint
+  readonly growthGlobalX64: bigint
 
   constructor(fields: WhirlpoolRewardInfoFields) {
     this.mint = fields.mint
@@ -84,8 +84,8 @@ export class WhirlpoolRewardInfo {
       mint: address(obj.mint),
       vault: address(obj.vault),
       authority: address(obj.authority),
-      emissionsPerSecondX64: new BN(obj.emissionsPerSecondX64),
-      growthGlobalX64: new BN(obj.growthGlobalX64),
+      emissionsPerSecondX64: BigInt(obj.emissionsPerSecondX64),
+      growthGlobalX64: BigInt(obj.growthGlobalX64),
     })
   }
 

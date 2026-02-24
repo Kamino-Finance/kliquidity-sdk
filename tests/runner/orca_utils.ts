@@ -95,7 +95,7 @@ export async function initializeWhirlpool(
     const initialPrice = 1.0;
     const initialisePoolArgs: WhirlpoolInstructions.InitializePoolV2Args = {
       tickSpacing: tickSize,
-      initialSqrtPrice: new anchor.BN(priceToSqrtPrice(initialPrice, 6, 6).toString()),
+      initialSqrtPrice: BigInt(priceToSqrtPrice(initialPrice, 6, 6).toString()),
     };
 
     const initializePoolAccounts: WhirlpoolInstructions.InitializePoolV2Accounts = {

@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -22,18 +21,18 @@ export interface WhirlpoolFields {
   tickSpacingSeed: Array<number>
   feeRate: number
   protocolFeeRate: number
-  liquidity: BN
-  sqrtPrice: BN
+  liquidity: bigint
+  sqrtPrice: bigint
   tickCurrentIndex: number
-  protocolFeeOwedA: BN
-  protocolFeeOwedB: BN
+  protocolFeeOwedA: bigint
+  protocolFeeOwedB: bigint
   tokenMintA: Address
   tokenVaultA: Address
-  feeGrowthGlobalA: BN
+  feeGrowthGlobalA: bigint
   tokenMintB: Address
   tokenVaultB: Address
-  feeGrowthGlobalB: BN
-  rewardLastUpdatedTimestamp: BN
+  feeGrowthGlobalB: bigint
+  rewardLastUpdatedTimestamp: bigint
   rewardInfos: Array<types.WhirlpoolRewardInfoFields>
 }
 
@@ -66,21 +65,21 @@ export class Whirlpool {
   readonly tickSpacingSeed: Array<number>
   readonly feeRate: number
   readonly protocolFeeRate: number
-  readonly liquidity: BN
-  readonly sqrtPrice: BN
+  readonly liquidity: bigint
+  readonly sqrtPrice: bigint
   readonly tickCurrentIndex: number
-  readonly protocolFeeOwedA: BN
-  readonly protocolFeeOwedB: BN
+  readonly protocolFeeOwedA: bigint
+  readonly protocolFeeOwedB: bigint
   readonly tokenMintA: Address
   readonly tokenVaultA: Address
-  readonly feeGrowthGlobalA: BN
+  readonly feeGrowthGlobalA: bigint
   readonly tokenMintB: Address
   readonly tokenVaultB: Address
-  readonly feeGrowthGlobalB: BN
-  readonly rewardLastUpdatedTimestamp: BN
+  readonly feeGrowthGlobalB: bigint
+  readonly rewardLastUpdatedTimestamp: bigint
   readonly rewardInfos: Array<types.WhirlpoolRewardInfo>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     63, 149, 209, 12, 225, 128, 99, 9,
   ])
 
@@ -146,7 +145,7 @@ export class Whirlpool {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -166,16 +165,23 @@ export class Whirlpool {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): Whirlpool {
-    if (!data.slice(0, 8).equals(Whirlpool.discriminator)) {
+  static decode(data: Uint8Array): Whirlpool {
+    if (data.length < Whirlpool.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < Whirlpool.discriminator.length; i++) {
+      if (data[i] !== Whirlpool.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = Whirlpool.layout.decode(data.slice(8))
+    const dec = Whirlpool.layout.decode(
+      data.subarray(Whirlpool.discriminator.length)
+    )
 
     return new Whirlpool({
       whirlpoolsConfig: dec.whirlpoolsConfig,
@@ -236,18 +242,18 @@ export class Whirlpool {
       tickSpacingSeed: obj.tickSpacingSeed,
       feeRate: obj.feeRate,
       protocolFeeRate: obj.protocolFeeRate,
-      liquidity: new BN(obj.liquidity),
-      sqrtPrice: new BN(obj.sqrtPrice),
+      liquidity: BigInt(obj.liquidity),
+      sqrtPrice: BigInt(obj.sqrtPrice),
       tickCurrentIndex: obj.tickCurrentIndex,
-      protocolFeeOwedA: new BN(obj.protocolFeeOwedA),
-      protocolFeeOwedB: new BN(obj.protocolFeeOwedB),
+      protocolFeeOwedA: BigInt(obj.protocolFeeOwedA),
+      protocolFeeOwedB: BigInt(obj.protocolFeeOwedB),
       tokenMintA: address(obj.tokenMintA),
       tokenVaultA: address(obj.tokenVaultA),
-      feeGrowthGlobalA: new BN(obj.feeGrowthGlobalA),
+      feeGrowthGlobalA: BigInt(obj.feeGrowthGlobalA),
       tokenMintB: address(obj.tokenMintB),
       tokenVaultB: address(obj.tokenVaultB),
-      feeGrowthGlobalB: new BN(obj.feeGrowthGlobalB),
-      rewardLastUpdatedTimestamp: new BN(obj.rewardLastUpdatedTimestamp),
+      feeGrowthGlobalB: BigInt(obj.feeGrowthGlobalB),
+      rewardLastUpdatedTimestamp: BigInt(obj.rewardLastUpdatedTimestamp),
       rewardInfos: obj.rewardInfos.map((item) =>
         types.WhirlpoolRewardInfo.fromJSON(item)
       ),

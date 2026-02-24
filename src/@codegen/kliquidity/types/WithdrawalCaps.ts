@@ -1,14 +1,14 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface WithdrawalCapsFields {
-  configCapacity: BN
-  currentTotal: BN
-  lastIntervalStartTimestamp: BN
-  configIntervalLengthSeconds: BN
+  configCapacity: bigint
+  currentTotal: bigint
+  lastIntervalStartTimestamp: bigint
+  configIntervalLengthSeconds: bigint
 }
 
 export interface WithdrawalCapsJSON {
@@ -19,10 +19,10 @@ export interface WithdrawalCapsJSON {
 }
 
 export class WithdrawalCaps {
-  readonly configCapacity: BN
-  readonly currentTotal: BN
-  readonly lastIntervalStartTimestamp: BN
-  readonly configIntervalLengthSeconds: BN
+  readonly configCapacity: bigint
+  readonly currentTotal: bigint
+  readonly lastIntervalStartTimestamp: bigint
+  readonly configIntervalLengthSeconds: bigint
 
   constructor(fields: WithdrawalCapsFields) {
     this.configCapacity = fields.configCapacity
@@ -73,10 +73,10 @@ export class WithdrawalCaps {
 
   static fromJSON(obj: WithdrawalCapsJSON): WithdrawalCaps {
     return new WithdrawalCaps({
-      configCapacity: new BN(obj.configCapacity),
-      currentTotal: new BN(obj.currentTotal),
-      lastIntervalStartTimestamp: new BN(obj.lastIntervalStartTimestamp),
-      configIntervalLengthSeconds: new BN(obj.configIntervalLengthSeconds),
+      configCapacity: BigInt(obj.configCapacity),
+      currentTotal: BigInt(obj.currentTotal),
+      lastIntervalStartTimestamp: BigInt(obj.lastIntervalStartTimestamp),
+      configIntervalLengthSeconds: BigInt(obj.configIntervalLengthSeconds),
     })
   }
 

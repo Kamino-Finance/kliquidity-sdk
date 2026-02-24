@@ -2,18 +2,19 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([10, 51, 61, 35, 112, 105, 24, 85])
 
 export interface RemoveAllLiquidityAccounts {
   position: Address
@@ -36,10 +37,10 @@ export interface RemoveAllLiquidityAccounts {
 
 export function removeAllLiquidity(
   accounts: RemoveAllLiquidityAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.position, role: 1 },
     { address: accounts.lbPair, role: 1 },
     isSome(accounts.binArrayBitmapExtension)
@@ -60,8 +61,7 @@ export function removeAllLiquidity(
     { address: accounts.program, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([10, 51, 61, 35, 112, 105, 24, 85])
-  const data = identifier
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = DISCRIMINATOR
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

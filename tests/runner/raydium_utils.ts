@@ -3,7 +3,6 @@ import { Address, generateKeyPairSigner, getAddressEncoder, getProgramDerivedAdd
 import * as RaydiumInstructions from '../../src/@codegen/raydium/instructions';
 import { accountExist, DeployedPool } from './utils';
 import Decimal from 'decimal.js';
-import { BN } from 'bn.js';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
 import { getCreateAccountInstruction, SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { SYSVAR_RENT_ADDRESS } from '@solana/sysvars';
@@ -73,8 +72,8 @@ export async function initializeRaydiumPool(
 
   {
     const createPoolArgs: RaydiumInstructions.CreatePoolArgs = {
-      sqrtPriceX64: sqrtPriceX64InitialPrice,
-      openTime: new BN(1684953391), // not relevant, it has to be a timestamp < current timestamp
+      sqrtPriceX64: BigInt(sqrtPriceX64InitialPrice.toString()),
+      openTime: BigInt(1684953391), // not relevant, it has to be a timestamp < current timestamp
     };
     const createPoolAccounts: RaydiumInstructions.CreatePoolAccounts = {
       poolCreator: env.admin,

@@ -2,22 +2,25 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  136, 136, 252, 221, 194, 66, 126, 89,
+])
+
 export interface CollectProtocolFeeArgs {
-  amount0Requested: BN
-  amount1Requested: BN
+  amount0Requested: bigint
+  amount1Requested: bigint
 }
 
 export interface CollectProtocolFeeAccounts {
@@ -34,7 +37,7 @@ export interface CollectProtocolFeeAccounts {
   tokenProgram2022: Address
 }
 
-export const layout = borsh.struct<CollectProtocolFeeArgs>([
+export const layout = borsh.struct([
   borsh.u64("amount0Requested"),
   borsh.u64("amount1Requested"),
 ])
@@ -42,10 +45,10 @@ export const layout = borsh.struct<CollectProtocolFeeArgs>([
 export function collectProtocolFee(
   args: CollectProtocolFeeArgs,
   accounts: CollectProtocolFeeAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.owner.address, role: 2, signer: accounts.owner },
     { address: accounts.poolState, role: 1 },
     { address: accounts.ammConfig, role: 0 },
@@ -59,8 +62,7 @@ export function collectProtocolFee(
     { address: accounts.tokenProgram2022, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([136, 136, 252, 221, 194, 66, 126, 89])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       amount0Requested: args.amount0Requested,
@@ -68,7 +70,12 @@ export function collectProtocolFee(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

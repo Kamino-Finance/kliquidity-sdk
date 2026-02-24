@@ -1,5 +1,3 @@
-import { BN } from '@coral-xyz/anchor';
-
 import { address, Address, Instruction, TransactionMessage, TransactionSigner } from '@solana/kit';
 import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import { Dex, collToLamportsDecimal } from './utils';
@@ -45,7 +43,7 @@ export function strategyTypeToNumber(strategyType: StrategyType): number {
 }
 
 export function getStrategyTypeFromStrategy(strategy: WhirlpoolStrategy): StrategyType {
-  switch (strategy.strategyType.toNumber()) {
+  switch (Number(strategy.strategyType)) {
     case 0:
       return 'NON_PEGGED';
     case 1:
@@ -53,7 +51,7 @@ export function getStrategyTypeFromStrategy(strategy: WhirlpoolStrategy): Strate
     case 2:
       return 'STABLE';
     default:
-      throw new Error(`Unknown strategyType value ${strategy.strategyType.toNumber()}`);
+      throw new Error(`Unknown strategyType value ${Number(strategy.strategyType)}`);
   }
 }
 
@@ -314,6 +312,6 @@ export interface InitPoolTickIfNeeded {
 }
 
 export type Percentage = {
-  numerator: BN;
-  denominator: BN;
+  numerator: bigint;
+  denominator: bigint;
 };

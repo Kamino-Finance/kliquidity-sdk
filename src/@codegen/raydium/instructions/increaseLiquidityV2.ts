@@ -2,23 +2,26 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  133, 29, 89, 223, 69, 238, 176, 10,
+])
+
 export interface IncreaseLiquidityV2Args {
-  liquidity: BN
-  amount0Max: BN
-  amount1Max: BN
+  liquidity: bigint
+  amount0Max: bigint
+  amount1Max: bigint
   baseFlag: boolean | null
 }
 
@@ -40,7 +43,7 @@ export interface IncreaseLiquidityV2Accounts {
   vault1Mint: Address
 }
 
-export const layout = borsh.struct<IncreaseLiquidityV2Args>([
+export const layout = borsh.struct([
   borsh.u128("liquidity"),
   borsh.u64("amount0Max"),
   borsh.u64("amount1Max"),
@@ -50,10 +53,10 @@ export const layout = borsh.struct<IncreaseLiquidityV2Args>([
 export function increaseLiquidityV2(
   args: IncreaseLiquidityV2Args,
   accounts: IncreaseLiquidityV2Accounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.nftOwner.address, role: 2, signer: accounts.nftOwner },
     { address: accounts.nftAccount, role: 0 },
     { address: accounts.poolState, role: 1 },
@@ -71,8 +74,7 @@ export function increaseLiquidityV2(
     { address: accounts.vault1Mint, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([133, 29, 89, 223, 69, 238, 176, 10])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       liquidity: args.liquidity,
@@ -82,7 +84,12 @@ export function increaseLiquidityV2(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

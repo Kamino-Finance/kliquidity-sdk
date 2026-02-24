@@ -1,12 +1,12 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface PositionRewardInfoFields {
-  growthInsideCheckpoint: BN
-  amountOwed: BN
+  growthInsideCheckpoint: bigint
+  amountOwed: bigint
 }
 
 export interface PositionRewardInfoJSON {
@@ -15,8 +15,8 @@ export interface PositionRewardInfoJSON {
 }
 
 export class PositionRewardInfo {
-  readonly growthInsideCheckpoint: BN
-  readonly amountOwed: BN
+  readonly growthInsideCheckpoint: bigint
+  readonly amountOwed: bigint
 
   constructor(fields: PositionRewardInfoFields) {
     this.growthInsideCheckpoint = fields.growthInsideCheckpoint
@@ -54,8 +54,8 @@ export class PositionRewardInfo {
 
   static fromJSON(obj: PositionRewardInfoJSON): PositionRewardInfo {
     return new PositionRewardInfo({
-      growthInsideCheckpoint: new BN(obj.growthInsideCheckpoint),
-      amountOwed: new BN(obj.amountOwed),
+      growthInsideCheckpoint: BigInt(obj.growthInsideCheckpoint),
+      amountOwed: BigInt(obj.amountOwed),
     })
   }
 

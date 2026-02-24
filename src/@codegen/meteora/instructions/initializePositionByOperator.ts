@@ -2,18 +2,21 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([
+  251, 189, 190, 244, 117, 254, 35, 148,
+])
 
 export interface InitializePositionByOperatorArgs {
   lowerBinId: number
@@ -35,7 +38,7 @@ export interface InitializePositionByOperatorAccounts {
   program: Address
 }
 
-export const layout = borsh.struct<InitializePositionByOperatorArgs>([
+export const layout = borsh.struct([
   borsh.i32("lowerBinId"),
   borsh.i32("width"),
   borshAddress("owner"),
@@ -45,10 +48,10 @@ export const layout = borsh.struct<InitializePositionByOperatorArgs>([
 export function initializePositionByOperator(
   args: InitializePositionByOperatorArgs,
   accounts: InitializePositionByOperatorAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.payer.address, role: 3, signer: accounts.payer },
     { address: accounts.base.address, role: 2, signer: accounts.base },
     { address: accounts.position, role: 1 },
@@ -60,8 +63,7 @@ export function initializePositionByOperator(
     { address: accounts.program, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([251, 189, 190, 244, 117, 254, 35, 148])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       lowerBinId: args.lowerBinId,
@@ -71,7 +73,12 @@ export function initializePositionByOperator(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

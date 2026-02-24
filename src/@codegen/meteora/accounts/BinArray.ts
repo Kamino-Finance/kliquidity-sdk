@@ -9,14 +9,13 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
 export interface BinArrayFields {
-  index: BN
+  index: bigint
   /** Version of binArray */
   version: number
   padding: Array<number>
@@ -40,14 +39,14 @@ export interface BinArrayJSON {
  * index: 2 contains bin 600 <-> 1199, ...
  */
 export class BinArray {
-  readonly index: BN
+  readonly index: bigint
   /** Version of binArray */
   readonly version: number
   readonly padding: Array<number>
   readonly lbPair: Address
   readonly bins: Array<types.Bin>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     92, 142, 92, 220, 5, 148, 70, 181,
   ])
 
@@ -83,7 +82,7 @@ export class BinArray {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -103,16 +102,23 @@ export class BinArray {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): BinArray {
-    if (!data.slice(0, 8).equals(BinArray.discriminator)) {
+  static decode(data: Uint8Array): BinArray {
+    if (data.length < BinArray.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < BinArray.discriminator.length; i++) {
+      if (data[i] !== BinArray.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = BinArray.layout.decode(data.slice(8))
+    const dec = BinArray.layout.decode(
+      data.subarray(BinArray.discriminator.length)
+    )
 
     return new BinArray({
       index: dec.index,
@@ -139,7 +145,7 @@ export class BinArray {
 
   static fromJSON(obj: BinArrayJSON): BinArray {
     return new BinArray({
-      index: new BN(obj.index),
+      index: BigInt(obj.index),
       version: obj.version,
       padding: obj.padding,
       lbPair: address(obj.lbPair),

@@ -1,12 +1,12 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface AddLiquiditySingleSidePreciseParameterFields {
   bins: Array<types.CompressedBinDepositAmountFields>
-  decompressMultiplier: BN
+  decompressMultiplier: bigint
 }
 
 export interface AddLiquiditySingleSidePreciseParameterJSON {
@@ -16,7 +16,7 @@ export interface AddLiquiditySingleSidePreciseParameterJSON {
 
 export class AddLiquiditySingleSidePreciseParameter {
   readonly bins: Array<types.CompressedBinDepositAmount>
-  readonly decompressMultiplier: BN
+  readonly decompressMultiplier: bigint
 
   constructor(fields: AddLiquiditySingleSidePreciseParameterFields) {
     this.bins = fields.bins.map(
@@ -70,7 +70,7 @@ export class AddLiquiditySingleSidePreciseParameter {
       bins: obj.bins.map((item) =>
         types.CompressedBinDepositAmount.fromJSON(item)
       ),
-      decompressMultiplier: new BN(obj.decompressMultiplier),
+      decompressMultiplier: BigInt(obj.decompressMultiplier),
     })
   }
 

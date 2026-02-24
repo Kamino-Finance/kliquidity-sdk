@@ -1,13 +1,13 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface RebalanceAutodriftWindowFields {
   stakingRateA: types.PriceFields | null
   stakingRateB: types.PriceFields | null
-  epoch: BN
+  epoch: bigint
   theoreticalTick: number
   stratMidTick: number
 }
@@ -23,7 +23,7 @@ export interface RebalanceAutodriftWindowJSON {
 export class RebalanceAutodriftWindow {
   readonly stakingRateA: types.Price | null
   readonly stakingRateB: types.Price | null
-  readonly epoch: BN
+  readonly epoch: bigint
   readonly theoreticalTick: number
   readonly stratMidTick: number
 
@@ -95,7 +95,7 @@ export class RebalanceAutodriftWindow {
         (obj.stakingRateA && types.Price.fromJSON(obj.stakingRateA)) || null,
       stakingRateB:
         (obj.stakingRateB && types.Price.fromJSON(obj.stakingRateB)) || null,
-      epoch: new BN(obj.epoch),
+      epoch: BigInt(obj.epoch),
       theoreticalTick: obj.theoreticalTick,
       stratMidTick: obj.stratMidTick,
     })

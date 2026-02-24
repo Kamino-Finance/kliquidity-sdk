@@ -2,22 +2,25 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  73, 226, 248, 215, 5, 197, 211, 229,
+])
+
 export interface EmergencySwapArgs {
   aToB: boolean
-  targetLimitBps: BN
+  targetLimitBps: bigint
 }
 
 export interface EmergencySwapAccounts {
@@ -48,7 +51,7 @@ export interface EmergencySwapAccounts {
   memoProgram: Address
 }
 
-export const layout = borsh.struct<EmergencySwapArgs>([
+export const layout = borsh.struct([
   borsh.bool("aToB"),
   borsh.u64("targetLimitBps"),
 ])
@@ -56,10 +59,10 @@ export const layout = borsh.struct<EmergencySwapArgs>([
 export function emergencySwap(
   args: EmergencySwapArgs,
   accounts: EmergencySwapAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     {
       address: accounts.adminAuthority.address,
       role: 3,
@@ -88,8 +91,7 @@ export function emergencySwap(
     { address: accounts.memoProgram, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([73, 226, 248, 215, 5, 197, 211, 229])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       aToB: args.aToB,
@@ -97,7 +99,12 @@ export function emergencySwap(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

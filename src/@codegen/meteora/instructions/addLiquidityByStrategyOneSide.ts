@@ -2,18 +2,19 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([41, 5, 238, 175, 100, 225, 6, 205])
 
 export interface AddLiquidityByStrategyOneSideArgs {
   liquidityParameter: types.LiquidityParameterByStrategyOneSideFields
@@ -41,10 +42,10 @@ export const layout = borsh.struct([
 export function addLiquidityByStrategyOneSide(
   args: AddLiquidityByStrategyOneSideArgs,
   accounts: AddLiquidityByStrategyOneSideAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.position, role: 1 },
     { address: accounts.lbPair, role: 1 },
     isSome(accounts.binArrayBitmapExtension)
@@ -61,8 +62,7 @@ export function addLiquidityByStrategyOneSide(
     { address: accounts.program, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([41, 5, 238, 175, 100, 225, 6, 205])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       liquidityParameter: types.LiquidityParameterByStrategyOneSide.toEncodable(
@@ -71,7 +71,12 @@ export function addLiquidityByStrategyOneSide(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

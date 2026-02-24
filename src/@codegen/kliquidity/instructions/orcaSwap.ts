@@ -2,23 +2,26 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  33, 94, 249, 97, 250, 254, 198, 93,
+])
+
 export interface OrcaSwapArgs {
-  amount: BN
-  otherAmountThreshold: BN
-  sqrtPriceLimit: BN
+  amount: bigint
+  otherAmountThreshold: bigint
+  sqrtPriceLimit: bigint
   amountSpecifiedIsInput: boolean
   aToB: boolean
 }
@@ -43,7 +46,7 @@ export interface OrcaSwapAccounts {
   whirlpoolProgram: Address
 }
 
-export const layout = borsh.struct<OrcaSwapArgs>([
+export const layout = borsh.struct([
   borsh.u64("amount"),
   borsh.u64("otherAmountThreshold"),
   borsh.u128("sqrtPriceLimit"),
@@ -54,10 +57,10 @@ export const layout = borsh.struct<OrcaSwapArgs>([
 export function orcaSwap(
   args: OrcaSwapArgs,
   accounts: OrcaSwapAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.funder.address, role: 3, signer: accounts.funder },
     { address: accounts.tokenATokenProgram, role: 0 },
     { address: accounts.tokenBTokenProgram, role: 0 },
@@ -77,8 +80,7 @@ export function orcaSwap(
     { address: accounts.whirlpoolProgram, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([33, 94, 249, 97, 250, 254, 198, 93])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       amount: args.amount,
@@ -89,7 +91,12 @@ export function orcaSwap(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

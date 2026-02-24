@@ -1,16 +1,16 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface TickFields {
   initialized: boolean
-  liquidityNet: BN
-  liquidityGross: BN
-  feeGrowthOutsideA: BN
-  feeGrowthOutsideB: BN
-  rewardGrowthsOutside: Array<BN>
+  liquidityNet: bigint
+  liquidityGross: bigint
+  feeGrowthOutsideA: bigint
+  feeGrowthOutsideB: bigint
+  rewardGrowthsOutside: Array<bigint>
 }
 
 export interface TickJSON {
@@ -24,11 +24,11 @@ export interface TickJSON {
 
 export class Tick {
   readonly initialized: boolean
-  readonly liquidityNet: BN
-  readonly liquidityGross: BN
-  readonly feeGrowthOutsideA: BN
-  readonly feeGrowthOutsideB: BN
-  readonly rewardGrowthsOutside: Array<BN>
+  readonly liquidityNet: bigint
+  readonly liquidityGross: bigint
+  readonly feeGrowthOutsideA: bigint
+  readonly feeGrowthOutsideB: bigint
+  readonly rewardGrowthsOutside: Array<bigint>
 
   constructor(fields: TickFields) {
     this.initialized = fields.initialized
@@ -92,12 +92,12 @@ export class Tick {
   static fromJSON(obj: TickJSON): Tick {
     return new Tick({
       initialized: obj.initialized,
-      liquidityNet: new BN(obj.liquidityNet),
-      liquidityGross: new BN(obj.liquidityGross),
-      feeGrowthOutsideA: new BN(obj.feeGrowthOutsideA),
-      feeGrowthOutsideB: new BN(obj.feeGrowthOutsideB),
-      rewardGrowthsOutside: obj.rewardGrowthsOutside.map(
-        (item) => new BN(item)
+      liquidityNet: BigInt(obj.liquidityNet),
+      liquidityGross: BigInt(obj.liquidityGross),
+      feeGrowthOutsideA: BigInt(obj.feeGrowthOutsideA),
+      feeGrowthOutsideB: BigInt(obj.feeGrowthOutsideB),
+      rewardGrowthsOutside: obj.rewardGrowthsOutside.map((item) =>
+        BigInt(item)
       ),
     })
   }

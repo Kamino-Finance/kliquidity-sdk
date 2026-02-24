@@ -1,9 +1,9 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface VariableParametersFields {
   /**
    * Volatility accumulator measure the number of bin crossed since reference bin ID. Normally (without filter period taken into consideration), reference bin ID is the active bin of last swap.
@@ -17,7 +17,7 @@ export interface VariableParametersFields {
   /** Padding for bytemuck safe alignment */
   padding: Array<number>
   /** Last timestamp the variable parameters was updated */
-  lastUpdateTimestamp: BN
+  lastUpdateTimestamp: bigint
   /** Padding for bytemuck safe alignment */
   padding1: Array<number>
 }
@@ -54,7 +54,7 @@ export class VariableParameters {
   /** Padding for bytemuck safe alignment */
   readonly padding: Array<number>
   /** Last timestamp the variable parameters was updated */
-  readonly lastUpdateTimestamp: BN
+  readonly lastUpdateTimestamp: bigint
   /** Padding for bytemuck safe alignment */
   readonly padding1: Array<number>
 
@@ -121,7 +121,7 @@ export class VariableParameters {
       volatilityReference: obj.volatilityReference,
       indexReference: obj.indexReference,
       padding: obj.padding,
-      lastUpdateTimestamp: new BN(obj.lastUpdateTimestamp),
+      lastUpdateTimestamp: BigInt(obj.lastUpdateTimestamp),
       padding1: obj.padding1,
     })
   }

@@ -1,12 +1,12 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface LiquidityParameterByStrategyOneSideFields {
   /** Amount of X token or Y token to deposit */
-  amount: BN
+  amount: bigint
   /** Active bin that integrator observe off-chain */
   activeId: number
   /** max active bin slippage allowed */
@@ -28,7 +28,7 @@ export interface LiquidityParameterByStrategyOneSideJSON {
 
 export class LiquidityParameterByStrategyOneSide {
   /** Amount of X token or Y token to deposit */
-  readonly amount: BN
+  readonly amount: bigint
   /** Active bin that integrator observe off-chain */
   readonly activeId: number
   /** max active bin slippage allowed */
@@ -93,7 +93,7 @@ export class LiquidityParameterByStrategyOneSide {
     obj: LiquidityParameterByStrategyOneSideJSON
   ): LiquidityParameterByStrategyOneSide {
     return new LiquidityParameterByStrategyOneSide({
-      amount: new BN(obj.amount),
+      amount: BigInt(obj.amount),
       activeId: obj.activeId,
       maxActiveBinSlippage: obj.maxActiveBinSlippage,
       strategyParameters: types.StrategyParameters.fromJSON(

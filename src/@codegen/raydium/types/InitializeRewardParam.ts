@@ -1,13 +1,13 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface InitializeRewardParamFields {
-  openTime: BN
-  endTime: BN
-  emissionsPerSecondX64: BN
+  openTime: bigint
+  endTime: bigint
+  emissionsPerSecondX64: bigint
 }
 
 export interface InitializeRewardParamJSON {
@@ -17,9 +17,9 @@ export interface InitializeRewardParamJSON {
 }
 
 export class InitializeRewardParam {
-  readonly openTime: BN
-  readonly endTime: BN
-  readonly emissionsPerSecondX64: BN
+  readonly openTime: bigint
+  readonly endTime: bigint
+  readonly emissionsPerSecondX64: bigint
 
   constructor(fields: InitializeRewardParamFields) {
     this.openTime = fields.openTime
@@ -65,9 +65,9 @@ export class InitializeRewardParam {
 
   static fromJSON(obj: InitializeRewardParamJSON): InitializeRewardParam {
     return new InitializeRewardParam({
-      openTime: new BN(obj.openTime),
-      endTime: new BN(obj.endTime),
-      emissionsPerSecondX64: new BN(obj.emissionsPerSecondX64),
+      openTime: BigInt(obj.openTime),
+      endTime: BigInt(obj.endTime),
+      emissionsPerSecondX64: BigInt(obj.emissionsPerSecondX64),
     })
   }
 

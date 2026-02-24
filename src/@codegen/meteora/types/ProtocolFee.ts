@@ -1,12 +1,12 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface ProtocolFeeFields {
-  amountX: BN
-  amountY: BN
+  amountX: bigint
+  amountY: bigint
 }
 
 export interface ProtocolFeeJSON {
@@ -15,8 +15,8 @@ export interface ProtocolFeeJSON {
 }
 
 export class ProtocolFee {
-  readonly amountX: BN
-  readonly amountY: BN
+  readonly amountX: bigint
+  readonly amountY: bigint
 
   constructor(fields: ProtocolFeeFields) {
     this.amountX = fields.amountX
@@ -51,8 +51,8 @@ export class ProtocolFee {
 
   static fromJSON(obj: ProtocolFeeJSON): ProtocolFee {
     return new ProtocolFee({
-      amountX: new BN(obj.amountX),
-      amountY: new BN(obj.amountY),
+      amountX: BigInt(obj.amountX),
+      amountY: BigInt(obj.amountY),
     })
   }
 

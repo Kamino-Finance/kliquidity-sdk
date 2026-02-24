@@ -3,10 +3,10 @@ import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils
 import { FullBPSDecimal } from '../utils/CreationParameters';
 import { Dex, readBigUint128LE } from '../utils';
 import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
-import BN from 'bn.js';
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { getPriceFromQ64Price } from '../utils/meteora';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
+import { toBN } from '../utils/raydiumBridge';
 
 export const DEFAULT_LOWER_RANGE_PRICE_DIFF_BPS = new Decimal(500);
 export const DEFAULT_UPPER_RANGE_PRICE_DIFF_BPS = new Decimal(500);
@@ -100,12 +100,12 @@ export function readTakeProfitRebalanceParamsFromStrategy(
   const params: RebalanceFieldsDict = {};
 
   params['lowerRangePrice'] = SqrtPriceMath.sqrtPriceX64ToPrice(
-    new BN(readBigUint128LE(paramsBuffer, 0).toString()),
+    toBN(readBigUint128LE(paramsBuffer, 0)),
     tokenADecimals,
     tokenBDecimals
   );
   params['upperRangePrice'] = SqrtPriceMath.sqrtPriceX64ToPrice(
-    new BN(readBigUint128LE(paramsBuffer, 16).toString()),
+    toBN(readBigUint128LE(paramsBuffer, 16)),
     tokenADecimals,
     tokenBDecimals
   );

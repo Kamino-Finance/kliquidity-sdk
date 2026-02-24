@@ -1,11 +1,11 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface PeriodicRebalanceStateFields {
-  lastRebalanceTimestamp: BN
+  lastRebalanceTimestamp: bigint
 }
 
 export interface PeriodicRebalanceStateJSON {
@@ -13,7 +13,7 @@ export interface PeriodicRebalanceStateJSON {
 }
 
 export class PeriodicRebalanceState {
-  readonly lastRebalanceTimestamp: BN
+  readonly lastRebalanceTimestamp: bigint
 
   constructor(fields: PeriodicRebalanceStateFields) {
     this.lastRebalanceTimestamp = fields.lastRebalanceTimestamp
@@ -44,7 +44,7 @@ export class PeriodicRebalanceState {
 
   static fromJSON(obj: PeriodicRebalanceStateJSON): PeriodicRebalanceState {
     return new PeriodicRebalanceState({
-      lastRebalanceTimestamp: new BN(obj.lastRebalanceTimestamp),
+      lastRebalanceTimestamp: BigInt(obj.lastRebalanceTimestamp),
     })
   }
 

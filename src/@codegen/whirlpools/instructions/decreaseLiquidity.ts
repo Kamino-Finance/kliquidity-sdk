@@ -2,23 +2,24 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([160, 38, 208, 111, 104, 91, 44, 1])
+
 export interface DecreaseLiquidityArgs {
-  liquidityAmount: BN
-  tokenMinA: BN
-  tokenMinB: BN
+  liquidityAmount: bigint
+  tokenMinA: bigint
+  tokenMinB: bigint
 }
 
 export interface DecreaseLiquidityAccounts {
@@ -35,7 +36,7 @@ export interface DecreaseLiquidityAccounts {
   tickArrayUpper: Address
 }
 
-export const layout = borsh.struct<DecreaseLiquidityArgs>([
+export const layout = borsh.struct([
   borsh.u128("liquidityAmount"),
   borsh.u64("tokenMinA"),
   borsh.u64("tokenMinB"),
@@ -44,10 +45,10 @@ export const layout = borsh.struct<DecreaseLiquidityArgs>([
 export function decreaseLiquidity(
   args: DecreaseLiquidityArgs,
   accounts: DecreaseLiquidityAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.whirlpool, role: 1 },
     { address: accounts.tokenProgram, role: 0 },
     {
@@ -65,8 +66,7 @@ export function decreaseLiquidity(
     { address: accounts.tickArrayUpper, role: 1 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([160, 38, 208, 111, 104, 91, 44, 1])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       liquidityAmount: args.liquidityAmount,
@@ -75,7 +75,12 @@ export function decreaseLiquidity(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

@@ -1,28 +1,28 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface BinFields {
   /** Amount of token X in the bin. This already excluded protocol fees. */
-  amountX: BN
+  amountX: bigint
   /** Amount of token Y in the bin. This already excluded protocol fees. */
-  amountY: BN
+  amountY: bigint
   /** Bin price */
-  price: BN
+  price: bigint
   /** Liquidities of the bin. This is the same as LP mint supply. q-number */
-  liquiditySupply: BN
+  liquiditySupply: bigint
   /** reward_a_per_token_stored */
-  rewardPerTokenStored: Array<BN>
+  rewardPerTokenStored: Array<bigint>
   /** Swap fee amount of token X per liquidity deposited. */
-  feeAmountXPerTokenStored: BN
+  feeAmountXPerTokenStored: bigint
   /** Swap fee amount of token Y per liquidity deposited. */
-  feeAmountYPerTokenStored: BN
+  feeAmountYPerTokenStored: bigint
   /** Total token X swap into the bin. Only used for tracking purpose. */
-  amountXIn: BN
+  amountXIn: bigint
   /** Total token Y swap into he bin. Only used for tracking purpose. */
-  amountYIn: BN
+  amountYIn: bigint
 }
 
 export interface BinJSON {
@@ -48,23 +48,23 @@ export interface BinJSON {
 
 export class Bin {
   /** Amount of token X in the bin. This already excluded protocol fees. */
-  readonly amountX: BN
+  readonly amountX: bigint
   /** Amount of token Y in the bin. This already excluded protocol fees. */
-  readonly amountY: BN
+  readonly amountY: bigint
   /** Bin price */
-  readonly price: BN
+  readonly price: bigint
   /** Liquidities of the bin. This is the same as LP mint supply. q-number */
-  readonly liquiditySupply: BN
+  readonly liquiditySupply: bigint
   /** reward_a_per_token_stored */
-  readonly rewardPerTokenStored: Array<BN>
+  readonly rewardPerTokenStored: Array<bigint>
   /** Swap fee amount of token X per liquidity deposited. */
-  readonly feeAmountXPerTokenStored: BN
+  readonly feeAmountXPerTokenStored: bigint
   /** Swap fee amount of token Y per liquidity deposited. */
-  readonly feeAmountYPerTokenStored: BN
+  readonly feeAmountYPerTokenStored: bigint
   /** Total token X swap into the bin. Only used for tracking purpose. */
-  readonly amountXIn: BN
+  readonly amountXIn: bigint
   /** Total token Y swap into he bin. Only used for tracking purpose. */
-  readonly amountYIn: BN
+  readonly amountYIn: bigint
 
   constructor(fields: BinFields) {
     this.amountX = fields.amountX
@@ -142,17 +142,17 @@ export class Bin {
 
   static fromJSON(obj: BinJSON): Bin {
     return new Bin({
-      amountX: new BN(obj.amountX),
-      amountY: new BN(obj.amountY),
-      price: new BN(obj.price),
-      liquiditySupply: new BN(obj.liquiditySupply),
-      rewardPerTokenStored: obj.rewardPerTokenStored.map(
-        (item) => new BN(item)
+      amountX: BigInt(obj.amountX),
+      amountY: BigInt(obj.amountY),
+      price: BigInt(obj.price),
+      liquiditySupply: BigInt(obj.liquiditySupply),
+      rewardPerTokenStored: obj.rewardPerTokenStored.map((item) =>
+        BigInt(item)
       ),
-      feeAmountXPerTokenStored: new BN(obj.feeAmountXPerTokenStored),
-      feeAmountYPerTokenStored: new BN(obj.feeAmountYPerTokenStored),
-      amountXIn: new BN(obj.amountXIn),
-      amountYIn: new BN(obj.amountYIn),
+      feeAmountXPerTokenStored: BigInt(obj.feeAmountXPerTokenStored),
+      feeAmountYPerTokenStored: BigInt(obj.feeAmountYPerTokenStored),
+      amountXIn: BigInt(obj.amountXIn),
+      amountYIn: BigInt(obj.amountYIn),
     })
   }
 

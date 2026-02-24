@@ -1,14 +1,14 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface FeeInfoFields {
-  feeXPerTokenComplete: BN
-  feeYPerTokenComplete: BN
-  feeXPending: BN
-  feeYPending: BN
+  feeXPerTokenComplete: bigint
+  feeYPerTokenComplete: bigint
+  feeXPending: bigint
+  feeYPending: bigint
 }
 
 export interface FeeInfoJSON {
@@ -19,10 +19,10 @@ export interface FeeInfoJSON {
 }
 
 export class FeeInfo {
-  readonly feeXPerTokenComplete: BN
-  readonly feeYPerTokenComplete: BN
-  readonly feeXPending: BN
-  readonly feeYPending: BN
+  readonly feeXPerTokenComplete: bigint
+  readonly feeYPerTokenComplete: bigint
+  readonly feeXPending: bigint
+  readonly feeYPending: bigint
 
   constructor(fields: FeeInfoFields) {
     this.feeXPerTokenComplete = fields.feeXPerTokenComplete
@@ -73,10 +73,10 @@ export class FeeInfo {
 
   static fromJSON(obj: FeeInfoJSON): FeeInfo {
     return new FeeInfo({
-      feeXPerTokenComplete: new BN(obj.feeXPerTokenComplete),
-      feeYPerTokenComplete: new BN(obj.feeYPerTokenComplete),
-      feeXPending: new BN(obj.feeXPending),
-      feeYPending: new BN(obj.feeYPending),
+      feeXPerTokenComplete: BigInt(obj.feeXPerTokenComplete),
+      feeYPerTokenComplete: BigInt(obj.feeYPerTokenComplete),
+      feeXPending: BigInt(obj.feeXPending),
+      feeYPending: BigInt(obj.feeYPending),
     })
   }
 

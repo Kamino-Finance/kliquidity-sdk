@@ -424,8 +424,8 @@ export async function updateCollateralInfo(
   );
 
   const args: Instructions.UpdateCollateralInfoArgs = {
-    index: new anchor.BN(collateralNumber),
-    mode: new anchor.BN(mode.discriminator),
+    index: BigInt(collateralNumber),
+    mode: BigInt(mode.discriminator),
     value: argValue,
   };
 

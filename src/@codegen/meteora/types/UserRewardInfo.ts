@@ -1,12 +1,12 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface UserRewardInfoFields {
-  rewardPerTokenCompletes: Array<BN>
-  rewardPendings: Array<BN>
+  rewardPerTokenCompletes: Array<bigint>
+  rewardPendings: Array<bigint>
 }
 
 export interface UserRewardInfoJSON {
@@ -15,8 +15,8 @@ export interface UserRewardInfoJSON {
 }
 
 export class UserRewardInfo {
-  readonly rewardPerTokenCompletes: Array<BN>
-  readonly rewardPendings: Array<BN>
+  readonly rewardPerTokenCompletes: Array<bigint>
+  readonly rewardPendings: Array<bigint>
 
   constructor(fields: UserRewardInfoFields) {
     this.rewardPerTokenCompletes = fields.rewardPerTokenCompletes
@@ -59,10 +59,10 @@ export class UserRewardInfo {
 
   static fromJSON(obj: UserRewardInfoJSON): UserRewardInfo {
     return new UserRewardInfo({
-      rewardPerTokenCompletes: obj.rewardPerTokenCompletes.map(
-        (item) => new BN(item)
+      rewardPerTokenCompletes: obj.rewardPerTokenCompletes.map((item) =>
+        BigInt(item)
       ),
-      rewardPendings: obj.rewardPendings.map((item) => new BN(item)),
+      rewardPendings: obj.rewardPendings.map((item) => BigInt(item)),
     })
   }
 

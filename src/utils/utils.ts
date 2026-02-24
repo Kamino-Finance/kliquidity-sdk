@@ -17,7 +17,7 @@ import {
   updateStrategyConfig,
 } from '../@codegen/kliquidity/instructions';
 import { RebalanceFieldInfo, RebalanceFieldsDict } from './types';
-import BN from 'bn.js';
+import { toBN } from './raydiumBridge';
 import { PoolPriceReferenceType, TwapPriceReferenceType } from './priceReferenceTypes';
 import { U64_MAX } from '../constants/numericalValues';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib/raydium/clmm/utils/math';
@@ -69,7 +69,7 @@ export function numberToReferencePriceType(num: number): ReferencePriceType {
 
 export function getStrategyConfigValue(value: Decimal): number[] {
   const buffer = Buffer.alloc(128);
-  writeBNUint64LE(buffer, new BN(value.toString()), 0);
+  writeBigintUint64LE(buffer, BigInt(value.toString()), 0);
   return [...buffer];
 }
 
@@ -94,17 +94,17 @@ export function buildStrategyRebalanceParams(
     buffer.writeInt32LE(params[0].toNumber());
     buffer.writeInt32LE(params[1].toNumber(), 4);
     buffer.writeInt32LE(params[2].toNumber(), 8);
-    writeBNUint64LE(buffer, new BN(params[3].toString()), 12);
+    writeBigintUint64LE(buffer, BigInt(params[3].toString()), 12);
     buffer.writeUint8(params[4].toNumber(), 20);
   } else if (rebalance_type.kind == RebalanceType.TakeProfit.kind) {
     // TODO: fix this for meteora
     const lowerPrice = SqrtPriceMath.priceToSqrtPriceX64(params[0], tokenADecimals!, tokenBDecimals!);
     const upperPrice = SqrtPriceMath.priceToSqrtPriceX64(params[1], tokenADecimals!, tokenBDecimals!);
-    writeBN128LE(buffer, lowerPrice, 0);
-    writeBN128LE(buffer, upperPrice, 16);
+    writeBigint128LE(buffer, BigInt(lowerPrice.toString()), 0);
+    writeBigint128LE(buffer, BigInt(upperPrice.toString()), 16);
     buffer.writeUint8(params[2].toNumber(), 32);
   } else if (rebalance_type.kind == RebalanceType.PeriodicRebalance.kind) {
-    writeBNUint64LE(buffer, new BN(params[0].toString()), 0);
+    writeBigintUint64LE(buffer, BigInt(params[0].toString()), 0);
     buffer.writeUInt16LE(params[1].toNumber(), 8);
     buffer.writeUInt16LE(params[2].toNumber(), 10);
   } else if (rebalance_type.kind == RebalanceType.Expander.kind) {
@@ -237,16 +237,14 @@ export function readPriceOption(buffer: Buffer, offset: number): [number, Decima
   return [offset + 17, new Decimal(value.toString()).div(new Decimal(10).pow(exp.toString()))];
 }
 
-function writeBNUint64LE(buffer: Buffer, value: BN, offset: number) {
-  const lower_half = value.maskn(64).toBuffer('le');
-  buffer.set(lower_half, offset);
+function writeBigintUint64LE(buffer: Buffer, value: bigint, offset: number) {
+  buffer.writeBigUInt64LE(value & ((1n << 64n) - 1n), offset);
 }
 
-function writeBN128LE(buffer: Buffer, value: BN, offset: number) {
-  const lower_half = value.maskn(64).toBuffer('le');
-  const upper_half = value.shrn(64).toBuffer('le');
-  buffer.set(lower_half, offset);
-  buffer.set(upper_half, offset + 8);
+function writeBigint128LE(buffer: Buffer, value: bigint, offset: number) {
+  const mask64 = (1n << 64n) - 1n;
+  buffer.writeBigUInt64LE(value & mask64, offset);
+  buffer.writeBigUInt64LE((value >> 64n) & mask64, offset + 8);
 }
 
 export function rebalanceFieldsDictToInfo(rebalanceFields: RebalanceFieldsDict): RebalanceFieldInfo[] {
@@ -263,17 +261,17 @@ export function rebalanceFieldsDictToInfo(rebalanceFields: RebalanceFieldsDict):
   return rebalanceFieldsInfo;
 }
 
-export function isVaultInitialized(vault: Address, decimals: BN): boolean {
-  return vault !== DEFAULT_PUBLIC_KEY && decimals.toNumber() > 0;
+export function isVaultInitialized(vault: Address, decimals: bigint): boolean {
+  return vault !== DEFAULT_PUBLIC_KEY && decimals > 0n;
 }
 
-export function sqrtPriceToPrice(sqrtPrice: BN, dexNo: number, decimalsA: number, decimalsB: number): Decimal {
+export function sqrtPriceToPrice(sqrtPrice: bigint, dexNo: number, decimalsA: number, decimalsB: number): Decimal {
   const dex = numberToDex(dexNo);
   if (dex == 'ORCA') {
-    return new Decimal(orcaSqrtPriceToPrice(BigInt(sqrtPrice.toString()), decimalsA, decimalsB));
+    return new Decimal(orcaSqrtPriceToPrice(sqrtPrice, decimalsA, decimalsB));
   }
   if (dex == 'RAYDIUM') {
-    return SqrtPriceMath.sqrtPriceX64ToPrice(sqrtPrice, decimalsA, decimalsB);
+    return SqrtPriceMath.sqrtPriceX64ToPrice(toBN(sqrtPrice), decimalsA, decimalsB);
   }
   if (dex == 'METEORA') {
     const price = new Decimal(sqrtPrice.toString());

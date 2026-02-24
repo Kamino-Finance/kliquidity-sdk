@@ -1,11 +1,11 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
-export type SqrtPriceFields = [BN]
-export type SqrtPriceValue = [BN]
+/* eslint-enable @typescript-eslint/no-unused-vars */
+export type SqrtPriceFields = [bigint]
+export type SqrtPriceValue = [bigint]
 
 export interface SqrtPriceJSON {
   kind: "SqrtPrice"
@@ -39,8 +39,8 @@ export class SqrtPrice {
   }
 }
 
-export type Q64_64Fields = [BN]
-export type Q64_64Value = [BN]
+export type Q64_64Fields = [bigint]
+export type Q64_64Value = [bigint]
 
 export interface Q64_64JSON {
   kind: "Q64_64"
@@ -97,10 +97,10 @@ export function fromJSON(
 ): types.DexSpecificPriceKind {
   switch (obj.kind) {
     case "SqrtPrice": {
-      return new SqrtPrice([new BN(obj.value[0])])
+      return new SqrtPrice([BigInt(obj.value[0])])
     }
     case "Q64_64": {
-      return new Q64_64([new BN(obj.value[0])])
+      return new Q64_64([BigInt(obj.value[0])])
     }
   }
 }
