@@ -1,21 +1,21 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface RewardInfoFields {
   rewardState: number
-  openTime: BN
-  endTime: BN
-  lastUpdateTime: BN
-  emissionsPerSecondX64: BN
-  rewardTotalEmissioned: BN
-  rewardClaimed: BN
+  openTime: bigint
+  endTime: bigint
+  lastUpdateTime: bigint
+  emissionsPerSecondX64: bigint
+  rewardTotalEmissioned: bigint
+  rewardClaimed: bigint
   tokenMint: Address
   tokenVault: Address
   authority: Address
-  rewardGrowthGlobalX64: BN
+  rewardGrowthGlobalX64: bigint
 }
 
 export interface RewardInfoJSON {
@@ -34,16 +34,16 @@ export interface RewardInfoJSON {
 
 export class RewardInfo {
   readonly rewardState: number
-  readonly openTime: BN
-  readonly endTime: BN
-  readonly lastUpdateTime: BN
-  readonly emissionsPerSecondX64: BN
-  readonly rewardTotalEmissioned: BN
-  readonly rewardClaimed: BN
+  readonly openTime: bigint
+  readonly endTime: bigint
+  readonly lastUpdateTime: bigint
+  readonly emissionsPerSecondX64: bigint
+  readonly rewardTotalEmissioned: bigint
+  readonly rewardClaimed: bigint
   readonly tokenMint: Address
   readonly tokenVault: Address
   readonly authority: Address
-  readonly rewardGrowthGlobalX64: BN
+  readonly rewardGrowthGlobalX64: bigint
 
   constructor(fields: RewardInfoFields) {
     this.rewardState = fields.rewardState
@@ -130,16 +130,16 @@ export class RewardInfo {
   static fromJSON(obj: RewardInfoJSON): RewardInfo {
     return new RewardInfo({
       rewardState: obj.rewardState,
-      openTime: new BN(obj.openTime),
-      endTime: new BN(obj.endTime),
-      lastUpdateTime: new BN(obj.lastUpdateTime),
-      emissionsPerSecondX64: new BN(obj.emissionsPerSecondX64),
-      rewardTotalEmissioned: new BN(obj.rewardTotalEmissioned),
-      rewardClaimed: new BN(obj.rewardClaimed),
+      openTime: BigInt(obj.openTime),
+      endTime: BigInt(obj.endTime),
+      lastUpdateTime: BigInt(obj.lastUpdateTime),
+      emissionsPerSecondX64: BigInt(obj.emissionsPerSecondX64),
+      rewardTotalEmissioned: BigInt(obj.rewardTotalEmissioned),
+      rewardClaimed: BigInt(obj.rewardClaimed),
       tokenMint: address(obj.tokenMint),
       tokenVault: address(obj.tokenVault),
       authority: address(obj.authority),
-      rewardGrowthGlobalX64: new BN(obj.rewardGrowthGlobalX64),
+      rewardGrowthGlobalX64: BigInt(obj.rewardGrowthGlobalX64),
     })
   }
 

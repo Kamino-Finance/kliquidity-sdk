@@ -2,27 +2,30 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  195, 96, 237, 108, 68, 162, 219, 230,
+])
+
 export interface TwoHopSwapArgs {
-  amount: BN
-  otherAmountThreshold: BN
+  amount: bigint
+  otherAmountThreshold: bigint
   amountSpecifiedIsInput: boolean
   aToBOne: boolean
   aToBTwo: boolean
-  sqrtPriceLimitOne: BN
-  sqrtPriceLimitTwo: BN
+  sqrtPriceLimitOne: bigint
+  sqrtPriceLimitTwo: bigint
 }
 
 export interface TwoHopSwapAccounts {
@@ -48,7 +51,7 @@ export interface TwoHopSwapAccounts {
   oracleTwo: Address
 }
 
-export const layout = borsh.struct<TwoHopSwapArgs>([
+export const layout = borsh.struct([
   borsh.u64("amount"),
   borsh.u64("otherAmountThreshold"),
   borsh.bool("amountSpecifiedIsInput"),
@@ -61,10 +64,10 @@ export const layout = borsh.struct<TwoHopSwapArgs>([
 export function twoHopSwap(
   args: TwoHopSwapArgs,
   accounts: TwoHopSwapAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.tokenProgram, role: 0 },
     {
       address: accounts.tokenAuthority.address,
@@ -91,8 +94,7 @@ export function twoHopSwap(
     { address: accounts.oracleTwo, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([195, 96, 237, 108, 68, 162, 219, 230])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       amount: args.amount,
@@ -105,7 +107,12 @@ export function twoHopSwap(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

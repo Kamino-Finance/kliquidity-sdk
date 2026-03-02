@@ -118,22 +118,22 @@ export class OrcaService {
   ): Map<Address, Decimal> {
     const tokensPrices: Map<Address, Decimal> = new Map();
 
-    const tokenA = collateralInfos[strategy.tokenACollateralId.toNumber()];
-    const tokenB = collateralInfos[strategy.tokenBCollateralId.toNumber()];
-    const rewardToken0 = collateralInfos[strategy.reward0CollateralId.toNumber()];
-    const rewardToken1 = collateralInfos[strategy.reward1CollateralId.toNumber()];
-    const rewardToken2 = collateralInfos[strategy.reward2CollateralId.toNumber()];
+    const tokenA = collateralInfos[Number(strategy.tokenACollateralId)];
+    const tokenB = collateralInfos[Number(strategy.tokenBCollateralId)];
+    const rewardToken0 = collateralInfos[Number(strategy.reward0CollateralId)];
+    const rewardToken1 = collateralInfos[Number(strategy.reward1CollateralId)];
+    const rewardToken2 = collateralInfos[Number(strategy.reward2CollateralId)];
 
     const aPrice = prices.spot[tokenA.mint.toString()];
     const bPrice = prices.spot[tokenB.mint.toString()];
-    const reward0Price = strategy.reward0Decimals.toNumber() !== 0 ? prices.spot[rewardToken0.mint.toString()] : null;
-    const reward1Price = strategy.reward1Decimals.toNumber() !== 0 ? prices.spot[rewardToken1.mint.toString()] : null;
-    const reward2Price = strategy.reward2Decimals.toNumber() !== 0 ? prices.spot[rewardToken2.mint.toString()] : null;
+    const reward0Price = Number(strategy.reward0Decimals) !== 0 ? prices.spot[rewardToken0.mint.toString()] : null;
+    const reward1Price = Number(strategy.reward1Decimals) !== 0 ? prices.spot[rewardToken1.mint.toString()] : null;
+    const reward2Price = Number(strategy.reward2Decimals) !== 0 ? prices.spot[rewardToken2.mint.toString()] : null;
 
     const [mintA, mintB] = [address(strategy.tokenAMint.toString()), address(strategy.tokenBMint.toString())];
-    const reward0 = address(collateralInfos[strategy.reward0CollateralId.toNumber()]?.mint?.toString());
-    const reward1 = address(collateralInfos[strategy.reward1CollateralId.toNumber()]?.mint?.toString());
-    const reward2 = address(collateralInfos[strategy.reward2CollateralId.toNumber()]?.mint?.toString());
+    const reward0 = address(collateralInfos[Number(strategy.reward0CollateralId)]?.mint?.toString());
+    const reward1 = address(collateralInfos[Number(strategy.reward1CollateralId)]?.mint?.toString());
+    const reward2 = address(collateralInfos[Number(strategy.reward2CollateralId)]?.mint?.toString());
 
     tokensPrices.set(mintA, aPrice.price);
     tokensPrices.set(mintB, bPrice.price);
@@ -214,14 +214,14 @@ export class OrcaService {
     const tokensPrices = this.getTokenPrices(strategy, prices, collateralInfos);
 
     const rewardsDecimals = new Map<Address, number>();
-    if (strategy.reward0Decimals.toNumber() !== 0) {
-      rewardsDecimals.set(address(pool.rewards[0]?.mint), strategy.reward0Decimals.toNumber());
+    if (Number(strategy.reward0Decimals) !== 0) {
+      rewardsDecimals.set(address(pool.rewards[0]?.mint), Number(strategy.reward0Decimals));
     }
-    if (strategy.reward1Decimals.toNumber() !== 0) {
-      rewardsDecimals.set(address(pool.rewards[1]?.mint), strategy.reward1Decimals.toNumber());
+    if (Number(strategy.reward1Decimals) !== 0) {
+      rewardsDecimals.set(address(pool.rewards[1]?.mint), Number(strategy.reward1Decimals));
     }
-    if (strategy.reward2Decimals.toNumber() !== 0) {
-      rewardsDecimals.set(address(pool.rewards[2]?.mint), strategy.reward2Decimals.toNumber());
+    if (Number(strategy.reward2Decimals) !== 0) {
+      rewardsDecimals.set(address(pool.rewards[2]?.mint), Number(strategy.reward2Decimals));
     }
     const apr = estimateAprsForPriceRange(
       pool,

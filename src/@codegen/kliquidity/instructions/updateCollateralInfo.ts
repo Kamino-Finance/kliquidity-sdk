@@ -2,22 +2,25 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  76, 94, 131, 44, 137, 61, 161, 110,
+])
+
 export interface UpdateCollateralInfoArgs {
-  index: BN
-  mode: BN
+  index: bigint
+  mode: bigint
   value: Array<number>
 }
 
@@ -27,7 +30,7 @@ export interface UpdateCollateralInfoAccounts {
   tokenInfos: Address
 }
 
-export const layout = borsh.struct<UpdateCollateralInfoArgs>([
+export const layout = borsh.struct([
   borsh.u64("index"),
   borsh.u64("mode"),
   borsh.array(borsh.u8(), 32, "value"),
@@ -36,10 +39,10 @@ export const layout = borsh.struct<UpdateCollateralInfoArgs>([
 export function updateCollateralInfo(
   args: UpdateCollateralInfoArgs,
   accounts: UpdateCollateralInfoAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     {
       address: accounts.adminAuthority.address,
       role: 3,
@@ -49,8 +52,7 @@ export function updateCollateralInfo(
     { address: accounts.tokenInfos, role: 1 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([76, 94, 131, 44, 137, 61, 161, 110])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       index: args.index,
@@ -59,7 +61,12 @@ export function updateCollateralInfo(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

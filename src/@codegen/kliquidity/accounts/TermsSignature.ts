@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -26,7 +25,7 @@ export interface TermsSignatureJSON {
 export class TermsSignature {
   readonly signature: Array<number>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     197, 173, 136, 91, 182, 49, 113, 19,
   ])
 
@@ -54,7 +53,7 @@ export class TermsSignature {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -74,16 +73,23 @@ export class TermsSignature {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): TermsSignature {
-    if (!data.slice(0, 8).equals(TermsSignature.discriminator)) {
+  static decode(data: Uint8Array): TermsSignature {
+    if (data.length < TermsSignature.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < TermsSignature.discriminator.length; i++) {
+      if (data[i] !== TermsSignature.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = TermsSignature.layout.decode(data.slice(8))
+    const dec = TermsSignature.layout.decode(
+      data.subarray(TermsSignature.discriminator.length)
+    )
 
     return new TermsSignature({
       signature: dec.signature,

@@ -2,18 +2,21 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([
+  93, 124, 16, 179, 249, 131, 115, 245,
+])
 
 export interface InitializePositionBundleWithMetadataAccounts {
   positionBundle: Address
@@ -32,10 +35,10 @@ export interface InitializePositionBundleWithMetadataAccounts {
 
 export function initializePositionBundleWithMetadata(
   accounts: InitializePositionBundleWithMetadataAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.positionBundle, role: 1 },
     {
       address: accounts.positionBundleMint.address,
@@ -54,8 +57,7 @@ export function initializePositionBundleWithMetadata(
     { address: accounts.metadataProgram, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([93, 124, 16, 179, 249, 131, 115, 245])
-  const data = identifier
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = DISCRIMINATOR
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

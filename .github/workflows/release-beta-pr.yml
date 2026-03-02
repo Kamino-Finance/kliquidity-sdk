@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       head_branch:
-        description: "Developer branch to PR from (e.g. feature/foo). Must exist on origin."
+        description: 'Developer branch to PR from (e.g. feature/foo). Must exist on origin.'
         required: true
         type: string
       sync_mode:
-        description: "How to sync to the trusted base rate if the lane branch already exists. reset | rebase"
+        description: 'How to sync to the trusted base rate if the lane branch already exists. reset | rebase'
         required: true
-        default: "rebase"
+        default: 'rebase'
         type: choice
         options: [rebase, reset]
 
@@ -24,7 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: master
     steps:
-
       # minimal checkout to import the app-checkout action
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -57,14 +56,14 @@ jobs:
         uses: ./.github/actions/mint-branch
         with:
           lane: ${{ inputs.head_branch }}
-          lane_prefix: "beta"
+          lane_prefix: 'beta'
           sync_mode: ${{ inputs.sync_mode }}
 
       - name: Create pull request (head -> lane)
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          LANE_PREFIX: "beta"
+          LANE_PREFIX: 'beta'
           LANE: ${{ inputs.head_branch }}
           HEAD: ${{ inputs.head_branch }}
           REPO: ${{ github.repository }}

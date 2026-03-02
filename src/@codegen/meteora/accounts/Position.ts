@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -21,7 +20,7 @@ export interface PositionFields {
   /** Owner of the position. Client rely on this to to fetch their positions. */
   owner: Address
   /** Liquidity shares of this position in bins (lower_bin_id <-> upper_bin_id). This is the same as LP concept. */
-  liquidityShares: Array<BN>
+  liquidityShares: Array<bigint>
   /** Farming reward information */
   rewardInfos: Array<types.UserRewardInfoFields>
   /** Swap fee to claim information */
@@ -31,13 +30,13 @@ export interface PositionFields {
   /** Upper bin ID */
   upperBinId: number
   /** Last updated timestamp */
-  lastUpdatedAt: BN
+  lastUpdatedAt: bigint
   /** Total claimed token fee X */
-  totalClaimedFeeXAmount: BN
+  totalClaimedFeeXAmount: bigint
   /** Total claimed token fee Y */
-  totalClaimedFeeYAmount: BN
+  totalClaimedFeeYAmount: bigint
   /** Total claimed rewards */
-  totalClaimedRewards: Array<BN>
+  totalClaimedRewards: Array<bigint>
   /** Reserved space for future use */
   reserved: Array<number>
 }
@@ -75,7 +74,7 @@ export class Position {
   /** Owner of the position. Client rely on this to to fetch their positions. */
   readonly owner: Address
   /** Liquidity shares of this position in bins (lower_bin_id <-> upper_bin_id). This is the same as LP concept. */
-  readonly liquidityShares: Array<BN>
+  readonly liquidityShares: Array<bigint>
   /** Farming reward information */
   readonly rewardInfos: Array<types.UserRewardInfo>
   /** Swap fee to claim information */
@@ -85,17 +84,17 @@ export class Position {
   /** Upper bin ID */
   readonly upperBinId: number
   /** Last updated timestamp */
-  readonly lastUpdatedAt: BN
+  readonly lastUpdatedAt: bigint
   /** Total claimed token fee X */
-  readonly totalClaimedFeeXAmount: BN
+  readonly totalClaimedFeeXAmount: bigint
   /** Total claimed token fee Y */
-  readonly totalClaimedFeeYAmount: BN
+  readonly totalClaimedFeeYAmount: bigint
   /** Total claimed rewards */
-  readonly totalClaimedRewards: Array<BN>
+  readonly totalClaimedRewards: Array<bigint>
   /** Reserved space for future use */
   readonly reserved: Array<number>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     170, 188, 143, 228, 122, 64, 247, 208,
   ])
 
@@ -149,7 +148,7 @@ export class Position {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -169,16 +168,23 @@ export class Position {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): Position {
-    if (!data.slice(0, 8).equals(Position.discriminator)) {
+  static decode(data: Uint8Array): Position {
+    if (data.length < Position.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < Position.discriminator.length; i++) {
+      if (data[i] !== Position.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = Position.layout.decode(data.slice(8))
+    const dec = Position.layout.decode(
+      data.subarray(Position.discriminator.length)
+    )
 
     return new Position({
       lbPair: dec.lbPair,
@@ -227,17 +233,17 @@ export class Position {
     return new Position({
       lbPair: address(obj.lbPair),
       owner: address(obj.owner),
-      liquidityShares: obj.liquidityShares.map((item) => new BN(item)),
+      liquidityShares: obj.liquidityShares.map((item) => BigInt(item)),
       rewardInfos: obj.rewardInfos.map((item) =>
         types.UserRewardInfo.fromJSON(item)
       ),
       feeInfos: obj.feeInfos.map((item) => types.FeeInfo.fromJSON(item)),
       lowerBinId: obj.lowerBinId,
       upperBinId: obj.upperBinId,
-      lastUpdatedAt: new BN(obj.lastUpdatedAt),
-      totalClaimedFeeXAmount: new BN(obj.totalClaimedFeeXAmount),
-      totalClaimedFeeYAmount: new BN(obj.totalClaimedFeeYAmount),
-      totalClaimedRewards: obj.totalClaimedRewards.map((item) => new BN(item)),
+      lastUpdatedAt: BigInt(obj.lastUpdatedAt),
+      totalClaimedFeeXAmount: BigInt(obj.totalClaimedFeeXAmount),
+      totalClaimedFeeYAmount: BigInt(obj.totalClaimedFeeYAmount),
+      totalClaimedRewards: obj.totalClaimedRewards.map((item) => BigInt(item)),
       reserved: obj.reserved,
     })
   }

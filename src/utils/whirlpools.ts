@@ -3,7 +3,6 @@
  * Added roundUp flag to accurately estimate token holdings for deposits
  */
 
-import { BN } from '@coral-xyz/anchor';
 import { Address } from '@solana/kit';
 import { positionStatus, tickIndexToSqrtPrice } from '@orca-so/whirlpools-core';
 import { ZERO_BN } from '../constants/numericalValues';
@@ -13,10 +12,10 @@ import { Percentage } from './types';
 export type InternalRemoveLiquidityQuoteParam = {
   positionAddress: Address;
   tickCurrentIndex: number;
-  sqrtPrice: BN;
+  sqrtPrice: bigint;
   tickLowerIndex: number;
   tickUpperIndex: number;
-  liquidity: BN;
+  liquidity: bigint;
   slippageTolerance: Percentage;
 };
 
@@ -24,7 +23,7 @@ export function getRemoveLiquidityQuote(
   param: InternalRemoveLiquidityQuoteParam,
   roundUp: boolean = false
 ): RemoveLiquidityQuote {
-  const posStatus = positionStatus(BigInt(param.sqrtPrice.toString()), param.tickLowerIndex, param.tickUpperIndex);
+  const posStatus = positionStatus(param.sqrtPrice, param.tickLowerIndex, param.tickUpperIndex);
 
   switch (posStatus) {
     case 'priceBelowRange':
@@ -47,12 +46,7 @@ function getRemoveLiquidityQuoteWhenPositionIsBelowRange(
   const sqrtPriceLowerX64 = tickIndexToSqrtPrice(tickLowerIndex);
   const sqrtPriceUpperX64 = tickIndexToSqrtPrice(tickUpperIndex);
 
-  const estTokenA = getTokenAFromLiquidity(
-    liquidity,
-    new BN(sqrtPriceLowerX64.toString()),
-    new BN(sqrtPriceUpperX64.toString()),
-    roundUp
-  );
+  const estTokenA = getTokenAFromLiquidity(liquidity, sqrtPriceLowerX64, sqrtPriceUpperX64, roundUp);
   const minTokenA = adjustForSlippage(estTokenA, slippageTolerance, roundUp);
 
   return {
@@ -75,20 +69,10 @@ function getRemoveLiquidityQuoteWhenPositionIsInRange(
   const sqrtPriceLowerX64 = tickIndexToSqrtPrice(tickLowerIndex);
   const sqrtPriceUpperX64 = tickIndexToSqrtPrice(tickUpperIndex);
 
-  const estTokenA = getTokenAFromLiquidity(
-    liquidity,
-    new BN(sqrtPriceX64.toString()),
-    new BN(sqrtPriceUpperX64.toString()),
-    roundUp
-  );
+  const estTokenA = getTokenAFromLiquidity(liquidity, sqrtPriceX64, sqrtPriceUpperX64, roundUp);
   const minTokenA = adjustForSlippage(estTokenA, slippageTolerance, roundUp);
 
-  const estTokenB = getTokenBFromLiquidity(
-    liquidity,
-    new BN(sqrtPriceLowerX64.toString()),
-    new BN(sqrtPriceX64.toString()),
-    roundUp
-  );
+  const estTokenB = getTokenBFromLiquidity(liquidity, sqrtPriceLowerX64, sqrtPriceX64, roundUp);
   const minTokenB = adjustForSlippage(estTokenB, slippageTolerance, roundUp);
 
   return {
@@ -110,12 +94,7 @@ function getRemoveLiquidityQuoteWhenPositionIsAboveRange(
   const sqrtPriceLowerX64 = tickIndexToSqrtPrice(tickLowerIndex);
   const sqrtPriceUpperX64 = tickIndexToSqrtPrice(tickUpperIndex);
 
-  const estTokenB = getTokenBFromLiquidity(
-    liquidity,
-    new BN(sqrtPriceLowerX64.toString()),
-    new BN(sqrtPriceUpperX64.toString()),
-    roundUp
-  );
+  const estTokenB = getTokenBFromLiquidity(liquidity, sqrtPriceLowerX64, sqrtPriceUpperX64, roundUp);
   const minTokenB = adjustForSlippage(estTokenB, slippageTolerance, roundUp);
 
   return {
@@ -130,9 +109,9 @@ function getRemoveLiquidityQuoteWhenPositionIsAboveRange(
 
 export type RemoveLiquidityQuote = {
   positionAddress: Address;
-  minTokenA: BN;
-  minTokenB: BN;
-  estTokenA: BN;
-  estTokenB: BN;
-  liquidity: BN;
+  minTokenA: bigint;
+  minTokenB: bigint;
+  estTokenA: bigint;
+  estTokenB: bigint;
+  liquidity: bigint;
 };

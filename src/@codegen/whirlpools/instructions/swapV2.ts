@@ -2,23 +2,24 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([43, 4, 237, 11, 26, 201, 30, 98])
+
 export interface SwapV2Args {
-  amount: BN
-  otherAmountThreshold: BN
-  sqrtPriceLimit: BN
+  amount: bigint
+  otherAmountThreshold: bigint
+  sqrtPriceLimit: bigint
   amountSpecifiedIsInput: boolean
   aToB: boolean
   remainingAccountsInfo: types.RemainingAccountsInfoFields | null
@@ -54,10 +55,10 @@ export const layout = borsh.struct([
 export function swapV2(
   args: SwapV2Args,
   accounts: SwapV2Accounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.tokenProgramA, role: 0 },
     { address: accounts.tokenProgramB, role: 0 },
     { address: accounts.memoProgram, role: 0 },
@@ -79,8 +80,7 @@ export function swapV2(
     { address: accounts.oracle, role: 1 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([43, 4, 237, 11, 26, 201, 30, 98])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       amount: args.amount,
@@ -97,7 +97,12 @@ export function swapV2(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

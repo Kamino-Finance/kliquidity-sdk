@@ -1,16 +1,16 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface InitPermissionPairIxFields {
   activeId: number
   binStep: number
   baseFactor: number
   minBinId: number
   maxBinId: number
-  lockDurationInSlot: BN
+  lockDurationInSlot: bigint
 }
 
 export interface InitPermissionPairIxJSON {
@@ -28,7 +28,7 @@ export class InitPermissionPairIx {
   readonly baseFactor: number
   readonly minBinId: number
   readonly maxBinId: number
-  readonly lockDurationInSlot: BN
+  readonly lockDurationInSlot: bigint
 
   constructor(fields: InitPermissionPairIxFields) {
     this.activeId = fields.activeId
@@ -94,7 +94,7 @@ export class InitPermissionPairIx {
       baseFactor: obj.baseFactor,
       minBinId: obj.minBinId,
       maxBinId: obj.maxBinId,
-      lockDurationInSlot: new BN(obj.lockDurationInSlot),
+      lockDurationInSlot: BigInt(obj.lockDurationInSlot),
     })
   }
 

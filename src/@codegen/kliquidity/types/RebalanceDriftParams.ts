@@ -1,14 +1,14 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface RebalanceDriftParamsFields {
   startMidTick: number
   ticksBelowMid: number
   ticksAboveMid: number
-  secondsPerTick: BN
+  secondsPerTick: bigint
   direction: types.DriftDirectionKind
 }
 
@@ -24,7 +24,7 @@ export class RebalanceDriftParams {
   readonly startMidTick: number
   readonly ticksBelowMid: number
   readonly ticksAboveMid: number
-  readonly secondsPerTick: BN
+  readonly secondsPerTick: bigint
   readonly direction: types.DriftDirectionKind
 
   constructor(fields: RebalanceDriftParamsFields) {
@@ -84,7 +84,7 @@ export class RebalanceDriftParams {
       startMidTick: obj.startMidTick,
       ticksBelowMid: obj.ticksBelowMid,
       ticksAboveMid: obj.ticksAboveMid,
-      secondsPerTick: new BN(obj.secondsPerTick),
+      secondsPerTick: BigInt(obj.secondsPerTick),
       direction: types.DriftDirection.fromJSON(obj.direction),
     })
   }

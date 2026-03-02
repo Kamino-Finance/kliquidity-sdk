@@ -1,11 +1,11 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
-export type LiquidityFields = [BN]
-export type LiquidityValue = [BN]
+/* eslint-enable @typescript-eslint/no-unused-vars */
+export type LiquidityFields = [bigint]
+export type LiquidityValue = [bigint]
 
 export interface LiquidityJSON {
   kind: "Liquidity"
@@ -123,7 +123,7 @@ export function fromJSON(
 ): types.RemoveLiquidityModeKind {
   switch (obj.kind) {
     case "Liquidity": {
-      return new Liquidity([new BN(obj.value[0])])
+      return new Liquidity([BigInt(obj.value[0])])
     }
     case "Bps": {
       return new Bps([obj.value[0]])

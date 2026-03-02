@@ -1,9 +1,9 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface RewardInfoFields {
   /** Reward token mint. */
   mint: Address
@@ -12,15 +12,15 @@ export interface RewardInfoFields {
   /** Authority account that allows to fund rewards */
   funder: Address
   /** TODO check whether we need to store it in pool */
-  rewardDuration: BN
+  rewardDuration: bigint
   /** TODO check whether we need to store it in pool */
-  rewardDurationEnd: BN
+  rewardDurationEnd: bigint
   /** TODO check whether we need to store it in pool */
-  rewardRate: BN
+  rewardRate: bigint
   /** The last time reward states were updated. */
-  lastUpdateTime: BN
+  lastUpdateTime: bigint
   /** Accumulated seconds where when farm distribute rewards, but the bin is empty. The reward will be accumulated for next reward time window. */
-  cumulativeSecondsWithEmptyLiquidityReward: BN
+  cumulativeSecondsWithEmptyLiquidityReward: bigint
 }
 
 export interface RewardInfoJSON {
@@ -51,15 +51,15 @@ export class RewardInfo {
   /** Authority account that allows to fund rewards */
   readonly funder: Address
   /** TODO check whether we need to store it in pool */
-  readonly rewardDuration: BN
+  readonly rewardDuration: bigint
   /** TODO check whether we need to store it in pool */
-  readonly rewardDurationEnd: BN
+  readonly rewardDurationEnd: bigint
   /** TODO check whether we need to store it in pool */
-  readonly rewardRate: BN
+  readonly rewardRate: bigint
   /** The last time reward states were updated. */
-  readonly lastUpdateTime: BN
+  readonly lastUpdateTime: bigint
   /** Accumulated seconds where when farm distribute rewards, but the bin is empty. The reward will be accumulated for next reward time window. */
-  readonly cumulativeSecondsWithEmptyLiquidityReward: BN
+  readonly cumulativeSecondsWithEmptyLiquidityReward: bigint
 
   constructor(fields: RewardInfoFields) {
     this.mint = fields.mint
@@ -137,11 +137,11 @@ export class RewardInfo {
       mint: address(obj.mint),
       vault: address(obj.vault),
       funder: address(obj.funder),
-      rewardDuration: new BN(obj.rewardDuration),
-      rewardDurationEnd: new BN(obj.rewardDurationEnd),
-      rewardRate: new BN(obj.rewardRate),
-      lastUpdateTime: new BN(obj.lastUpdateTime),
-      cumulativeSecondsWithEmptyLiquidityReward: new BN(
+      rewardDuration: BigInt(obj.rewardDuration),
+      rewardDurationEnd: BigInt(obj.rewardDurationEnd),
+      rewardRate: BigInt(obj.rewardRate),
+      lastUpdateTime: BigInt(obj.lastUpdateTime),
+      cumulativeSecondsWithEmptyLiquidityReward: BigInt(
         obj.cumulativeSecondsWithEmptyLiquidityReward
       ),
     })

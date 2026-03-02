@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -19,7 +18,7 @@ export interface ObservationStateFields {
   initialized: boolean
   poolId: Address
   observations: Array<types.ObservationFields>
-  padding: Array<BN>
+  padding: Array<bigint>
 }
 
 export interface ObservationStateJSON {
@@ -33,9 +32,9 @@ export class ObservationState {
   readonly initialized: boolean
   readonly poolId: Address
   readonly observations: Array<types.Observation>
-  readonly padding: Array<BN>
+  readonly padding: Array<bigint>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     122, 174, 197, 53, 129, 9, 165, 132,
   ])
 
@@ -71,7 +70,7 @@ export class ObservationState {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -91,16 +90,23 @@ export class ObservationState {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): ObservationState {
-    if (!data.slice(0, 8).equals(ObservationState.discriminator)) {
+  static decode(data: Uint8Array): ObservationState {
+    if (data.length < ObservationState.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < ObservationState.discriminator.length; i++) {
+      if (data[i] !== ObservationState.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = ObservationState.layout.decode(data.slice(8))
+    const dec = ObservationState.layout.decode(
+      data.subarray(ObservationState.discriminator.length)
+    )
 
     return new ObservationState({
       initialized: dec.initialized,
@@ -130,7 +136,7 @@ export class ObservationState {
       observations: obj.observations.map((item) =>
         types.Observation.fromJSON(item)
       ),
-      padding: obj.padding.map((item) => new BN(item)),
+      padding: obj.padding.map((item) => BigInt(item)),
     })
   }
 }

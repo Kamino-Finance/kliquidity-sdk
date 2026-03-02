@@ -53,6 +53,7 @@ import {
   TickMath,
 } from '@raydium-io/raydium-sdk-v2/lib';
 import { fromLegacyPublicKey } from '@solana/compat';
+import { toBN } from '../utils/raydiumBridge';
 import { fetchAllMint, Mint } from '@solana-program/token-2022';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
 
@@ -95,7 +96,7 @@ export class RaydiumService {
     }
 
     const poolPrice = SqrtPriceMath.sqrtPriceX64ToPrice(
-      poolState.sqrtPriceX64,
+      toBN(poolState.sqrtPriceX64),
       poolState.mintDecimals0,
       poolState.mintDecimals1
     );
@@ -379,7 +380,7 @@ export class RaydiumService {
 
     const rpc = PoolInfoLayout.decode(Buffer.from(poolAccountInfo.value.data[0], 'base64'));
     const currentPrice = SqrtPriceMath.sqrtPriceX64ToPrice(
-      poolState.sqrtPriceX64,
+      toBN(poolState.sqrtPriceX64),
       poolState.mintDecimals0,
       poolState.mintDecimals1
     ).toNumber();

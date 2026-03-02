@@ -2,22 +2,25 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  226, 2, 190, 101, 202, 132, 156, 20,
+])
+
 export interface FlashSwapUnevenVaultsEndArgs {
-  minRepayAmount: BN
-  amountToLeaveToUser: BN
+  minRepayAmount: bigint
+  amountToLeaveToUser: bigint
   aToB: boolean
 }
 
@@ -44,7 +47,7 @@ export interface FlashSwapUnevenVaultsEndAccounts {
   consensusAccount: Address
 }
 
-export const layout = borsh.struct<FlashSwapUnevenVaultsEndArgs>([
+export const layout = borsh.struct([
   borsh.u64("minRepayAmount"),
   borsh.u64("amountToLeaveToUser"),
   borsh.bool("aToB"),
@@ -62,10 +65,10 @@ export const layout = borsh.struct<FlashSwapUnevenVaultsEndArgs>([
 export function flashSwapUnevenVaultsEnd(
   args: FlashSwapUnevenVaultsEndArgs,
   accounts: FlashSwapUnevenVaultsEndAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.swapper.address, role: 3, signer: accounts.swapper },
     { address: accounts.strategy, role: 1 },
     { address: accounts.globalConfig, role: 0 },
@@ -88,8 +91,7 @@ export function flashSwapUnevenVaultsEnd(
     { address: accounts.consensusAccount, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([226, 2, 190, 101, 202, 132, 156, 20])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       minRepayAmount: args.minRepayAmount,
@@ -98,7 +100,12 @@ export function flashSwapUnevenVaultsEnd(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

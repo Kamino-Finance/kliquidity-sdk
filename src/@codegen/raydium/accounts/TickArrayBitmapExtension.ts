@@ -9,16 +9,15 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
 export interface TickArrayBitmapExtensionFields {
   poolId: Address
-  positiveTickArrayBitmap: Array<Array<BN>>
-  negativeTickArrayBitmap: Array<Array<BN>>
+  positiveTickArrayBitmap: Array<Array<bigint>>
+  negativeTickArrayBitmap: Array<Array<bigint>>
 }
 
 export interface TickArrayBitmapExtensionJSON {
@@ -29,10 +28,10 @@ export interface TickArrayBitmapExtensionJSON {
 
 export class TickArrayBitmapExtension {
   readonly poolId: Address
-  readonly positiveTickArrayBitmap: Array<Array<BN>>
-  readonly negativeTickArrayBitmap: Array<Array<BN>>
+  readonly positiveTickArrayBitmap: Array<Array<bigint>>
+  readonly negativeTickArrayBitmap: Array<Array<bigint>>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     60, 150, 36, 219, 97, 128, 139, 153,
   ])
 
@@ -64,7 +63,7 @@ export class TickArrayBitmapExtension {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -84,16 +83,23 @@ export class TickArrayBitmapExtension {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): TickArrayBitmapExtension {
-    if (!data.slice(0, 8).equals(TickArrayBitmapExtension.discriminator)) {
+  static decode(data: Uint8Array): TickArrayBitmapExtension {
+    if (data.length < TickArrayBitmapExtension.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < TickArrayBitmapExtension.discriminator.length; i++) {
+      if (data[i] !== TickArrayBitmapExtension.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = TickArrayBitmapExtension.layout.decode(data.slice(8))
+    const dec = TickArrayBitmapExtension.layout.decode(
+      data.subarray(TickArrayBitmapExtension.discriminator.length)
+    )
 
     return new TickArrayBitmapExtension({
       poolId: dec.poolId,
@@ -118,10 +124,10 @@ export class TickArrayBitmapExtension {
     return new TickArrayBitmapExtension({
       poolId: address(obj.poolId),
       positiveTickArrayBitmap: obj.positiveTickArrayBitmap.map((item) =>
-        item.map((item) => new BN(item))
+        item.map((item) => BigInt(item))
       ),
       negativeTickArrayBitmap: obj.negativeTickArrayBitmap.map((item) =>
-        item.map((item) => new BN(item))
+        item.map((item) => BigInt(item))
       ),
     })
   }

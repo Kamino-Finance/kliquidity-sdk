@@ -1,9 +1,9 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface PoolPriceJSON {
   kind: "PoolPrice"
 }
@@ -27,8 +27,8 @@ export class PoolPrice {
   }
 }
 
-export type SqrtPriceFields = [BN]
-export type SqrtPriceValue = [BN]
+export type SqrtPriceFields = [bigint]
+export type SqrtPriceValue = [bigint]
 
 export interface SqrtPriceJSON {
   kind: "SqrtPrice"
@@ -126,7 +126,7 @@ export function fromJSON(
       return new PoolPrice()
     }
     case "SqrtPrice": {
-      return new SqrtPrice([new BN(obj.value[0])])
+      return new SqrtPrice([BigInt(obj.value[0])])
     }
     case "TickIndex": {
       return new TickIndex([obj.value[0]])

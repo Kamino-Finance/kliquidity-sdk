@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -18,13 +17,13 @@ import { PROGRAM_ID } from "../programId"
 export interface PositionFields {
   whirlpool: Address
   positionMint: Address
-  liquidity: BN
+  liquidity: bigint
   tickLowerIndex: number
   tickUpperIndex: number
-  feeGrowthCheckpointA: BN
-  feeOwedA: BN
-  feeGrowthCheckpointB: BN
-  feeOwedB: BN
+  feeGrowthCheckpointA: bigint
+  feeOwedA: bigint
+  feeGrowthCheckpointB: bigint
+  feeOwedB: bigint
   rewardInfos: Array<types.PositionRewardInfoFields>
 }
 
@@ -44,16 +43,16 @@ export interface PositionJSON {
 export class Position {
   readonly whirlpool: Address
   readonly positionMint: Address
-  readonly liquidity: BN
+  readonly liquidity: bigint
   readonly tickLowerIndex: number
   readonly tickUpperIndex: number
-  readonly feeGrowthCheckpointA: BN
-  readonly feeOwedA: BN
-  readonly feeGrowthCheckpointB: BN
-  readonly feeOwedB: BN
+  readonly feeGrowthCheckpointA: bigint
+  readonly feeOwedA: bigint
+  readonly feeGrowthCheckpointB: bigint
+  readonly feeOwedB: bigint
   readonly rewardInfos: Array<types.PositionRewardInfo>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     170, 188, 143, 228, 122, 64, 247, 208,
   ])
 
@@ -101,7 +100,7 @@ export class Position {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -121,16 +120,23 @@ export class Position {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): Position {
-    if (!data.slice(0, 8).equals(Position.discriminator)) {
+  static decode(data: Uint8Array): Position {
+    if (data.length < Position.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < Position.discriminator.length; i++) {
+      if (data[i] !== Position.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = Position.layout.decode(data.slice(8))
+    const dec = Position.layout.decode(
+      data.subarray(Position.discriminator.length)
+    )
 
     return new Position({
       whirlpool: dec.whirlpool,
@@ -169,13 +175,13 @@ export class Position {
     return new Position({
       whirlpool: address(obj.whirlpool),
       positionMint: address(obj.positionMint),
-      liquidity: new BN(obj.liquidity),
+      liquidity: BigInt(obj.liquidity),
       tickLowerIndex: obj.tickLowerIndex,
       tickUpperIndex: obj.tickUpperIndex,
-      feeGrowthCheckpointA: new BN(obj.feeGrowthCheckpointA),
-      feeOwedA: new BN(obj.feeOwedA),
-      feeGrowthCheckpointB: new BN(obj.feeGrowthCheckpointB),
-      feeOwedB: new BN(obj.feeOwedB),
+      feeGrowthCheckpointA: BigInt(obj.feeGrowthCheckpointA),
+      feeOwedA: BigInt(obj.feeOwedA),
+      feeGrowthCheckpointB: BigInt(obj.feeGrowthCheckpointB),
+      feeOwedB: BigInt(obj.feeOwedB),
       rewardInfos: obj.rewardInfos.map((item) =>
         types.PositionRewardInfo.fromJSON(item)
       ),

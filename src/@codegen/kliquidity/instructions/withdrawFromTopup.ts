@@ -2,21 +2,24 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  95, 227, 138, 220, 240, 95, 150, 113,
+])
+
 export interface WithdrawFromTopupArgs {
-  amount: BN
+  amount: bigint
 }
 
 export interface WithdrawFromTopupAccounts {
@@ -25,15 +28,15 @@ export interface WithdrawFromTopupAccounts {
   system: Address
 }
 
-export const layout = borsh.struct<WithdrawFromTopupArgs>([borsh.u64("amount")])
+export const layout = borsh.struct([borsh.u64("amount")])
 
 export function withdrawFromTopup(
   args: WithdrawFromTopupArgs,
   accounts: WithdrawFromTopupAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     {
       address: accounts.adminAuthority.address,
       role: 3,
@@ -43,15 +46,19 @@ export function withdrawFromTopup(
     { address: accounts.system, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([95, 227, 138, 220, 240, 95, 150, 113])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       amount: args.amount,
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

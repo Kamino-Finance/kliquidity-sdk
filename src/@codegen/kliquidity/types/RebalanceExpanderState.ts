@@ -1,11 +1,11 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface RebalanceExpanderStateFields {
-  initialPoolPrice: BN
+  initialPoolPrice: bigint
   expansionCount: number
 }
 
@@ -15,7 +15,7 @@ export interface RebalanceExpanderStateJSON {
 }
 
 export class RebalanceExpanderState {
-  readonly initialPoolPrice: BN
+  readonly initialPoolPrice: bigint
   readonly expansionCount: number
 
   constructor(fields: RebalanceExpanderStateFields) {
@@ -54,7 +54,7 @@ export class RebalanceExpanderState {
 
   static fromJSON(obj: RebalanceExpanderStateJSON): RebalanceExpanderState {
     return new RebalanceExpanderState({
-      initialPoolPrice: new BN(obj.initialPoolPrice),
+      initialPoolPrice: BigInt(obj.initialPoolPrice),
       expansionCount: obj.expansionCount,
     })
   }

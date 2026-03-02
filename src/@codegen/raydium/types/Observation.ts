@@ -1,14 +1,14 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface ObservationFields {
   blockTimestamp: number
-  sqrtPriceX64: BN
-  cumulativeTimePriceX64: BN
-  padding: BN
+  sqrtPriceX64: bigint
+  cumulativeTimePriceX64: bigint
+  padding: bigint
 }
 
 export interface ObservationJSON {
@@ -20,9 +20,9 @@ export interface ObservationJSON {
 
 export class Observation {
   readonly blockTimestamp: number
-  readonly sqrtPriceX64: BN
-  readonly cumulativeTimePriceX64: BN
-  readonly padding: BN
+  readonly sqrtPriceX64: bigint
+  readonly cumulativeTimePriceX64: bigint
+  readonly padding: bigint
 
   constructor(fields: ObservationFields) {
     this.blockTimestamp = fields.blockTimestamp
@@ -74,9 +74,9 @@ export class Observation {
   static fromJSON(obj: ObservationJSON): Observation {
     return new Observation({
       blockTimestamp: obj.blockTimestamp,
-      sqrtPriceX64: new BN(obj.sqrtPriceX64),
-      cumulativeTimePriceX64: new BN(obj.cumulativeTimePriceX64),
-      padding: new BN(obj.padding),
+      sqrtPriceX64: BigInt(obj.sqrtPriceX64),
+      cumulativeTimePriceX64: BigInt(obj.cumulativeTimePriceX64),
+      padding: BigInt(obj.padding),
     })
   }
 
