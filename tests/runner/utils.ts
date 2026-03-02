@@ -15,7 +15,6 @@ import {
   Signature,
   TransactionSigner,
 } from '@solana/kit';
-import * as anchor from '@coral-xyz/anchor';
 import { StrategyConfigOptionKind, UpdateCollateralInfoModeKind } from '../../src/@codegen/kliquidity/types';
 import * as Instructions from '../../src/@codegen/kliquidity/instructions';
 import { getMintDecimals } from '../../src/utils';

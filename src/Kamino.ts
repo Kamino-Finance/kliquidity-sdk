@@ -4097,14 +4097,8 @@ export class Kamino {
       expectedBBalance = await this.getTokenAccountBalanceOrZero(tokenBAta);
     }
 
-    const expectedALamportsDecimal = collToLamportsDecimal(
-      expectedABalance,
-      Number(strategyState.tokenAMintDecimals)
-    );
-    const expectedBLamportsDecimal = collToLamportsDecimal(
-      expectedBBalance,
-      Number(strategyState.tokenBMintDecimals)
-    );
+    const expectedALamportsDecimal = collToLamportsDecimal(expectedABalance, Number(strategyState.tokenAMintDecimals));
+    const expectedBLamportsDecimal = collToLamportsDecimal(expectedBBalance, Number(strategyState.tokenBMintDecimals));
     this.logger.info('expectedALamportsDecimal ', expectedALamportsDecimal.toString());
     this.logger.info('expectedBLamportsDecimal ', expectedBLamportsDecimal.toString());
     const expectedALamports = expectedALamportsDecimal.floor();
@@ -4580,12 +4574,9 @@ export class Kamino {
       reward0Vault: strategyState.reward0Vault,
       reward1Vault: strategyState.reward1Vault,
       reward2Vault: strategyState.baseVaultAuthority,
-      poolRewardVault0:
-        Number(strategyState.reward0Decimals) > 0 ? poolRewardVault0 : strategyState.baseVaultAuthority,
-      poolRewardVault1:
-        Number(strategyState.reward1Decimals) > 0 ? poolRewardVault1 : strategyState.baseVaultAuthority,
-      poolRewardVault2:
-        Number(strategyState.reward2Decimals) > 0 ? poolRewardVault2 : strategyState.baseVaultAuthority,
+      poolRewardVault0: Number(strategyState.reward0Decimals) > 0 ? poolRewardVault0 : strategyState.baseVaultAuthority,
+      poolRewardVault1: Number(strategyState.reward1Decimals) > 0 ? poolRewardVault1 : strategyState.baseVaultAuthority,
+      poolRewardVault2: Number(strategyState.reward2Decimals) > 0 ? poolRewardVault2 : strategyState.baseVaultAuthority,
       tickArrayLower: strategyState.tickArrayLower,
       tickArrayUpper: strategyState.tickArrayUpper,
       raydiumProtocolPositionOrBaseVaultAuthority: strategyState.raydiumProtocolPositionOrBaseVaultAuthority,
@@ -7817,7 +7808,10 @@ export class Kamino {
       1
     );
 
-    return { amountSlippageA: fromBN(amountsSlippage.amountSlippageA), amountSlippageB: fromBN(amountsSlippage.amountSlippageB) };
+    return {
+      amountSlippageA: fromBN(amountsSlippage.amountSlippageA),
+      amountSlippageB: fromBN(amountsSlippage.amountSlippageB),
+    };
   };
 
   private getDepositRatioFromBRaydium = async (
@@ -7843,7 +7837,11 @@ export class Kamino {
     const lowerSqrtPriceX64 = RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickLowerIndex);
     const upperSqrtPriceX64 = RaydiumSqrtPriceMath.getSqrtPriceX64FromTick(positionState.tickUpperIndex);
 
-    const liqudity = RaydiumLiquidityMath.getLiquidityFromTokenAmountB(lowerSqrtPriceX64, upperSqrtPriceX64, toBN(amountB));
+    const liqudity = RaydiumLiquidityMath.getLiquidityFromTokenAmountB(
+      lowerSqrtPriceX64,
+      upperSqrtPriceX64,
+      toBN(amountB)
+    );
     const amountsSlippage = RaydiumLiquidityMath.getAmountsFromLiquidityWithSlippage(
       toBN(poolState.sqrtPriceX64),
       lowerSqrtPriceX64,
@@ -7854,7 +7852,10 @@ export class Kamino {
       1
     );
 
-    return { amountSlippageA: fromBN(amountsSlippage.amountSlippageA), amountSlippageB: fromBN(amountsSlippage.amountSlippageB) };
+    return {
+      amountSlippageA: fromBN(amountsSlippage.amountSlippageA),
+      amountSlippageB: fromBN(amountsSlippage.amountSlippageB),
+    };
   };
 
   getCollateralInfo = async (address: Address): Promise<CollateralInfo[]> => {

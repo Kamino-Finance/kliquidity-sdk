@@ -3,28 +3,28 @@ description: Mint or fast-forward a protected lane branch (e.g. feature/<lane>) 
 
 inputs:
   lane:
-    description: "Lane suffix, e.g. kswap-sdk -> feature/kswap-sdk"
+    description: 'Lane suffix, e.g. kswap-sdk -> feature/kswap-sdk'
     required: true
   base_ref:
-    description: "Trusted base ref (default: master). master | refs/tags/<tag> | <tag> | <commit-sha>"
+    description: 'Trusted base ref (default: master). master | refs/tags/<tag> | <tag> | <commit-sha>'
     required: false
-    default: "master"
+    default: 'master'
   lane_prefix:
-    description: "Lane branch prefix"
+    description: 'Lane branch prefix'
     required: false
-    default: "feature"
+    default: 'feature'
   tag_prefix:
-    description: "Trusted tag prefix; trusted tags are refs/tags/<tag_prefix>*"
+    description: 'Trusted tag prefix; trusted tags are refs/tags/<tag_prefix>*'
     required: false
-    default: "v"
+    default: 'v'
   sync_mode:
-    description: "How to sync to the trusted base rate if the lane branch already exists. reset | rebase"
+    description: 'How to sync to the trusted base rate if the lane branch already exists. reset | rebase'
     required: true
-    default: "rebase"
+    default: 'rebase'
   dry_run:
-    description: "If true, do not push; only print what would happen"
+    description: 'If true, do not push; only print what would happen'
     required: false
-    default: "false"
+    default: 'false'
 
 runs:
   using: composite

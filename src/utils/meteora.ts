@@ -80,11 +80,15 @@ export function binIdToBinArrayIndex(binId: bigint): bigint {
   return binId < 0n && mod !== 0n ? idx - 1n : idx;
 }
 
-export async function deriveBinArray(lbPair: Address, index: bigint, programId: Address): Promise<ProgramDerivedAddress> {
+export async function deriveBinArray(
+  lbPair: Address,
+  index: bigint,
+  programId: Address
+): Promise<ProgramDerivedAddress> {
   let binArrayBytes: Uint8Array;
   if (index < 0n) {
     const mask = (1n << 64n) - 1n;
-    const encoded = ((~(-index) + 1n) & mask);
+    const encoded = (~-index + 1n) & mask;
     const buf = new Uint8Array(8);
     const dv = new DataView(buf.buffer);
     dv.setBigUint64(0, encoded, true);

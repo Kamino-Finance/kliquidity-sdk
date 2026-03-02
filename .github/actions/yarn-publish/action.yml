@@ -3,30 +3,29 @@ description: Publish to npm with checks to assert a commit and tag were made
 
 inputs:
   version:
-    description: "Semver version"
+    description: 'Semver version'
     required: true
   package:
-    description: "Package path"
+    description: 'Package path'
     required: true
   tag_prefix:
-    description: "Git tag prefix"
+    description: 'Git tag prefix'
     default: 'v'
   commit_msg:
-    description: "Git commit message format"
+    description: 'Git commit message format'
     default: 'Release v%s'
   public:
-    description: "If true, publish without --access restricted"
+    description: 'If true, publish without --access restricted'
     required: true
-    default: "false"
+    default: 'false'
   npm_tag:
-    description: "NPM tag, e.g. beta, or latest (default)"
+    description: 'NPM tag, e.g. beta, or latest (default)'
     required: true
-    default: "latest"
+    default: 'latest'
 
 runs:
   using: composite
   steps:
-
     - name: Publish to NPM
       shell: bash
       run: |
@@ -44,7 +43,7 @@ runs:
         commit_msg="${{ inputs.commit_msg }}"
         package="${{ inputs.package }}"
         npm_tag="${{ inputs.npm_tag }}"
-        
+
         # reject empty and anything with whitespace or leading dash
         if [ -z "$npm_tag" ] || [[ "$npm_tag" =~ [[:space:]] ]] || [[ "$npm_tag" == -* ]]; then
           echo "ERROR: invalid npm_tag: '$npm_tag'"
@@ -99,17 +98,17 @@ runs:
           echo
           exit 1
         fi
-        
+
         # Publish only after we know the version bump is real
         echo "Validated commit and tag"
-        
+
         access_flag="--access restricted"
         if [ "${{ inputs.public }}" = "true" ]; then
           access_flag="--access public"
         fi
-        
+
         is_workspace=false
-        
+
         if jq -e '
           (.workspaces | type == "array") or
           (.workspaces.packages | type == "array")
@@ -117,7 +116,7 @@ runs:
           echo "Publishing workspace package"
           is_workspace=true
         fi
-        
+
         # Yarn classic does not support OIDC so we use npm instead
         if [ "$is_workspace" = "true" ]; then
           npm publish -w "${package}" ${access_flag} --tag "${npm_tag}"

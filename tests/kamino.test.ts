@@ -1836,18 +1836,27 @@ describe('Kamino SDK Tests', () => {
       env.raydiumProgramId
     );
 
-    const strategiesShareData = await kamino.getStrategiesShareData([fixtures.newOrcaStrategy, fixtures.newRaydiumStrategy]);
+    const strategiesShareData = await kamino.getStrategiesShareData([
+      fixtures.newOrcaStrategy,
+      fixtures.newRaydiumStrategy,
+    ]);
     const oldStrategiesShareData = await kamino.legacyGetStrategiesShareData([
       fixtures.newOrcaStrategy,
       fixtures.newRaydiumStrategy,
     ]);
-    
+
     expect(strategiesShareData.length).to.be.eq(oldStrategiesShareData.length);
     for (let i = 0; i < strategiesShareData.length; i++) {
       expect(strategiesShareData[i].address.toString()).to.deep.eq(oldStrategiesShareData[i].address.toString());
-      expect(strategiesShareData[i].shareData.price.toString()).to.be.eq(oldStrategiesShareData[i].shareData.price.toString());
-      expect(strategiesShareData[i].shareData.balance.tokenAAmounts.toString()).to.be.eq(oldStrategiesShareData[i].shareData.balance.tokenAAmounts.toString());
-      expect(strategiesShareData[i].shareData.balance.tokenBAmounts.toString()).to.be.eq(oldStrategiesShareData[i].shareData.balance.tokenBAmounts.toString());
+      expect(strategiesShareData[i].shareData.price.toString()).to.be.eq(
+        oldStrategiesShareData[i].shareData.price.toString()
+      );
+      expect(strategiesShareData[i].shareData.balance.tokenAAmounts.toString()).to.be.eq(
+        oldStrategiesShareData[i].shareData.balance.tokenAAmounts.toString()
+      );
+      expect(strategiesShareData[i].shareData.balance.tokenBAmounts.toString()).to.be.eq(
+        oldStrategiesShareData[i].shareData.balance.tokenBAmounts.toString()
+      );
     }
   });
 
