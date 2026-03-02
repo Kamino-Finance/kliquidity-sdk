@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -34,9 +33,9 @@ export interface PoolStateFields {
   /** The minimum number of ticks between initialized ticks */
   tickSpacing: number
   /** The currently in range liquidity available to the pool. */
-  liquidity: BN
+  liquidity: bigint
   /** The current price of the pool as a sqrt(token_1/token_0) Q64.64 value */
-  sqrtPriceX64: BN
+  sqrtPriceX64: bigint
   /** The current tick of the pool, i.e. according to the last tick transition that was run. */
   tickCurrent: number
   /** the most-recently updated index of the observations array */
@@ -46,16 +45,16 @@ export interface PoolStateFields {
    * The fee growth as a Q64.64 number, i.e. fees of token_0 and token_1 collected per
    * unit of liquidity for the entire life of the pool.
    */
-  feeGrowthGlobal0X64: BN
-  feeGrowthGlobal1X64: BN
+  feeGrowthGlobal0X64: bigint
+  feeGrowthGlobal1X64: bigint
   /** The amounts of token_0 and token_1 that are owed to the protocol. */
-  protocolFeesToken0: BN
-  protocolFeesToken1: BN
+  protocolFeesToken0: bigint
+  protocolFeesToken1: bigint
   /** The amounts in and out of swap token_0 and token_1 */
-  swapInAmountToken0: BN
-  swapOutAmountToken1: BN
-  swapInAmountToken1: BN
-  swapOutAmountToken0: BN
+  swapInAmountToken0: bigint
+  swapOutAmountToken1: bigint
+  swapInAmountToken1: bigint
+  swapOutAmountToken0: bigint
   /**
    * Bitwise representation of the state of the pool
    * bit0, 1: disable open position and increase liquidity, 0: normal
@@ -69,18 +68,18 @@ export interface PoolStateFields {
   padding: Array<number>
   rewardInfos: Array<types.RewardInfoFields>
   /** Packed initialized tick array state */
-  tickArrayBitmap: Array<BN>
+  tickArrayBitmap: Array<bigint>
   /** except protocol_fee and fund_fee */
-  totalFeesToken0: BN
+  totalFeesToken0: bigint
   /** except protocol_fee and fund_fee */
-  totalFeesClaimedToken0: BN
-  totalFeesToken1: BN
-  totalFeesClaimedToken1: BN
-  fundFeesToken0: BN
-  fundFeesToken1: BN
-  openTime: BN
-  padding1: Array<BN>
-  padding2: Array<BN>
+  totalFeesClaimedToken0: bigint
+  totalFeesToken1: bigint
+  totalFeesClaimedToken1: bigint
+  fundFeesToken0: bigint
+  fundFeesToken1: bigint
+  openTime: bigint
+  padding1: Array<bigint>
+  padding2: Array<bigint>
 }
 
 export interface PoolStateJSON {
@@ -170,9 +169,9 @@ export class PoolState {
   /** The minimum number of ticks between initialized ticks */
   readonly tickSpacing: number
   /** The currently in range liquidity available to the pool. */
-  readonly liquidity: BN
+  readonly liquidity: bigint
   /** The current price of the pool as a sqrt(token_1/token_0) Q64.64 value */
-  readonly sqrtPriceX64: BN
+  readonly sqrtPriceX64: bigint
   /** The current tick of the pool, i.e. according to the last tick transition that was run. */
   readonly tickCurrent: number
   /** the most-recently updated index of the observations array */
@@ -182,16 +181,16 @@ export class PoolState {
    * The fee growth as a Q64.64 number, i.e. fees of token_0 and token_1 collected per
    * unit of liquidity for the entire life of the pool.
    */
-  readonly feeGrowthGlobal0X64: BN
-  readonly feeGrowthGlobal1X64: BN
+  readonly feeGrowthGlobal0X64: bigint
+  readonly feeGrowthGlobal1X64: bigint
   /** The amounts of token_0 and token_1 that are owed to the protocol. */
-  readonly protocolFeesToken0: BN
-  readonly protocolFeesToken1: BN
+  readonly protocolFeesToken0: bigint
+  readonly protocolFeesToken1: bigint
   /** The amounts in and out of swap token_0 and token_1 */
-  readonly swapInAmountToken0: BN
-  readonly swapOutAmountToken1: BN
-  readonly swapInAmountToken1: BN
-  readonly swapOutAmountToken0: BN
+  readonly swapInAmountToken0: bigint
+  readonly swapOutAmountToken1: bigint
+  readonly swapInAmountToken1: bigint
+  readonly swapOutAmountToken0: bigint
   /**
    * Bitwise representation of the state of the pool
    * bit0, 1: disable open position and increase liquidity, 0: normal
@@ -205,20 +204,20 @@ export class PoolState {
   readonly padding: Array<number>
   readonly rewardInfos: Array<types.RewardInfo>
   /** Packed initialized tick array state */
-  readonly tickArrayBitmap: Array<BN>
+  readonly tickArrayBitmap: Array<bigint>
   /** except protocol_fee and fund_fee */
-  readonly totalFeesToken0: BN
+  readonly totalFeesToken0: bigint
   /** except protocol_fee and fund_fee */
-  readonly totalFeesClaimedToken0: BN
-  readonly totalFeesToken1: BN
-  readonly totalFeesClaimedToken1: BN
-  readonly fundFeesToken0: BN
-  readonly fundFeesToken1: BN
-  readonly openTime: BN
-  readonly padding1: Array<BN>
-  readonly padding2: Array<BN>
+  readonly totalFeesClaimedToken0: bigint
+  readonly totalFeesToken1: bigint
+  readonly totalFeesClaimedToken1: bigint
+  readonly fundFeesToken0: bigint
+  readonly fundFeesToken1: bigint
+  readonly openTime: bigint
+  readonly padding1: Array<bigint>
+  readonly padding2: Array<bigint>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     247, 237, 227, 245, 215, 195, 222, 70,
   ])
 
@@ -320,7 +319,7 @@ export class PoolState {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -340,16 +339,23 @@ export class PoolState {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): PoolState {
-    if (!data.slice(0, 8).equals(PoolState.discriminator)) {
+  static decode(data: Uint8Array): PoolState {
+    if (data.length < PoolState.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < PoolState.discriminator.length; i++) {
+      if (data[i] !== PoolState.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = PoolState.layout.decode(data.slice(8))
+    const dec = PoolState.layout.decode(
+      data.subarray(PoolState.discriminator.length)
+    )
 
     return new PoolState({
       bump: dec.bump,
@@ -451,34 +457,34 @@ export class PoolState {
       mintDecimals0: obj.mintDecimals0,
       mintDecimals1: obj.mintDecimals1,
       tickSpacing: obj.tickSpacing,
-      liquidity: new BN(obj.liquidity),
-      sqrtPriceX64: new BN(obj.sqrtPriceX64),
+      liquidity: BigInt(obj.liquidity),
+      sqrtPriceX64: BigInt(obj.sqrtPriceX64),
       tickCurrent: obj.tickCurrent,
       observationIndex: obj.observationIndex,
       observationUpdateDuration: obj.observationUpdateDuration,
-      feeGrowthGlobal0X64: new BN(obj.feeGrowthGlobal0X64),
-      feeGrowthGlobal1X64: new BN(obj.feeGrowthGlobal1X64),
-      protocolFeesToken0: new BN(obj.protocolFeesToken0),
-      protocolFeesToken1: new BN(obj.protocolFeesToken1),
-      swapInAmountToken0: new BN(obj.swapInAmountToken0),
-      swapOutAmountToken1: new BN(obj.swapOutAmountToken1),
-      swapInAmountToken1: new BN(obj.swapInAmountToken1),
-      swapOutAmountToken0: new BN(obj.swapOutAmountToken0),
+      feeGrowthGlobal0X64: BigInt(obj.feeGrowthGlobal0X64),
+      feeGrowthGlobal1X64: BigInt(obj.feeGrowthGlobal1X64),
+      protocolFeesToken0: BigInt(obj.protocolFeesToken0),
+      protocolFeesToken1: BigInt(obj.protocolFeesToken1),
+      swapInAmountToken0: BigInt(obj.swapInAmountToken0),
+      swapOutAmountToken1: BigInt(obj.swapOutAmountToken1),
+      swapInAmountToken1: BigInt(obj.swapInAmountToken1),
+      swapOutAmountToken0: BigInt(obj.swapOutAmountToken0),
       status: obj.status,
       padding: obj.padding,
       rewardInfos: obj.rewardInfos.map((item) =>
         types.RewardInfo.fromJSON(item)
       ),
-      tickArrayBitmap: obj.tickArrayBitmap.map((item) => new BN(item)),
-      totalFeesToken0: new BN(obj.totalFeesToken0),
-      totalFeesClaimedToken0: new BN(obj.totalFeesClaimedToken0),
-      totalFeesToken1: new BN(obj.totalFeesToken1),
-      totalFeesClaimedToken1: new BN(obj.totalFeesClaimedToken1),
-      fundFeesToken0: new BN(obj.fundFeesToken0),
-      fundFeesToken1: new BN(obj.fundFeesToken1),
-      openTime: new BN(obj.openTime),
-      padding1: obj.padding1.map((item) => new BN(item)),
-      padding2: obj.padding2.map((item) => new BN(item)),
+      tickArrayBitmap: obj.tickArrayBitmap.map((item) => BigInt(item)),
+      totalFeesToken0: BigInt(obj.totalFeesToken0),
+      totalFeesClaimedToken0: BigInt(obj.totalFeesClaimedToken0),
+      totalFeesToken1: BigInt(obj.totalFeesToken1),
+      totalFeesClaimedToken1: BigInt(obj.totalFeesClaimedToken1),
+      fundFeesToken0: BigInt(obj.fundFeesToken0),
+      fundFeesToken1: BigInt(obj.fundFeesToken1),
+      openTime: BigInt(obj.openTime),
+      padding1: obj.padding1.map((item) => BigInt(item)),
+      padding2: obj.padding2.map((item) => BigInt(item)),
     })
   }
 }

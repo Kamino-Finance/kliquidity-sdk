@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -29,7 +28,7 @@ export class TokenBadge {
   readonly whirlpoolsConfig: Address
   readonly tokenMint: Address
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     116, 219, 204, 229, 249, 116, 255, 150,
   ])
 
@@ -59,7 +58,7 @@ export class TokenBadge {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -79,16 +78,23 @@ export class TokenBadge {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): TokenBadge {
-    if (!data.slice(0, 8).equals(TokenBadge.discriminator)) {
+  static decode(data: Uint8Array): TokenBadge {
+    if (data.length < TokenBadge.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < TokenBadge.discriminator.length; i++) {
+      if (data[i] !== TokenBadge.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = TokenBadge.layout.decode(data.slice(8))
+    const dec = TokenBadge.layout.decode(
+      data.subarray(TokenBadge.discriminator.length)
+    )
 
     return new TokenBadge({
       whirlpoolsConfig: dec.whirlpoolsConfig,

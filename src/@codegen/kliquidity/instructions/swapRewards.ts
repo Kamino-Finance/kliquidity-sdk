@@ -2,25 +2,26 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([92, 41, 172, 30, 190, 65, 174, 90])
+
 export interface SwapRewardsArgs {
-  tokenAIn: BN
-  tokenBIn: BN
-  rewardIndex: BN
-  rewardCollateralId: BN
-  minCollateralTokenOut: BN
+  tokenAIn: bigint
+  tokenBIn: bigint
+  rewardIndex: bigint
+  rewardCollateralId: bigint
+  minCollateralTokenOut: bigint
 }
 
 export interface SwapRewardsAccounts {
@@ -50,7 +51,7 @@ export interface SwapRewardsAccounts {
   instructionSysvarAccount: Address
 }
 
-export const layout = borsh.struct<SwapRewardsArgs>([
+export const layout = borsh.struct([
   borsh.u64("tokenAIn"),
   borsh.u64("tokenBIn"),
   borsh.u64("rewardIndex"),
@@ -61,10 +62,10 @@ export const layout = borsh.struct<SwapRewardsArgs>([
 export function swapRewards(
   args: SwapRewardsArgs,
   accounts: SwapRewardsAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.user.address, role: 3, signer: accounts.user },
     { address: accounts.strategy, role: 1 },
     { address: accounts.globalConfig, role: 0 },
@@ -91,8 +92,7 @@ export function swapRewards(
     { address: accounts.instructionSysvarAccount, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([92, 41, 172, 30, 190, 65, 174, 90])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       tokenAIn: args.tokenAIn,
@@ -103,7 +103,12 @@ export function swapRewards(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

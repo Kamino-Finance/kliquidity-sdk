@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -83,7 +82,7 @@ export class PresetParameter {
   /** Portion of swap fees retained by the protocol by controlling protocol_share parameter. protocol_swap_fee = protocol_share * total_swap_fee */
   readonly protocolShare: number
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     242, 62, 244, 34, 181, 112, 58, 170,
   ])
 
@@ -129,7 +128,7 @@ export class PresetParameter {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -149,16 +148,23 @@ export class PresetParameter {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): PresetParameter {
-    if (!data.slice(0, 8).equals(PresetParameter.discriminator)) {
+  static decode(data: Uint8Array): PresetParameter {
+    if (data.length < PresetParameter.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < PresetParameter.discriminator.length; i++) {
+      if (data[i] !== PresetParameter.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = PresetParameter.layout.decode(data.slice(8))
+    const dec = PresetParameter.layout.decode(
+      data.subarray(PresetParameter.discriminator.length)
+    )
 
     return new PresetParameter({
       binStep: dec.binStep,

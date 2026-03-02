@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -35,7 +34,7 @@ export class WhirlpoolsConfig {
   readonly rewardEmissionsSuperAuthority: Address
   readonly defaultProtocolFeeRate: number
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     157, 20, 49, 224, 217, 87, 193, 254,
   ])
 
@@ -69,7 +68,7 @@ export class WhirlpoolsConfig {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -89,16 +88,23 @@ export class WhirlpoolsConfig {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): WhirlpoolsConfig {
-    if (!data.slice(0, 8).equals(WhirlpoolsConfig.discriminator)) {
+  static decode(data: Uint8Array): WhirlpoolsConfig {
+    if (data.length < WhirlpoolsConfig.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < WhirlpoolsConfig.discriminator.length; i++) {
+      if (data[i] !== WhirlpoolsConfig.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = WhirlpoolsConfig.layout.decode(data.slice(8))
+    const dec = WhirlpoolsConfig.layout.decode(
+      data.subarray(WhirlpoolsConfig.discriminator.length)
+    )
 
     return new WhirlpoolsConfig({
       feeAuthority: dec.feeAuthority,

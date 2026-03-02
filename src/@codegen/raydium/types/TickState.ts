@@ -1,16 +1,16 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface TickStateFields {
   tick: number
-  liquidityNet: BN
-  liquidityGross: BN
-  feeGrowthOutside0X64: BN
-  feeGrowthOutside1X64: BN
-  rewardGrowthsOutsideX64: Array<BN>
+  liquidityNet: bigint
+  liquidityGross: bigint
+  feeGrowthOutside0X64: bigint
+  feeGrowthOutside1X64: bigint
+  rewardGrowthsOutsideX64: Array<bigint>
   padding: Array<number>
 }
 
@@ -26,11 +26,11 @@ export interface TickStateJSON {
 
 export class TickState {
   readonly tick: number
-  readonly liquidityNet: BN
-  readonly liquidityGross: BN
-  readonly feeGrowthOutside0X64: BN
-  readonly feeGrowthOutside1X64: BN
-  readonly rewardGrowthsOutsideX64: Array<BN>
+  readonly liquidityNet: bigint
+  readonly liquidityGross: bigint
+  readonly feeGrowthOutside0X64: bigint
+  readonly feeGrowthOutside1X64: bigint
+  readonly rewardGrowthsOutsideX64: Array<bigint>
   readonly padding: Array<number>
 
   constructor(fields: TickStateFields) {
@@ -100,12 +100,12 @@ export class TickState {
   static fromJSON(obj: TickStateJSON): TickState {
     return new TickState({
       tick: obj.tick,
-      liquidityNet: new BN(obj.liquidityNet),
-      liquidityGross: new BN(obj.liquidityGross),
-      feeGrowthOutside0X64: new BN(obj.feeGrowthOutside0X64),
-      feeGrowthOutside1X64: new BN(obj.feeGrowthOutside1X64),
-      rewardGrowthsOutsideX64: obj.rewardGrowthsOutsideX64.map(
-        (item) => new BN(item)
+      liquidityNet: BigInt(obj.liquidityNet),
+      liquidityGross: BigInt(obj.liquidityGross),
+      feeGrowthOutside0X64: BigInt(obj.feeGrowthOutside0X64),
+      feeGrowthOutside1X64: BigInt(obj.feeGrowthOutside1X64),
+      rewardGrowthsOutsideX64: obj.rewardGrowthsOutsideX64.map((item) =>
+        BigInt(item)
       ),
       padding: obj.padding,
     })

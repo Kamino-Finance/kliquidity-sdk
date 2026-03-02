@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -26,7 +25,7 @@ export interface CollateralInfosJSON {
 export class CollateralInfos {
   readonly infos: Array<types.CollateralInfo>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     127, 210, 52, 226, 74, 169, 111, 9,
   ])
 
@@ -56,7 +55,7 @@ export class CollateralInfos {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -76,16 +75,23 @@ export class CollateralInfos {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): CollateralInfos {
-    if (!data.slice(0, 8).equals(CollateralInfos.discriminator)) {
+  static decode(data: Uint8Array): CollateralInfos {
+    if (data.length < CollateralInfos.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < CollateralInfos.discriminator.length; i++) {
+      if (data[i] !== CollateralInfos.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = CollateralInfos.layout.decode(data.slice(8))
+    const dec = CollateralInfos.layout.decode(
+      data.subarray(CollateralInfos.discriminator.length)
+    )
 
     return new CollateralInfos({
       infos: dec.infos.map(

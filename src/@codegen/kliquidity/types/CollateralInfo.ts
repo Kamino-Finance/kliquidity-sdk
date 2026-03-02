@@ -1,25 +1,25 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface CollateralInfoFields {
   mint: Address
-  lowerHeuristic: BN
-  upperHeuristic: BN
-  expHeuristic: BN
-  maxTwapDivergenceBps: BN
+  lowerHeuristic: bigint
+  upperHeuristic: bigint
+  expHeuristic: bigint
+  maxTwapDivergenceBps: bigint
   scopeTwapPriceChain: Array<number>
   scopePriceChain: Array<number>
   name: Array<number>
-  maxAgePriceSeconds: BN
-  maxAgeTwapSeconds: BN
-  maxIgnorableAmountAsReward: BN
+  maxAgePriceSeconds: bigint
+  maxAgeTwapSeconds: bigint
+  maxIgnorableAmountAsReward: bigint
   disabled: number
   padding0: Array<number>
   scopeStakingRateChain: Array<number>
-  padding: Array<BN>
+  padding: Array<bigint>
 }
 
 export interface CollateralInfoJSON {
@@ -42,20 +42,20 @@ export interface CollateralInfoJSON {
 
 export class CollateralInfo {
   readonly mint: Address
-  readonly lowerHeuristic: BN
-  readonly upperHeuristic: BN
-  readonly expHeuristic: BN
-  readonly maxTwapDivergenceBps: BN
+  readonly lowerHeuristic: bigint
+  readonly upperHeuristic: bigint
+  readonly expHeuristic: bigint
+  readonly maxTwapDivergenceBps: bigint
   readonly scopeTwapPriceChain: Array<number>
   readonly scopePriceChain: Array<number>
   readonly name: Array<number>
-  readonly maxAgePriceSeconds: BN
-  readonly maxAgeTwapSeconds: BN
-  readonly maxIgnorableAmountAsReward: BN
+  readonly maxAgePriceSeconds: bigint
+  readonly maxAgeTwapSeconds: bigint
+  readonly maxIgnorableAmountAsReward: bigint
   readonly disabled: number
   readonly padding0: Array<number>
   readonly scopeStakingRateChain: Array<number>
-  readonly padding: Array<BN>
+  readonly padding: Array<bigint>
 
   constructor(fields: CollateralInfoFields) {
     this.mint = fields.mint
@@ -162,20 +162,20 @@ export class CollateralInfo {
   static fromJSON(obj: CollateralInfoJSON): CollateralInfo {
     return new CollateralInfo({
       mint: address(obj.mint),
-      lowerHeuristic: new BN(obj.lowerHeuristic),
-      upperHeuristic: new BN(obj.upperHeuristic),
-      expHeuristic: new BN(obj.expHeuristic),
-      maxTwapDivergenceBps: new BN(obj.maxTwapDivergenceBps),
+      lowerHeuristic: BigInt(obj.lowerHeuristic),
+      upperHeuristic: BigInt(obj.upperHeuristic),
+      expHeuristic: BigInt(obj.expHeuristic),
+      maxTwapDivergenceBps: BigInt(obj.maxTwapDivergenceBps),
       scopeTwapPriceChain: obj.scopeTwapPriceChain,
       scopePriceChain: obj.scopePriceChain,
       name: obj.name,
-      maxAgePriceSeconds: new BN(obj.maxAgePriceSeconds),
-      maxAgeTwapSeconds: new BN(obj.maxAgeTwapSeconds),
-      maxIgnorableAmountAsReward: new BN(obj.maxIgnorableAmountAsReward),
+      maxAgePriceSeconds: BigInt(obj.maxAgePriceSeconds),
+      maxAgeTwapSeconds: BigInt(obj.maxAgeTwapSeconds),
+      maxIgnorableAmountAsReward: BigInt(obj.maxIgnorableAmountAsReward),
       disabled: obj.disabled,
       padding0: obj.padding0,
       scopeStakingRateChain: obj.scopeStakingRateChain,
-      padding: obj.padding.map((item) => new BN(item)),
+      padding: obj.padding.map((item) => BigInt(item)),
     })
   }
 

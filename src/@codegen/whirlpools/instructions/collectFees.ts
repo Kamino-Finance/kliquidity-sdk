@@ -2,18 +2,21 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([
+  164, 152, 207, 99, 30, 186, 19, 182,
+])
 
 export interface CollectFeesAccounts {
   whirlpool: Address
@@ -29,10 +32,10 @@ export interface CollectFeesAccounts {
 
 export function collectFees(
   accounts: CollectFeesAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.whirlpool, role: 0 },
     {
       address: accounts.positionAuthority.address,
@@ -48,8 +51,7 @@ export function collectFees(
     { address: accounts.tokenProgram, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([164, 152, 207, 99, 30, 186, 19, 182])
-  const data = identifier
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = DISCRIMINATOR
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

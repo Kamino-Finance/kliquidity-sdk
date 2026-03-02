@@ -1,16 +1,16 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface ObservationFields {
   /** Cumulative active bin ID */
-  cumulativeActiveBinId: BN
+  cumulativeActiveBinId: bigint
   /** Observation sample created timestamp */
-  createdAt: BN
+  createdAt: bigint
   /** Observation sample last updated timestamp */
-  lastUpdatedAt: BN
+  lastUpdatedAt: bigint
 }
 
 export interface ObservationJSON {
@@ -24,11 +24,11 @@ export interface ObservationJSON {
 
 export class Observation {
   /** Cumulative active bin ID */
-  readonly cumulativeActiveBinId: BN
+  readonly cumulativeActiveBinId: bigint
   /** Observation sample created timestamp */
-  readonly createdAt: BN
+  readonly createdAt: bigint
   /** Observation sample last updated timestamp */
-  readonly lastUpdatedAt: BN
+  readonly lastUpdatedAt: bigint
 
   constructor(fields: ObservationFields) {
     this.cumulativeActiveBinId = fields.cumulativeActiveBinId
@@ -74,9 +74,9 @@ export class Observation {
 
   static fromJSON(obj: ObservationJSON): Observation {
     return new Observation({
-      cumulativeActiveBinId: new BN(obj.cumulativeActiveBinId),
-      createdAt: new BN(obj.createdAt),
-      lastUpdatedAt: new BN(obj.lastUpdatedAt),
+      cumulativeActiveBinId: BigInt(obj.cumulativeActiveBinId),
+      createdAt: BigInt(obj.createdAt),
+      lastUpdatedAt: BigInt(obj.lastUpdatedAt),
     })
   }
 

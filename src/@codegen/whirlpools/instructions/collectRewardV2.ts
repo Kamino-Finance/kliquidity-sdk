@@ -2,18 +2,21 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([
+  177, 107, 37, 180, 160, 19, 49, 209,
+])
 
 export interface CollectRewardV2Args {
   rewardIndex: number
@@ -40,10 +43,10 @@ export const layout = borsh.struct([
 export function collectRewardV2(
   args: CollectRewardV2Args,
   accounts: CollectRewardV2Accounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.whirlpool, role: 0 },
     {
       address: accounts.positionAuthority.address,
@@ -59,8 +62,7 @@ export function collectRewardV2(
     { address: accounts.memoProgram, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([177, 107, 37, 180, 160, 19, 49, 209])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       rewardIndex: args.rewardIndex,
@@ -73,7 +75,12 @@ export function collectRewardV2(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

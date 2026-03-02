@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -38,7 +37,7 @@ export class TickArrayState {
   readonly initializedTickCount: number
   readonly padding: Array<number>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     192, 155, 85, 205, 49, 249, 129, 42,
   ])
 
@@ -74,7 +73,7 @@ export class TickArrayState {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -94,16 +93,23 @@ export class TickArrayState {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): TickArrayState {
-    if (!data.slice(0, 8).equals(TickArrayState.discriminator)) {
+  static decode(data: Uint8Array): TickArrayState {
+    if (data.length < TickArrayState.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < TickArrayState.discriminator.length; i++) {
+      if (data[i] !== TickArrayState.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = TickArrayState.layout.decode(data.slice(8))
+    const dec = TickArrayState.layout.decode(
+      data.subarray(TickArrayState.discriminator.length)
+    )
 
     return new TickArrayState({
       poolId: dec.poolId,

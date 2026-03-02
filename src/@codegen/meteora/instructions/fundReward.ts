@@ -2,22 +2,25 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  188, 50, 249, 165, 93, 151, 38, 63,
+])
+
 export interface FundRewardArgs {
-  rewardIndex: BN
-  amount: BN
+  rewardIndex: bigint
+  amount: bigint
   carryForward: boolean
 }
 
@@ -33,7 +36,7 @@ export interface FundRewardAccounts {
   program: Address
 }
 
-export const layout = borsh.struct<FundRewardArgs>([
+export const layout = borsh.struct([
   borsh.u64("rewardIndex"),
   borsh.u64("amount"),
   borsh.bool("carryForward"),
@@ -42,10 +45,10 @@ export const layout = borsh.struct<FundRewardArgs>([
 export function fundReward(
   args: FundRewardArgs,
   accounts: FundRewardAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.lbPair, role: 1 },
     { address: accounts.rewardVault, role: 1 },
     { address: accounts.rewardMint, role: 0 },
@@ -57,8 +60,7 @@ export function fundReward(
     { address: accounts.program, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([188, 50, 249, 165, 93, 151, 38, 63])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       rewardIndex: args.rewardIndex,
@@ -67,7 +69,12 @@ export function fundReward(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -18,9 +17,9 @@ import { PROGRAM_ID } from "../programId"
 export interface BinArrayBitmapExtensionFields {
   lbPair: Address
   /** Packed initialized bin array state for start_bin_index is positive */
-  positiveBinArrayBitmap: Array<Array<BN>>
+  positiveBinArrayBitmap: Array<Array<bigint>>
   /** Packed initialized bin array state for start_bin_index is negative */
-  negativeBinArrayBitmap: Array<Array<BN>>
+  negativeBinArrayBitmap: Array<Array<bigint>>
 }
 
 export interface BinArrayBitmapExtensionJSON {
@@ -34,11 +33,11 @@ export interface BinArrayBitmapExtensionJSON {
 export class BinArrayBitmapExtension {
   readonly lbPair: Address
   /** Packed initialized bin array state for start_bin_index is positive */
-  readonly positiveBinArrayBitmap: Array<Array<BN>>
+  readonly positiveBinArrayBitmap: Array<Array<bigint>>
   /** Packed initialized bin array state for start_bin_index is negative */
-  readonly negativeBinArrayBitmap: Array<Array<BN>>
+  readonly negativeBinArrayBitmap: Array<Array<bigint>>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     80, 111, 124, 113, 55, 237, 18, 5,
   ])
 
@@ -70,7 +69,7 @@ export class BinArrayBitmapExtension {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -90,16 +89,23 @@ export class BinArrayBitmapExtension {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): BinArrayBitmapExtension {
-    if (!data.slice(0, 8).equals(BinArrayBitmapExtension.discriminator)) {
+  static decode(data: Uint8Array): BinArrayBitmapExtension {
+    if (data.length < BinArrayBitmapExtension.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < BinArrayBitmapExtension.discriminator.length; i++) {
+      if (data[i] !== BinArrayBitmapExtension.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = BinArrayBitmapExtension.layout.decode(data.slice(8))
+    const dec = BinArrayBitmapExtension.layout.decode(
+      data.subarray(BinArrayBitmapExtension.discriminator.length)
+    )
 
     return new BinArrayBitmapExtension({
       lbPair: dec.lbPair,
@@ -124,10 +130,10 @@ export class BinArrayBitmapExtension {
     return new BinArrayBitmapExtension({
       lbPair: address(obj.lbPair),
       positiveBinArrayBitmap: obj.positiveBinArrayBitmap.map((item) =>
-        item.map((item) => new BN(item))
+        item.map((item) => BigInt(item))
       ),
       negativeBinArrayBitmap: obj.negativeBinArrayBitmap.map((item) =>
-        item.map((item) => new BN(item))
+        item.map((item) => BigInt(item))
       ),
     })
   }

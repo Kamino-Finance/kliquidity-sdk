@@ -1,19 +1,19 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface KaminoRewardInfoFields {
-  decimals: BN
+  decimals: bigint
   rewardVault: Address
   rewardMint: Address
-  rewardCollateralId: BN
-  lastIssuanceTs: BN
-  rewardPerSecond: BN
-  amountUncollected: BN
-  amountIssuedCumulative: BN
-  amountAvailable: BN
+  rewardCollateralId: bigint
+  lastIssuanceTs: bigint
+  rewardPerSecond: bigint
+  amountUncollected: bigint
+  amountIssuedCumulative: bigint
+  amountAvailable: bigint
 }
 
 export interface KaminoRewardInfoJSON {
@@ -29,15 +29,15 @@ export interface KaminoRewardInfoJSON {
 }
 
 export class KaminoRewardInfo {
-  readonly decimals: BN
+  readonly decimals: bigint
   readonly rewardVault: Address
   readonly rewardMint: Address
-  readonly rewardCollateralId: BN
-  readonly lastIssuanceTs: BN
-  readonly rewardPerSecond: BN
-  readonly amountUncollected: BN
-  readonly amountIssuedCumulative: BN
-  readonly amountAvailable: BN
+  readonly rewardCollateralId: bigint
+  readonly lastIssuanceTs: bigint
+  readonly rewardPerSecond: bigint
+  readonly amountUncollected: bigint
+  readonly amountIssuedCumulative: bigint
+  readonly amountAvailable: bigint
 
   constructor(fields: KaminoRewardInfoFields) {
     this.decimals = fields.decimals
@@ -113,15 +113,15 @@ export class KaminoRewardInfo {
 
   static fromJSON(obj: KaminoRewardInfoJSON): KaminoRewardInfo {
     return new KaminoRewardInfo({
-      decimals: new BN(obj.decimals),
+      decimals: BigInt(obj.decimals),
       rewardVault: address(obj.rewardVault),
       rewardMint: address(obj.rewardMint),
-      rewardCollateralId: new BN(obj.rewardCollateralId),
-      lastIssuanceTs: new BN(obj.lastIssuanceTs),
-      rewardPerSecond: new BN(obj.rewardPerSecond),
-      amountUncollected: new BN(obj.amountUncollected),
-      amountIssuedCumulative: new BN(obj.amountIssuedCumulative),
-      amountAvailable: new BN(obj.amountAvailable),
+      rewardCollateralId: BigInt(obj.rewardCollateralId),
+      lastIssuanceTs: BigInt(obj.lastIssuanceTs),
+      rewardPerSecond: BigInt(obj.rewardPerSecond),
+      amountUncollected: BigInt(obj.amountUncollected),
+      amountIssuedCumulative: BigInt(obj.amountIssuedCumulative),
+      amountAvailable: BigInt(obj.amountAvailable),
     })
   }
 

@@ -2,22 +2,23 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([75, 151, 187, 125, 50, 4, 11, 71])
+
 export interface CheckExpectedVaultsBalancesArgs {
-  tokenAAtaBalance: BN
-  tokenBAtaBalance: BN
+  tokenAAtaBalance: bigint
+  tokenBAtaBalance: bigint
 }
 
 export interface CheckExpectedVaultsBalancesAccounts {
@@ -26,7 +27,7 @@ export interface CheckExpectedVaultsBalancesAccounts {
   tokenBAta: Address
 }
 
-export const layout = borsh.struct<CheckExpectedVaultsBalancesArgs>([
+export const layout = borsh.struct([
   borsh.u64("tokenAAtaBalance"),
   borsh.u64("tokenBAtaBalance"),
 ])
@@ -34,17 +35,16 @@ export const layout = borsh.struct<CheckExpectedVaultsBalancesArgs>([
 export function checkExpectedVaultsBalances(
   args: CheckExpectedVaultsBalancesArgs,
   accounts: CheckExpectedVaultsBalancesAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.user.address, role: 3, signer: accounts.user },
     { address: accounts.tokenAAta, role: 0 },
     { address: accounts.tokenBAta, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([75, 151, 187, 125, 50, 4, 11, 71])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       tokenAAtaBalance: args.tokenAAtaBalance,
@@ -52,7 +52,12 @@ export function checkExpectedVaultsBalances(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

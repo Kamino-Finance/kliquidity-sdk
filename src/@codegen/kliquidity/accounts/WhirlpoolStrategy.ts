@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -19,7 +18,7 @@ export interface WhirlpoolStrategyFields {
   adminAuthority: Address
   globalConfig: Address
   baseVaultAuthority: Address
-  baseVaultAuthorityBump: BN
+  baseVaultAuthorityBump: bigint
   pool: Address
   poolTokenVaultA: Address
   poolTokenVaultB: Address
@@ -32,59 +31,59 @@ export interface WhirlpoolStrategyFields {
   tokenAVault: Address
   tokenBVault: Address
   deprecated0: Array<Address>
-  deprecated1: Array<BN>
+  deprecated1: Array<bigint>
   tokenAMint: Address
   tokenBMint: Address
-  tokenAMintDecimals: BN
-  tokenBMintDecimals: BN
-  tokenAAmounts: BN
-  tokenBAmounts: BN
-  tokenACollateralId: BN
-  tokenBCollateralId: BN
+  tokenAMintDecimals: bigint
+  tokenBMintDecimals: bigint
+  tokenAAmounts: bigint
+  tokenBAmounts: bigint
+  tokenACollateralId: bigint
+  tokenBCollateralId: bigint
   scopePrices: Address
   deprecated2: Address
   sharesMint: Address
-  sharesMintDecimals: BN
+  sharesMintDecimals: bigint
   sharesMintAuthority: Address
-  sharesMintAuthorityBump: BN
-  sharesIssued: BN
-  status: BN
-  reward0Amount: BN
+  sharesMintAuthorityBump: bigint
+  sharesIssued: bigint
+  status: bigint
+  reward0Amount: bigint
   reward0Vault: Address
-  reward0CollateralId: BN
-  reward0Decimals: BN
-  reward1Amount: BN
+  reward0CollateralId: bigint
+  reward0Decimals: bigint
+  reward1Amount: bigint
   reward1Vault: Address
-  reward1CollateralId: BN
-  reward1Decimals: BN
-  reward2Amount: BN
+  reward1CollateralId: bigint
+  reward1Decimals: bigint
+  reward2Amount: bigint
   reward2Vault: Address
-  reward2CollateralId: BN
-  reward2Decimals: BN
-  depositCapUsd: BN
-  feesACumulative: BN
-  feesBCumulative: BN
-  reward0AmountCumulative: BN
-  reward1AmountCumulative: BN
-  reward2AmountCumulative: BN
-  depositCapUsdPerIxn: BN
+  reward2CollateralId: bigint
+  reward2Decimals: bigint
+  depositCapUsd: bigint
+  feesACumulative: bigint
+  feesBCumulative: bigint
+  reward0AmountCumulative: bigint
+  reward1AmountCumulative: bigint
+  reward2AmountCumulative: bigint
+  depositCapUsdPerIxn: bigint
   withdrawalCapA: types.WithdrawalCapsFields
   withdrawalCapB: types.WithdrawalCapsFields
-  maxPriceDeviationBps: BN
+  maxPriceDeviationBps: bigint
   swapVaultMaxSlippageBps: number
   swapVaultMaxSlippageFromReferenceBps: number
-  strategyType: BN
-  padding0: BN
-  withdrawFee: BN
-  feesFee: BN
-  reward0Fee: BN
-  reward1Fee: BN
-  reward2Fee: BN
-  positionTimestamp: BN
+  strategyType: bigint
+  padding0: bigint
+  withdrawFee: bigint
+  feesFee: bigint
+  reward0Fee: bigint
+  reward1Fee: bigint
+  reward2Fee: bigint
+  positionTimestamp: bigint
   kaminoRewards: Array<types.KaminoRewardInfoFields>
-  strategyDex: BN
+  strategyDex: bigint
   raydiumProtocolPositionOrBaseVaultAuthority: Address
-  allowDepositWithoutInvest: BN
+  allowDepositWithoutInvest: bigint
   raydiumPoolConfigOrBaseVaultAuthority: Address
   depositBlocked: number
   creationStatus: number
@@ -102,21 +101,21 @@ export interface WhirlpoolStrategyFields {
   padding1: Array<number>
   rebalanceRaw: types.RebalanceRawFields
   padding2: Array<number>
-  tokenAFeesFromRewardsCumulative: BN
-  tokenBFeesFromRewardsCumulative: BN
+  tokenAFeesFromRewardsCumulative: bigint
+  tokenBFeesFromRewardsCumulative: bigint
   strategyLookupTable: Address
-  lastSwapUnevenStepTimestamp: BN
+  lastSwapUnevenStepTimestamp: bigint
   farm: Address
   rebalancesCap: types.WithdrawalCapsFields
   swapUnevenAuthority: Address
   tokenATokenProgram: Address
   tokenBTokenProgram: Address
   pendingAdmin: Address
-  padding3: BN
-  padding4: Array<BN>
-  padding5: Array<BN>
-  padding6: Array<BN>
-  padding7: Array<BN>
+  padding3: bigint
+  padding4: Array<bigint>
+  padding5: Array<bigint>
+  padding6: Array<bigint>
+  padding7: Array<bigint>
 }
 
 export interface WhirlpoolStrategyJSON {
@@ -227,7 +226,7 @@ export class WhirlpoolStrategy {
   readonly adminAuthority: Address
   readonly globalConfig: Address
   readonly baseVaultAuthority: Address
-  readonly baseVaultAuthorityBump: BN
+  readonly baseVaultAuthorityBump: bigint
   readonly pool: Address
   readonly poolTokenVaultA: Address
   readonly poolTokenVaultB: Address
@@ -240,59 +239,59 @@ export class WhirlpoolStrategy {
   readonly tokenAVault: Address
   readonly tokenBVault: Address
   readonly deprecated0: Array<Address>
-  readonly deprecated1: Array<BN>
+  readonly deprecated1: Array<bigint>
   readonly tokenAMint: Address
   readonly tokenBMint: Address
-  readonly tokenAMintDecimals: BN
-  readonly tokenBMintDecimals: BN
-  readonly tokenAAmounts: BN
-  readonly tokenBAmounts: BN
-  readonly tokenACollateralId: BN
-  readonly tokenBCollateralId: BN
+  readonly tokenAMintDecimals: bigint
+  readonly tokenBMintDecimals: bigint
+  readonly tokenAAmounts: bigint
+  readonly tokenBAmounts: bigint
+  readonly tokenACollateralId: bigint
+  readonly tokenBCollateralId: bigint
   readonly scopePrices: Address
   readonly deprecated2: Address
   readonly sharesMint: Address
-  readonly sharesMintDecimals: BN
+  readonly sharesMintDecimals: bigint
   readonly sharesMintAuthority: Address
-  readonly sharesMintAuthorityBump: BN
-  readonly sharesIssued: BN
-  readonly status: BN
-  readonly reward0Amount: BN
+  readonly sharesMintAuthorityBump: bigint
+  readonly sharesIssued: bigint
+  readonly status: bigint
+  readonly reward0Amount: bigint
   readonly reward0Vault: Address
-  readonly reward0CollateralId: BN
-  readonly reward0Decimals: BN
-  readonly reward1Amount: BN
+  readonly reward0CollateralId: bigint
+  readonly reward0Decimals: bigint
+  readonly reward1Amount: bigint
   readonly reward1Vault: Address
-  readonly reward1CollateralId: BN
-  readonly reward1Decimals: BN
-  readonly reward2Amount: BN
+  readonly reward1CollateralId: bigint
+  readonly reward1Decimals: bigint
+  readonly reward2Amount: bigint
   readonly reward2Vault: Address
-  readonly reward2CollateralId: BN
-  readonly reward2Decimals: BN
-  readonly depositCapUsd: BN
-  readonly feesACumulative: BN
-  readonly feesBCumulative: BN
-  readonly reward0AmountCumulative: BN
-  readonly reward1AmountCumulative: BN
-  readonly reward2AmountCumulative: BN
-  readonly depositCapUsdPerIxn: BN
+  readonly reward2CollateralId: bigint
+  readonly reward2Decimals: bigint
+  readonly depositCapUsd: bigint
+  readonly feesACumulative: bigint
+  readonly feesBCumulative: bigint
+  readonly reward0AmountCumulative: bigint
+  readonly reward1AmountCumulative: bigint
+  readonly reward2AmountCumulative: bigint
+  readonly depositCapUsdPerIxn: bigint
   readonly withdrawalCapA: types.WithdrawalCaps
   readonly withdrawalCapB: types.WithdrawalCaps
-  readonly maxPriceDeviationBps: BN
+  readonly maxPriceDeviationBps: bigint
   readonly swapVaultMaxSlippageBps: number
   readonly swapVaultMaxSlippageFromReferenceBps: number
-  readonly strategyType: BN
-  readonly padding0: BN
-  readonly withdrawFee: BN
-  readonly feesFee: BN
-  readonly reward0Fee: BN
-  readonly reward1Fee: BN
-  readonly reward2Fee: BN
-  readonly positionTimestamp: BN
+  readonly strategyType: bigint
+  readonly padding0: bigint
+  readonly withdrawFee: bigint
+  readonly feesFee: bigint
+  readonly reward0Fee: bigint
+  readonly reward1Fee: bigint
+  readonly reward2Fee: bigint
+  readonly positionTimestamp: bigint
   readonly kaminoRewards: Array<types.KaminoRewardInfo>
-  readonly strategyDex: BN
+  readonly strategyDex: bigint
   readonly raydiumProtocolPositionOrBaseVaultAuthority: Address
-  readonly allowDepositWithoutInvest: BN
+  readonly allowDepositWithoutInvest: bigint
   readonly raydiumPoolConfigOrBaseVaultAuthority: Address
   readonly depositBlocked: number
   readonly creationStatus: number
@@ -310,23 +309,23 @@ export class WhirlpoolStrategy {
   readonly padding1: Array<number>
   readonly rebalanceRaw: types.RebalanceRaw
   readonly padding2: Array<number>
-  readonly tokenAFeesFromRewardsCumulative: BN
-  readonly tokenBFeesFromRewardsCumulative: BN
+  readonly tokenAFeesFromRewardsCumulative: bigint
+  readonly tokenBFeesFromRewardsCumulative: bigint
   readonly strategyLookupTable: Address
-  readonly lastSwapUnevenStepTimestamp: BN
+  readonly lastSwapUnevenStepTimestamp: bigint
   readonly farm: Address
   readonly rebalancesCap: types.WithdrawalCaps
   readonly swapUnevenAuthority: Address
   readonly tokenATokenProgram: Address
   readonly tokenBTokenProgram: Address
   readonly pendingAdmin: Address
-  readonly padding3: BN
-  readonly padding4: Array<BN>
-  readonly padding5: Array<BN>
-  readonly padding6: Array<BN>
-  readonly padding7: Array<BN>
+  readonly padding3: bigint
+  readonly padding4: Array<bigint>
+  readonly padding5: Array<bigint>
+  readonly padding6: Array<bigint>
+  readonly padding7: Array<bigint>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     190, 178, 231, 184, 49, 186, 103, 13,
   ])
 
@@ -563,7 +562,7 @@ export class WhirlpoolStrategy {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -583,16 +582,23 @@ export class WhirlpoolStrategy {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): WhirlpoolStrategy {
-    if (!data.slice(0, 8).equals(WhirlpoolStrategy.discriminator)) {
+  static decode(data: Uint8Array): WhirlpoolStrategy {
+    if (data.length < WhirlpoolStrategy.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < WhirlpoolStrategy.discriminator.length; i++) {
+      if (data[i] !== WhirlpoolStrategy.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = WhirlpoolStrategy.layout.decode(data.slice(8))
+    const dec = WhirlpoolStrategy.layout.decode(
+      data.subarray(WhirlpoolStrategy.discriminator.length)
+    )
 
     return new WhirlpoolStrategy({
       adminAuthority: dec.adminAuthority,
@@ -820,7 +826,7 @@ export class WhirlpoolStrategy {
       adminAuthority: address(obj.adminAuthority),
       globalConfig: address(obj.globalConfig),
       baseVaultAuthority: address(obj.baseVaultAuthority),
-      baseVaultAuthorityBump: new BN(obj.baseVaultAuthorityBump),
+      baseVaultAuthorityBump: BigInt(obj.baseVaultAuthorityBump),
       pool: address(obj.pool),
       poolTokenVaultA: address(obj.poolTokenVaultA),
       poolTokenVaultB: address(obj.poolTokenVaultB),
@@ -833,64 +839,64 @@ export class WhirlpoolStrategy {
       tokenAVault: address(obj.tokenAVault),
       tokenBVault: address(obj.tokenBVault),
       deprecated0: obj.deprecated0.map((item) => address(item)),
-      deprecated1: obj.deprecated1.map((item) => new BN(item)),
+      deprecated1: obj.deprecated1.map((item) => BigInt(item)),
       tokenAMint: address(obj.tokenAMint),
       tokenBMint: address(obj.tokenBMint),
-      tokenAMintDecimals: new BN(obj.tokenAMintDecimals),
-      tokenBMintDecimals: new BN(obj.tokenBMintDecimals),
-      tokenAAmounts: new BN(obj.tokenAAmounts),
-      tokenBAmounts: new BN(obj.tokenBAmounts),
-      tokenACollateralId: new BN(obj.tokenACollateralId),
-      tokenBCollateralId: new BN(obj.tokenBCollateralId),
+      tokenAMintDecimals: BigInt(obj.tokenAMintDecimals),
+      tokenBMintDecimals: BigInt(obj.tokenBMintDecimals),
+      tokenAAmounts: BigInt(obj.tokenAAmounts),
+      tokenBAmounts: BigInt(obj.tokenBAmounts),
+      tokenACollateralId: BigInt(obj.tokenACollateralId),
+      tokenBCollateralId: BigInt(obj.tokenBCollateralId),
       scopePrices: address(obj.scopePrices),
       deprecated2: address(obj.deprecated2),
       sharesMint: address(obj.sharesMint),
-      sharesMintDecimals: new BN(obj.sharesMintDecimals),
+      sharesMintDecimals: BigInt(obj.sharesMintDecimals),
       sharesMintAuthority: address(obj.sharesMintAuthority),
-      sharesMintAuthorityBump: new BN(obj.sharesMintAuthorityBump),
-      sharesIssued: new BN(obj.sharesIssued),
-      status: new BN(obj.status),
-      reward0Amount: new BN(obj.reward0Amount),
+      sharesMintAuthorityBump: BigInt(obj.sharesMintAuthorityBump),
+      sharesIssued: BigInt(obj.sharesIssued),
+      status: BigInt(obj.status),
+      reward0Amount: BigInt(obj.reward0Amount),
       reward0Vault: address(obj.reward0Vault),
-      reward0CollateralId: new BN(obj.reward0CollateralId),
-      reward0Decimals: new BN(obj.reward0Decimals),
-      reward1Amount: new BN(obj.reward1Amount),
+      reward0CollateralId: BigInt(obj.reward0CollateralId),
+      reward0Decimals: BigInt(obj.reward0Decimals),
+      reward1Amount: BigInt(obj.reward1Amount),
       reward1Vault: address(obj.reward1Vault),
-      reward1CollateralId: new BN(obj.reward1CollateralId),
-      reward1Decimals: new BN(obj.reward1Decimals),
-      reward2Amount: new BN(obj.reward2Amount),
+      reward1CollateralId: BigInt(obj.reward1CollateralId),
+      reward1Decimals: BigInt(obj.reward1Decimals),
+      reward2Amount: BigInt(obj.reward2Amount),
       reward2Vault: address(obj.reward2Vault),
-      reward2CollateralId: new BN(obj.reward2CollateralId),
-      reward2Decimals: new BN(obj.reward2Decimals),
-      depositCapUsd: new BN(obj.depositCapUsd),
-      feesACumulative: new BN(obj.feesACumulative),
-      feesBCumulative: new BN(obj.feesBCumulative),
-      reward0AmountCumulative: new BN(obj.reward0AmountCumulative),
-      reward1AmountCumulative: new BN(obj.reward1AmountCumulative),
-      reward2AmountCumulative: new BN(obj.reward2AmountCumulative),
-      depositCapUsdPerIxn: new BN(obj.depositCapUsdPerIxn),
+      reward2CollateralId: BigInt(obj.reward2CollateralId),
+      reward2Decimals: BigInt(obj.reward2Decimals),
+      depositCapUsd: BigInt(obj.depositCapUsd),
+      feesACumulative: BigInt(obj.feesACumulative),
+      feesBCumulative: BigInt(obj.feesBCumulative),
+      reward0AmountCumulative: BigInt(obj.reward0AmountCumulative),
+      reward1AmountCumulative: BigInt(obj.reward1AmountCumulative),
+      reward2AmountCumulative: BigInt(obj.reward2AmountCumulative),
+      depositCapUsdPerIxn: BigInt(obj.depositCapUsdPerIxn),
       withdrawalCapA: types.WithdrawalCaps.fromJSON(obj.withdrawalCapA),
       withdrawalCapB: types.WithdrawalCaps.fromJSON(obj.withdrawalCapB),
-      maxPriceDeviationBps: new BN(obj.maxPriceDeviationBps),
+      maxPriceDeviationBps: BigInt(obj.maxPriceDeviationBps),
       swapVaultMaxSlippageBps: obj.swapVaultMaxSlippageBps,
       swapVaultMaxSlippageFromReferenceBps:
         obj.swapVaultMaxSlippageFromReferenceBps,
-      strategyType: new BN(obj.strategyType),
-      padding0: new BN(obj.padding0),
-      withdrawFee: new BN(obj.withdrawFee),
-      feesFee: new BN(obj.feesFee),
-      reward0Fee: new BN(obj.reward0Fee),
-      reward1Fee: new BN(obj.reward1Fee),
-      reward2Fee: new BN(obj.reward2Fee),
-      positionTimestamp: new BN(obj.positionTimestamp),
+      strategyType: BigInt(obj.strategyType),
+      padding0: BigInt(obj.padding0),
+      withdrawFee: BigInt(obj.withdrawFee),
+      feesFee: BigInt(obj.feesFee),
+      reward0Fee: BigInt(obj.reward0Fee),
+      reward1Fee: BigInt(obj.reward1Fee),
+      reward2Fee: BigInt(obj.reward2Fee),
+      positionTimestamp: BigInt(obj.positionTimestamp),
       kaminoRewards: obj.kaminoRewards.map((item) =>
         types.KaminoRewardInfo.fromJSON(item)
       ),
-      strategyDex: new BN(obj.strategyDex),
+      strategyDex: BigInt(obj.strategyDex),
       raydiumProtocolPositionOrBaseVaultAuthority: address(
         obj.raydiumProtocolPositionOrBaseVaultAuthority
       ),
-      allowDepositWithoutInvest: new BN(obj.allowDepositWithoutInvest),
+      allowDepositWithoutInvest: BigInt(obj.allowDepositWithoutInvest),
       raydiumPoolConfigOrBaseVaultAuthority: address(
         obj.raydiumPoolConfigOrBaseVaultAuthority
       ),
@@ -909,25 +915,25 @@ export class WhirlpoolStrategy {
       padding1: obj.padding1,
       rebalanceRaw: types.RebalanceRaw.fromJSON(obj.rebalanceRaw),
       padding2: obj.padding2,
-      tokenAFeesFromRewardsCumulative: new BN(
+      tokenAFeesFromRewardsCumulative: BigInt(
         obj.tokenAFeesFromRewardsCumulative
       ),
-      tokenBFeesFromRewardsCumulative: new BN(
+      tokenBFeesFromRewardsCumulative: BigInt(
         obj.tokenBFeesFromRewardsCumulative
       ),
       strategyLookupTable: address(obj.strategyLookupTable),
-      lastSwapUnevenStepTimestamp: new BN(obj.lastSwapUnevenStepTimestamp),
+      lastSwapUnevenStepTimestamp: BigInt(obj.lastSwapUnevenStepTimestamp),
       farm: address(obj.farm),
       rebalancesCap: types.WithdrawalCaps.fromJSON(obj.rebalancesCap),
       swapUnevenAuthority: address(obj.swapUnevenAuthority),
       tokenATokenProgram: address(obj.tokenATokenProgram),
       tokenBTokenProgram: address(obj.tokenBTokenProgram),
       pendingAdmin: address(obj.pendingAdmin),
-      padding3: new BN(obj.padding3),
-      padding4: obj.padding4.map((item) => new BN(item)),
-      padding5: obj.padding5.map((item) => new BN(item)),
-      padding6: obj.padding6.map((item) => new BN(item)),
-      padding7: obj.padding7.map((item) => new BN(item)),
+      padding3: BigInt(obj.padding3),
+      padding4: obj.padding4.map((item) => BigInt(item)),
+      padding5: obj.padding5.map((item) => BigInt(item)),
+      padding6: obj.padding6.map((item) => BigInt(item)),
+      padding7: obj.padding7.map((item) => BigInt(item)),
     })
   }
 }

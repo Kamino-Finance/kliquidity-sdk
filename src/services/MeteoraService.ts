@@ -135,8 +135,8 @@ export class MeteoraService {
 
     const pool = await this.getPool(strategy.pool);
 
-    const decimalsX = strategy.tokenAMintDecimals.toNumber();
-    const decimalsY = strategy.tokenBMintDecimals.toNumber();
+    const decimalsX = Number(strategy.tokenAMintDecimals);
+    const decimalsY = Number(strategy.tokenBMintDecimals);
     let priceLower: Decimal = new Decimal(0);
     let priceUpper: Decimal = new Decimal(0);
     if (position && pool) {

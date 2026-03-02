@@ -15,7 +15,6 @@ import {
   Signature,
   TransactionSigner,
 } from '@solana/kit';
-import * as anchor from '@coral-xyz/anchor';
 import { StrategyConfigOptionKind, UpdateCollateralInfoModeKind } from '../../src/@codegen/kliquidity/types';
 import * as Instructions from '../../src/@codegen/kliquidity/instructions';
 import { getMintDecimals } from '../../src/utils';
@@ -424,8 +423,8 @@ export async function updateCollateralInfo(
   );
 
   const args: Instructions.UpdateCollateralInfoArgs = {
-    index: new anchor.BN(collateralNumber),
-    mode: new anchor.BN(mode.discriminator),
+    index: BigInt(collateralNumber),
+    mode: BigInt(mode.discriminator),
     value: argValue,
   };
 

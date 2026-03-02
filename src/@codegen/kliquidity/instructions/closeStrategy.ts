@@ -2,18 +2,21 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([
+  56, 247, 170, 246, 89, 221, 134, 200,
+])
 
 export interface CloseStrategyAccounts {
   adminAuthority: TransactionSigner
@@ -65,10 +68,10 @@ export interface CloseStrategyAccounts {
 
 export function closeStrategy(
   accounts: CloseStrategyAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     {
       address: accounts.adminAuthority.address,
       role: 3,
@@ -110,8 +113,7 @@ export function closeStrategy(
       : { address: programAddress, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([56, 247, 170, 246, 89, 221, 134, 200])
-  const data = identifier
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = DISCRIMINATOR
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

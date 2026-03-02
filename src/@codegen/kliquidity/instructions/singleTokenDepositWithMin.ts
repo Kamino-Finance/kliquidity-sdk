@@ -2,22 +2,25 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
+export const DISCRIMINATOR = new Uint8Array([
+  250, 142, 102, 160, 72, 12, 83, 139,
+])
+
 export interface SingleTokenDepositWithMinArgs {
-  tokenAMinPostDepositBalance: BN
-  tokenBMinPostDepositBalance: BN
+  tokenAMinPostDepositBalance: bigint
+  tokenBMinPostDepositBalance: bigint
 }
 
 export interface SingleTokenDepositWithMinAccounts {
@@ -46,7 +49,7 @@ export interface SingleTokenDepositWithMinAccounts {
   instructionSysvarAccount: Address
 }
 
-export const layout = borsh.struct<SingleTokenDepositWithMinArgs>([
+export const layout = borsh.struct([
   borsh.u64("tokenAMinPostDepositBalance"),
   borsh.u64("tokenBMinPostDepositBalance"),
 ])
@@ -54,10 +57,10 @@ export const layout = borsh.struct<SingleTokenDepositWithMinArgs>([
 export function singleTokenDepositWithMin(
   args: SingleTokenDepositWithMinArgs,
   accounts: SingleTokenDepositWithMinAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.user.address, role: 3, signer: accounts.user },
     { address: accounts.strategy, role: 1 },
     { address: accounts.globalConfig, role: 0 },
@@ -83,8 +86,7 @@ export function singleTokenDepositWithMin(
     { address: accounts.instructionSysvarAccount, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([250, 142, 102, 160, 72, 12, 83, 139])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       tokenAMinPostDepositBalance: args.tokenAMinPostDepositBalance,
@@ -92,7 +94,12 @@ export function singleTokenDepositWithMin(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

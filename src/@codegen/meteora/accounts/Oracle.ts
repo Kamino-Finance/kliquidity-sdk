@@ -9,19 +9,18 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
 export interface OracleFields {
   /** Index of latest observation slot */
-  idx: BN
+  idx: bigint
   /** Size of active sample. Active sample is initialized observation. */
-  activeSize: BN
+  activeSize: bigint
   /** Number of observations */
-  length: BN
+  length: bigint
 }
 
 export interface OracleJSON {
@@ -35,13 +34,13 @@ export interface OracleJSON {
 
 export class Oracle {
   /** Index of latest observation slot */
-  readonly idx: BN
+  readonly idx: bigint
   /** Size of active sample. Active sample is initialized observation. */
-  readonly activeSize: BN
+  readonly activeSize: bigint
   /** Number of observations */
-  readonly length: BN
+  readonly length: bigint
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     139, 194, 131, 179, 140, 179, 229, 244,
   ])
 
@@ -73,7 +72,7 @@ export class Oracle {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -93,16 +92,21 @@ export class Oracle {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): Oracle {
-    if (!data.slice(0, 8).equals(Oracle.discriminator)) {
+  static decode(data: Uint8Array): Oracle {
+    if (data.length < Oracle.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < Oracle.discriminator.length; i++) {
+      if (data[i] !== Oracle.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = Oracle.layout.decode(data.slice(8))
+    const dec = Oracle.layout.decode(data.subarray(Oracle.discriminator.length))
 
     return new Oracle({
       idx: dec.idx,
@@ -121,9 +125,9 @@ export class Oracle {
 
   static fromJSON(obj: OracleJSON): Oracle {
     return new Oracle({
-      idx: new BN(obj.idx),
-      activeSize: new BN(obj.activeSize),
-      length: new BN(obj.length),
+      idx: BigInt(obj.idx),
+      activeSize: BigInt(obj.activeSize),
+      length: BigInt(obj.length),
     })
   }
 }

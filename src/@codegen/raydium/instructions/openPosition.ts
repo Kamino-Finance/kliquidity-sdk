@@ -2,27 +2,30 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([
+  135, 128, 47, 77, 15, 152, 240, 49,
+])
 
 export interface OpenPositionArgs {
   tickLowerIndex: number
   tickUpperIndex: number
   tickArrayLowerStartIndex: number
   tickArrayUpperStartIndex: number
-  liquidity: BN
-  amount0Max: BN
-  amount1Max: BN
+  liquidity: bigint
+  amount0Max: bigint
+  amount1Max: bigint
 }
 
 export interface OpenPositionAccounts {
@@ -47,7 +50,7 @@ export interface OpenPositionAccounts {
   metadataProgram: Address
 }
 
-export const layout = borsh.struct<OpenPositionArgs>([
+export const layout = borsh.struct([
   borsh.i32("tickLowerIndex"),
   borsh.i32("tickUpperIndex"),
   borsh.i32("tickArrayLowerStartIndex"),
@@ -60,10 +63,10 @@ export const layout = borsh.struct<OpenPositionArgs>([
 export function openPosition(
   args: OpenPositionArgs,
   accounts: OpenPositionAccounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.payer.address, role: 3, signer: accounts.payer },
     { address: accounts.positionNftOwner, role: 0 },
     {
@@ -89,8 +92,7 @@ export function openPosition(
     { address: accounts.metadataProgram, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([135, 128, 47, 77, 15, 152, 240, 49])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       tickLowerIndex: args.tickLowerIndex,
@@ -103,7 +105,12 @@ export function openPosition(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

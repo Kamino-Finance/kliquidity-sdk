@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -21,7 +20,7 @@ export interface PositionV2Fields {
   /** Owner of the position. Client rely on this to to fetch their positions. */
   owner: Address
   /** Liquidity shares of this position in bins (lower_bin_id <-> upper_bin_id). This is the same as LP concept. */
-  liquidityShares: Array<BN>
+  liquidityShares: Array<bigint>
   /** Farming reward information */
   rewardInfos: Array<types.UserRewardInfoFields>
   /** Swap fee to claim information */
@@ -31,17 +30,17 @@ export interface PositionV2Fields {
   /** Upper bin ID */
   upperBinId: number
   /** Last updated timestamp */
-  lastUpdatedAt: BN
+  lastUpdatedAt: bigint
   /** Total claimed token fee X */
-  totalClaimedFeeXAmount: BN
+  totalClaimedFeeXAmount: bigint
   /** Total claimed token fee Y */
-  totalClaimedFeeYAmount: BN
+  totalClaimedFeeYAmount: bigint
   /** Total claimed rewards */
-  totalClaimedRewards: Array<BN>
+  totalClaimedRewards: Array<bigint>
   /** Operator of position */
   operator: Address
   /** Slot which the locked liquidity can be withdraw */
-  lockReleaseSlot: BN
+  lockReleaseSlot: bigint
   /** Is the position subjected to liquidity locking for the launch pool. */
   subjectedToBootstrapLiquidityLocking: number
   /** Address is able to claim fee in this position, only valid for bootstrap_liquidity_position */
@@ -91,7 +90,7 @@ export class PositionV2 {
   /** Owner of the position. Client rely on this to to fetch their positions. */
   readonly owner: Address
   /** Liquidity shares of this position in bins (lower_bin_id <-> upper_bin_id). This is the same as LP concept. */
-  readonly liquidityShares: Array<BN>
+  readonly liquidityShares: Array<bigint>
   /** Farming reward information */
   readonly rewardInfos: Array<types.UserRewardInfo>
   /** Swap fee to claim information */
@@ -101,17 +100,17 @@ export class PositionV2 {
   /** Upper bin ID */
   readonly upperBinId: number
   /** Last updated timestamp */
-  readonly lastUpdatedAt: BN
+  readonly lastUpdatedAt: bigint
   /** Total claimed token fee X */
-  readonly totalClaimedFeeXAmount: BN
+  readonly totalClaimedFeeXAmount: bigint
   /** Total claimed token fee Y */
-  readonly totalClaimedFeeYAmount: BN
+  readonly totalClaimedFeeYAmount: bigint
   /** Total claimed rewards */
-  readonly totalClaimedRewards: Array<BN>
+  readonly totalClaimedRewards: Array<bigint>
   /** Operator of position */
   readonly operator: Address
   /** Slot which the locked liquidity can be withdraw */
-  readonly lockReleaseSlot: BN
+  readonly lockReleaseSlot: bigint
   /** Is the position subjected to liquidity locking for the launch pool. */
   readonly subjectedToBootstrapLiquidityLocking: number
   /** Address is able to claim fee in this position, only valid for bootstrap_liquidity_position */
@@ -119,7 +118,7 @@ export class PositionV2 {
   /** Reserved space for future use */
   readonly reserved: Array<number>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     117, 176, 212, 199, 245, 180, 133, 182,
   ])
 
@@ -182,7 +181,7 @@ export class PositionV2 {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -202,16 +201,23 @@ export class PositionV2 {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): PositionV2 {
-    if (!data.slice(0, 8).equals(PositionV2.discriminator)) {
+  static decode(data: Uint8Array): PositionV2 {
+    if (data.length < PositionV2.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < PositionV2.discriminator.length; i++) {
+      if (data[i] !== PositionV2.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = PositionV2.layout.decode(data.slice(8))
+    const dec = PositionV2.layout.decode(
+      data.subarray(PositionV2.discriminator.length)
+    )
 
     return new PositionV2({
       lbPair: dec.lbPair,
@@ -270,19 +276,19 @@ export class PositionV2 {
     return new PositionV2({
       lbPair: address(obj.lbPair),
       owner: address(obj.owner),
-      liquidityShares: obj.liquidityShares.map((item) => new BN(item)),
+      liquidityShares: obj.liquidityShares.map((item) => BigInt(item)),
       rewardInfos: obj.rewardInfos.map((item) =>
         types.UserRewardInfo.fromJSON(item)
       ),
       feeInfos: obj.feeInfos.map((item) => types.FeeInfo.fromJSON(item)),
       lowerBinId: obj.lowerBinId,
       upperBinId: obj.upperBinId,
-      lastUpdatedAt: new BN(obj.lastUpdatedAt),
-      totalClaimedFeeXAmount: new BN(obj.totalClaimedFeeXAmount),
-      totalClaimedFeeYAmount: new BN(obj.totalClaimedFeeYAmount),
-      totalClaimedRewards: obj.totalClaimedRewards.map((item) => new BN(item)),
+      lastUpdatedAt: BigInt(obj.lastUpdatedAt),
+      totalClaimedFeeXAmount: BigInt(obj.totalClaimedFeeXAmount),
+      totalClaimedFeeYAmount: BigInt(obj.totalClaimedFeeYAmount),
+      totalClaimedRewards: obj.totalClaimedRewards.map((item) => BigInt(item)),
       operator: address(obj.operator),
-      lockReleaseSlot: new BN(obj.lockReleaseSlot),
+      lockReleaseSlot: BigInt(obj.lockReleaseSlot),
       subjectedToBootstrapLiquidityLocking:
         obj.subjectedToBootstrapLiquidityLocking,
       feeOwner: address(obj.feeOwner),

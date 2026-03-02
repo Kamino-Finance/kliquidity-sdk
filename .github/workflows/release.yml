@@ -14,18 +14,17 @@ on:
           - major
   push:
     branches:
-      - "beta/**"
+      - 'beta/**'
 
 permissions:
   id-token: write # required for OIDC
 
 jobs:
   release:
-    name: "Build + Release"
+    name: 'Build + Release'
     environment: master
     runs-on: ubuntu-latest
     steps:
-
       - name: Set Build Variables
         id: vars
         shell: bash
@@ -44,7 +43,7 @@ jobs:
           echo "ref=$ref"
           echo "is_beta=$is_beta"
           echo "npm_tag=$npm_tag"
-          
+
           echo "is_beta=$is_beta" >> "$GITHUB_OUTPUT"
           echo "npm_tag=$npm_tag" >> "$GITHUB_OUTPUT"
 
@@ -93,8 +92,8 @@ jobs:
         if: ${{ steps.beta_gate.outputs.should_publish == 'true' }}
         uses: actions/setup-node@2951748f4c016b747952f8ca7e75fc64f2f62b53
         with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
         if: ${{ steps.beta_gate.outputs.should_publish == 'true' }}
@@ -151,7 +150,7 @@ jobs:
         with:
           public: 'true'
           package: '.'
-          commit_msg: "Release @kamino-finance/kliquidity-sdk v%s"
+          commit_msg: 'Release @kamino-finance/kliquidity-sdk v%s'
           version: ${{ steps.semver.outputs.new_version }}
           npm_tag: ${{ steps.vars.outputs.npm_tag }}
 
@@ -160,7 +159,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          
+
           if [ "${{ steps.vars.outputs.is_beta }}" = "false" ]; then
             git push origin master --follow-tags
           else

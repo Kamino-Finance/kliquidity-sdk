@@ -1,12 +1,12 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface RebalancePricePercentageWithResetStateFields {
-  lastRebalanceLowerResetPoolPrice: BN
-  lastRebalanceUpperResetPoolPrice: BN
+  lastRebalanceLowerResetPoolPrice: bigint
+  lastRebalanceUpperResetPoolPrice: bigint
 }
 
 export interface RebalancePricePercentageWithResetStateJSON {
@@ -15,8 +15,8 @@ export interface RebalancePricePercentageWithResetStateJSON {
 }
 
 export class RebalancePricePercentageWithResetState {
-  readonly lastRebalanceLowerResetPoolPrice: BN
-  readonly lastRebalanceUpperResetPoolPrice: BN
+  readonly lastRebalanceLowerResetPoolPrice: bigint
+  readonly lastRebalanceUpperResetPoolPrice: bigint
 
   constructor(fields: RebalancePricePercentageWithResetStateFields) {
     this.lastRebalanceLowerResetPoolPrice =
@@ -63,10 +63,10 @@ export class RebalancePricePercentageWithResetState {
     obj: RebalancePricePercentageWithResetStateJSON
   ): RebalancePricePercentageWithResetState {
     return new RebalancePricePercentageWithResetState({
-      lastRebalanceLowerResetPoolPrice: new BN(
+      lastRebalanceLowerResetPoolPrice: BigInt(
         obj.lastRebalanceLowerResetPoolPrice
       ),
-      lastRebalanceUpperResetPoolPrice: new BN(
+      lastRebalanceUpperResetPoolPrice: BigInt(
         obj.lastRebalanceUpperResetPoolPrice
       ),
     })

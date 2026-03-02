@@ -1,11 +1,11 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
-export type BpsFields = [BN]
-export type BpsValue = [BN]
+/* eslint-enable @typescript-eslint/no-unused-vars */
+export type BpsFields = [bigint]
+export type BpsValue = [bigint]
 
 export interface BpsJSON {
   kind: "Bps"
@@ -41,16 +41,16 @@ export class Bps {
 
 export type AbsoluteFields = {
   /** Amount of src token expected by the user to perform the swap */
-  srcAmountToSwap: BN
+  srcAmountToSwap: bigint
   /** Amount of dst token the user provides in exchange */
-  dstAmountToVault: BN
+  dstAmountToVault: bigint
   aToB: boolean
 }
 export type AbsoluteValue = {
   /** Amount of src token expected by the user to perform the swap */
-  srcAmountToSwap: BN
+  srcAmountToSwap: bigint
   /** Amount of dst token the user provides in exchange */
-  dstAmountToVault: BN
+  dstAmountToVault: bigint
   aToB: boolean
 }
 
@@ -127,12 +127,12 @@ export function fromDecoded(obj: any): types.SwapLimitKind {
 export function fromJSON(obj: types.SwapLimitJSON): types.SwapLimitKind {
   switch (obj.kind) {
     case "Bps": {
-      return new Bps([new BN(obj.value[0])])
+      return new Bps([BigInt(obj.value[0])])
     }
     case "Absolute": {
       return new Absolute({
-        srcAmountToSwap: new BN(obj.value.srcAmountToSwap),
-        dstAmountToVault: new BN(obj.value.dstAmountToVault),
+        srcAmountToSwap: BigInt(obj.value.srcAmountToSwap),
+        dstAmountToVault: BigInt(obj.value.dstAmountToVault),
         aToB: obj.value.aToB,
       })
     }

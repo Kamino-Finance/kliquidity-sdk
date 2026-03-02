@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -25,18 +24,18 @@ export interface ProtocolPositionStateFields {
   /** The upper bound tick of the position */
   tickUpperIndex: number
   /** The amount of liquidity owned by this position */
-  liquidity: BN
+  liquidity: bigint
   /** The token_0 fee growth per unit of liquidity as of the last update to liquidity or fees owed */
-  feeGrowthInside0LastX64: BN
+  feeGrowthInside0LastX64: bigint
   /** The token_1 fee growth per unit of liquidity as of the last update to liquidity or fees owed */
-  feeGrowthInside1LastX64: BN
+  feeGrowthInside1LastX64: bigint
   /** The fees owed to the position owner in token_0 */
-  tokenFeesOwed0: BN
+  tokenFeesOwed0: bigint
   /** The fees owed to the position owner in token_1 */
-  tokenFeesOwed1: BN
+  tokenFeesOwed1: bigint
   /** The reward growth per unit of liquidity as of the last update to liquidity */
-  rewardGrowthInside: Array<BN>
-  padding: Array<BN>
+  rewardGrowthInside: Array<bigint>
+  padding: Array<bigint>
 }
 
 export interface ProtocolPositionStateJSON {
@@ -73,20 +72,20 @@ export class ProtocolPositionState {
   /** The upper bound tick of the position */
   readonly tickUpperIndex: number
   /** The amount of liquidity owned by this position */
-  readonly liquidity: BN
+  readonly liquidity: bigint
   /** The token_0 fee growth per unit of liquidity as of the last update to liquidity or fees owed */
-  readonly feeGrowthInside0LastX64: BN
+  readonly feeGrowthInside0LastX64: bigint
   /** The token_1 fee growth per unit of liquidity as of the last update to liquidity or fees owed */
-  readonly feeGrowthInside1LastX64: BN
+  readonly feeGrowthInside1LastX64: bigint
   /** The fees owed to the position owner in token_0 */
-  readonly tokenFeesOwed0: BN
+  readonly tokenFeesOwed0: bigint
   /** The fees owed to the position owner in token_1 */
-  readonly tokenFeesOwed1: BN
+  readonly tokenFeesOwed1: bigint
   /** The reward growth per unit of liquidity as of the last update to liquidity */
-  readonly rewardGrowthInside: Array<BN>
-  readonly padding: Array<BN>
+  readonly rewardGrowthInside: Array<bigint>
+  readonly padding: Array<bigint>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     100, 226, 145, 99, 146, 218, 160, 106,
   ])
 
@@ -134,7 +133,7 @@ export class ProtocolPositionState {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -154,16 +153,23 @@ export class ProtocolPositionState {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): ProtocolPositionState {
-    if (!data.slice(0, 8).equals(ProtocolPositionState.discriminator)) {
+  static decode(data: Uint8Array): ProtocolPositionState {
+    if (data.length < ProtocolPositionState.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < ProtocolPositionState.discriminator.length; i++) {
+      if (data[i] !== ProtocolPositionState.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = ProtocolPositionState.layout.decode(data.slice(8))
+    const dec = ProtocolPositionState.layout.decode(
+      data.subarray(ProtocolPositionState.discriminator.length)
+    )
 
     return new ProtocolPositionState({
       bump: dec.bump,
@@ -204,13 +210,13 @@ export class ProtocolPositionState {
       poolId: address(obj.poolId),
       tickLowerIndex: obj.tickLowerIndex,
       tickUpperIndex: obj.tickUpperIndex,
-      liquidity: new BN(obj.liquidity),
-      feeGrowthInside0LastX64: new BN(obj.feeGrowthInside0LastX64),
-      feeGrowthInside1LastX64: new BN(obj.feeGrowthInside1LastX64),
-      tokenFeesOwed0: new BN(obj.tokenFeesOwed0),
-      tokenFeesOwed1: new BN(obj.tokenFeesOwed1),
-      rewardGrowthInside: obj.rewardGrowthInside.map((item) => new BN(item)),
-      padding: obj.padding.map((item) => new BN(item)),
+      liquidity: BigInt(obj.liquidity),
+      feeGrowthInside0LastX64: BigInt(obj.feeGrowthInside0LastX64),
+      feeGrowthInside1LastX64: BigInt(obj.feeGrowthInside1LastX64),
+      tokenFeesOwed0: BigInt(obj.tokenFeesOwed0),
+      tokenFeesOwed1: BigInt(obj.tokenFeesOwed1),
+      rewardGrowthInside: obj.rewardGrowthInside.map((item) => BigInt(item)),
+      padding: obj.padding.map((item) => BigInt(item)),
     })
   }
 }

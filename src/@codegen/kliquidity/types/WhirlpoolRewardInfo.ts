@@ -1,9 +1,9 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface WhirlpoolRewardInfoFields {
   /** Reward token mint. */
   mint: Address
@@ -12,12 +12,12 @@ export interface WhirlpoolRewardInfoFields {
   /** Authority account that has permission to initialize the reward and set emissions. */
   authority: Address
   /** Q64.64 number that indicates how many tokens per second are earned per unit of liquidity. */
-  emissionsPerSecondX64: BN
+  emissionsPerSecondX64: bigint
   /**
    * Q64.64 number that tracks the total tokens earned per unit of liquidity since the reward
    * emissions were turned on.
    */
-  growthGlobalX64: BN
+  growthGlobalX64: bigint
 }
 
 export interface WhirlpoolRewardInfoJSON {
@@ -44,12 +44,12 @@ export class WhirlpoolRewardInfo {
   /** Authority account that has permission to initialize the reward and set emissions. */
   readonly authority: Address
   /** Q64.64 number that indicates how many tokens per second are earned per unit of liquidity. */
-  readonly emissionsPerSecondX64: BN
+  readonly emissionsPerSecondX64: bigint
   /**
    * Q64.64 number that tracks the total tokens earned per unit of liquidity since the reward
    * emissions were turned on.
    */
-  readonly growthGlobalX64: BN
+  readonly growthGlobalX64: bigint
 
   constructor(fields: WhirlpoolRewardInfoFields) {
     this.mint = fields.mint
@@ -108,8 +108,8 @@ export class WhirlpoolRewardInfo {
       mint: address(obj.mint),
       vault: address(obj.vault),
       authority: address(obj.authority),
-      emissionsPerSecondX64: new BN(obj.emissionsPerSecondX64),
-      growthGlobalX64: new BN(obj.growthGlobalX64),
+      emissionsPerSecondX64: BigInt(obj.emissionsPerSecondX64),
+      growthGlobalX64: BigInt(obj.growthGlobalX64),
     })
   }
 

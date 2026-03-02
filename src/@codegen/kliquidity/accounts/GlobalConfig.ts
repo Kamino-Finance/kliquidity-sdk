@@ -9,37 +9,36 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
 
 export interface GlobalConfigFields {
-  emergencyMode: BN
-  blockDeposit: BN
-  blockInvest: BN
-  blockWithdraw: BN
-  blockCollectFees: BN
-  blockCollectRewards: BN
-  blockSwapRewards: BN
+  emergencyMode: bigint
+  blockDeposit: bigint
+  blockInvest: bigint
+  blockWithdraw: bigint
+  blockCollectFees: bigint
+  blockCollectRewards: bigint
+  blockSwapRewards: bigint
   blockSwapUnevenVaults: number
   blockEmergencySwap: number
-  minWithdrawalFeeBps: BN
+  minWithdrawalFeeBps: bigint
   scopeProgramId: Address
   scopePriceId: Address
-  swapRewardsDiscountBps: Array<BN>
+  swapRewardsDiscountBps: Array<bigint>
   actionsAuthority: Address
   adminAuthority: Address
   treasuryFeeVaults: Array<Address>
   tokenInfos: Address
-  blockLocalAdmin: BN
-  minPerformanceFeeBps: BN
-  minSwapUnevenSlippageToleranceBps: BN
-  minReferencePriceSlippageToleranceBps: BN
-  actionsAfterRebalanceDelaySeconds: BN
+  blockLocalAdmin: bigint
+  minPerformanceFeeBps: bigint
+  minSwapUnevenSlippageToleranceBps: bigint
+  minReferencePriceSlippageToleranceBps: bigint
+  actionsAfterRebalanceDelaySeconds: bigint
   treasuryFeeVaultReceiver: Address
-  padding: Array<BN>
+  padding: Array<bigint>
 }
 
 export interface GlobalConfigJSON {
@@ -70,32 +69,32 @@ export interface GlobalConfigJSON {
 }
 
 export class GlobalConfig {
-  readonly emergencyMode: BN
-  readonly blockDeposit: BN
-  readonly blockInvest: BN
-  readonly blockWithdraw: BN
-  readonly blockCollectFees: BN
-  readonly blockCollectRewards: BN
-  readonly blockSwapRewards: BN
+  readonly emergencyMode: bigint
+  readonly blockDeposit: bigint
+  readonly blockInvest: bigint
+  readonly blockWithdraw: bigint
+  readonly blockCollectFees: bigint
+  readonly blockCollectRewards: bigint
+  readonly blockSwapRewards: bigint
   readonly blockSwapUnevenVaults: number
   readonly blockEmergencySwap: number
-  readonly minWithdrawalFeeBps: BN
+  readonly minWithdrawalFeeBps: bigint
   readonly scopeProgramId: Address
   readonly scopePriceId: Address
-  readonly swapRewardsDiscountBps: Array<BN>
+  readonly swapRewardsDiscountBps: Array<bigint>
   readonly actionsAuthority: Address
   readonly adminAuthority: Address
   readonly treasuryFeeVaults: Array<Address>
   readonly tokenInfos: Address
-  readonly blockLocalAdmin: BN
-  readonly minPerformanceFeeBps: BN
-  readonly minSwapUnevenSlippageToleranceBps: BN
-  readonly minReferencePriceSlippageToleranceBps: BN
-  readonly actionsAfterRebalanceDelaySeconds: BN
+  readonly blockLocalAdmin: bigint
+  readonly minPerformanceFeeBps: bigint
+  readonly minSwapUnevenSlippageToleranceBps: bigint
+  readonly minReferencePriceSlippageToleranceBps: bigint
+  readonly actionsAfterRebalanceDelaySeconds: bigint
   readonly treasuryFeeVaultReceiver: Address
-  readonly padding: Array<BN>
+  readonly padding: Array<bigint>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     149, 8, 156, 202, 160, 252, 176, 217,
   ])
 
@@ -172,7 +171,7 @@ export class GlobalConfig {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -192,16 +191,23 @@ export class GlobalConfig {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): GlobalConfig {
-    if (!data.slice(0, 8).equals(GlobalConfig.discriminator)) {
+  static decode(data: Uint8Array): GlobalConfig {
+    if (data.length < GlobalConfig.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < GlobalConfig.discriminator.length; i++) {
+      if (data[i] !== GlobalConfig.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = GlobalConfig.layout.decode(data.slice(8))
+    const dec = GlobalConfig.layout.decode(
+      data.subarray(GlobalConfig.discriminator.length)
+    )
 
     return new GlobalConfig({
       emergencyMode: dec.emergencyMode,
@@ -268,38 +274,38 @@ export class GlobalConfig {
 
   static fromJSON(obj: GlobalConfigJSON): GlobalConfig {
     return new GlobalConfig({
-      emergencyMode: new BN(obj.emergencyMode),
-      blockDeposit: new BN(obj.blockDeposit),
-      blockInvest: new BN(obj.blockInvest),
-      blockWithdraw: new BN(obj.blockWithdraw),
-      blockCollectFees: new BN(obj.blockCollectFees),
-      blockCollectRewards: new BN(obj.blockCollectRewards),
-      blockSwapRewards: new BN(obj.blockSwapRewards),
+      emergencyMode: BigInt(obj.emergencyMode),
+      blockDeposit: BigInt(obj.blockDeposit),
+      blockInvest: BigInt(obj.blockInvest),
+      blockWithdraw: BigInt(obj.blockWithdraw),
+      blockCollectFees: BigInt(obj.blockCollectFees),
+      blockCollectRewards: BigInt(obj.blockCollectRewards),
+      blockSwapRewards: BigInt(obj.blockSwapRewards),
       blockSwapUnevenVaults: obj.blockSwapUnevenVaults,
       blockEmergencySwap: obj.blockEmergencySwap,
-      minWithdrawalFeeBps: new BN(obj.minWithdrawalFeeBps),
+      minWithdrawalFeeBps: BigInt(obj.minWithdrawalFeeBps),
       scopeProgramId: address(obj.scopeProgramId),
       scopePriceId: address(obj.scopePriceId),
-      swapRewardsDiscountBps: obj.swapRewardsDiscountBps.map(
-        (item) => new BN(item)
+      swapRewardsDiscountBps: obj.swapRewardsDiscountBps.map((item) =>
+        BigInt(item)
       ),
       actionsAuthority: address(obj.actionsAuthority),
       adminAuthority: address(obj.adminAuthority),
       treasuryFeeVaults: obj.treasuryFeeVaults.map((item) => address(item)),
       tokenInfos: address(obj.tokenInfos),
-      blockLocalAdmin: new BN(obj.blockLocalAdmin),
-      minPerformanceFeeBps: new BN(obj.minPerformanceFeeBps),
-      minSwapUnevenSlippageToleranceBps: new BN(
+      blockLocalAdmin: BigInt(obj.blockLocalAdmin),
+      minPerformanceFeeBps: BigInt(obj.minPerformanceFeeBps),
+      minSwapUnevenSlippageToleranceBps: BigInt(
         obj.minSwapUnevenSlippageToleranceBps
       ),
-      minReferencePriceSlippageToleranceBps: new BN(
+      minReferencePriceSlippageToleranceBps: BigInt(
         obj.minReferencePriceSlippageToleranceBps
       ),
-      actionsAfterRebalanceDelaySeconds: new BN(
+      actionsAfterRebalanceDelaySeconds: BigInt(
         obj.actionsAfterRebalanceDelaySeconds
       ),
       treasuryFeeVaultReceiver: address(obj.treasuryFeeVaultReceiver),
-      padding: obj.padding.map((item) => new BN(item)),
+      padding: obj.padding.map((item) => BigInt(item)),
     })
   }
 }

@@ -1,26 +1,26 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export type UniformFields = {
   currentBinIndex: number
   lowerBinIndex: number
   upperBinIndex: number
-  amountXtoDeposit: BN
-  amountYtoDeposit: BN
-  xCurrentBin: BN
-  yCurrentBin: BN
+  amountXtoDeposit: bigint
+  amountYtoDeposit: bigint
+  xCurrentBin: bigint
+  yCurrentBin: bigint
 }
 export type UniformValue = {
   currentBinIndex: number
   lowerBinIndex: number
   upperBinIndex: number
-  amountXtoDeposit: BN
-  amountYtoDeposit: BN
-  xCurrentBin: BN
-  yCurrentBin: BN
+  amountXtoDeposit: bigint
+  amountYtoDeposit: bigint
+  xCurrentBin: bigint
+  yCurrentBin: bigint
 }
 
 export interface UniformJSON {
@@ -155,10 +155,10 @@ export function fromJSON(
         currentBinIndex: obj.value.currentBinIndex,
         lowerBinIndex: obj.value.lowerBinIndex,
         upperBinIndex: obj.value.upperBinIndex,
-        amountXtoDeposit: new BN(obj.value.amountXtoDeposit),
-        amountYtoDeposit: new BN(obj.value.amountYtoDeposit),
-        xCurrentBin: new BN(obj.value.xCurrentBin),
-        yCurrentBin: new BN(obj.value.yCurrentBin),
+        amountXtoDeposit: BigInt(obj.value.amountXtoDeposit),
+        amountYtoDeposit: BigInt(obj.value.amountYtoDeposit),
+        xCurrentBin: BigInt(obj.value.xCurrentBin),
+        yCurrentBin: BigInt(obj.value.yCurrentBin),
       })
     }
     case "CurrentTick": {

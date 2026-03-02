@@ -9,8 +9,7 @@ import {
   Rpc,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
@@ -25,7 +24,7 @@ export interface AmmConfigFields {
   fundFeeRate: number
   paddingU32: number
   fundOwner: Address
-  padding: Array<BN>
+  padding: Array<bigint>
 }
 
 export interface AmmConfigJSON {
@@ -51,9 +50,9 @@ export class AmmConfig {
   readonly fundFeeRate: number
   readonly paddingU32: number
   readonly fundOwner: Address
-  readonly padding: Array<BN>
+  readonly padding: Array<bigint>
 
-  static readonly discriminator = Buffer.from([
+  static readonly discriminator = new Uint8Array([
     218, 244, 33, 104, 203, 203, 43, 111,
   ])
 
@@ -99,7 +98,7 @@ export class AmmConfig {
       )
     }
 
-    return this.decode(Buffer.from(info.data))
+    return this.decode(new Uint8Array(info.data))
   }
 
   static async fetchMultiple(
@@ -119,16 +118,23 @@ export class AmmConfig {
         )
       }
 
-      return this.decode(Buffer.from(info.data))
+      return this.decode(new Uint8Array(info.data))
     })
   }
 
-  static decode(data: Buffer): AmmConfig {
-    if (!data.slice(0, 8).equals(AmmConfig.discriminator)) {
+  static decode(data: Uint8Array): AmmConfig {
+    if (data.length < AmmConfig.discriminator.length) {
       throw new Error("invalid account discriminator")
     }
+    for (let i = 0; i < AmmConfig.discriminator.length; i++) {
+      if (data[i] !== AmmConfig.discriminator[i]) {
+        throw new Error("invalid account discriminator")
+      }
+    }
 
-    const dec = AmmConfig.layout.decode(data.slice(8))
+    const dec = AmmConfig.layout.decode(
+      data.subarray(AmmConfig.discriminator.length)
+    )
 
     return new AmmConfig({
       bump: dec.bump,
@@ -170,7 +176,7 @@ export class AmmConfig {
       fundFeeRate: obj.fundFeeRate,
       paddingU32: obj.paddingU32,
       fundOwner: address(obj.fundOwner),
-      padding: obj.padding.map((item) => new BN(item)),
+      padding: obj.padding.map((item) => BigInt(item)),
     })
   }
 }

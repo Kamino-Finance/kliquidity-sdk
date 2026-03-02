@@ -2,27 +2,30 @@
 import {
   Address,
   isSome,
-  IAccountMeta,
-  IAccountSignerMeta,
-  IInstruction,
+  AccountMeta,
+  AccountSignerMeta,
+  Instruction,
   Option,
   TransactionSigner,
 } from "@solana/kit"
 /* eslint-enable @typescript-eslint/no-unused-vars */
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "../utils/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { borshAddress } from "../utils" // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PROGRAM_ID } from "../programId"
+
+export const DISCRIMINATOR = new Uint8Array([
+  77, 184, 74, 214, 112, 86, 241, 199,
+])
 
 export interface OpenPositionV2Args {
   tickLowerIndex: number
   tickUpperIndex: number
   tickArrayLowerStartIndex: number
   tickArrayUpperStartIndex: number
-  liquidity: BN
-  amount0Max: BN
-  amount1Max: BN
+  liquidity: bigint
+  amount0Max: bigint
+  amount1Max: bigint
   withMatedata: boolean
   baseFlag: boolean | null
 }
@@ -52,7 +55,7 @@ export interface OpenPositionV2Accounts {
   vault1Mint: Address
 }
 
-export const layout = borsh.struct<OpenPositionV2Args>([
+export const layout = borsh.struct([
   borsh.i32("tickLowerIndex"),
   borsh.i32("tickUpperIndex"),
   borsh.i32("tickArrayLowerStartIndex"),
@@ -67,10 +70,10 @@ export const layout = borsh.struct<OpenPositionV2Args>([
 export function openPositionV2(
   args: OpenPositionV2Args,
   accounts: OpenPositionV2Accounts,
-  remainingAccounts: Array<IAccountMeta | IAccountSignerMeta> = [],
+  remainingAccounts: Array<AccountMeta | AccountSignerMeta> = [],
   programAddress: Address = PROGRAM_ID
 ) {
-  const keys: Array<IAccountMeta | IAccountSignerMeta> = [
+  const keys: Array<AccountMeta | AccountSignerMeta> = [
     { address: accounts.payer.address, role: 3, signer: accounts.payer },
     { address: accounts.positionNftOwner, role: 0 },
     {
@@ -99,8 +102,7 @@ export function openPositionV2(
     { address: accounts.vault1Mint, role: 0 },
     ...remainingAccounts,
   ]
-  const identifier = Buffer.from([77, 184, 74, 214, 112, 86, 241, 199])
-  const buffer = Buffer.alloc(1000)
+  const buffer = new Uint8Array(1000)
   const len = layout.encode(
     {
       tickLowerIndex: args.tickLowerIndex,
@@ -115,7 +117,12 @@ export function openPositionV2(
     },
     buffer
   )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix: IInstruction = { accounts: keys, programAddress, data }
+  const data = (() => {
+    const d = new Uint8Array(8 + len)
+    d.set(DISCRIMINATOR)
+    d.set(buffer.subarray(0, len), 8)
+    return d
+  })()
+  const ix: Instruction = { accounts: keys, programAddress, data }
   return ix
 }

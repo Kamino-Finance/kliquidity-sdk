@@ -1,12 +1,12 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface RebalanceDriftStateFields {
   step: types.RebalanceDriftStepKind
-  lastDriftTimestamp: BN
+  lastDriftTimestamp: bigint
   lastMidTick: number
 }
 
@@ -18,7 +18,7 @@ export interface RebalanceDriftStateJSON {
 
 export class RebalanceDriftState {
   readonly step: types.RebalanceDriftStepKind
-  readonly lastDriftTimestamp: BN
+  readonly lastDriftTimestamp: bigint
   readonly lastMidTick: number
 
   constructor(fields: RebalanceDriftStateFields) {
@@ -66,7 +66,7 @@ export class RebalanceDriftState {
   static fromJSON(obj: RebalanceDriftStateJSON): RebalanceDriftState {
     return new RebalanceDriftState({
       step: types.RebalanceDriftStep.fromJSON(obj.step),
-      lastDriftTimestamp: new BN(obj.lastDriftTimestamp),
+      lastDriftTimestamp: BigInt(obj.lastDriftTimestamp),
       lastMidTick: obj.lastMidTick,
     })
   }

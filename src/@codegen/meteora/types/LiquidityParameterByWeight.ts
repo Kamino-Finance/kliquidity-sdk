@@ -1,14 +1,14 @@
-import { address, Address } from "@solana/kit" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@coral-xyz/borsh"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { address, Address } from "@solana/kit"
+import * as types from "../types"
+import * as borsh from "../utils/borsh"
 import { borshAddress } from "../utils"
-
+/* eslint-enable @typescript-eslint/no-unused-vars */
 export interface LiquidityParameterByWeightFields {
   /** Amount of X token to deposit */
-  amountX: BN
+  amountX: bigint
   /** Amount of Y token to deposit */
-  amountY: BN
+  amountY: bigint
   /** Active bin that integrator observe off-chain */
   activeId: number
   /** max active bin slippage allowed */
@@ -32,9 +32,9 @@ export interface LiquidityParameterByWeightJSON {
 
 export class LiquidityParameterByWeight {
   /** Amount of X token to deposit */
-  readonly amountX: BN
+  readonly amountX: bigint
   /** Amount of Y token to deposit */
-  readonly amountY: BN
+  readonly amountY: bigint
   /** Active bin that integrator observe off-chain */
   readonly activeId: number
   /** max active bin slippage allowed */
@@ -109,8 +109,8 @@ export class LiquidityParameterByWeight {
     obj: LiquidityParameterByWeightJSON
   ): LiquidityParameterByWeight {
     return new LiquidityParameterByWeight({
-      amountX: new BN(obj.amountX),
-      amountY: new BN(obj.amountY),
+      amountX: BigInt(obj.amountX),
+      amountY: BigInt(obj.amountY),
       activeId: obj.activeId,
       maxActiveBinSlippage: obj.maxActiveBinSlippage,
       binLiquidityDist: obj.binLiquidityDist.map((item) =>
