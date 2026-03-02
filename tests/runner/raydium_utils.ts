@@ -71,31 +71,25 @@ export async function initializeRaydiumPool(
   const [tokenBVault, _bump3] = await getPoolVaultAddress(poolAddress, tokenMintB, env.raydiumProgramId);
 
   {
-    const createPoolArgs: RaydiumInstructions.CreatePoolArgs = {
-      sqrtPriceX64: BigInt(sqrtPriceX64InitialPrice.toString()),
-      openTime: BigInt(1684953391), // not relevant, it has to be a timestamp < current timestamp
-    };
-    const createPoolAccounts: RaydiumInstructions.CreatePoolAccounts = {
-      poolCreator: env.admin,
-      ammConfig: config,
-      poolState: poolAddress,
-      tokenMint0: tokenMintA,
-      tokenMint1: tokenMintB,
-      tokenVault0: tokenAVault,
-      tokenVault1: tokenBVault,
-      observationState: observation,
-      systemProgram: SYSTEM_PROGRAM_ADDRESS,
-      rent: SYSVAR_RENT_ADDRESS,
-      tickArrayBitmap: bitmapPk,
-      tokenProgram0: TOKEN_PROGRAM_ADDRESS,
-      tokenProgram1: TOKEN_PROGRAM_ADDRESS,
-    };
-
-    const initializeTx = RaydiumInstructions.createPool(
-      createPoolArgs,
-      createPoolAccounts,
-      undefined,
-      env.raydiumProgramId
+    const initializeTx = RaydiumInstructions.getCreatePoolInstruction(
+      {
+        poolCreator: env.admin,
+        ammConfig: config,
+        poolState: poolAddress,
+        tokenMint0: tokenMintA,
+        tokenMint1: tokenMintB,
+        tokenVault0: tokenAVault,
+        tokenVault1: tokenBVault,
+        observationState: observation,
+        systemProgram: SYSTEM_PROGRAM_ADDRESS,
+        rent: SYSVAR_RENT_ADDRESS,
+        tickArrayBitmap: bitmapPk,
+        tokenProgram0: TOKEN_PROGRAM_ADDRESS,
+        tokenProgram1: TOKEN_PROGRAM_ADDRESS,
+        sqrtPriceX64: BigInt(sqrtPriceX64InitialPrice.toString()),
+        openTime: BigInt(1684953391),
+      },
+      { programAddress: env.raydiumProgramId }
     );
     const sig = await sendAndConfirmTx(env.c, env.admin, [initializeTx]);
     console.log('Initialize Raydium pool: ', sig);
@@ -144,24 +138,18 @@ async function createAmmConfig(
   protocolFeeRate: number,
   fundFeeRate: number
 ): Promise<Signature> {
-  const initConfigArgs: RaydiumInstructions.CreateAmmConfigArgs = {
-    index: index,
-    tickSpacing: tickSpacing,
-    tradeFeeRate: tradeFeeRate,
-    protocolFeeRate: protocolFeeRate,
-    fundFeeRate: fundFeeRate,
-  };
-  const initConfigAccounts: RaydiumInstructions.CreateAmmConfigAccounts = {
-    owner: env.admin,
-    ammConfig: config,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-  };
-
-  const initializeTx = RaydiumInstructions.createAmmConfig(
-    initConfigArgs,
-    initConfigAccounts,
-    undefined,
-    env.raydiumProgramId
+  const initializeTx = RaydiumInstructions.getCreateAmmConfigInstruction(
+    {
+      owner: env.admin,
+      ammConfig: config,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+      index: index,
+      tickSpacing: tickSpacing,
+      tradeFeeRate: tradeFeeRate,
+      protocolFeeRate: protocolFeeRate,
+      fundFeeRate: fundFeeRate,
+    },
+    { programAddress: env.raydiumProgramId }
   );
   const sig = await sendAndConfirmTx(env.c, env.admin, [initializeTx]);
   console.log('InitializeConfig:', sig);

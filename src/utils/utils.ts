@@ -2,19 +2,13 @@ import { Address, Instruction, isSome, Option, TransactionSigner } from '@solana
 import Decimal from 'decimal.js';
 import {
   DriftDirection,
-  DriftDirectionKind,
   RebalanceAutodriftStep,
-  RebalanceAutodriftStepKind,
   RebalanceType,
-  RebalanceTypeKind,
   StakingRateSource,
-  StakingRateSourceKind,
-  StrategyConfigOptionKind,
+  StrategyConfigOption,
 } from '../@codegen/kliquidity/types';
 import {
-  UpdateStrategyConfigAccounts,
-  UpdateStrategyConfigArgs,
-  updateStrategyConfig,
+  getUpdateStrategyConfigInstruction,
 } from '../@codegen/kliquidity/instructions';
 import { RebalanceFieldInfo, RebalanceFieldsDict } from './types';
 import { fromBN, toBN } from './raydiumBridge';
@@ -75,39 +69,39 @@ export function getStrategyConfigValue(value: Decimal): number[] {
 
 export function buildStrategyRebalanceParams(
   params: Array<Decimal>,
-  rebalance_type: RebalanceTypeKind,
+  rebalance_type: RebalanceType,
   tokenADecimals?: number,
   tokenBDecimals?: number
 ): number[] {
   const buffer = Buffer.alloc(128);
-  if (rebalance_type.kind == RebalanceType.Manual.kind) {
+  if (rebalance_type === RebalanceType.Manual) {
     // Manual has no params
-  } else if (rebalance_type.kind == RebalanceType.PricePercentage.kind) {
+  } else if (rebalance_type === RebalanceType.PricePercentage) {
     buffer.writeUint16LE(params[0].toNumber());
     buffer.writeUint16LE(params[1].toNumber(), 2);
-  } else if (rebalance_type.kind == RebalanceType.PricePercentageWithReset.kind) {
+  } else if (rebalance_type === RebalanceType.PricePercentageWithReset) {
     buffer.writeUint16LE(params[0].toNumber());
     buffer.writeUint16LE(params[1].toNumber(), 2);
     buffer.writeUint16LE(params[2].toNumber(), 4);
     buffer.writeUint16LE(params[3].toNumber(), 6);
-  } else if (rebalance_type.kind == RebalanceType.Drift.kind) {
+  } else if (rebalance_type === RebalanceType.Drift) {
     buffer.writeInt32LE(params[0].toNumber());
     buffer.writeInt32LE(params[1].toNumber(), 4);
     buffer.writeInt32LE(params[2].toNumber(), 8);
     writeBigintUint64LE(buffer, BigInt(params[3].toString()), 12);
     buffer.writeUint8(params[4].toNumber(), 20);
-  } else if (rebalance_type.kind == RebalanceType.TakeProfit.kind) {
+  } else if (rebalance_type === RebalanceType.TakeProfit) {
     // TODO: fix this for meteora
     const lowerPrice = SqrtPriceMath.priceToSqrtPriceX64(params[0], tokenADecimals!, tokenBDecimals!);
     const upperPrice = SqrtPriceMath.priceToSqrtPriceX64(params[1], tokenADecimals!, tokenBDecimals!);
     writeBigint128LE(buffer, fromBN(lowerPrice), 0);
     writeBigint128LE(buffer, fromBN(upperPrice), 16);
     buffer.writeUint8(params[2].toNumber(), 32);
-  } else if (rebalance_type.kind == RebalanceType.PeriodicRebalance.kind) {
+  } else if (rebalance_type === RebalanceType.PeriodicRebalance) {
     writeBigintUint64LE(buffer, BigInt(params[0].toString()), 0);
     buffer.writeUInt16LE(params[1].toNumber(), 8);
     buffer.writeUInt16LE(params[2].toNumber(), 10);
-  } else if (rebalance_type.kind == RebalanceType.Expander.kind) {
+  } else if (rebalance_type === RebalanceType.Expander) {
     buffer.writeUInt16LE(params[0].toNumber(), 0);
     buffer.writeUInt16LE(params[1].toNumber(), 2);
     buffer.writeUInt16LE(params[2].toNumber(), 4);
@@ -115,7 +109,7 @@ export function buildStrategyRebalanceParams(
     buffer.writeUInt16LE(params[4].toNumber(), 8);
     buffer.writeUInt16LE(params[5].toNumber(), 10);
     buffer.writeUInt8(params[6].toNumber(), 12);
-  } else if (rebalance_type.kind == RebalanceType.Autodrift.kind) {
+  } else if (rebalance_type === RebalanceType.Autodrift) {
     buffer.writeUInt32LE(params[0].toNumber(), 0);
     buffer.writeInt32LE(params[1].toNumber(), 4);
     buffer.writeInt32LE(params[2].toNumber(), 8);
@@ -132,58 +126,58 @@ export function buildStrategyRebalanceParams(
 export function doesStrategyHaveResetRange(rebalanceTypeNumber: number): boolean {
   const rebalanceType = numberToRebalanceType(rebalanceTypeNumber);
   return (
-    rebalanceType.kind == RebalanceType.PricePercentageWithReset.kind ||
-    rebalanceType.kind == RebalanceType.Expander.kind
+    rebalanceType === RebalanceType.PricePercentageWithReset ||
+    rebalanceType === RebalanceType.Expander
   );
 }
 
-export function numberToDriftDirection(value: number): DriftDirectionKind {
+export function numberToDriftDirection(value: number): DriftDirection {
   if (value == 0) {
-    return new DriftDirection.Increasing();
+    return DriftDirection.Increasing;
   } else if (value == 1) {
-    return new DriftDirection.Decreasing();
+    return DriftDirection.Decreasing;
   } else {
     throw new Error(`Invalid drift direction ${value.toString()}`);
   }
 }
 
-export function numberToStakingRateSource(value: number): StakingRateSourceKind {
+export function numberToStakingRateSource(value: number): StakingRateSource {
   if (value == 0) {
-    return new StakingRateSource.Constant();
+    return StakingRateSource.Constant;
   } else if (value == 1) {
-    return new StakingRateSource.Scope();
+    return StakingRateSource.Scope;
   } else {
     throw new Error(`Invalid staking rate source ${value.toString()}`);
   }
 }
 
-export function numberToAutodriftStep(value: number): RebalanceAutodriftStepKind {
+export function numberToAutodriftStep(value: number): RebalanceAutodriftStep {
   if (value == 0) {
-    return new RebalanceAutodriftStep.Uninitialized();
+    return RebalanceAutodriftStep.Uninitialized;
   } else if (value == 1) {
-    return new RebalanceAutodriftStep.Autodrifting();
+    return RebalanceAutodriftStep.Autodrifting;
   } else {
     throw new Error(`Invalid autodrift step ${value.toString()}`);
   }
 }
 
-export function numberToRebalanceType(rebalance_type: number): RebalanceTypeKind {
+export function numberToRebalanceType(rebalance_type: number): RebalanceType {
   if (rebalance_type == 0) {
-    return new RebalanceType.Manual();
+    return RebalanceType.Manual;
   } else if (rebalance_type == 1) {
-    return new RebalanceType.PricePercentage();
+    return RebalanceType.PricePercentage;
   } else if (rebalance_type == 2) {
-    return new RebalanceType.PricePercentageWithReset();
+    return RebalanceType.PricePercentageWithReset;
   } else if (rebalance_type == 3) {
-    return new RebalanceType.Drift();
+    return RebalanceType.Drift;
   } else if (rebalance_type == 4) {
-    return new RebalanceType.TakeProfit();
+    return RebalanceType.TakeProfit;
   } else if (rebalance_type == 5) {
-    return new RebalanceType.PeriodicRebalance();
+    return RebalanceType.PeriodicRebalance;
   } else if (rebalance_type == 6) {
-    return new RebalanceType.Expander();
+    return RebalanceType.Expander;
   } else if (rebalance_type == 7) {
-    return new RebalanceType.Autodrift();
+    return RebalanceType.Autodrift;
   } else {
     throw new Error(`Invalid rebalance type ${rebalance_type.toString()}`);
   }
@@ -193,25 +187,20 @@ export async function getUpdateStrategyConfigIx(
   signer: TransactionSigner,
   globalConfig: Address,
   strategy: Address,
-  mode: StrategyConfigOptionKind,
+  mode: StrategyConfigOption,
   amount: Decimal,
   programId: Address,
   newAccount: Address = DEFAULT_PUBLIC_KEY
 ): Promise<Instruction> {
-  const args: UpdateStrategyConfigArgs = {
-    mode: mode.discriminator,
-    value: getStrategyConfigValue(amount),
-  };
-
-  const accounts: UpdateStrategyConfigAccounts = {
+  return getUpdateStrategyConfigInstruction({
     adminAuthority: signer,
     newAccount,
     globalConfig,
     strategy,
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
-  };
-
-  return updateStrategyConfig(args, accounts, undefined, programId);
+    mode,
+    value: new Uint8Array(getStrategyConfigValue(amount)),
+  }, { programAddress: programId });
 }
 
 export function collToLamportsDecimal(amount: Decimal, decimals: number): Decimal {

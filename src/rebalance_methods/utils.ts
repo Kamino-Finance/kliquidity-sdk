@@ -1,15 +1,5 @@
 import Decimal from 'decimal.js';
-import { RebalanceTypeKind } from '../@codegen/kliquidity/types';
-import {
-  Manual,
-  PricePercentage,
-  PricePercentageWithReset,
-  Expander,
-  Drift,
-  TakeProfit,
-  PeriodicRebalance,
-  Autodrift,
-} from '../@codegen/kliquidity/types/RebalanceType';
+import { RebalanceType } from '../@codegen/kliquidity/types';
 import { RebalanceFieldInfo } from '../utils';
 import {
   AutodriftMethod,
@@ -31,7 +21,7 @@ import { PricePercentageRebalanceTypeName } from './pricePercentageRebalance';
 import { PricePercentageWithResetRebalanceTypeName } from './pricePercentageWithResetRebalance';
 import { TakeProfitRebalanceTypeName } from './takeProfitRebalance';
 
-export function getRebalanceTypeFromRebalanceFields(rebalanceFieldInfos: RebalanceFieldInfo[]): RebalanceTypeKind {
+export function getRebalanceTypeFromRebalanceFields(rebalanceFieldInfos: RebalanceFieldInfo[]): RebalanceType {
   const rebalanceTypeField = rebalanceFieldInfos.find((field) => field.label === 'rebalanceType');
   if (!rebalanceTypeField) {
     throw new Error('Rebalance type field not found');
@@ -39,43 +29,43 @@ export function getRebalanceTypeFromRebalanceFields(rebalanceFieldInfos: Rebalan
 
   switch (rebalanceTypeField.value) {
     case ManualRebalanceTypeName:
-      return new Manual();
+      return RebalanceType.Manual;
     case PricePercentageRebalanceTypeName:
-      return new PricePercentage();
+      return RebalanceType.PricePercentage;
     case PricePercentageWithResetRebalanceTypeName:
-      return new PricePercentageWithReset();
+      return RebalanceType.PricePercentageWithReset;
     case DriftRebalanceTypeName:
-      return new Drift();
+      return RebalanceType.Drift;
     case TakeProfitRebalanceTypeName:
-      return new TakeProfit();
+      return RebalanceType.TakeProfit;
     case PeriodicRebalanceTypeName:
-      return new PeriodicRebalance();
+      return RebalanceType.PeriodicRebalance;
     case ExpanderRebalanceTypeName:
-      return new Expander();
+      return RebalanceType.Expander;
     case AutodriftRebalanceTypeName:
-      return new Autodrift();
+      return RebalanceType.Autodrift;
     default:
       throw new Error(`Invalid rebalance type ${rebalanceTypeField.value}`);
   }
 }
 
-export function rebalanceTypeToRebalanceMethod(rebalanceType: RebalanceTypeKind): RebalanceMethod {
-  switch (rebalanceType.kind) {
-    case Manual.kind:
+export function rebalanceTypeToRebalanceMethod(rebalanceType: RebalanceType): RebalanceMethod {
+  switch (rebalanceType) {
+    case RebalanceType.Manual:
       return ManualRebalanceMethod;
-    case PricePercentage.kind:
+    case RebalanceType.PricePercentage:
       return PricePercentageRebalanceMethod;
-    case PricePercentageWithReset.kind:
+    case RebalanceType.PricePercentageWithReset:
       return PricePercentageWithResetRangeRebalanceMethod;
-    case Drift.kind:
+    case RebalanceType.Drift:
       return DriftRebalanceMethod;
-    case TakeProfit.kind:
+    case RebalanceType.TakeProfit:
       return TakeProfitMethod;
-    case PeriodicRebalance.kind:
+    case RebalanceType.PeriodicRebalance:
       return PeriodicRebalanceMethod;
-    case Expander.kind:
+    case RebalanceType.Expander:
       return ExpanderMethod;
-    case Autodrift.kind:
+    case RebalanceType.Autodrift:
       return AutodriftMethod;
     default:
       throw new Error(`Invalid rebalance type ${rebalanceType}`);

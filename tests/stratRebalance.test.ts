@@ -14,20 +14,11 @@ import {
 import Decimal from 'decimal.js';
 import { GlobalConfigMainnet } from './runner/utils';
 import { expect } from 'chai';
-import { PROGRAM_ID as KLIQUIDITY_PROGRAM_ID } from '../src/@codegen/kliquidity/programId';
-import { PROGRAM_ID as WHIRLPOOL_PROGRAM_ID } from '../src/@codegen/whirlpools/programId';
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programId';
-import {
-  Drift,
-  Expander,
-  Manual,
-  PeriodicRebalance,
-  PricePercentage,
-  PricePercentageWithReset,
-  TakeProfit,
-} from '../src/@codegen/kliquidity/types/RebalanceType';
+import { YVAULTS_PROGRAM_ADDRESS as KLIQUIDITY_PROGRAM_ID } from '../src/@codegen/kliquidity/programs';
+import { WHIRLPOOL_PROGRAM_ADDRESS as WHIRLPOOL_PROGRAM_ID } from '../src/@codegen/whirlpools/programs';
+import { AMM_V3_PROGRAM_ADDRESS as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programs';
+import { RebalanceType, ReferencePriceType } from '../src/@codegen/kliquidity/types';
 import { getComputeBudgetAndPriorityFeeIxns } from '../src/utils/transactions';
-import { POOL, TWAP } from '../src/@codegen/kliquidity/types/ReferencePriceType';
 import {
   DriftRebalanceMethod,
   ExpanderMethod,
@@ -82,7 +73,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Manual.discriminator),
+      new Decimal(RebalanceType.Manual),
       [priceLower, priceUpper],
       address('So11111111111111111111111111111111111111112'),
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
@@ -232,7 +223,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(PricePercentage.discriminator),
+      new Decimal(RebalanceType.PricePercentage),
       [lowerRangeBPS, upperRangeBPS],
       tokenAMint,
       tokenBMint
@@ -438,7 +429,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(PricePercentageWithReset.discriminator),
+      new Decimal(RebalanceType.PricePercentageWithReset),
       [lowerRangeBPS, upperRangeBPS, resetLowerRangeBPS, resetUpperRangeBPS],
       tokenAMint,
       tokenBMint
@@ -678,7 +669,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(PeriodicRebalance.discriminator),
+      new Decimal(RebalanceType.PeriodicRebalance),
       [period, lowerRangeBPS, upperRangeBPS],
       tokenAMint,
       tokenBMint
@@ -876,7 +867,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(TakeProfit.discriminator),
+      new Decimal(RebalanceType.TakeProfit),
       [lowerPrice, upperPrice, destinationToken],
       tokenAMint,
       tokenBMint
@@ -1060,7 +1051,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Expander.discriminator),
+      new Decimal(RebalanceType.Expander),
       [
         lowerRangeBPS,
         upperRangeBPS,
@@ -1377,7 +1368,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Drift.discriminator),
+      new Decimal(RebalanceType.Drift),
       [startMidTick, ticksBelowMid, ticksAboveMid, secondsPerTick, direction],
       tokenAMint,
       tokenBMint
@@ -1607,7 +1598,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Manual.discriminator),
+      new Decimal(RebalanceType.Manual),
       [priceLower, priceUpper],
       address('So11111111111111111111111111111111111111112'),
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
@@ -1656,12 +1647,12 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       throw new Error('strategy not found');
     }
 
-    expect(strategyState!.rebalanceRaw.referencePriceType).to.be.eq(POOL.discriminator);
+    expect(strategyState!.rebalanceRaw.referencePriceType).to.be.eq(ReferencePriceType.POOL);
 
     let updatePriceReferenceTypeIx = await kamino.getUpdateReferencePriceTypeIx(
       env.admin,
       newStrategy.address,
-      new TWAP()
+      ReferencePriceType.TWAP
     );
     let updatePriceReferenceTypeTxId = await sendAndConfirmTx(env.c, signer, [updatePriceReferenceTypeIx]);
     console.log('update reference price to TWAP tx', updatePriceReferenceTypeTxId);
@@ -1670,9 +1661,9 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     if (!strategyState) {
       throw new Error('strategy not found');
     }
-    expect(strategyState!.rebalanceRaw.referencePriceType).to.be.eq(TWAP.discriminator);
+    expect(strategyState!.rebalanceRaw.referencePriceType).to.be.eq(ReferencePriceType.TWAP);
 
-    updatePriceReferenceTypeIx = await kamino.getUpdateReferencePriceTypeIx(env.admin, newStrategy.address, new POOL());
+    updatePriceReferenceTypeIx = await kamino.getUpdateReferencePriceTypeIx(env.admin, newStrategy.address, ReferencePriceType.POOL);
 
     updatePriceReferenceTypeTxId = await sendAndConfirmTx(env.c, signer, [updatePriceReferenceTypeIx]);
     console.log('update reference price to POOL tx', updatePriceReferenceTypeTxId);
@@ -1681,7 +1672,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     if (!strategyState) {
       throw new Error('strategy not found');
     }
-    expect(strategyState!.rebalanceRaw.referencePriceType).to.be.eq(POOL.discriminator);
+    expect(strategyState!.rebalanceRaw.referencePriceType).to.be.eq(ReferencePriceType.POOL);
   });
 
   it.skip('update rebalance strategy types and params', async () => {
@@ -1711,7 +1702,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Manual.discriminator),
+      new Decimal(RebalanceType.Manual),
       [priceLower, priceUpper],
       tokenAMint,
       tokenBMint

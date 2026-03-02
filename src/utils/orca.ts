@@ -11,7 +11,8 @@ import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-deri
 import { ONE_BN, U64_MAX_BI, ZERO_BN } from '../constants';
 import { Percentage } from './types';
 import { DEFAULT_ADDRESS, IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
-import { TickArray, Whirlpool } from '../@codegen/whirlpools/accounts';
+import { fetchAllMaybeTickArray, type TickArray, type Whirlpool } from '../@codegen/whirlpools/accounts';
+import { unwrapAccounts } from './codamaHelpers';
 import {
   _MAX_TICK_INDEX,
   _MIN_TICK_INDEX,
@@ -315,7 +316,7 @@ export async function getLiquidityDistribution(
     tickUpper,
     whirlpoolProgramId
   );
-  const tickArrays = await TickArray.fetchMultiple(rpc, tickArrayAddresses, whirlpoolProgramId);
+  const tickArrays = unwrapAccounts(await fetchAllMaybeTickArray(rpc, tickArrayAddresses));
 
   const currentLiquidity = new Decimal(poolData.liquidity.toString());
   let relativeLiquidity = currentLiquidity;

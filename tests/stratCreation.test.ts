@@ -20,16 +20,15 @@ import {
   updateStrategyConfig,
   USDCMintMainnet,
 } from './runner/utils';
-import { UpdateRebalanceType } from '../src/@codegen/kliquidity/types/StrategyConfigOption';
+import { StrategyConfigOption, RebalanceType } from '../src/@codegen/kliquidity/types';
 import { expect } from 'chai';
-import { PROGRAM_ID as KLIQUIDITY_PROGRAM_ID } from '../src/@codegen/kliquidity/programId';
-import { PROGRAM_ID as WHIRLPOOL_PROGRAM_ID } from '../src/@codegen/whirlpools/programId';
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programId';
-import { Manual, PricePercentage, PricePercentageWithReset } from '../src/@codegen/kliquidity/types/RebalanceType';
+import { YVAULTS_PROGRAM_ADDRESS as KLIQUIDITY_PROGRAM_ID } from '../src/@codegen/kliquidity/programs';
+import { WHIRLPOOL_PROGRAM_ADDRESS as WHIRLPOOL_PROGRAM_ID } from '../src/@codegen/whirlpools/programs';
+import { AMM_V3_PROGRAM_ADDRESS as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programs';
 import { createWsolAtaIfMissing, getComputeBudgetAndPriorityFeeIxns } from '../src/utils/transactions';
 import { JupService } from '../src/services/JupService';
 import { DEFAULT_PUBLIC_KEY, STAGING_GLOBAL_CONFIG, STAGING_KAMINO_PROGRAM_ID } from '../src/constants/pubkeys';
-import { PROGRAM_ID as METEORA_PROGRAM_ID } from '../src/@codegen/meteora/programId';
+import { LB_CLMM_PROGRAM_ADDRESS as METEORA_PROGRAM_ID } from '../src/@codegen/meteora/programs';
 import { sendAndConfirmTx } from './runner/tx';
 import { initEnv } from './runner/env';
 import { setupStrategyLookupTable } from './runner/lut';
@@ -691,7 +690,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Manual.discriminator),
+      new Decimal(RebalanceType.Manual),
       [new Decimal(18.0), new Decimal(21.0)],
       address('So11111111111111111111111111111111111111112'),
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
@@ -747,7 +746,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Manual.discriminator),
+      new Decimal(RebalanceType.Manual),
       [new Decimal(18.0), new Decimal(21.0)],
       address('So11111111111111111111111111111111111111112'),
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
@@ -803,7 +802,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Manual.discriminator),
+      new Decimal(RebalanceType.Manual),
       [], // not needed used for manual
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
@@ -858,7 +857,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Manual.discriminator),
+      new Decimal(RebalanceType.Manual),
       [], // not needed used for manual
       SOLMintMainnet,
       USDCMintMainnet
@@ -913,7 +912,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(PricePercentage.discriminator),
+      new Decimal(RebalanceType.PricePercentage),
       [new Decimal(100.0), new Decimal(100.0)],
       SOLMintMainnet,
       USDCMintMainnet
@@ -967,7 +966,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Manual.discriminator),
+      new Decimal(RebalanceType.Manual),
       [], // not needed used for manual
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
@@ -1022,7 +1021,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(PricePercentage.discriminator),
+      new Decimal(RebalanceType.PricePercentage),
       [new Decimal(100.0), new Decimal(100.0)],
       SOLMintMainnet,
       USDCMintMainnet
@@ -1069,10 +1068,10 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     expect(strategyData[0]?.rebalanceRaw.params[2] == 24.0);
 
     // update rebalance method to manual
-    await updateStrategyConfig(env, newStrategy.address, new UpdateRebalanceType(), new Decimal(Manual.discriminator));
+    await updateStrategyConfig(env, newStrategy.address, StrategyConfigOption.UpdateRebalanceType, new Decimal(RebalanceType.Manual));
 
     strategyData = await kamino.getStrategies([newStrategy.address]);
-    expect(strategyData[0]?.rebalanceType == Manual.discriminator);
+    expect(strategyData[0]?.rebalanceType == RebalanceType.Manual);
   });
 
   it.skip('get raydium pool liquidity distribution', async () => {
@@ -1165,7 +1164,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(Manual.discriminator),
+      new Decimal(RebalanceType.Manual),
       [], // not needed used for manual
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
@@ -1204,10 +1203,10 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     expect(strategyData[0]?.rebalanceRaw.params[2] == 24.0);
 
     // update rebalance method to manual
-    await updateStrategyConfig(env, newStrategy.address, new UpdateRebalanceType(), new Decimal(Manual.discriminator));
+    await updateStrategyConfig(env, newStrategy.address, StrategyConfigOption.UpdateRebalanceType, new Decimal(RebalanceType.Manual));
 
     strategyData = await kamino.getStrategies([newStrategy.address]);
-    expect(strategyData[0]?.rebalanceType == Manual.discriminator);
+    expect(strategyData[0]?.rebalanceType == RebalanceType.Manual);
   });
 
   //test create as PricePercentageWithreset -> Update to Manual -> move back to PricePercentageWithReset diff range
@@ -1236,7 +1235,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(PricePercentageWithReset.discriminator),
+      new Decimal(RebalanceType.PricePercentageWithReset),
       [lowerPriceBpsDifference, upperPriceBpsDifference, lowerPriceResetRange, upperPriceResetRange],
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
@@ -1323,7 +1322,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(PricePercentage.discriminator),
+      new Decimal(RebalanceType.PricePercentage),
       [lowerPriceBpsDifference, upperPriceBpsDifference],
       address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
       address('USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX')
@@ -1386,7 +1385,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       newStrategy.address,
       newPosition,
       signer,
-      new Decimal(PricePercentage.discriminator),
+      new Decimal(RebalanceType.PricePercentage),
       [lowerPriceBpsDifference, upperPriceBpsDifference],
       address('So11111111111111111111111111111111111111112'),
       address('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263')
