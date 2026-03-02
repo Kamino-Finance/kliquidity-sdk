@@ -118,7 +118,7 @@ export function getIncreaseLiquidityQuote(
     return increaseLiquidityQuote(
       param.liquidity,
       slippageToleranceBps,
-      BigInt(pool.sqrtPrice.toString()),
+      pool.sqrtPrice,
       tickLowerIndex,
       tickUpperIndex,
       transferFeeA,
@@ -128,7 +128,7 @@ export function getIncreaseLiquidityQuote(
     return increaseLiquidityQuoteA(
       param.tokenA,
       slippageToleranceBps,
-      BigInt(pool.sqrtPrice.toString()),
+      pool.sqrtPrice,
       tickLowerIndex,
       tickUpperIndex,
       transferFeeA,
@@ -138,7 +138,7 @@ export function getIncreaseLiquidityQuote(
     return increaseLiquidityQuoteB(
       param.tokenB,
       slippageToleranceBps,
-      BigInt(pool.sqrtPrice.toString()),
+      pool.sqrtPrice,
       tickLowerIndex,
       tickUpperIndex,
       transferFeeA,
@@ -212,10 +212,10 @@ export function estimateAprsForPriceRange(
   const { minTokenA, minTokenB } = getRemoveLiquidityQuote({
     positionAddress: DEFAULT_ADDRESS,
     tickCurrentIndex: pool.tickCurrentIndex,
-    sqrtPrice: BigInt(pool.sqrtPrice.toString()),
+    sqrtPrice: BigInt(pool.sqrtPrice),
     tickLowerIndex,
     tickUpperIndex,
-    liquidity: BigInt(pool.liquidity.toString()),
+    liquidity: BigInt(pool.liquidity),
     slippageTolerance: { numerator: ZERO_BN, denominator: BigInt(FullBPS) },
   });
   const tokenValueA = getTokenValue(minTokenA, pool.tokenA.decimals, tokenPriceA);

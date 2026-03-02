@@ -17,7 +17,7 @@ import {
   updateStrategyConfig,
 } from '../@codegen/kliquidity/instructions';
 import { RebalanceFieldInfo, RebalanceFieldsDict } from './types';
-import { toBN } from './raydiumBridge';
+import { fromBN, toBN } from './raydiumBridge';
 import { PoolPriceReferenceType, TwapPriceReferenceType } from './priceReferenceTypes';
 import { U64_MAX } from '../constants/numericalValues';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib/raydium/clmm/utils/math';
@@ -100,8 +100,8 @@ export function buildStrategyRebalanceParams(
     // TODO: fix this for meteora
     const lowerPrice = SqrtPriceMath.priceToSqrtPriceX64(params[0], tokenADecimals!, tokenBDecimals!);
     const upperPrice = SqrtPriceMath.priceToSqrtPriceX64(params[1], tokenADecimals!, tokenBDecimals!);
-    writeBigint128LE(buffer, BigInt(lowerPrice.toString()), 0);
-    writeBigint128LE(buffer, BigInt(upperPrice.toString()), 16);
+    writeBigint128LE(buffer, fromBN(lowerPrice), 0);
+    writeBigint128LE(buffer, fromBN(upperPrice), 16);
     buffer.writeUint8(params[2].toNumber(), 32);
   } else if (rebalance_type.kind == RebalanceType.PeriodicRebalance.kind) {
     writeBigintUint64LE(buffer, BigInt(params[0].toString()), 0);
