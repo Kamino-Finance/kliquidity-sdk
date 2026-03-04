@@ -50,12 +50,7 @@ import { createWsolAtaIfMissing } from '../src/utils/transactions';
 import { getMintDecimals } from '../src/utils';
 import { setupStrategyLookupTable } from './runner/lut';
 import { Env, initEnv } from './runner/env';
-import {
-  type CollateralInfos,
-  type GlobalConfig,
-  getGlobalConfigEncoder,
-  getCollateralInfosEncoder,
-} from '../src/@codegen/kliquidity/accounts';
+import { getGlobalConfigEncoder, getCollateralInfosEncoder } from '../src/@codegen/kliquidity/accounts';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { sendAndConfirmTx } from './runner/tx';
 

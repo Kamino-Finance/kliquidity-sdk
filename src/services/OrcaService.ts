@@ -3,7 +3,7 @@ import Decimal from 'decimal.js';
 import axios from 'axios';
 import { OrcaWhirlpoolsResponse, Whirlpool as WhirlpoolAPIResponse } from './OrcaWhirlpoolsResponse';
 import { type WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
-import { fetchMaybePosition, type Position } from '../@codegen/whirlpools/accounts';
+import { fetchMaybePosition } from '../@codegen/whirlpools/accounts';
 import { unwrapAccount } from '../utils/codamaHelpers';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
 import {

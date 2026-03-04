@@ -11,7 +11,7 @@ import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-deri
 import { ONE_BN, U64_MAX_BI, ZERO_BN } from '../constants';
 import { Percentage } from './types';
 import { DEFAULT_ADDRESS, IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
-import { fetchAllMaybeTickArray, type TickArray, type Whirlpool } from '../@codegen/whirlpools/accounts';
+import { fetchAllMaybeTickArray, type Whirlpool } from '../@codegen/whirlpools/accounts';
 import { unwrapAccounts } from './codamaHelpers';
 import {
   _MAX_TICK_INDEX,

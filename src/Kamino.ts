@@ -15,17 +15,13 @@ import {
   isAddress,
   isSome,
   JsonParsedTokenAccount,
-  none,
-  Option,
   Rpc,
   Slot,
   SolanaRpcApi,
-  some,
   TransactionSigner,
 } from '@solana/kit';
 import bs58 from 'bs58';
 import {
-  type CollateralInfos,
   type GlobalConfig,
   type TermsSignature,
   type WhirlpoolStrategy,
@@ -38,13 +34,11 @@ import {
   getWhirlpoolStrategySize,
   WHIRLPOOL_STRATEGY_DISCRIMINATOR,
 } from './@codegen/kliquidity/accounts';
-import { YVAULTS_PROGRAM_ADDRESS } from './@codegen/kliquidity/programs';
 import { unwrapAccount, unwrapAccounts } from './utils/codamaHelpers';
 import Decimal from 'decimal.js';
 import { getInitializeTickArrayInstruction } from './@codegen/whirlpools/instructions';
 import {
   type Position as OrcaPosition,
-  type TickArray,
   type Whirlpool,
   fetchMaybePosition as fetchMaybeOrcaPosition,
   fetchAllMaybePosition as fetchAllMaybeOrcaPosition,
@@ -169,7 +163,6 @@ import {
   StrategyConfigOption,
 } from './@codegen/kliquidity/types';
 import {
-  type AmmConfig,
   type PersonalPositionState,
   type PoolState,
   fetchMaybeAmmConfig,
@@ -299,7 +292,6 @@ import {
   MeteoraPosition,
 } from './utils/meteora';
 import {
-  type BinArray,
   type LbPair,
   type PositionV2,
   fetchMaybeBinArray,

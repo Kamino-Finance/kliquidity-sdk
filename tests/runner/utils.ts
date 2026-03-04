@@ -24,9 +24,6 @@ import {
   fetchMaybeWhirlpoolStrategy,
   fetchMaybeGlobalConfig,
   fetchMaybeCollateralInfos,
-  type WhirlpoolStrategy,
-  type GlobalConfig,
-  type CollateralInfos,
 } from '../../src/@codegen/kliquidity/accounts';
 import { unwrapAccount } from '../../src/utils/codamaHelpers';
 import {
