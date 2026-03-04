@@ -341,7 +341,7 @@ describe('Kamino SDK Tests', () => {
     );
     const strategy = await kamino.getStrategyByAddress(fixtures.newOrcaStrategy);
     expect(strategy).not.to.be.null;
-    console.log(JSON.stringify(strategy));
+    console.log(JSON.stringify(strategy, (_, v) => (typeof v === 'bigint' ? v.toString() : v)));
   });
 
   it('should get RAYDIUM strategy share price', async () => {
