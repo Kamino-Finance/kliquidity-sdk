@@ -50,7 +50,12 @@ import { createWsolAtaIfMissing } from '../src/utils/transactions';
 import { getMintDecimals } from '../src/utils';
 import { setupStrategyLookupTable } from './runner/lut';
 import { Env, initEnv } from './runner/env';
-import { type CollateralInfos, type GlobalConfig, getGlobalConfigEncoder, getCollateralInfosEncoder } from '../src/@codegen/kliquidity/accounts';
+import {
+  type CollateralInfos,
+  type GlobalConfig,
+  getGlobalConfigEncoder,
+  getCollateralInfosEncoder,
+} from '../src/@codegen/kliquidity/accounts';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { sendAndConfirmTx } from './runner/tx';
 
@@ -192,8 +197,18 @@ describe('Kamino SDK Tests', () => {
       StrategyConfigOption.UpdateDepositCap,
       new Decimal(1_000_000_000_000_000)
     );
-    await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateMaxDeviationBps, new Decimal(1000));
-    await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.AllowDepositWithoutInvest, new Decimal(1));
+    await updateStrategyConfig(
+      env,
+      fixtures.newOrcaStrategy,
+      StrategyConfigOption.UpdateMaxDeviationBps,
+      new Decimal(1000)
+    );
+    await updateStrategyConfig(
+      env,
+      fixtures.newOrcaStrategy,
+      StrategyConfigOption.AllowDepositWithoutInvest,
+      new Decimal(1)
+    );
 
     await updateStrategyConfig(
       env,
@@ -207,8 +222,18 @@ describe('Kamino SDK Tests', () => {
       StrategyConfigOption.UpdateDepositCap,
       new Decimal(1_000_000_000_000_000)
     );
-    await updateStrategyConfig(env, fixtures.newRaydiumStrategy, StrategyConfigOption.UpdateMaxDeviationBps, new Decimal(2000));
-    await updateStrategyConfig(env, fixtures.newRaydiumStrategy, StrategyConfigOption.AllowDepositWithoutInvest, new Decimal(1));
+    await updateStrategyConfig(
+      env,
+      fixtures.newRaydiumStrategy,
+      StrategyConfigOption.UpdateMaxDeviationBps,
+      new Decimal(2000)
+    );
+    await updateStrategyConfig(
+      env,
+      fixtures.newRaydiumStrategy,
+      StrategyConfigOption.AllowDepositWithoutInvest,
+      new Decimal(1)
+    );
 
     await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address);
     await setupStrategyLookupTable(env, kamino, newRaydiumStrategy.address);
@@ -1217,7 +1242,12 @@ describe('Kamino SDK Tests', () => {
     expect(strats.length).to.be.eq(3);
 
     // set creation state to live
-    await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateStrategyCreationState, new Decimal(2));
+    await updateStrategyConfig(
+      env,
+      fixtures.newOrcaStrategy,
+      StrategyConfigOption.UpdateStrategyCreationState,
+      new Decimal(2)
+    );
 
     // assert only a single strat remained SHADOW
     strats = await kamino.getAllStrategiesWithFilters(filters);
@@ -1453,7 +1483,12 @@ describe('Kamino SDK Tests', () => {
     expect(performanceFees.reward2FeeBPS.eq(ZERO)).to.be.true;
 
     // update fees and check they are read correctly
-    await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateCollectFeesFee, new Decimal(200));
+    await updateStrategyConfig(
+      env,
+      fixtures.newOrcaStrategy,
+      StrategyConfigOption.UpdateCollectFeesFee,
+      new Decimal(200)
+    );
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateReward0Fee, new Decimal(300));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateReward1Fee, new Decimal(400));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateReward2Fee, new Decimal(500));
@@ -1507,7 +1542,12 @@ describe('Kamino SDK Tests', () => {
     expect(performanceFees.reward2FeeBPS.eq(new Decimal(500))).to.be.true;
 
     // update fees and check they are read correctly
-    await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateCollectFeesFee, new Decimal(400));
+    await updateStrategyConfig(
+      env,
+      fixtures.newOrcaStrategy,
+      StrategyConfigOption.UpdateCollectFeesFee,
+      new Decimal(400)
+    );
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateReward0Fee, new Decimal(450));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateReward1Fee, new Decimal(700));
     await updateStrategyConfig(env, fixtures.newOrcaStrategy, StrategyConfigOption.UpdateReward2Fee, new Decimal(800));
@@ -1776,8 +1816,18 @@ describe('Kamino SDK Tests', () => {
     );
     txStrategyCreate.push(orcaStrategyIx);
     await sendAndConfirmTx(env.c, env.admin, txStrategyCreate);
-    await updateStrategyConfig(env, newOrcaStrategy.address, StrategyConfigOption.UpdateDepositCapIxn, new Decimal(1000000000000000));
-    await updateStrategyConfig(env, newOrcaStrategy.address, StrategyConfigOption.UpdateDepositCap, new Decimal(10000000000000000));
+    await updateStrategyConfig(
+      env,
+      newOrcaStrategy.address,
+      StrategyConfigOption.UpdateDepositCapIxn,
+      new Decimal(1000000000000000)
+    );
+    await updateStrategyConfig(
+      env,
+      newOrcaStrategy.address,
+      StrategyConfigOption.UpdateDepositCap,
+      new Decimal(10000000000000000)
+    );
     const strategyState = (await kamino.getStrategyByAddress(newOrcaStrategy.address))!;
 
     // Create lookup table and open new position
@@ -1916,11 +1966,14 @@ export async function setUpGlobalConfig(
     BigInt(getGlobalConfigEncoder().fixedSize)
   );
 
-  const initializeGlobalConfigIx = Instructions.getInitializeGlobalConfigInstruction({
-    adminAuthority: env.admin,
-    globalConfig: globalConfig.address,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-  }, { programAddress: kamino.getProgramID() });
+  const initializeGlobalConfigIx = Instructions.getInitializeGlobalConfigInstruction(
+    {
+      adminAuthority: env.admin,
+      globalConfig: globalConfig.address,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+    },
+    { programAddress: kamino.getProgramID() }
+  );
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createGlobalConfigIx, initializeGlobalConfigIx]);
 
@@ -1962,12 +2015,15 @@ export async function setUpCollateralInfo(env: Env, kamino: Kamino): Promise<Add
     BigInt(getCollateralInfosEncoder().fixedSize)
   );
 
-  const initializeCollateralInfosIx = Instructions.getInitializeCollateralInfoInstruction({
-    adminAuthority: env.admin,
-    globalConfig: kamino.getGlobalConfig(),
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    collInfo: collInfo.address,
-  }, { programAddress: kamino.getProgramID() });
+  const initializeCollateralInfosIx = Instructions.getInitializeCollateralInfoInstruction(
+    {
+      adminAuthority: env.admin,
+      globalConfig: kamino.getGlobalConfig(),
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+      collInfo: collInfo.address,
+    },
+    { programAddress: kamino.getProgramID() }
+  );
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createCollateralInfoIx, initializeCollateralInfosIx]);
 
@@ -2018,14 +2074,17 @@ export async function updateGlobalConfig(
   const index = Number.parseInt(keyIndex);
   const formatted_value = getGlobalConfigValue(value);
 
-  const updateConfigIx = Instructions.getUpdateGlobalConfigInstruction({
-    key: globalConfigOption,
-    index: index,
-    value: new Uint8Array(formatted_value),
-    adminAuthority: env.admin,
-    globalConfig: globalConfig,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-  }, { programAddress: kamino.getProgramID() });
+  const updateConfigIx = Instructions.getUpdateGlobalConfigInstruction(
+    {
+      key: globalConfigOption,
+      index: index,
+      value: new Uint8Array(formatted_value),
+      adminAuthority: env.admin,
+      globalConfig: globalConfig,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+    },
+    { programAddress: kamino.getProgramID() }
+  );
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateConfigIx]);
 
   console.log('Update Global Config ', GlobalConfigOption[globalConfigOption], sig);

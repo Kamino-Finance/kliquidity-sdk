@@ -7,9 +7,7 @@ import {
   StakingRateSource,
   StrategyConfigOption,
 } from '../@codegen/kliquidity/types';
-import {
-  getUpdateStrategyConfigInstruction,
-} from '../@codegen/kliquidity/instructions';
+import { getUpdateStrategyConfigInstruction } from '../@codegen/kliquidity/instructions';
 import { RebalanceFieldInfo, RebalanceFieldsDict } from './types';
 import { fromBN, toBN } from './raydiumBridge';
 import { PoolPriceReferenceType, TwapPriceReferenceType } from './priceReferenceTypes';
@@ -125,10 +123,7 @@ export function buildStrategyRebalanceParams(
 
 export function doesStrategyHaveResetRange(rebalanceTypeNumber: number): boolean {
   const rebalanceType = numberToRebalanceType(rebalanceTypeNumber);
-  return (
-    rebalanceType === RebalanceType.PricePercentageWithReset ||
-    rebalanceType === RebalanceType.Expander
-  );
+  return rebalanceType === RebalanceType.PricePercentageWithReset || rebalanceType === RebalanceType.Expander;
 }
 
 export function numberToDriftDirection(value: number): DriftDirection {
@@ -192,15 +187,18 @@ export async function getUpdateStrategyConfigIx(
   programId: Address,
   newAccount: Address = DEFAULT_PUBLIC_KEY
 ): Promise<Instruction> {
-  return getUpdateStrategyConfigInstruction({
-    adminAuthority: signer,
-    newAccount,
-    globalConfig,
-    strategy,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    mode,
-    value: new Uint8Array(getStrategyConfigValue(amount)),
-  }, { programAddress: programId });
+  return getUpdateStrategyConfigInstruction(
+    {
+      adminAuthority: signer,
+      newAccount,
+      globalConfig,
+      strategy,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+      mode,
+      value: new Uint8Array(getStrategyConfigValue(amount)),
+    },
+    { programAddress: programId }
+  );
 }
 
 export function collToLamportsDecimal(amount: Decimal, decimals: number): Decimal {

@@ -1663,7 +1663,11 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     }
     expect(strategyState!.rebalanceRaw.referencePriceType).to.be.eq(ReferencePriceType.TWAP);
 
-    updatePriceReferenceTypeIx = await kamino.getUpdateReferencePriceTypeIx(env.admin, newStrategy.address, ReferencePriceType.POOL);
+    updatePriceReferenceTypeIx = await kamino.getUpdateReferencePriceTypeIx(
+      env.admin,
+      newStrategy.address,
+      ReferencePriceType.POOL
+    );
 
     updatePriceReferenceTypeTxId = await sendAndConfirmTx(env.c, signer, [updatePriceReferenceTypeIx]);
     console.log('update reference price to POOL tx', updatePriceReferenceTypeTxId);

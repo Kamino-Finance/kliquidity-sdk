@@ -422,11 +422,7 @@ export async function updateCollateralInfo(
   }
   const argValue = toCollateralInfoValue(value);
 
-  console.log(
-    `UpdateCollateralInfo`,
-    mode,
-    `for ${collateralToken} with value ${value} encoded as ${argValue}`
-  );
+  console.log(`UpdateCollateralInfo`, mode, `for ${collateralToken} with value ${value} encoded as ${argValue}`);
 
   const ix = Instructions.getUpdateCollateralInfoInstruction(
     {

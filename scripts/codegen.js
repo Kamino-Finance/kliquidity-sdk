@@ -3,14 +3,7 @@
 const { rootNodeFromAnchor } = require('@codama/nodes-from-anchor');
 const { renderVisitor } = require('@codama/renderers-js');
 const { createFromRoot } = require('codama');
-const {
-  readFileSync,
-  rmSync,
-  writeFileSync,
-  readdirSync,
-  statSync,
-  existsSync,
-} = require('node:fs');
+const { readFileSync, rmSync, writeFileSync, readdirSync, statSync, existsSync } = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -41,7 +34,6 @@ const programs = [
 async function main() {
   // Clean output root
   rmSync(path.join(ROOT, 'src/@codegen'), { recursive: true, force: true });
-
 
   for (const prog of programs) {
     const idlPath = path.join(ROOT, prog.idl);
@@ -74,7 +66,7 @@ async function main() {
   console.log('All codegen complete.');
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
@@ -97,10 +89,7 @@ function postProcessFile(filePath, programId) {
   let changed = false;
 
   // Fix empty program address (Anchor v0 IDLs don't embed program IDs)
-  const fixed = content.replace(
-    /= '' as Address<''>/g,
-    `= '${programId}' as Address<'${programId}'>`
-  );
+  const fixed = content.replace(/= '' as Address<''>/g, `= '${programId}' as Address<'${programId}'>`);
   if (fixed !== content) {
     content = fixed;
     changed = true;
@@ -115,7 +104,7 @@ function simplifyProgramsDir(dstDir) {
   const programsDir = path.join(dstDir, 'programs');
   if (!existsSync(programsDir)) return;
 
-  const programFiles = readdirSync(programsDir).filter(f => f !== 'index.ts' && f.endsWith('.ts'));
+  const programFiles = readdirSync(programsDir).filter((f) => f !== 'index.ts' && f.endsWith('.ts'));
   const programNames = [];
 
   for (const pf of programFiles) {
@@ -137,8 +126,6 @@ function simplifyProgramsDir(dstDir) {
   }
 
   // Rewrite index.ts to just re-export
-  const indexContent = programNames
-    .map(p => `export { ${p.name} } from './${p.file}';`)
-    .join('\n') + '\n';
+  const indexContent = programNames.map((p) => `export { ${p.name} } from './${p.file}';`).join('\n') + '\n';
   writeFileSync(path.join(programsDir, 'index.ts'), indexContent);
 }

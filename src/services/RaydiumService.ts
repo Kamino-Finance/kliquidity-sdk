@@ -14,7 +14,13 @@ import {
   Pool,
   RaydiumPoolsResponse,
 } from './RaydiumPoolsResponse';
-import { fetchMaybePoolState, fetchMaybePersonalPositionState, getPoolStateDecoder, type PoolState, type PersonalPositionState } from '../@codegen/raydium/accounts';
+import {
+  fetchMaybePoolState,
+  fetchMaybePersonalPositionState,
+  getPoolStateDecoder,
+  type PoolState,
+  type PersonalPositionState,
+} from '../@codegen/raydium/accounts';
 import Decimal from 'decimal.js';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
 import { type WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';

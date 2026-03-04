@@ -1068,7 +1068,12 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     expect(strategyData[0]?.rebalanceRaw.params[2] == 24.0);
 
     // update rebalance method to manual
-    await updateStrategyConfig(env, newStrategy.address, StrategyConfigOption.UpdateRebalanceType, new Decimal(RebalanceType.Manual));
+    await updateStrategyConfig(
+      env,
+      newStrategy.address,
+      StrategyConfigOption.UpdateRebalanceType,
+      new Decimal(RebalanceType.Manual)
+    );
 
     strategyData = await kamino.getStrategies([newStrategy.address]);
     expect(strategyData[0]?.rebalanceType == RebalanceType.Manual);
@@ -1203,7 +1208,12 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     expect(strategyData[0]?.rebalanceRaw.params[2] == 24.0);
 
     // update rebalance method to manual
-    await updateStrategyConfig(env, newStrategy.address, StrategyConfigOption.UpdateRebalanceType, new Decimal(RebalanceType.Manual));
+    await updateStrategyConfig(
+      env,
+      newStrategy.address,
+      StrategyConfigOption.UpdateRebalanceType,
+      new Decimal(RebalanceType.Manual)
+    );
 
     strategyData = await kamino.getStrategies([newStrategy.address]);
     expect(strategyData[0]?.rebalanceType == RebalanceType.Manual);

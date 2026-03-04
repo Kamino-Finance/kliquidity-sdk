@@ -41,9 +41,7 @@ import {
 import { YVAULTS_PROGRAM_ADDRESS } from './@codegen/kliquidity/programs';
 import { unwrapAccount, unwrapAccounts } from './utils/codamaHelpers';
 import Decimal from 'decimal.js';
-import {
-  getInitializeTickArrayInstruction,
-} from './@codegen/whirlpools/instructions';
+import { getInitializeTickArrayInstruction } from './@codegen/whirlpools/instructions';
 import {
   type Position as OrcaPosition,
   type TickArray,
@@ -314,9 +312,7 @@ import {
   getPositionV2Decoder,
 } from './@codegen/meteora/accounts';
 import LbPairWithAddress from './models/LbPairWithAddress';
-import {
-  getInitializeBinArrayInstruction,
-} from './@codegen/meteora/instructions';
+import { getInitializeBinArrayInstruction } from './@codegen/meteora/instructions';
 import {
   getPdaProtocolPositionAddress,
   i32ToBytes,
@@ -1356,7 +1352,9 @@ export class Kamino {
         )}`
       );
     }
-    const decodedStrategy = getWhirlpoolStrategyDecoder().decode(new Uint8Array(Buffer.from(matchingStrategies[0].account.data[0], 'base64')));
+    const decodedStrategy = getWhirlpoolStrategyDecoder().decode(
+      new Uint8Array(Buffer.from(matchingStrategies[0].account.data[0], 'base64'))
+    );
     return {
       address: matchingStrategies[0].pubkey,
       strategy: decodedStrategy,
@@ -2161,7 +2159,9 @@ export class Kamino {
         throw Error(`Could not fetch Raydium position state with pubkey ${strategy.position.toString()}`);
       }
       const poolState = getPoolStateDecoder().decode(new Uint8Array(Buffer.from(poolStateAcc.data[0], 'base64')));
-      const position = getPersonalPositionStateDecoder().decode(new Uint8Array(Buffer.from(positionAcc.data[0], 'base64')));
+      const position = getPersonalPositionStateDecoder().decode(
+        new Uint8Array(Buffer.from(positionAcc.data[0], 'base64'))
+      );
       return this.getRaydiumTokensBalances(strategy, poolState, position, mode);
     } else if (Number(strategy.strategyDex) === dexToNumber('METEORA')) {
       return this.getMeteoraTokensBalances(strategy);
@@ -2798,8 +2798,7 @@ export class Kamino {
    * Get whirlpool from public key
    * @param whirlpool pubkey of the orca whirlpool
    */
-  getWhirlpoolByAddress = async (whirlpool: Address) =>
-    unwrapAccount(await fetchMaybeWhirlpool(this._rpc, whirlpool));
+  getWhirlpoolByAddress = async (whirlpool: Address) => unwrapAccount(await fetchMaybeWhirlpool(this._rpc, whirlpool));
 
   /**
    * Get a list of Raydium pools from public keys
@@ -2843,18 +2842,15 @@ export class Kamino {
     return poolsMap;
   };
 
-  getRaydiumAmmConfig = async (config: Address) =>
-    unwrapAccount(await fetchMaybeAmmConfig(this._rpc, config));
+  getRaydiumAmmConfig = async (config: Address) => unwrapAccount(await fetchMaybeAmmConfig(this._rpc, config));
 
   /**
    * Get Raydium pool from public key
    * @param pool pubkey of the orca whirlpool
    */
-  getRaydiumPoolByAddress = async (pool: Address) =>
-    unwrapAccount(await fetchMaybePoolState(this._rpc, pool));
+  getRaydiumPoolByAddress = async (pool: Address) => unwrapAccount(await fetchMaybePoolState(this._rpc, pool));
 
-  getMeteoraPoolByAddress = async (pool: Address) =>
-    unwrapAccount(await fetchMaybeLbPair(this._rpc, pool));
+  getMeteoraPoolByAddress = async (pool: Address) => unwrapAccount(await fetchMaybeLbPair(this._rpc, pool));
 
   getEventAuthorityPDA = async (dex: bigint): Promise<Address | undefined> => {
     if (Number(dex) === dexToNumber('ORCA') || Number(dex) === dexToNumber('RAYDIUM')) {
@@ -2949,14 +2945,16 @@ export class Kamino {
       memoProgram: MEMO_PROGRAM_ID,
     };
 
-    let withdrawIx = getWithdrawInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    let withdrawIx = getWithdrawInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
     let collectFeesAndRewardsIxns: Instruction[] = [];
 
     //  for Raydium strats we need to collect fees and rewards before withdrawal
     //  add rewards vaults accounts to withdraw
     const isRaydium = Number(strategyState.strategy.strategyDex) === dexToNumber('RAYDIUM');
     if (isRaydium) {
-      const raydiumPosition = unwrapAccount(await fetchMaybePersonalPositionState(this._rpc, strategyState.strategy.position));
+      const raydiumPosition = unwrapAccount(
+        await fetchMaybePersonalPositionState(this._rpc, strategyState.strategy.position)
+      );
       if (!raydiumPosition) {
         throw new Error('Position is not found');
       }
@@ -2973,7 +2971,6 @@ export class Kamino {
       withdrawIx = {
         ...withdrawIx,
         accounts: withdrawIx.accounts?.concat([
-
           {
             address: strategyState.strategy.raydiumProtocolPositionOrBaseVaultAuthority,
             role: AccountRole.WRITABLE,
@@ -2984,7 +2981,6 @@ export class Kamino {
         withdrawIx = {
           ...withdrawIx,
           accounts: withdrawIx.accounts?.concat([
-
             {
               address: poolState.rewardInfos[0].tokenVault,
               role: AccountRole.WRITABLE,
@@ -3004,7 +3000,6 @@ export class Kamino {
         withdrawIx = {
           ...withdrawIx,
           accounts: withdrawIx.accounts?.concat([
-
             {
               address: poolState.rewardInfos[1].tokenVault,
               role: AccountRole.WRITABLE,
@@ -3024,7 +3019,6 @@ export class Kamino {
         withdrawIx = {
           ...withdrawIx,
           accounts: withdrawIx.accounts?.concat([
-
             {
               address: poolState.rewardInfos[2].tokenVault,
               role: AccountRole.WRITABLE,
@@ -3048,7 +3042,6 @@ export class Kamino {
       withdrawIx = {
         ...withdrawIx,
         accounts: withdrawIx.accounts?.concat([
-
           {
             address: poolTickArrayBitmap,
             role: AccountRole.WRITABLE,
@@ -3339,12 +3332,12 @@ export class Kamino {
     const lamportsA = amountA.mul(new Decimal(10).pow(strategyState.strategy.tokenAMintDecimals.toString()));
     const lamportsB = amountB.mul(new Decimal(10).pow(strategyState.strategy.tokenBMintDecimals.toString()));
 
-    const depositArgs= {
+    const depositArgs = {
       tokenMaxA: BigInt(lamportsA.floor().toString()),
       tokenMaxB: BigInt(lamportsB.floor().toString()),
     };
 
-    const depositAccounts= {
+    const depositAccounts = {
       user: owner,
       strategy: strategyState.address,
       globalConfig: strategyState.strategy.globalConfig,
@@ -3370,7 +3363,7 @@ export class Kamino {
       tokenBTokenProgram: keyOrDefault(strategyState.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS),
     };
 
-    return getDepositInstruction({...depositArgs, ...depositAccounts}, { programAddress: this.getProgramID() });
+    return getDepositInstruction({ ...depositArgs, ...depositAccounts }, { programAddress: this.getProgramID() });
   };
 
   singleSidedDepositTokenA = async (
@@ -3794,12 +3787,12 @@ export class Kamino {
       []
     );
 
-    const args= {
+    const args = {
       tokenAMinPostDepositBalance: BigInt(realTokenAMinPostDepositBalanceLamports.floor().toString()),
       tokenBMinPostDepositBalance: BigInt(realTokenBMinPostDepositBalanceLamports.floor().toString()),
     };
 
-    const accounts= {
+    const accounts = {
       user: owner,
       strategy: strategyWithAddress.address,
       globalConfig: strategyState.globalConfig,
@@ -3825,7 +3818,10 @@ export class Kamino {
       tokenBTokenProgram: keyOrDefault(strategyWithAddress.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS),
     };
 
-    const singleSidedDepositIx = getSingleTokenDepositWithMinInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    const singleSidedDepositIx = getSingleTokenDepositWithMinInstruction(
+      { ...args, ...accounts },
+      { programAddress: this.getProgramID() }
+    );
 
     let result: Instruction[] = [];
     if (includeAtaIxns) {
@@ -3941,17 +3937,20 @@ export class Kamino {
       solToWithdraw = collToLamportsDecimal(amount, DECIMALS_SOL);
     }
 
-    const args= {
+    const args = {
       amount: BigInt(solToWithdraw.toString()),
     };
 
-    const accounts= {
+    const accounts = {
       adminAuthority: owner,
       topupVault,
       system: SYSTEM_PROGRAM_ADDRESS,
     };
 
-    const withdrawIxn = getWithdrawFromTopupInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    const withdrawIxn = getWithdrawFromTopupInstruction(
+      { ...args, ...accounts },
+      { programAddress: this.getProgramID() }
+    );
     return withdrawIxn;
   };
 
@@ -4101,18 +4100,18 @@ export class Kamino {
     const expectedALamports = expectedALamportsDecimal.floor();
     const expectedBLamports = expectedBLamportsDecimal.floor();
 
-    const args= {
+    const args = {
       tokenAAtaBalance: BigInt(expectedALamports.toString()),
       tokenBAtaBalance: BigInt(expectedBLamports.toString()),
     };
 
-    const accounts= {
+    const accounts = {
       user,
       tokenAAta,
       tokenBAta,
     };
 
-    return getCheckExpectedVaultsBalancesInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    return getCheckExpectedVaultsBalancesInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
   };
 
   /**
@@ -4175,13 +4174,13 @@ export class Kamino {
 
     const programAddresses = await this.getStrategyProgramAddresses(strategy, tokenAMint, tokenBMint);
 
-    const strategyArgs= {
+    const strategyArgs = {
       tokenACollateralId: BigInt(tokenACollateralId),
       tokenBCollateralId: BigInt(tokenBCollateralId),
       strategyType: BigInt(dexToNumber(dex)),
     };
 
-    const strategyAccounts= {
+    const strategyAccounts = {
       adminAuthority: owner,
       strategy,
       globalConfig: this._globalConfig,
@@ -4201,11 +4200,13 @@ export class Kamino {
       tokenBTokenProgram,
     };
 
-    let ix = getInitializeStrategyInstruction({...strategyArgs, ...strategyAccounts}, { programAddress: this.getProgramID() });
+    let ix = getInitializeStrategyInstruction(
+      { ...strategyArgs, ...strategyAccounts },
+      { programAddress: this.getProgramID() }
+    );
     ix = {
       ...ix,
       accounts: ix.accounts?.concat([
-
         { address: config.scopePriceId, role: AccountRole.READONLY },
         { address: config.scopeProgramId, role: AccountRole.READONLY },
       ]) as any,
@@ -4345,7 +4346,7 @@ export class Kamino {
       userReward2Ata = await getAssociatedTokenAddress(rewardMints[5], admin.address, rewardTokenPrograms[5]);
     }
 
-    const strategyAccounts= {
+    const strategyAccounts = {
       adminAuthority: admin,
       strategy: strategyPubkey,
       oldPositionOrBaseVaultAuthority,
@@ -4381,13 +4382,12 @@ export class Kamino {
       tokenBMint: strategyState.tokenBMint,
     };
 
-    let ix = getCloseStrategyInstruction({...strategyAccounts}, { programAddress: this.getProgramID() });
+    let ix = getCloseStrategyInstruction({ ...strategyAccounts }, { programAddress: this.getProgramID() });
 
     for (let i = 0; i < 6; i++) {
       ix = {
         ...ix,
         accounts: ix.accounts?.concat([
-
           { address: rewardMints[i], role: AccountRole.READONLY },
           { address: rewardTokenPrograms[i], role: AccountRole.READONLY },
         ]) as any,
@@ -4549,7 +4549,7 @@ export class Kamino {
       rewardMint2 = this.getProgramID();
     }
 
-    const accounts= {
+    const accounts = {
       user: owner || strategyState.adminAuthority,
       strategy: strategyPubkey,
       globalConfig: strategyState.globalConfig,
@@ -4585,7 +4585,7 @@ export class Kamino {
       tokenProgram2022: TOKEN_2022_PROGRAM_ADDRESS,
     };
 
-    let ix = getCollectFeesAndRewardsInstruction({...accounts}, { programAddress: this.getProgramID() });
+    let ix = getCollectFeesAndRewardsInstruction({ ...accounts }, { programAddress: this.getProgramID() });
     const pairs: [number, Address][] = [
       [Number(strategyState.reward0Decimals), rewardMint0],
       [Number(strategyState.reward1Decimals), rewardMint1],
@@ -4597,7 +4597,6 @@ export class Kamino {
         ix = {
           ...ix,
           accounts: ix.accounts?.concat([
-
             { address: mint, role: AccountRole.READONLY },
             { address: tokenProgram, role: AccountRole.READONLY },
           ]) as any,
@@ -4613,8 +4612,7 @@ export class Kamino {
 
       ix = {
         ...ix,
-        accounts: ix.accounts?.concat([
-{ address: poolTickArrayBitmap, role: AccountRole.READONLY }]) as any,
+        accounts: ix.accounts?.concat([{ address: poolTickArrayBitmap, role: AccountRole.READONLY }]) as any,
       };
     }
     return ix;
@@ -4731,8 +4729,8 @@ export class Kamino {
     pool?: LbPair | null,
     position?: PositionV2 | null
   ): Promise<MeteoraPosition> => {
-    pool = pool ?? (unwrapAccount(await fetchMaybeLbPair(this._rpc, poolPk)));
-    position = position ?? (unwrapAccount(await fetchMaybePositionV2(this._rpc, positionPk)));
+    pool = pool ?? unwrapAccount(await fetchMaybeLbPair(this._rpc, poolPk));
+    position = position ?? unwrapAccount(await fetchMaybePositionV2(this._rpc, positionPk));
     if (!pool || !position) {
       return {
         Address: positionPk,
@@ -4960,7 +4958,7 @@ export class Kamino {
 
     const positionTokenAccount = await getAssociatedTokenAddress(positionMint.address, baseVaultAuthority);
 
-    const args= {
+    const args = {
       tickLowerIndex: BigInt(tickLowerIndex),
       tickUpperIndex: BigInt(tickUpperIndex),
       bump: positionBump,
@@ -4978,7 +4976,7 @@ export class Kamino {
       throw Error(`Could not fetch global config with pubkey ${this._globalConfig.toString()}`);
     }
 
-    const accounts= {
+    const accounts = {
       adminAuthority: adminAuthority,
       strategy,
       pool: pool,
@@ -5018,7 +5016,7 @@ export class Kamino {
       memoProgram: MEMO_PROGRAM_ID,
     };
 
-    const ix = getOpenLiquidityPositionInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    const ix = getOpenLiquidityPositionInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
 
     const accs = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === positionMint.address);
@@ -5099,7 +5097,7 @@ export class Kamino {
 
     const positionTokenAccount = await getAssociatedTokenAddress(positionMint.address, baseVaultAuthority);
 
-    const args= {
+    const args = {
       tickLowerIndex: BigInt(tickLowerIndex),
       tickUpperIndex: BigInt(tickUpperIndex),
       bump: positionBump,
@@ -5112,7 +5110,7 @@ export class Kamino {
     if (!globalConfig) {
       throw Error(`Could not fetch global config with pubkey ${this._globalConfig.toString()}`);
     }
-    const accounts= {
+    const accounts = {
       adminAuthority: adminAuthority,
       strategy,
       pool: pool,
@@ -5156,12 +5154,11 @@ export class Kamino {
       programAddress: this._raydiumService.getRaydiumProgramId(),
     });
 
-    let ix = getOpenLiquidityPositionInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    let ix = getOpenLiquidityPositionInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
 
     ix = {
       ...ix,
       accounts: ix.accounts?.concat([
-
         { address: protocolPosition, role: AccountRole.WRITABLE },
         { address: oldProtocolPositionOrBaseVaultAuthority, role: AccountRole.WRITABLE },
         { address: METADATA_PROGRAM_ID, role: AccountRole.READONLY },
@@ -5172,7 +5169,6 @@ export class Kamino {
       ix = {
         ...ix,
         accounts: ix.accounts?.concat([
-
           { address: poolState.rewardInfos[0].tokenVault, role: AccountRole.WRITABLE },
           { address: strategyRewardOVault, role: AccountRole.WRITABLE },
           { address: poolState.rewardInfos[0].tokenMint, role: AccountRole.READONLY },
@@ -5183,7 +5179,6 @@ export class Kamino {
       ix = {
         ...ix,
         accounts: ix.accounts?.concat([
-
           { address: poolState.rewardInfos[1].tokenVault, role: AccountRole.WRITABLE },
           { address: strategyReward1Vault, role: AccountRole.WRITABLE },
           { address: poolState.rewardInfos[1].tokenMint, role: AccountRole.READONLY },
@@ -5194,7 +5189,6 @@ export class Kamino {
       ix = {
         ...ix,
         accounts: ix.accounts?.concat([
-
           { address: poolState.rewardInfos[2].tokenVault, role: AccountRole.WRITABLE },
           { address: strategyReward2Vault, role: AccountRole.WRITABLE },
           { address: poolState.rewardInfos[2].tokenMint, role: AccountRole.READONLY },
@@ -5268,7 +5262,7 @@ export class Kamino {
 
     const positionTokenAccount = await getAssociatedTokenAddress(position.address, baseVaultAuthority);
 
-    const args= {
+    const args = {
       tickLowerIndex: BigInt(tickLowerIndex),
       tickUpperIndex: BigInt(tickUpperIndex),
       bump: positionBump,
@@ -5282,7 +5276,7 @@ export class Kamino {
       throw Error(`Could not fetch global config with pubkey ${this._globalConfig.toString()}`);
     }
 
-    const accounts= {
+    const accounts = {
       adminAuthority: adminAuthority,
       strategy,
       pool: pool,
@@ -5322,7 +5316,7 @@ export class Kamino {
       memoProgram: MEMO_PROGRAM_ID,
     };
 
-    const ix = getOpenLiquidityPositionInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    const ix = getOpenLiquidityPositionInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
 
     const accs = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === position.address);
@@ -5358,13 +5352,13 @@ export class Kamino {
     if (globalConfig === null) {
       throw new Error(`Unable to fetch GlobalConfig with Pubkey ${strategyState.globalConfig}`);
     }
-    const args= {
+    const args = {
       action: action,
     };
 
     const programId = this.getDexProgramId(strategyState);
 
-    const accounts= {
+    const accounts = {
       adminAuthority: admin,
       strategy: strategyPubkey,
       globalConfig: strategyState.globalConfig,
@@ -5392,7 +5386,10 @@ export class Kamino {
       tokenProgram2022: TOKEN_2022_PROGRAM_ADDRESS,
     };
 
-    let executiveWithdrawIx = getExecutiveWithdrawInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    let executiveWithdrawIx = getExecutiveWithdrawInstruction(
+      { ...args, ...accounts },
+      { programAddress: this.getProgramID() }
+    );
 
     //  for Raydium strats we need to collect fees and rewards before withdrawal
     //  add rewards vaults accounts to withdraw
@@ -5407,7 +5404,6 @@ export class Kamino {
         executiveWithdrawIx = {
           ...executiveWithdrawIx,
           accounts: executiveWithdrawIx.accounts?.concat([
-
             { address: poolState.rewardInfos[0].tokenVault, role: AccountRole.WRITABLE },
             { address: strategyState.reward0Vault, role: AccountRole.WRITABLE },
           ]) as any,
@@ -5417,7 +5413,6 @@ export class Kamino {
         executiveWithdrawIx = {
           ...executiveWithdrawIx,
           accounts: executiveWithdrawIx.accounts?.concat([
-
             { address: poolState.rewardInfos[1].tokenVault, role: AccountRole.WRITABLE },
             { address: strategyState.reward1Vault, role: AccountRole.WRITABLE },
           ]) as any,
@@ -5427,7 +5422,6 @@ export class Kamino {
         executiveWithdrawIx = {
           ...executiveWithdrawIx,
           accounts: executiveWithdrawIx.accounts?.concat([
-
             { address: poolState.rewardInfos[2].tokenVault, role: AccountRole.WRITABLE },
             { address: strategyState.reward2Vault, role: AccountRole.WRITABLE },
           ]) as any,
@@ -5481,7 +5475,7 @@ export class Kamino {
     const programId = this.getDexProgramId(strategyState);
     const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
 
-    const accounts= {
+    const accounts = {
       position: strategyState.position,
       positionTokenAccount: strategyState.positionTokenAccount,
       pool: strategyState.pool,
@@ -5510,7 +5504,7 @@ export class Kamino {
       tokenProgram2022: TOKEN_2022_PROGRAM_ADDRESS,
     };
 
-    return getInvestInstruction({...accounts}, { programAddress: this.getProgramID() });
+    return getInvestInstruction({ ...accounts }, { programAddress: this.getProgramID() });
   };
 
   /**
@@ -5681,19 +5675,19 @@ export class Kamino {
     );
 
     const value = buildStrategyRebalanceParams(processedRebalanceParams, rebalanceType, tokenADecimals, tokenBDecimals);
-    const args= {
+    const args = {
       mode: StrategyConfigOption.UpdateRebalanceParams as number,
       value: new Uint8Array(value),
     };
 
-    const accounts= {
+    const accounts = {
       adminAuthority: strategyAdmin,
       newAccount: DEFAULT_PUBLIC_KEY, // not used
       globalConfig: this._globalConfig,
       strategy: strategyAddress,
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
     };
-    return getUpdateStrategyConfigInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    return getUpdateStrategyConfigInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
   };
 
   getUpdateRebalancingParamsForUninitializedStratIx = async (
@@ -5705,19 +5699,19 @@ export class Kamino {
     tokenBDecimals: number
   ): Promise<Instruction> => {
     const value = buildStrategyRebalanceParams(rebalanceParams, rebalanceType, tokenADecimals, tokenBDecimals);
-    const args= {
+    const args = {
       mode: StrategyConfigOption.UpdateRebalanceParams as number,
       value: new Uint8Array(value),
     };
 
-    const accounts= {
+    const accounts = {
       adminAuthority: strategyAdmin,
       newAccount: DEFAULT_PUBLIC_KEY, // not used
       globalConfig: this._globalConfig,
       strategy,
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
     };
-    return getUpdateStrategyConfigInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    return getUpdateStrategyConfigInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
   };
 
   buildStrategyRebalanceParams = async (strategy: Address | StrategyWithAddress): Promise<number[]> => {
@@ -6782,7 +6776,14 @@ export class Kamino {
     }
 
     ixs.push(
-      await this.openPosition(admin, strategyWithAddress, newPosition, priceLower, priceUpper, StrategyStatus.Rebalancing)
+      await this.openPosition(
+        admin,
+        strategyWithAddress,
+        newPosition,
+        priceLower,
+        priceUpper,
+        StrategyStatus.Rebalancing
+      )
     );
 
     return ixs;
@@ -7636,18 +7637,18 @@ export class Kamino {
   async getUserTermsSignatureIx(owner: TransactionSigner, signature: Uint8Array): Promise<Instruction> {
     const pdaSeed = [Buffer.from('signature'), addressEncoder.encode(owner.address)];
     const [signatureStateKey] = await getProgramDerivedAddress({ seeds: pdaSeed, programAddress: this.getProgramID() });
-    const args= {
+    const args = {
       signature: signature,
     };
 
-    const accounts= {
+    const accounts = {
       owner: owner,
       ownerSignatureState: signatureStateKey,
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
       rent: SYSVAR_RENT_ADDRESS,
     };
 
-    return getSignTermsInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+    return getSignTermsInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
   }
 
   private async getDepositRatioFromAOrca(
@@ -7960,13 +7961,13 @@ export class Kamino {
           }
 
           const rewardVault = await generateKeyPairSigner();
-          const args= {
+          const args = {
             rewardIndex: i,
             collateralToken: collateralId,
           };
 
           const tokenProgram = await this.getAccountOwner(whirlpool.rewardInfos[i].mint);
-          const accounts= {
+          const accounts = {
             payer: strategyOwner,
             globalConfig: strategyState.globalConfig,
             strategy: strategyWithAddress.address,
@@ -7980,7 +7981,10 @@ export class Kamino {
             tokenInfos: globalConfig.tokenInfos,
           };
 
-          const ix = getUpdateRewardMappingInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+          const ix = getUpdateRewardMappingInstruction(
+            { ...args, ...accounts },
+            { programAddress: this.getProgramID() }
+          );
           result.push([ix, rewardVault]);
         }
       }
@@ -7998,13 +8002,13 @@ export class Kamino {
           }
 
           const rewardVault = await generateKeyPairSigner();
-          const args= {
+          const args = {
             rewardIndex: i,
             collateralToken: collateralId,
           };
 
           const tokenProgram = await this.getAccountOwner(poolState.rewardInfos[i].tokenMint);
-          const accounts= {
+          const accounts = {
             payer: strategyOwner,
             globalConfig: strategyState.globalConfig,
             strategy: strategyWithAddress.address,
@@ -8018,7 +8022,10 @@ export class Kamino {
             tokenInfos: globalConfig.tokenInfos,
           };
 
-          const ix = getUpdateRewardMappingInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+          const ix = getUpdateRewardMappingInstruction(
+            { ...args, ...accounts },
+            { programAddress: this.getProgramID() }
+          );
           result.push([ix, rewardVault]);
         }
       }
@@ -8036,13 +8043,13 @@ export class Kamino {
           }
 
           const rewardVault = await generateKeyPairSigner();
-          const args= {
+          const args = {
             rewardIndex: i,
             collateralToken: collateralId,
           };
 
           const tokenProgram = await this.getAccountOwner(poolState.rewardInfos[i].mint);
-          const accounts= {
+          const accounts = {
             payer: strategyOwner,
             globalConfig: strategyState.globalConfig,
             strategy: strategyWithAddress.address,
@@ -8056,7 +8063,10 @@ export class Kamino {
             tokenInfos: globalConfig.tokenInfos,
           };
 
-          const ix = getUpdateRewardMappingInstruction({...args, ...accounts}, { programAddress: this.getProgramID() });
+          const ix = getUpdateRewardMappingInstruction(
+            { ...args, ...accounts },
+            { programAddress: this.getProgramID() }
+          );
           result.push([ix, rewardVault]);
         }
       }
