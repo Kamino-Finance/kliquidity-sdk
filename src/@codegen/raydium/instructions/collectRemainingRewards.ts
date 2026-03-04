@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU8Decoder, getU8Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU8Decoder, getU8Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { AMM_V3_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const COLLECT_REMAINING_REWARDS_DISCRIMINATOR = new Uint8Array([18, 237, 166, 197, 34, 16, 213, 144]);
 
@@ -53,7 +51,7 @@ const programAddress = config?.programAddress ?? AMM_V3_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { rewardFunder: { value: input.rewardFunder ?? null, isWritable: false }, funderTokenAccount: { value: input.funderTokenAccount ?? null, isWritable: true }, poolState: { value: input.poolState ?? null, isWritable: true }, rewardTokenVault: { value: input.rewardTokenVault ?? null, isWritable: false }, rewardVaultMint: { value: input.rewardVaultMint ?? null, isWritable: false }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false }, tokenProgram2022: { value: input.tokenProgram2022 ?? null, isWritable: false }, memoProgram: { value: input.memoProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -66,7 +64,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("rewardFunder", accounts.rewardFunder), getAccountMeta("funderTokenAccount", accounts.funderTokenAccount), getAccountMeta("poolState", accounts.poolState), getAccountMeta("rewardTokenVault", accounts.rewardTokenVault), getAccountMeta("rewardVaultMint", accounts.rewardVaultMint), getAccountMeta("tokenProgram", accounts.tokenProgram), getAccountMeta("tokenProgram2022", accounts.tokenProgram2022), getAccountMeta("memoProgram", accounts.memoProgram)], data: getCollectRemainingRewardsInstructionDataEncoder().encode(args as CollectRemainingRewardsInstructionDataArgs), programAddress } as CollectRemainingRewardsInstruction<TProgramAddress, TAccountRewardFunder, TAccountFunderTokenAccount, TAccountPoolState, TAccountRewardTokenVault, TAccountRewardVaultMint, TAccountTokenProgram, TAccountTokenProgram2022, TAccountMemoProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.rewardFunder), getAccountMeta(accounts.funderTokenAccount), getAccountMeta(accounts.poolState), getAccountMeta(accounts.rewardTokenVault), getAccountMeta(accounts.rewardVaultMint), getAccountMeta(accounts.tokenProgram), getAccountMeta(accounts.tokenProgram2022), getAccountMeta(accounts.memoProgram)], data: getCollectRemainingRewardsInstructionDataEncoder().encode(args as CollectRemainingRewardsInstructionDataArgs), programAddress } as CollectRemainingRewardsInstruction<TProgramAddress, TAccountRewardFunder, TAccountFunderTokenAccount, TAccountPoolState, TAccountRewardTokenVault, TAccountRewardVaultMint, TAccountTokenProgram, TAccountTokenProgram2022, TAccountMemoProgram>);
 }
 
 export type ParsedCollectRemainingRewardsInstruction<TProgram extends string = typeof AMM_V3_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -84,7 +82,8 @@ data: CollectRemainingRewardsInstructionData; };
 
 export function parseCollectRemainingRewardsInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedCollectRemainingRewardsInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 8) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 8 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

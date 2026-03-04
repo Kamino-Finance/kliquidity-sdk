@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU8Decoder, getU8Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU8Decoder, getU8Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const UPDATE_REWARD_MAPPING_DISCRIMINATOR = new Uint8Array([203, 37, 37, 96, 23, 85, 233, 42]);
 
@@ -57,7 +55,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { payer: { value: input.payer ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: false }, pool: { value: input.pool ?? null, isWritable: false }, rewardMint: { value: input.rewardMint ?? null, isWritable: false }, rewardVault: { value: input.rewardVault ?? null, isWritable: true }, baseVaultAuthority: { value: input.baseVaultAuthority ?? null, isWritable: true }, tokenInfos: { value: input.tokenInfos ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -76,7 +74,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("payer", accounts.payer), getAccountMeta("strategy", accounts.strategy), getAccountMeta("globalConfig", accounts.globalConfig), getAccountMeta("pool", accounts.pool), getAccountMeta("rewardMint", accounts.rewardMint), getAccountMeta("rewardVault", accounts.rewardVault), getAccountMeta("baseVaultAuthority", accounts.baseVaultAuthority), getAccountMeta("tokenInfos", accounts.tokenInfos), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent), getAccountMeta("tokenProgram", accounts.tokenProgram)], data: getUpdateRewardMappingInstructionDataEncoder().encode(args as UpdateRewardMappingInstructionDataArgs), programAddress } as UpdateRewardMappingInstruction<TProgramAddress, TAccountPayer, TAccountStrategy, TAccountGlobalConfig, TAccountPool, TAccountRewardMint, TAccountRewardVault, TAccountBaseVaultAuthority, TAccountTokenInfos, TAccountSystemProgram, TAccountRent, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.payer), getAccountMeta(accounts.strategy), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.pool), getAccountMeta(accounts.rewardMint), getAccountMeta(accounts.rewardVault), getAccountMeta(accounts.baseVaultAuthority), getAccountMeta(accounts.tokenInfos), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent), getAccountMeta(accounts.tokenProgram)], data: getUpdateRewardMappingInstructionDataEncoder().encode(args as UpdateRewardMappingInstructionDataArgs), programAddress } as UpdateRewardMappingInstruction<TProgramAddress, TAccountPayer, TAccountStrategy, TAccountGlobalConfig, TAccountPool, TAccountRewardMint, TAccountRewardVault, TAccountBaseVaultAuthority, TAccountTokenInfos, TAccountSystemProgram, TAccountRent, TAccountTokenProgram>);
 }
 
 export type ParsedUpdateRewardMappingInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -97,7 +95,8 @@ data: UpdateRewardMappingInstructionData; };
 
 export function parseUpdateRewardMappingInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedUpdateRewardMappingInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 11) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 11 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

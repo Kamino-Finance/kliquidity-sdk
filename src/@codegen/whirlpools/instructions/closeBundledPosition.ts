@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const CLOSE_BUNDLED_POSITION_DISCRIMINATOR = new Uint8Array([41, 36, 216, 245, 27, 85, 103, 67]);
 
@@ -50,7 +48,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { bundledPosition: { value: input.bundledPosition ?? null, isWritable: true }, positionBundle: { value: input.positionBundle ?? null, isWritable: true }, positionBundleTokenAccount: { value: input.positionBundleTokenAccount ?? null, isWritable: false }, positionBundleAuthority: { value: input.positionBundleAuthority ?? null, isWritable: false }, receiver: { value: input.receiver ?? null, isWritable: true } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -60,7 +58,7 @@ const args = { ...input,  };
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("bundledPosition", accounts.bundledPosition), getAccountMeta("positionBundle", accounts.positionBundle), getAccountMeta("positionBundleTokenAccount", accounts.positionBundleTokenAccount), getAccountMeta("positionBundleAuthority", accounts.positionBundleAuthority), getAccountMeta("receiver", accounts.receiver)], data: getCloseBundledPositionInstructionDataEncoder().encode(args as CloseBundledPositionInstructionDataArgs), programAddress } as CloseBundledPositionInstruction<TProgramAddress, TAccountBundledPosition, TAccountPositionBundle, TAccountPositionBundleTokenAccount, TAccountPositionBundleAuthority, TAccountReceiver>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.bundledPosition), getAccountMeta(accounts.positionBundle), getAccountMeta(accounts.positionBundleTokenAccount), getAccountMeta(accounts.positionBundleAuthority), getAccountMeta(accounts.receiver)], data: getCloseBundledPositionInstructionDataEncoder().encode(args as CloseBundledPositionInstructionDataArgs), programAddress } as CloseBundledPositionInstruction<TProgramAddress, TAccountBundledPosition, TAccountPositionBundle, TAccountPositionBundleTokenAccount, TAccountPositionBundleAuthority, TAccountReceiver>);
 }
 
 export type ParsedCloseBundledPositionInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -75,7 +73,8 @@ data: CloseBundledPositionInstructionData; };
 
 export function parseCloseBundledPositionInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedCloseBundledPositionInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 5) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 5 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

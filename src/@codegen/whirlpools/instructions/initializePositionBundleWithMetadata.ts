@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INITIALIZE_POSITION_BUNDLE_WITH_METADATA_DISCRIMINATOR = new Uint8Array([93, 124, 16, 179, 249, 131, 115, 245]);
 
@@ -56,7 +54,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { positionBundle: { value: input.positionBundle ?? null, isWritable: true }, positionBundleMint: { value: input.positionBundleMint ?? null, isWritable: true }, positionBundleMetadata: { value: input.positionBundleMetadata ?? null, isWritable: true }, positionBundleTokenAccount: { value: input.positionBundleTokenAccount ?? null, isWritable: true }, positionBundleOwner: { value: input.positionBundleOwner ?? null, isWritable: false }, funder: { value: input.funder ?? null, isWritable: true }, metadataUpdateAuth: { value: input.metadataUpdateAuth ?? null, isWritable: false }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false }, associatedTokenProgram: { value: input.associatedTokenProgram ?? null, isWritable: false }, metadataProgram: { value: input.metadataProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -71,7 +69,7 @@ accounts.rent.value = 'SysvarRent111111111111111111111111111111111' as Address<'
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("positionBundle", accounts.positionBundle), getAccountMeta("positionBundleMint", accounts.positionBundleMint), getAccountMeta("positionBundleMetadata", accounts.positionBundleMetadata), getAccountMeta("positionBundleTokenAccount", accounts.positionBundleTokenAccount), getAccountMeta("positionBundleOwner", accounts.positionBundleOwner), getAccountMeta("funder", accounts.funder), getAccountMeta("metadataUpdateAuth", accounts.metadataUpdateAuth), getAccountMeta("tokenProgram", accounts.tokenProgram), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent), getAccountMeta("associatedTokenProgram", accounts.associatedTokenProgram), getAccountMeta("metadataProgram", accounts.metadataProgram)], data: getInitializePositionBundleWithMetadataInstructionDataEncoder().encode({}), programAddress } as InitializePositionBundleWithMetadataInstruction<TProgramAddress, TAccountPositionBundle, TAccountPositionBundleMint, TAccountPositionBundleMetadata, TAccountPositionBundleTokenAccount, TAccountPositionBundleOwner, TAccountFunder, TAccountMetadataUpdateAuth, TAccountTokenProgram, TAccountSystemProgram, TAccountRent, TAccountAssociatedTokenProgram, TAccountMetadataProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.positionBundle), getAccountMeta(accounts.positionBundleMint), getAccountMeta(accounts.positionBundleMetadata), getAccountMeta(accounts.positionBundleTokenAccount), getAccountMeta(accounts.positionBundleOwner), getAccountMeta(accounts.funder), getAccountMeta(accounts.metadataUpdateAuth), getAccountMeta(accounts.tokenProgram), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent), getAccountMeta(accounts.associatedTokenProgram), getAccountMeta(accounts.metadataProgram)], data: getInitializePositionBundleWithMetadataInstructionDataEncoder().encode({}), programAddress } as InitializePositionBundleWithMetadataInstruction<TProgramAddress, TAccountPositionBundle, TAccountPositionBundleMint, TAccountPositionBundleMetadata, TAccountPositionBundleTokenAccount, TAccountPositionBundleOwner, TAccountFunder, TAccountMetadataUpdateAuth, TAccountTokenProgram, TAccountSystemProgram, TAccountRent, TAccountAssociatedTokenProgram, TAccountMetadataProgram>);
 }
 
 export type ParsedInitializePositionBundleWithMetadataInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -93,7 +91,8 @@ data: InitializePositionBundleWithMetadataInstructionData; };
 
 export function parseInitializePositionBundleWithMetadataInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedInitializePositionBundleWithMetadataInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 12) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 12 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

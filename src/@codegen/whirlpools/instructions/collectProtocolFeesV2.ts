@@ -6,12 +6,10 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getOptionDecoder, getOptionEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type Codec, type Decoder, type Encoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type Option, type OptionOrNullable, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getOptionDecoder, getOptionEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type Codec, type Decoder, type Encoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type Option, type OptionOrNullable, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 import { getRemainingAccountsInfoDecoder, getRemainingAccountsInfoEncoder, type RemainingAccountsInfo, type RemainingAccountsInfoArgs } from '../types';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
 
 export const COLLECT_PROTOCOL_FEES_V2_DISCRIMINATOR = new Uint8Array([103, 128, 222, 134, 114, 200, 22, 200]);
 
@@ -58,7 +56,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { whirlpoolsConfig: { value: input.whirlpoolsConfig ?? null, isWritable: false }, whirlpool: { value: input.whirlpool ?? null, isWritable: true }, collectProtocolFeesAuthority: { value: input.collectProtocolFeesAuthority ?? null, isWritable: false }, tokenMintA: { value: input.tokenMintA ?? null, isWritable: false }, tokenMintB: { value: input.tokenMintB ?? null, isWritable: false }, tokenVaultA: { value: input.tokenVaultA ?? null, isWritable: true }, tokenVaultB: { value: input.tokenVaultB ?? null, isWritable: true }, tokenDestinationA: { value: input.tokenDestinationA ?? null, isWritable: true }, tokenDestinationB: { value: input.tokenDestinationB ?? null, isWritable: true }, tokenProgramA: { value: input.tokenProgramA ?? null, isWritable: false }, tokenProgramB: { value: input.tokenProgramB ?? null, isWritable: false }, memoProgram: { value: input.memoProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -68,7 +66,7 @@ const args = { ...input,  };
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("whirlpoolsConfig", accounts.whirlpoolsConfig), getAccountMeta("whirlpool", accounts.whirlpool), getAccountMeta("collectProtocolFeesAuthority", accounts.collectProtocolFeesAuthority), getAccountMeta("tokenMintA", accounts.tokenMintA), getAccountMeta("tokenMintB", accounts.tokenMintB), getAccountMeta("tokenVaultA", accounts.tokenVaultA), getAccountMeta("tokenVaultB", accounts.tokenVaultB), getAccountMeta("tokenDestinationA", accounts.tokenDestinationA), getAccountMeta("tokenDestinationB", accounts.tokenDestinationB), getAccountMeta("tokenProgramA", accounts.tokenProgramA), getAccountMeta("tokenProgramB", accounts.tokenProgramB), getAccountMeta("memoProgram", accounts.memoProgram)], data: getCollectProtocolFeesV2InstructionDataEncoder().encode(args as CollectProtocolFeesV2InstructionDataArgs), programAddress } as CollectProtocolFeesV2Instruction<TProgramAddress, TAccountWhirlpoolsConfig, TAccountWhirlpool, TAccountCollectProtocolFeesAuthority, TAccountTokenMintA, TAccountTokenMintB, TAccountTokenVaultA, TAccountTokenVaultB, TAccountTokenDestinationA, TAccountTokenDestinationB, TAccountTokenProgramA, TAccountTokenProgramB, TAccountMemoProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.whirlpoolsConfig), getAccountMeta(accounts.whirlpool), getAccountMeta(accounts.collectProtocolFeesAuthority), getAccountMeta(accounts.tokenMintA), getAccountMeta(accounts.tokenMintB), getAccountMeta(accounts.tokenVaultA), getAccountMeta(accounts.tokenVaultB), getAccountMeta(accounts.tokenDestinationA), getAccountMeta(accounts.tokenDestinationB), getAccountMeta(accounts.tokenProgramA), getAccountMeta(accounts.tokenProgramB), getAccountMeta(accounts.memoProgram)], data: getCollectProtocolFeesV2InstructionDataEncoder().encode(args as CollectProtocolFeesV2InstructionDataArgs), programAddress } as CollectProtocolFeesV2Instruction<TProgramAddress, TAccountWhirlpoolsConfig, TAccountWhirlpool, TAccountCollectProtocolFeesAuthority, TAccountTokenMintA, TAccountTokenMintB, TAccountTokenVaultA, TAccountTokenVaultB, TAccountTokenDestinationA, TAccountTokenDestinationB, TAccountTokenProgramA, TAccountTokenProgramB, TAccountMemoProgram>);
 }
 
 export type ParsedCollectProtocolFeesV2Instruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -90,7 +88,8 @@ data: CollectProtocolFeesV2InstructionData; };
 
 export function parseCollectProtocolFeesV2Instruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedCollectProtocolFeesV2Instruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 12) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 12 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

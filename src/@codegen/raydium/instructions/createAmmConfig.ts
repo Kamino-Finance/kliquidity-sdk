@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, getU32Decoder, getU32Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, getU32Decoder, getU32Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { AMM_V3_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const CREATE_AMM_CONFIG_DISCRIMINATOR = new Uint8Array([137, 52, 237, 212, 215, 117, 108, 104]);
 
@@ -52,7 +50,7 @@ const programAddress = config?.programAddress ?? AMM_V3_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { owner: { value: input.owner ?? null, isWritable: true }, ammConfig: { value: input.ammConfig ?? null, isWritable: true }, systemProgram: { value: input.systemProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -65,7 +63,7 @@ accounts.systemProgram.value = '11111111111111111111111111111111' as Address<'11
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("owner", accounts.owner), getAccountMeta("ammConfig", accounts.ammConfig), getAccountMeta("systemProgram", accounts.systemProgram)], data: getCreateAmmConfigInstructionDataEncoder().encode(args as CreateAmmConfigInstructionDataArgs), programAddress } as CreateAmmConfigInstruction<TProgramAddress, TAccountOwner, TAccountAmmConfig, TAccountSystemProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.owner), getAccountMeta(accounts.ammConfig), getAccountMeta(accounts.systemProgram)], data: getCreateAmmConfigInstructionDataEncoder().encode(args as CreateAmmConfigInstructionDataArgs), programAddress } as CreateAmmConfigInstruction<TProgramAddress, TAccountOwner, TAccountAmmConfig, TAccountSystemProgram>);
 }
 
 export type ParsedCreateAmmConfigInstruction<TProgram extends string = typeof AMM_V3_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -78,7 +76,8 @@ data: CreateAmmConfigInstructionData; };
 
 export function parseCreateAmmConfigInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedCreateAmmConfigInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 3 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBooleanDecoder, getBooleanEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBooleanDecoder, getBooleanEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const ORCA_SWAP_DISCRIMINATOR = new Uint8Array([33, 94, 249, 97, 250, 254, 198, 93]);
 
@@ -66,7 +64,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { funder: { value: input.funder ?? null, isWritable: true }, tokenATokenProgram: { value: input.tokenATokenProgram ?? null, isWritable: false }, tokenBTokenProgram: { value: input.tokenBTokenProgram ?? null, isWritable: false }, memoProgram: { value: input.memoProgram ?? null, isWritable: false }, tokenAuthority: { value: input.tokenAuthority ?? null, isWritable: false }, whirlpool: { value: input.whirlpool ?? null, isWritable: false }, tokenOwnerAccountA: { value: input.tokenOwnerAccountA ?? null, isWritable: false }, tokenVaultA: { value: input.tokenVaultA ?? null, isWritable: false }, tokenOwnerAccountB: { value: input.tokenOwnerAccountB ?? null, isWritable: false }, tokenVaultB: { value: input.tokenVaultB ?? null, isWritable: false }, tokenMintA: { value: input.tokenMintA ?? null, isWritable: false }, tokenMintB: { value: input.tokenMintB ?? null, isWritable: false }, tickArray0: { value: input.tickArray0 ?? null, isWritable: false }, tickArray1: { value: input.tickArray1 ?? null, isWritable: false }, tickArray2: { value: input.tickArray2 ?? null, isWritable: false }, oracle: { value: input.oracle ?? null, isWritable: false }, whirlpoolProgram: { value: input.whirlpoolProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -76,7 +74,7 @@ const args = { ...input,  };
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("funder", accounts.funder), getAccountMeta("tokenATokenProgram", accounts.tokenATokenProgram), getAccountMeta("tokenBTokenProgram", accounts.tokenBTokenProgram), getAccountMeta("memoProgram", accounts.memoProgram), getAccountMeta("tokenAuthority", accounts.tokenAuthority), getAccountMeta("whirlpool", accounts.whirlpool), getAccountMeta("tokenOwnerAccountA", accounts.tokenOwnerAccountA), getAccountMeta("tokenVaultA", accounts.tokenVaultA), getAccountMeta("tokenOwnerAccountB", accounts.tokenOwnerAccountB), getAccountMeta("tokenVaultB", accounts.tokenVaultB), getAccountMeta("tokenMintA", accounts.tokenMintA), getAccountMeta("tokenMintB", accounts.tokenMintB), getAccountMeta("tickArray0", accounts.tickArray0), getAccountMeta("tickArray1", accounts.tickArray1), getAccountMeta("tickArray2", accounts.tickArray2), getAccountMeta("oracle", accounts.oracle), getAccountMeta("whirlpoolProgram", accounts.whirlpoolProgram)], data: getOrcaSwapInstructionDataEncoder().encode(args as OrcaSwapInstructionDataArgs), programAddress } as OrcaSwapInstruction<TProgramAddress, TAccountFunder, TAccountTokenATokenProgram, TAccountTokenBTokenProgram, TAccountMemoProgram, TAccountTokenAuthority, TAccountWhirlpool, TAccountTokenOwnerAccountA, TAccountTokenVaultA, TAccountTokenOwnerAccountB, TAccountTokenVaultB, TAccountTokenMintA, TAccountTokenMintB, TAccountTickArray0, TAccountTickArray1, TAccountTickArray2, TAccountOracle, TAccountWhirlpoolProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.funder), getAccountMeta(accounts.tokenATokenProgram), getAccountMeta(accounts.tokenBTokenProgram), getAccountMeta(accounts.memoProgram), getAccountMeta(accounts.tokenAuthority), getAccountMeta(accounts.whirlpool), getAccountMeta(accounts.tokenOwnerAccountA), getAccountMeta(accounts.tokenVaultA), getAccountMeta(accounts.tokenOwnerAccountB), getAccountMeta(accounts.tokenVaultB), getAccountMeta(accounts.tokenMintA), getAccountMeta(accounts.tokenMintB), getAccountMeta(accounts.tickArray0), getAccountMeta(accounts.tickArray1), getAccountMeta(accounts.tickArray2), getAccountMeta(accounts.oracle), getAccountMeta(accounts.whirlpoolProgram)], data: getOrcaSwapInstructionDataEncoder().encode(args as OrcaSwapInstructionDataArgs), programAddress } as OrcaSwapInstruction<TProgramAddress, TAccountFunder, TAccountTokenATokenProgram, TAccountTokenBTokenProgram, TAccountMemoProgram, TAccountTokenAuthority, TAccountWhirlpool, TAccountTokenOwnerAccountA, TAccountTokenVaultA, TAccountTokenOwnerAccountB, TAccountTokenVaultB, TAccountTokenMintA, TAccountTokenMintB, TAccountTickArray0, TAccountTickArray1, TAccountTickArray2, TAccountOracle, TAccountWhirlpoolProgram>);
 }
 
 export type ParsedOrcaSwapInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -103,7 +101,8 @@ data: OrcaSwapInstructionData; };
 
 export function parseOrcaSwapInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedOrcaSwapInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 17) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 17 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

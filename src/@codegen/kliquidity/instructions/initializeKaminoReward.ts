@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INITIALIZE_KAMINO_REWARD_DISCRIMINATOR = new Uint8Array([203, 212, 8, 90, 91, 118, 111, 50]);
 
@@ -56,7 +54,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: false }, rewardMint: { value: input.rewardMint ?? null, isWritable: false }, rewardVault: { value: input.rewardVault ?? null, isWritable: true }, tokenInfos: { value: input.tokenInfos ?? null, isWritable: false }, baseVaultAuthority: { value: input.baseVaultAuthority ?? null, isWritable: true }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -75,7 +73,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("adminAuthority", accounts.adminAuthority), getAccountMeta("strategy", accounts.strategy), getAccountMeta("globalConfig", accounts.globalConfig), getAccountMeta("rewardMint", accounts.rewardMint), getAccountMeta("rewardVault", accounts.rewardVault), getAccountMeta("tokenInfos", accounts.tokenInfos), getAccountMeta("baseVaultAuthority", accounts.baseVaultAuthority), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent), getAccountMeta("tokenProgram", accounts.tokenProgram)], data: getInitializeKaminoRewardInstructionDataEncoder().encode(args as InitializeKaminoRewardInstructionDataArgs), programAddress } as InitializeKaminoRewardInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountRewardMint, TAccountRewardVault, TAccountTokenInfos, TAccountBaseVaultAuthority, TAccountSystemProgram, TAccountRent, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.strategy), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.rewardMint), getAccountMeta(accounts.rewardVault), getAccountMeta(accounts.tokenInfos), getAccountMeta(accounts.baseVaultAuthority), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent), getAccountMeta(accounts.tokenProgram)], data: getInitializeKaminoRewardInstructionDataEncoder().encode(args as InitializeKaminoRewardInstructionDataArgs), programAddress } as InitializeKaminoRewardInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountRewardMint, TAccountRewardVault, TAccountTokenInfos, TAccountBaseVaultAuthority, TAccountSystemProgram, TAccountRent, TAccountTokenProgram>);
 }
 
 export type ParsedInitializeKaminoRewardInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -95,7 +93,8 @@ data: InitializeKaminoRewardInstructionData; };
 
 export function parseInitializeKaminoRewardInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedInitializeKaminoRewardInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 10) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 10 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

@@ -61,10 +61,10 @@
     "@codama/nodes" "1.5.1"
     "@codama/visitors-core" "1.5.1"
 
-"@codama/renderers-js@^2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@codama/renderers-js/-/renderers-js-2.0.3.tgz#6c8a4ecf2f92ffe35ab9a2aad12eb2d35cb8987e"
-  integrity sha512-R1Ji1XKcsf/4Ef2OSGJWwWlalAcxMKMkm2OoH2IRuZpOR967dkJM7AG1B4aUQfGPbXEkHDFC7/k/R4u/ZOscig==
+"@codama/renderers-js@1.7.0":
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/@codama/renderers-js/-/renderers-js-1.7.0.tgz#508037700767732d370c535995e0ccb13f3f2010"
+  integrity sha512-WwKkSkNPdUBVWjGmkG+RNXyZ5K/4ji8UZQGzowDNTrqktUrqPsBThOkc7Zpmv+TpCapxrfjj0Txpo+0q5FjKGw==
   dependencies:
     "@codama/errors" "^1.4.4"
     "@codama/nodes" "^1.4.4"

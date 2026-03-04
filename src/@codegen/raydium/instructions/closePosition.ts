@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { AMM_V3_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const CLOSE_POSITION_DISCRIMINATOR = new Uint8Array([123, 134, 81, 0, 49, 68, 98, 98]);
 
@@ -50,7 +48,7 @@ const programAddress = config?.programAddress ?? AMM_V3_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { nftOwner: { value: input.nftOwner ?? null, isWritable: true }, positionNftMint: { value: input.positionNftMint ?? null, isWritable: true }, positionNftAccount: { value: input.positionNftAccount ?? null, isWritable: true }, personalPosition: { value: input.personalPosition ?? null, isWritable: true }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -62,7 +60,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("nftOwner", accounts.nftOwner), getAccountMeta("positionNftMint", accounts.positionNftMint), getAccountMeta("positionNftAccount", accounts.positionNftAccount), getAccountMeta("personalPosition", accounts.personalPosition), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("tokenProgram", accounts.tokenProgram)], data: getClosePositionInstructionDataEncoder().encode({}), programAddress } as ClosePositionInstruction<TProgramAddress, TAccountNftOwner, TAccountPositionNftMint, TAccountPositionNftAccount, TAccountPersonalPosition, TAccountSystemProgram, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.nftOwner), getAccountMeta(accounts.positionNftMint), getAccountMeta(accounts.positionNftAccount), getAccountMeta(accounts.personalPosition), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.tokenProgram)], data: getClosePositionInstructionDataEncoder().encode({}), programAddress } as ClosePositionInstruction<TProgramAddress, TAccountNftOwner, TAccountPositionNftMint, TAccountPositionNftAccount, TAccountPersonalPosition, TAccountSystemProgram, TAccountTokenProgram>);
 }
 
 export type ParsedClosePositionInstruction<TProgram extends string = typeof AMM_V3_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -78,7 +76,8 @@ data: ClosePositionInstructionData; };
 
 export function parseClosePositionInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedClosePositionInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 6) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 6 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

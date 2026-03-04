@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyUint8Array, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyUint8Array, type WritableAccount } from '@solana/kit';
 import { AMM_V3_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const UPDATE_REWARD_INFOS_DISCRIMINATOR = new Uint8Array([163, 172, 224, 52, 11, 154, 106, 223]);
 
@@ -45,13 +43,13 @@ const programAddress = config?.programAddress ?? AMM_V3_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { poolState: { value: input.poolState ?? null, isWritable: true } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("poolState", accounts.poolState)], data: getUpdateRewardInfosInstructionDataEncoder().encode({}), programAddress } as UpdateRewardInfosInstruction<TProgramAddress, TAccountPoolState>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.poolState)], data: getUpdateRewardInfosInstructionDataEncoder().encode({}), programAddress } as UpdateRewardInfosInstruction<TProgramAddress, TAccountPoolState>);
 }
 
 export type ParsedUpdateRewardInfosInstruction<TProgram extends string = typeof AMM_V3_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -62,7 +60,8 @@ data: UpdateRewardInfosInstructionData; };
 
 export function parseUpdateRewardInfosInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedUpdateRewardInfosInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 1) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 1 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

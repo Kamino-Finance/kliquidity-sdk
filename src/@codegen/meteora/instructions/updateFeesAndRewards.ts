@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { LB_CLMM_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const UPDATE_FEES_AND_REWARDS_DISCRIMINATOR = new Uint8Array([154, 230, 250, 13, 236, 209, 75, 223]);
 
@@ -49,13 +47,13 @@ const programAddress = config?.programAddress ?? LB_CLMM_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { position: { value: input.position ?? null, isWritable: true }, lbPair: { value: input.lbPair ?? null, isWritable: true }, binArrayLower: { value: input.binArrayLower ?? null, isWritable: true }, binArrayUpper: { value: input.binArrayUpper ?? null, isWritable: true }, owner: { value: input.owner ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("position", accounts.position), getAccountMeta("lbPair", accounts.lbPair), getAccountMeta("binArrayLower", accounts.binArrayLower), getAccountMeta("binArrayUpper", accounts.binArrayUpper), getAccountMeta("owner", accounts.owner)], data: getUpdateFeesAndRewardsInstructionDataEncoder().encode({}), programAddress } as UpdateFeesAndRewardsInstruction<TProgramAddress, TAccountPosition, TAccountLbPair, TAccountBinArrayLower, TAccountBinArrayUpper, TAccountOwner>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.position), getAccountMeta(accounts.lbPair), getAccountMeta(accounts.binArrayLower), getAccountMeta(accounts.binArrayUpper), getAccountMeta(accounts.owner)], data: getUpdateFeesAndRewardsInstructionDataEncoder().encode({}), programAddress } as UpdateFeesAndRewardsInstruction<TProgramAddress, TAccountPosition, TAccountLbPair, TAccountBinArrayLower, TAccountBinArrayUpper, TAccountOwner>);
 }
 
 export type ParsedUpdateFeesAndRewardsInstruction<TProgram extends string = typeof LB_CLMM_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -70,7 +68,8 @@ data: UpdateFeesAndRewardsInstructionData; };
 
 export function parseUpdateFeesAndRewardsInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedUpdateFeesAndRewardsInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 5) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 5 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

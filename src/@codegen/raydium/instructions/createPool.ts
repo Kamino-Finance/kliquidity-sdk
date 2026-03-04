@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { AMM_V3_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const CREATE_POOL_DISCRIMINATOR = new Uint8Array([233, 146, 209, 142, 207, 104, 64, 188]);
 
@@ -59,7 +57,7 @@ const programAddress = config?.programAddress ?? AMM_V3_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { poolCreator: { value: input.poolCreator ?? null, isWritable: true }, ammConfig: { value: input.ammConfig ?? null, isWritable: false }, poolState: { value: input.poolState ?? null, isWritable: true }, tokenMint0: { value: input.tokenMint0 ?? null, isWritable: false }, tokenMint1: { value: input.tokenMint1 ?? null, isWritable: false }, tokenVault0: { value: input.tokenVault0 ?? null, isWritable: true }, tokenVault1: { value: input.tokenVault1 ?? null, isWritable: true }, observationState: { value: input.observationState ?? null, isWritable: true }, tickArrayBitmap: { value: input.tickArrayBitmap ?? null, isWritable: true }, tokenProgram0: { value: input.tokenProgram0 ?? null, isWritable: false }, tokenProgram1: { value: input.tokenProgram1 ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -75,7 +73,7 @@ accounts.rent.value = 'SysvarRent111111111111111111111111111111111' as Address<'
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("poolCreator", accounts.poolCreator), getAccountMeta("ammConfig", accounts.ammConfig), getAccountMeta("poolState", accounts.poolState), getAccountMeta("tokenMint0", accounts.tokenMint0), getAccountMeta("tokenMint1", accounts.tokenMint1), getAccountMeta("tokenVault0", accounts.tokenVault0), getAccountMeta("tokenVault1", accounts.tokenVault1), getAccountMeta("observationState", accounts.observationState), getAccountMeta("tickArrayBitmap", accounts.tickArrayBitmap), getAccountMeta("tokenProgram0", accounts.tokenProgram0), getAccountMeta("tokenProgram1", accounts.tokenProgram1), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent)], data: getCreatePoolInstructionDataEncoder().encode(args as CreatePoolInstructionDataArgs), programAddress } as CreatePoolInstruction<TProgramAddress, TAccountPoolCreator, TAccountAmmConfig, TAccountPoolState, TAccountTokenMint0, TAccountTokenMint1, TAccountTokenVault0, TAccountTokenVault1, TAccountObservationState, TAccountTickArrayBitmap, TAccountTokenProgram0, TAccountTokenProgram1, TAccountSystemProgram, TAccountRent>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.poolCreator), getAccountMeta(accounts.ammConfig), getAccountMeta(accounts.poolState), getAccountMeta(accounts.tokenMint0), getAccountMeta(accounts.tokenMint1), getAccountMeta(accounts.tokenVault0), getAccountMeta(accounts.tokenVault1), getAccountMeta(accounts.observationState), getAccountMeta(accounts.tickArrayBitmap), getAccountMeta(accounts.tokenProgram0), getAccountMeta(accounts.tokenProgram1), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent)], data: getCreatePoolInstructionDataEncoder().encode(args as CreatePoolInstructionDataArgs), programAddress } as CreatePoolInstruction<TProgramAddress, TAccountPoolCreator, TAccountAmmConfig, TAccountPoolState, TAccountTokenMint0, TAccountTokenMint1, TAccountTokenVault0, TAccountTokenVault1, TAccountObservationState, TAccountTickArrayBitmap, TAccountTokenProgram0, TAccountTokenProgram1, TAccountSystemProgram, TAccountRent>);
 }
 
 export type ParsedCreatePoolInstruction<TProgram extends string = typeof AMM_V3_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -98,7 +96,8 @@ data: CreatePoolInstructionData; };
 
 export function parseCreatePoolInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedCreatePoolInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 13) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 13 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

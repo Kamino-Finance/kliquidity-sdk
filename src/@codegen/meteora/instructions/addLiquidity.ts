@@ -6,12 +6,10 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getArrayDecoder, getArrayEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type Codec, type Decoder, type Encoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getArrayDecoder, getArrayEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type Codec, type Decoder, type Encoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { LB_CLMM_PROGRAM_ADDRESS } from '../programs';
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 import { getBinLiquidityDistributionDecoder, getBinLiquidityDistributionEncoder, type BinLiquidityDistribution, type BinLiquidityDistributionArgs } from '../types';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
 
 export const ADD_LIQUIDITY_DISCRIMINATOR = new Uint8Array([181, 157, 89, 67, 143, 182, 52, 72]);
 
@@ -76,7 +74,7 @@ const programAddress = config?.programAddress ?? LB_CLMM_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { position: { value: input.position ?? null, isWritable: true }, lbPair: { value: input.lbPair ?? null, isWritable: true }, binArrayBitmapExtension: { value: input.binArrayBitmapExtension ?? null, isWritable: true }, userTokenX: { value: input.userTokenX ?? null, isWritable: true }, userTokenY: { value: input.userTokenY ?? null, isWritable: true }, reserveX: { value: input.reserveX ?? null, isWritable: true }, reserveY: { value: input.reserveY ?? null, isWritable: true }, tokenXMint: { value: input.tokenXMint ?? null, isWritable: false }, tokenYMint: { value: input.tokenYMint ?? null, isWritable: false }, binArrayLower: { value: input.binArrayLower ?? null, isWritable: true }, binArrayUpper: { value: input.binArrayUpper ?? null, isWritable: true }, sender: { value: input.sender ?? null, isWritable: false }, tokenXProgram: { value: input.tokenXProgram ?? null, isWritable: false }, tokenYProgram: { value: input.tokenYProgram ?? null, isWritable: false }, eventAuthority: { value: input.eventAuthority ?? null, isWritable: false }, program: { value: input.program ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -86,7 +84,7 @@ const args = { ...input,  };
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("position", accounts.position), getAccountMeta("lbPair", accounts.lbPair), getAccountMeta("binArrayBitmapExtension", accounts.binArrayBitmapExtension), getAccountMeta("userTokenX", accounts.userTokenX), getAccountMeta("userTokenY", accounts.userTokenY), getAccountMeta("reserveX", accounts.reserveX), getAccountMeta("reserveY", accounts.reserveY), getAccountMeta("tokenXMint", accounts.tokenXMint), getAccountMeta("tokenYMint", accounts.tokenYMint), getAccountMeta("binArrayLower", accounts.binArrayLower), getAccountMeta("binArrayUpper", accounts.binArrayUpper), getAccountMeta("sender", accounts.sender), getAccountMeta("tokenXProgram", accounts.tokenXProgram), getAccountMeta("tokenYProgram", accounts.tokenYProgram), getAccountMeta("eventAuthority", accounts.eventAuthority), getAccountMeta("program", accounts.program)], data: getAddLiquidityInstructionDataEncoder().encode(args as AddLiquidityInstructionDataArgs), programAddress } as AddLiquidityInstruction<TProgramAddress, TAccountPosition, TAccountLbPair, TAccountBinArrayBitmapExtension, TAccountUserTokenX, TAccountUserTokenY, TAccountReserveX, TAccountReserveY, TAccountTokenXMint, TAccountTokenYMint, TAccountBinArrayLower, TAccountBinArrayUpper, TAccountSender, TAccountTokenXProgram, TAccountTokenYProgram, TAccountEventAuthority, TAccountProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.position), getAccountMeta(accounts.lbPair), getAccountMeta(accounts.binArrayBitmapExtension), getAccountMeta(accounts.userTokenX), getAccountMeta(accounts.userTokenY), getAccountMeta(accounts.reserveX), getAccountMeta(accounts.reserveY), getAccountMeta(accounts.tokenXMint), getAccountMeta(accounts.tokenYMint), getAccountMeta(accounts.binArrayLower), getAccountMeta(accounts.binArrayUpper), getAccountMeta(accounts.sender), getAccountMeta(accounts.tokenXProgram), getAccountMeta(accounts.tokenYProgram), getAccountMeta(accounts.eventAuthority), getAccountMeta(accounts.program)], data: getAddLiquidityInstructionDataEncoder().encode(args as AddLiquidityInstructionDataArgs), programAddress } as AddLiquidityInstruction<TProgramAddress, TAccountPosition, TAccountLbPair, TAccountBinArrayBitmapExtension, TAccountUserTokenX, TAccountUserTokenY, TAccountReserveX, TAccountReserveY, TAccountTokenXMint, TAccountTokenYMint, TAccountBinArrayLower, TAccountBinArrayUpper, TAccountSender, TAccountTokenXProgram, TAccountTokenYProgram, TAccountEventAuthority, TAccountProgram>);
 }
 
 export type ParsedAddLiquidityInstruction<TProgram extends string = typeof LB_CLMM_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -112,7 +110,8 @@ data: AddLiquidityInstructionData; };
 
 export function parseAddLiquidityInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedAddLiquidityInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 16) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 16 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

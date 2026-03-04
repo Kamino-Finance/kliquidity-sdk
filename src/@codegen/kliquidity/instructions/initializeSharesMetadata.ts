@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { addDecoderSizePrefix, addEncoderSizePrefix, combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU32Decoder, getU32Encoder, getUtf8Decoder, getUtf8Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type Codec, type Decoder, type Encoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { addDecoderSizePrefix, addEncoderSizePrefix, combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU32Decoder, getU32Encoder, getUtf8Decoder, getUtf8Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type Codec, type Decoder, type Encoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INITIALIZE_SHARES_METADATA_DISCRIMINATOR = new Uint8Array([3, 15, 172, 114, 200, 0, 131, 32]);
 
@@ -56,7 +54,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: false }, globalConfig: { value: input.globalConfig ?? null, isWritable: false }, sharesMint: { value: input.sharesMint ?? null, isWritable: false }, sharesMetadata: { value: input.sharesMetadata ?? null, isWritable: true }, sharesMintAuthority: { value: input.sharesMintAuthority ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false }, metadataProgram: { value: input.metadataProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -72,7 +70,7 @@ accounts.rent.value = 'SysvarRent111111111111111111111111111111111' as Address<'
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("adminAuthority", accounts.adminAuthority), getAccountMeta("strategy", accounts.strategy), getAccountMeta("globalConfig", accounts.globalConfig), getAccountMeta("sharesMint", accounts.sharesMint), getAccountMeta("sharesMetadata", accounts.sharesMetadata), getAccountMeta("sharesMintAuthority", accounts.sharesMintAuthority), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent), getAccountMeta("metadataProgram", accounts.metadataProgram)], data: getInitializeSharesMetadataInstructionDataEncoder().encode(args as InitializeSharesMetadataInstructionDataArgs), programAddress } as InitializeSharesMetadataInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountSharesMint, TAccountSharesMetadata, TAccountSharesMintAuthority, TAccountSystemProgram, TAccountRent, TAccountMetadataProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.strategy), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.sharesMint), getAccountMeta(accounts.sharesMetadata), getAccountMeta(accounts.sharesMintAuthority), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent), getAccountMeta(accounts.metadataProgram)], data: getInitializeSharesMetadataInstructionDataEncoder().encode(args as InitializeSharesMetadataInstructionDataArgs), programAddress } as InitializeSharesMetadataInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountSharesMint, TAccountSharesMetadata, TAccountSharesMintAuthority, TAccountSystemProgram, TAccountRent, TAccountMetadataProgram>);
 }
 
 export type ParsedInitializeSharesMetadataInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -91,7 +89,8 @@ data: InitializeSharesMetadataInstructionData; };
 
 export function parseInitializeSharesMetadataInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedInitializeSharesMetadataInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 9) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 9 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

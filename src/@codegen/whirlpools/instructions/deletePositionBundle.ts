@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const DELETE_POSITION_BUNDLE_DISCRIMINATOR = new Uint8Array([100, 25, 99, 2, 217, 239, 124, 173]);
 
@@ -50,7 +48,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { positionBundle: { value: input.positionBundle ?? null, isWritable: true }, positionBundleMint: { value: input.positionBundleMint ?? null, isWritable: true }, positionBundleTokenAccount: { value: input.positionBundleTokenAccount ?? null, isWritable: true }, positionBundleOwner: { value: input.positionBundleOwner ?? null, isWritable: false }, receiver: { value: input.receiver ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -59,7 +57,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("positionBundle", accounts.positionBundle), getAccountMeta("positionBundleMint", accounts.positionBundleMint), getAccountMeta("positionBundleTokenAccount", accounts.positionBundleTokenAccount), getAccountMeta("positionBundleOwner", accounts.positionBundleOwner), getAccountMeta("receiver", accounts.receiver), getAccountMeta("tokenProgram", accounts.tokenProgram)], data: getDeletePositionBundleInstructionDataEncoder().encode({}), programAddress } as DeletePositionBundleInstruction<TProgramAddress, TAccountPositionBundle, TAccountPositionBundleMint, TAccountPositionBundleTokenAccount, TAccountPositionBundleOwner, TAccountReceiver, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.positionBundle), getAccountMeta(accounts.positionBundleMint), getAccountMeta(accounts.positionBundleTokenAccount), getAccountMeta(accounts.positionBundleOwner), getAccountMeta(accounts.receiver), getAccountMeta(accounts.tokenProgram)], data: getDeletePositionBundleInstructionDataEncoder().encode({}), programAddress } as DeletePositionBundleInstruction<TProgramAddress, TAccountPositionBundle, TAccountPositionBundleMint, TAccountPositionBundleTokenAccount, TAccountPositionBundleOwner, TAccountReceiver, TAccountTokenProgram>);
 }
 
 export type ParsedDeletePositionBundleInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -75,7 +73,8 @@ data: DeletePositionBundleInstructionData; };
 
 export function parseDeletePositionBundleInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedDeletePositionBundleInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 6) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 6 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const UPDATE_STRATEGY_ADMIN_DISCRIMINATOR = new Uint8Array([13, 227, 164, 236, 32, 39, 6, 255]);
 
@@ -46,13 +44,13 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { pendingAdmin: { value: input.pendingAdmin ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("pendingAdmin", accounts.pendingAdmin), getAccountMeta("strategy", accounts.strategy)], data: getUpdateStrategyAdminInstructionDataEncoder().encode({}), programAddress } as UpdateStrategyAdminInstruction<TProgramAddress, TAccountPendingAdmin, TAccountStrategy>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.pendingAdmin), getAccountMeta(accounts.strategy)], data: getUpdateStrategyAdminInstructionDataEncoder().encode({}), programAddress } as UpdateStrategyAdminInstruction<TProgramAddress, TAccountPendingAdmin, TAccountStrategy>);
 }
 
 export type ParsedUpdateStrategyAdminInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -64,7 +62,8 @@ data: UpdateStrategyAdminInstructionData; };
 
 export function parseUpdateStrategyAdminInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedUpdateStrategyAdminInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 2) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 2 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

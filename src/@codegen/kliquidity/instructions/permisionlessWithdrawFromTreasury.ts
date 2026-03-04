@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const PERMISIONLESS_WITHDRAW_FROM_TREASURY_DISCRIMINATOR = new Uint8Array([167, 36, 32, 79, 97, 170, 183, 108]);
 
@@ -51,7 +49,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { signer: { value: input.signer ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: false }, mint: { value: input.mint ?? null, isWritable: false }, treasuryFeeVault: { value: input.treasuryFeeVault ?? null, isWritable: true }, treasuryFeeVaultAuthority: { value: input.treasuryFeeVaultAuthority ?? null, isWritable: true }, tokenAccount: { value: input.tokenAccount ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -60,7 +58,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("signer", accounts.signer), getAccountMeta("globalConfig", accounts.globalConfig), getAccountMeta("mint", accounts.mint), getAccountMeta("treasuryFeeVault", accounts.treasuryFeeVault), getAccountMeta("treasuryFeeVaultAuthority", accounts.treasuryFeeVaultAuthority), getAccountMeta("tokenAccount", accounts.tokenAccount), getAccountMeta("tokenProgram", accounts.tokenProgram)], data: getPermisionlessWithdrawFromTreasuryInstructionDataEncoder().encode({}), programAddress } as PermisionlessWithdrawFromTreasuryInstruction<TProgramAddress, TAccountSigner, TAccountGlobalConfig, TAccountMint, TAccountTreasuryFeeVault, TAccountTreasuryFeeVaultAuthority, TAccountTokenAccount, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.signer), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.mint), getAccountMeta(accounts.treasuryFeeVault), getAccountMeta(accounts.treasuryFeeVaultAuthority), getAccountMeta(accounts.tokenAccount), getAccountMeta(accounts.tokenProgram)], data: getPermisionlessWithdrawFromTreasuryInstructionDataEncoder().encode({}), programAddress } as PermisionlessWithdrawFromTreasuryInstruction<TProgramAddress, TAccountSigner, TAccountGlobalConfig, TAccountMint, TAccountTreasuryFeeVault, TAccountTreasuryFeeVaultAuthority, TAccountTokenAccount, TAccountTokenProgram>);
 }
 
 export type ParsedPermisionlessWithdrawFromTreasuryInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -77,7 +75,8 @@ data: PermisionlessWithdrawFromTreasuryInstructionData; };
 
 export function parsePermisionlessWithdrawFromTreasuryInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedPermisionlessWithdrawFromTreasuryInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 7) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 7 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

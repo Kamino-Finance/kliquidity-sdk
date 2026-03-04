@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const COLLECT_PROTOCOL_FEES_DISCRIMINATOR = new Uint8Array([22, 67, 23, 98, 150, 178, 70, 220]);
 
@@ -52,7 +50,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { whirlpoolsConfig: { value: input.whirlpoolsConfig ?? null, isWritable: false }, whirlpool: { value: input.whirlpool ?? null, isWritable: true }, collectProtocolFeesAuthority: { value: input.collectProtocolFeesAuthority ?? null, isWritable: false }, tokenVaultA: { value: input.tokenVaultA ?? null, isWritable: true }, tokenVaultB: { value: input.tokenVaultB ?? null, isWritable: true }, tokenDestinationA: { value: input.tokenDestinationA ?? null, isWritable: true }, tokenDestinationB: { value: input.tokenDestinationB ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -61,7 +59,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("whirlpoolsConfig", accounts.whirlpoolsConfig), getAccountMeta("whirlpool", accounts.whirlpool), getAccountMeta("collectProtocolFeesAuthority", accounts.collectProtocolFeesAuthority), getAccountMeta("tokenVaultA", accounts.tokenVaultA), getAccountMeta("tokenVaultB", accounts.tokenVaultB), getAccountMeta("tokenDestinationA", accounts.tokenDestinationA), getAccountMeta("tokenDestinationB", accounts.tokenDestinationB), getAccountMeta("tokenProgram", accounts.tokenProgram)], data: getCollectProtocolFeesInstructionDataEncoder().encode({}), programAddress } as CollectProtocolFeesInstruction<TProgramAddress, TAccountWhirlpoolsConfig, TAccountWhirlpool, TAccountCollectProtocolFeesAuthority, TAccountTokenVaultA, TAccountTokenVaultB, TAccountTokenDestinationA, TAccountTokenDestinationB, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.whirlpoolsConfig), getAccountMeta(accounts.whirlpool), getAccountMeta(accounts.collectProtocolFeesAuthority), getAccountMeta(accounts.tokenVaultA), getAccountMeta(accounts.tokenVaultB), getAccountMeta(accounts.tokenDestinationA), getAccountMeta(accounts.tokenDestinationB), getAccountMeta(accounts.tokenProgram)], data: getCollectProtocolFeesInstructionDataEncoder().encode({}), programAddress } as CollectProtocolFeesInstruction<TProgramAddress, TAccountWhirlpoolsConfig, TAccountWhirlpool, TAccountCollectProtocolFeesAuthority, TAccountTokenVaultA, TAccountTokenVaultB, TAccountTokenDestinationA, TAccountTokenDestinationB, TAccountTokenProgram>);
 }
 
 export type ParsedCollectProtocolFeesInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -79,7 +77,8 @@ data: CollectProtocolFeesInstructionData; };
 
 export function parseCollectProtocolFeesInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedCollectProtocolFeesInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 8) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 8 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

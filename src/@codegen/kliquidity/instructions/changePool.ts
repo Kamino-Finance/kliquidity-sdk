@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const CHANGE_POOL_DISCRIMINATOR = new Uint8Array([141, 221, 123, 235, 35, 9, 145, 201]);
 
@@ -52,13 +50,13 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true }, oldPosition: { value: input.oldPosition ?? null, isWritable: false }, baseVaultAuthority: { value: input.baseVaultAuthority ?? null, isWritable: false }, newPool: { value: input.newPool ?? null, isWritable: false }, strategyRewardVault0OrBaseVaultAuthority: { value: input.strategyRewardVault0OrBaseVaultAuthority ?? null, isWritable: false }, strategyRewardVault1OrBaseVaultAuthority: { value: input.strategyRewardVault1OrBaseVaultAuthority ?? null, isWritable: false }, strategyRewardVault2OrBaseVaultAuthority: { value: input.strategyRewardVault2OrBaseVaultAuthority ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("adminAuthority", accounts.adminAuthority), getAccountMeta("strategy", accounts.strategy), getAccountMeta("oldPosition", accounts.oldPosition), getAccountMeta("baseVaultAuthority", accounts.baseVaultAuthority), getAccountMeta("newPool", accounts.newPool), getAccountMeta("strategyRewardVault0OrBaseVaultAuthority", accounts.strategyRewardVault0OrBaseVaultAuthority), getAccountMeta("strategyRewardVault1OrBaseVaultAuthority", accounts.strategyRewardVault1OrBaseVaultAuthority), getAccountMeta("strategyRewardVault2OrBaseVaultAuthority", accounts.strategyRewardVault2OrBaseVaultAuthority)], data: getChangePoolInstructionDataEncoder().encode({}), programAddress } as ChangePoolInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountOldPosition, TAccountBaseVaultAuthority, TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.strategy), getAccountMeta(accounts.oldPosition), getAccountMeta(accounts.baseVaultAuthority), getAccountMeta(accounts.newPool), getAccountMeta(accounts.strategyRewardVault0OrBaseVaultAuthority), getAccountMeta(accounts.strategyRewardVault1OrBaseVaultAuthority), getAccountMeta(accounts.strategyRewardVault2OrBaseVaultAuthority)], data: getChangePoolInstructionDataEncoder().encode({}), programAddress } as ChangePoolInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountOldPosition, TAccountBaseVaultAuthority, TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority>);
 }
 
 export type ParsedChangePoolInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -76,7 +74,8 @@ data: ChangePoolInstructionData; };
 
 export function parseChangePoolInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedChangePoolInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 8) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 8 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

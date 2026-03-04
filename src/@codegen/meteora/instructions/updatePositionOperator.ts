@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getAddressDecoder, getAddressEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getAddressDecoder, getAddressEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { LB_CLMM_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const UPDATE_POSITION_OPERATOR_DISCRIMINATOR = new Uint8Array([202, 184, 103, 143, 180, 191, 116, 217]);
 
@@ -49,7 +47,7 @@ const programAddress = config?.programAddress ?? LB_CLMM_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { position: { value: input.position ?? null, isWritable: true }, owner: { value: input.owner ?? null, isWritable: false }, eventAuthority: { value: input.eventAuthority ?? null, isWritable: false }, program: { value: input.program ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -59,7 +57,7 @@ const args = { ...input,  };
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("position", accounts.position), getAccountMeta("owner", accounts.owner), getAccountMeta("eventAuthority", accounts.eventAuthority), getAccountMeta("program", accounts.program)], data: getUpdatePositionOperatorInstructionDataEncoder().encode(args as UpdatePositionOperatorInstructionDataArgs), programAddress } as UpdatePositionOperatorInstruction<TProgramAddress, TAccountPosition, TAccountOwner, TAccountEventAuthority, TAccountProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.position), getAccountMeta(accounts.owner), getAccountMeta(accounts.eventAuthority), getAccountMeta(accounts.program)], data: getUpdatePositionOperatorInstructionDataEncoder().encode(args as UpdatePositionOperatorInstructionDataArgs), programAddress } as UpdatePositionOperatorInstruction<TProgramAddress, TAccountPosition, TAccountOwner, TAccountEventAuthority, TAccountProgram>);
 }
 
 export type ParsedUpdatePositionOperatorInstruction<TProgram extends string = typeof LB_CLMM_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -73,7 +71,8 @@ data: UpdatePositionOperatorInstructionData; };
 
 export function parseUpdatePositionOperatorInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedUpdatePositionOperatorInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 4) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 4 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

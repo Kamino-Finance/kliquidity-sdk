@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const UPDATE_STRATEGY_CONFIG_DISCRIMINATOR = new Uint8Array([81, 217, 177, 65, 40, 227, 8, 165]);
 
@@ -51,7 +49,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: false }, newAccount: { value: input.newAccount ?? null, isWritable: false }, strategy: { value: input.strategy ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -64,7 +62,7 @@ accounts.systemProgram.value = '11111111111111111111111111111111' as Address<'11
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("adminAuthority", accounts.adminAuthority), getAccountMeta("newAccount", accounts.newAccount), getAccountMeta("strategy", accounts.strategy), getAccountMeta("globalConfig", accounts.globalConfig), getAccountMeta("systemProgram", accounts.systemProgram)], data: getUpdateStrategyConfigInstructionDataEncoder().encode(args as UpdateStrategyConfigInstructionDataArgs), programAddress } as UpdateStrategyConfigInstruction<TProgramAddress, TAccountAdminAuthority, TAccountNewAccount, TAccountStrategy, TAccountGlobalConfig, TAccountSystemProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.newAccount), getAccountMeta(accounts.strategy), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.systemProgram)], data: getUpdateStrategyConfigInstructionDataEncoder().encode(args as UpdateStrategyConfigInstructionDataArgs), programAddress } as UpdateStrategyConfigInstruction<TProgramAddress, TAccountAdminAuthority, TAccountNewAccount, TAccountStrategy, TAccountGlobalConfig, TAccountSystemProgram>);
 }
 
 export type ParsedUpdateStrategyConfigInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -79,7 +77,8 @@ data: UpdateStrategyConfigInstructionData; };
 
 export function parseUpdateStrategyConfigInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedUpdateStrategyConfigInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 5) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 5 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

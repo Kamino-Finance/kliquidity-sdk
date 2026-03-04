@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getI32Decoder, getI32Encoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getI32Decoder, getI32Encoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { LB_CLMM_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INITIALIZE_LB_PAIR_DISCRIMINATOR = new Uint8Array([45, 154, 237, 210, 221, 15, 166, 92]);
 
@@ -60,7 +58,7 @@ const programAddress = config?.programAddress ?? LB_CLMM_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { lbPair: { value: input.lbPair ?? null, isWritable: true }, binArrayBitmapExtension: { value: input.binArrayBitmapExtension ?? null, isWritable: true }, tokenMintX: { value: input.tokenMintX ?? null, isWritable: false }, tokenMintY: { value: input.tokenMintY ?? null, isWritable: false }, reserveX: { value: input.reserveX ?? null, isWritable: true }, reserveY: { value: input.reserveY ?? null, isWritable: true }, oracle: { value: input.oracle ?? null, isWritable: true }, presetParameter: { value: input.presetParameter ?? null, isWritable: false }, funder: { value: input.funder ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false }, eventAuthority: { value: input.eventAuthority ?? null, isWritable: false }, program: { value: input.program ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -79,7 +77,7 @@ accounts.rent.value = 'SysvarRent111111111111111111111111111111111' as Address<'
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("lbPair", accounts.lbPair), getAccountMeta("binArrayBitmapExtension", accounts.binArrayBitmapExtension), getAccountMeta("tokenMintX", accounts.tokenMintX), getAccountMeta("tokenMintY", accounts.tokenMintY), getAccountMeta("reserveX", accounts.reserveX), getAccountMeta("reserveY", accounts.reserveY), getAccountMeta("oracle", accounts.oracle), getAccountMeta("presetParameter", accounts.presetParameter), getAccountMeta("funder", accounts.funder), getAccountMeta("tokenProgram", accounts.tokenProgram), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent), getAccountMeta("eventAuthority", accounts.eventAuthority), getAccountMeta("program", accounts.program)], data: getInitializeLbPairInstructionDataEncoder().encode(args as InitializeLbPairInstructionDataArgs), programAddress } as InitializeLbPairInstruction<TProgramAddress, TAccountLbPair, TAccountBinArrayBitmapExtension, TAccountTokenMintX, TAccountTokenMintY, TAccountReserveX, TAccountReserveY, TAccountOracle, TAccountPresetParameter, TAccountFunder, TAccountTokenProgram, TAccountSystemProgram, TAccountRent, TAccountEventAuthority, TAccountProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.lbPair), getAccountMeta(accounts.binArrayBitmapExtension), getAccountMeta(accounts.tokenMintX), getAccountMeta(accounts.tokenMintY), getAccountMeta(accounts.reserveX), getAccountMeta(accounts.reserveY), getAccountMeta(accounts.oracle), getAccountMeta(accounts.presetParameter), getAccountMeta(accounts.funder), getAccountMeta(accounts.tokenProgram), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent), getAccountMeta(accounts.eventAuthority), getAccountMeta(accounts.program)], data: getInitializeLbPairInstructionDataEncoder().encode(args as InitializeLbPairInstructionDataArgs), programAddress } as InitializeLbPairInstruction<TProgramAddress, TAccountLbPair, TAccountBinArrayBitmapExtension, TAccountTokenMintX, TAccountTokenMintY, TAccountReserveX, TAccountReserveY, TAccountOracle, TAccountPresetParameter, TAccountFunder, TAccountTokenProgram, TAccountSystemProgram, TAccountRent, TAccountEventAuthority, TAccountProgram>);
 }
 
 export type ParsedInitializeLbPairInstruction<TProgram extends string = typeof LB_CLMM_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -103,7 +101,8 @@ data: InitializeLbPairInstructionData; };
 
 export function parseInitializeLbPairInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedInitializeLbPairInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 14) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 14 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

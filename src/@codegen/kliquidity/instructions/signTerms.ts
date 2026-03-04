@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const SIGN_TERMS_DISCRIMINATOR = new Uint8Array([226, 42, 174, 143, 144, 159, 139, 1]);
 
@@ -49,7 +47,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { owner: { value: input.owner ?? null, isWritable: true }, ownerSignatureState: { value: input.ownerSignatureState ?? null, isWritable: true }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -65,7 +63,7 @@ accounts.rent.value = 'SysvarRent111111111111111111111111111111111' as Address<'
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("owner", accounts.owner), getAccountMeta("ownerSignatureState", accounts.ownerSignatureState), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent)], data: getSignTermsInstructionDataEncoder().encode(args as SignTermsInstructionDataArgs), programAddress } as SignTermsInstruction<TProgramAddress, TAccountOwner, TAccountOwnerSignatureState, TAccountSystemProgram, TAccountRent>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.owner), getAccountMeta(accounts.ownerSignatureState), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent)], data: getSignTermsInstructionDataEncoder().encode(args as SignTermsInstructionDataArgs), programAddress } as SignTermsInstruction<TProgramAddress, TAccountOwner, TAccountOwnerSignatureState, TAccountSystemProgram, TAccountRent>);
 }
 
 export type ParsedSignTermsInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -79,7 +77,8 @@ data: SignTermsInstructionData; };
 
 export function parseSignTermsInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedSignTermsInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 4) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 4 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

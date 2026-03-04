@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { LB_CLMM_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const SWAP_DISCRIMINATOR = new Uint8Array([248, 198, 158, 145, 225, 117, 135, 200]);
 
@@ -61,7 +59,7 @@ const programAddress = config?.programAddress ?? LB_CLMM_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { lbPair: { value: input.lbPair ?? null, isWritable: true }, binArrayBitmapExtension: { value: input.binArrayBitmapExtension ?? null, isWritable: false }, reserveX: { value: input.reserveX ?? null, isWritable: true }, reserveY: { value: input.reserveY ?? null, isWritable: true }, userTokenIn: { value: input.userTokenIn ?? null, isWritable: true }, userTokenOut: { value: input.userTokenOut ?? null, isWritable: true }, tokenXMint: { value: input.tokenXMint ?? null, isWritable: false }, tokenYMint: { value: input.tokenYMint ?? null, isWritable: false }, oracle: { value: input.oracle ?? null, isWritable: true }, hostFeeIn: { value: input.hostFeeIn ?? null, isWritable: true }, user: { value: input.user ?? null, isWritable: false }, tokenXProgram: { value: input.tokenXProgram ?? null, isWritable: false }, tokenYProgram: { value: input.tokenYProgram ?? null, isWritable: false }, eventAuthority: { value: input.eventAuthority ?? null, isWritable: false }, program: { value: input.program ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -71,7 +69,7 @@ const args = { ...input,  };
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("lbPair", accounts.lbPair), getAccountMeta("binArrayBitmapExtension", accounts.binArrayBitmapExtension), getAccountMeta("reserveX", accounts.reserveX), getAccountMeta("reserveY", accounts.reserveY), getAccountMeta("userTokenIn", accounts.userTokenIn), getAccountMeta("userTokenOut", accounts.userTokenOut), getAccountMeta("tokenXMint", accounts.tokenXMint), getAccountMeta("tokenYMint", accounts.tokenYMint), getAccountMeta("oracle", accounts.oracle), getAccountMeta("hostFeeIn", accounts.hostFeeIn), getAccountMeta("user", accounts.user), getAccountMeta("tokenXProgram", accounts.tokenXProgram), getAccountMeta("tokenYProgram", accounts.tokenYProgram), getAccountMeta("eventAuthority", accounts.eventAuthority), getAccountMeta("program", accounts.program)], data: getSwapInstructionDataEncoder().encode(args as SwapInstructionDataArgs), programAddress } as SwapInstruction<TProgramAddress, TAccountLbPair, TAccountBinArrayBitmapExtension, TAccountReserveX, TAccountReserveY, TAccountUserTokenIn, TAccountUserTokenOut, TAccountTokenXMint, TAccountTokenYMint, TAccountOracle, TAccountHostFeeIn, TAccountUser, TAccountTokenXProgram, TAccountTokenYProgram, TAccountEventAuthority, TAccountProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.lbPair), getAccountMeta(accounts.binArrayBitmapExtension), getAccountMeta(accounts.reserveX), getAccountMeta(accounts.reserveY), getAccountMeta(accounts.userTokenIn), getAccountMeta(accounts.userTokenOut), getAccountMeta(accounts.tokenXMint), getAccountMeta(accounts.tokenYMint), getAccountMeta(accounts.oracle), getAccountMeta(accounts.hostFeeIn), getAccountMeta(accounts.user), getAccountMeta(accounts.tokenXProgram), getAccountMeta(accounts.tokenYProgram), getAccountMeta(accounts.eventAuthority), getAccountMeta(accounts.program)], data: getSwapInstructionDataEncoder().encode(args as SwapInstructionDataArgs), programAddress } as SwapInstruction<TProgramAddress, TAccountLbPair, TAccountBinArrayBitmapExtension, TAccountReserveX, TAccountReserveY, TAccountUserTokenIn, TAccountUserTokenOut, TAccountTokenXMint, TAccountTokenYMint, TAccountOracle, TAccountHostFeeIn, TAccountUser, TAccountTokenXProgram, TAccountTokenYProgram, TAccountEventAuthority, TAccountProgram>);
 }
 
 export type ParsedSwapInstruction<TProgram extends string = typeof LB_CLMM_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -96,7 +94,8 @@ data: SwapInstructionData; };
 
 export function parseSwapInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedSwapInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 15) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 15 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

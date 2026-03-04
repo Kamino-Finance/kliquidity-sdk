@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBooleanDecoder, getBooleanEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBooleanDecoder, getBooleanEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const FLASH_SWAP_UNEVEN_VAULTS_END_DISCRIMINATOR = new Uint8Array([226, 2, 190, 101, 202, 132, 156, 20]);
 
@@ -67,7 +65,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { swapper: { value: input.swapper ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: false }, tokenAVault: { value: input.tokenAVault ?? null, isWritable: true }, tokenBVault: { value: input.tokenBVault ?? null, isWritable: true }, tokenAAta: { value: input.tokenAAta ?? null, isWritable: true }, tokenBAta: { value: input.tokenBAta ?? null, isWritable: true }, baseVaultAuthority: { value: input.baseVaultAuthority ?? null, isWritable: true }, pool: { value: input.pool ?? null, isWritable: true }, position: { value: input.position ?? null, isWritable: true }, scopePrices: { value: input.scopePrices ?? null, isWritable: false }, tokenInfos: { value: input.tokenInfos ?? null, isWritable: false }, tickArrayLower: { value: input.tickArrayLower ?? null, isWritable: false }, tickArrayUpper: { value: input.tickArrayUpper ?? null, isWritable: false }, tokenAMint: { value: input.tokenAMint ?? null, isWritable: false }, tokenBMint: { value: input.tokenBMint ?? null, isWritable: false }, tokenATokenProgram: { value: input.tokenATokenProgram ?? null, isWritable: false }, tokenBTokenProgram: { value: input.tokenBTokenProgram ?? null, isWritable: false }, instructionSysvarAccount: { value: input.instructionSysvarAccount ?? null, isWritable: false }, consensusAccount: { value: input.consensusAccount ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -80,7 +78,7 @@ accounts.instructionSysvarAccount.value = 'Sysvar1nstructions1111111111111111111
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("swapper", accounts.swapper), getAccountMeta("strategy", accounts.strategy), getAccountMeta("globalConfig", accounts.globalConfig), getAccountMeta("tokenAVault", accounts.tokenAVault), getAccountMeta("tokenBVault", accounts.tokenBVault), getAccountMeta("tokenAAta", accounts.tokenAAta), getAccountMeta("tokenBAta", accounts.tokenBAta), getAccountMeta("baseVaultAuthority", accounts.baseVaultAuthority), getAccountMeta("pool", accounts.pool), getAccountMeta("position", accounts.position), getAccountMeta("scopePrices", accounts.scopePrices), getAccountMeta("tokenInfos", accounts.tokenInfos), getAccountMeta("tickArrayLower", accounts.tickArrayLower), getAccountMeta("tickArrayUpper", accounts.tickArrayUpper), getAccountMeta("tokenAMint", accounts.tokenAMint), getAccountMeta("tokenBMint", accounts.tokenBMint), getAccountMeta("tokenATokenProgram", accounts.tokenATokenProgram), getAccountMeta("tokenBTokenProgram", accounts.tokenBTokenProgram), getAccountMeta("instructionSysvarAccount", accounts.instructionSysvarAccount), getAccountMeta("consensusAccount", accounts.consensusAccount)], data: getFlashSwapUnevenVaultsEndInstructionDataEncoder().encode(args as FlashSwapUnevenVaultsEndInstructionDataArgs), programAddress } as FlashSwapUnevenVaultsEndInstruction<TProgramAddress, TAccountSwapper, TAccountStrategy, TAccountGlobalConfig, TAccountTokenAVault, TAccountTokenBVault, TAccountTokenAAta, TAccountTokenBAta, TAccountBaseVaultAuthority, TAccountPool, TAccountPosition, TAccountScopePrices, TAccountTokenInfos, TAccountTickArrayLower, TAccountTickArrayUpper, TAccountTokenAMint, TAccountTokenBMint, TAccountTokenATokenProgram, TAccountTokenBTokenProgram, TAccountInstructionSysvarAccount, TAccountConsensusAccount>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.swapper), getAccountMeta(accounts.strategy), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.tokenAVault), getAccountMeta(accounts.tokenBVault), getAccountMeta(accounts.tokenAAta), getAccountMeta(accounts.tokenBAta), getAccountMeta(accounts.baseVaultAuthority), getAccountMeta(accounts.pool), getAccountMeta(accounts.position), getAccountMeta(accounts.scopePrices), getAccountMeta(accounts.tokenInfos), getAccountMeta(accounts.tickArrayLower), getAccountMeta(accounts.tickArrayUpper), getAccountMeta(accounts.tokenAMint), getAccountMeta(accounts.tokenBMint), getAccountMeta(accounts.tokenATokenProgram), getAccountMeta(accounts.tokenBTokenProgram), getAccountMeta(accounts.instructionSysvarAccount), getAccountMeta(accounts.consensusAccount)], data: getFlashSwapUnevenVaultsEndInstructionDataEncoder().encode(args as FlashSwapUnevenVaultsEndInstructionDataArgs), programAddress } as FlashSwapUnevenVaultsEndInstruction<TProgramAddress, TAccountSwapper, TAccountStrategy, TAccountGlobalConfig, TAccountTokenAVault, TAccountTokenBVault, TAccountTokenAAta, TAccountTokenBAta, TAccountBaseVaultAuthority, TAccountPool, TAccountPosition, TAccountScopePrices, TAccountTokenInfos, TAccountTickArrayLower, TAccountTickArrayUpper, TAccountTokenAMint, TAccountTokenBMint, TAccountTokenATokenProgram, TAccountTokenBTokenProgram, TAccountInstructionSysvarAccount, TAccountConsensusAccount>);
 }
 
 export type ParsedFlashSwapUnevenVaultsEndInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -110,7 +108,8 @@ data: FlashSwapUnevenVaultsEndInstructionData; };
 
 export function parseFlashSwapUnevenVaultsEndInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedFlashSwapUnevenVaultsEndInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 20) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 20 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

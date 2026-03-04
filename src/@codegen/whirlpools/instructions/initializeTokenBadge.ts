@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INITIALIZE_TOKEN_BADGE_DISCRIMINATOR = new Uint8Array([253, 77, 205, 95, 27, 224, 89, 223]);
 
@@ -51,7 +49,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { whirlpoolsConfig: { value: input.whirlpoolsConfig ?? null, isWritable: false }, whirlpoolsConfigExtension: { value: input.whirlpoolsConfigExtension ?? null, isWritable: false }, tokenBadgeAuthority: { value: input.tokenBadgeAuthority ?? null, isWritable: false }, tokenMint: { value: input.tokenMint ?? null, isWritable: false }, tokenBadge: { value: input.tokenBadge ?? null, isWritable: true }, funder: { value: input.funder ?? null, isWritable: true }, systemProgram: { value: input.systemProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -60,7 +58,7 @@ accounts.systemProgram.value = '11111111111111111111111111111111' as Address<'11
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("whirlpoolsConfig", accounts.whirlpoolsConfig), getAccountMeta("whirlpoolsConfigExtension", accounts.whirlpoolsConfigExtension), getAccountMeta("tokenBadgeAuthority", accounts.tokenBadgeAuthority), getAccountMeta("tokenMint", accounts.tokenMint), getAccountMeta("tokenBadge", accounts.tokenBadge), getAccountMeta("funder", accounts.funder), getAccountMeta("systemProgram", accounts.systemProgram)], data: getInitializeTokenBadgeInstructionDataEncoder().encode({}), programAddress } as InitializeTokenBadgeInstruction<TProgramAddress, TAccountWhirlpoolsConfig, TAccountWhirlpoolsConfigExtension, TAccountTokenBadgeAuthority, TAccountTokenMint, TAccountTokenBadge, TAccountFunder, TAccountSystemProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.whirlpoolsConfig), getAccountMeta(accounts.whirlpoolsConfigExtension), getAccountMeta(accounts.tokenBadgeAuthority), getAccountMeta(accounts.tokenMint), getAccountMeta(accounts.tokenBadge), getAccountMeta(accounts.funder), getAccountMeta(accounts.systemProgram)], data: getInitializeTokenBadgeInstructionDataEncoder().encode({}), programAddress } as InitializeTokenBadgeInstruction<TProgramAddress, TAccountWhirlpoolsConfig, TAccountWhirlpoolsConfigExtension, TAccountTokenBadgeAuthority, TAccountTokenMint, TAccountTokenBadge, TAccountFunder, TAccountSystemProgram>);
 }
 
 export type ParsedInitializeTokenBadgeInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -77,7 +75,8 @@ data: InitializeTokenBadgeInstructionData; };
 
 export function parseInitializeTokenBadgeInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedInitializeTokenBadgeInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 7) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 7 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

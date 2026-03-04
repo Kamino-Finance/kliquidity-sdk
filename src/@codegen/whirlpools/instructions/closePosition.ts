@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const CLOSE_POSITION_DISCRIMINATOR = new Uint8Array([123, 134, 81, 0, 49, 68, 98, 98]);
 
@@ -50,7 +48,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { positionAuthority: { value: input.positionAuthority ?? null, isWritable: false }, receiver: { value: input.receiver ?? null, isWritable: true }, position: { value: input.position ?? null, isWritable: true }, positionMint: { value: input.positionMint ?? null, isWritable: true }, positionTokenAccount: { value: input.positionTokenAccount ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -59,7 +57,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("positionAuthority", accounts.positionAuthority), getAccountMeta("receiver", accounts.receiver), getAccountMeta("position", accounts.position), getAccountMeta("positionMint", accounts.positionMint), getAccountMeta("positionTokenAccount", accounts.positionTokenAccount), getAccountMeta("tokenProgram", accounts.tokenProgram)], data: getClosePositionInstructionDataEncoder().encode({}), programAddress } as ClosePositionInstruction<TProgramAddress, TAccountPositionAuthority, TAccountReceiver, TAccountPosition, TAccountPositionMint, TAccountPositionTokenAccount, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.positionAuthority), getAccountMeta(accounts.receiver), getAccountMeta(accounts.position), getAccountMeta(accounts.positionMint), getAccountMeta(accounts.positionTokenAccount), getAccountMeta(accounts.tokenProgram)], data: getClosePositionInstructionDataEncoder().encode({}), programAddress } as ClosePositionInstruction<TProgramAddress, TAccountPositionAuthority, TAccountReceiver, TAccountPosition, TAccountPositionMint, TAccountPositionTokenAccount, TAccountTokenProgram>);
 }
 
 export type ParsedClosePositionInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -75,7 +73,8 @@ data: ClosePositionInstructionData; };
 
 export function parseClosePositionInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedClosePositionInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 6) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 6 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

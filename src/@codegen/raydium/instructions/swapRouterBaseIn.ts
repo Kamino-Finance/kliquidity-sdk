@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { AMM_V3_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const SWAP_ROUTER_BASE_IN_DISCRIMINATOR = new Uint8Array([69, 125, 115, 218, 245, 186, 242, 196]);
 
@@ -52,7 +50,7 @@ const programAddress = config?.programAddress ?? AMM_V3_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { payer: { value: input.payer ?? null, isWritable: false }, inputTokenAccount: { value: input.inputTokenAccount ?? null, isWritable: true }, inputTokenMint: { value: input.inputTokenMint ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false }, tokenProgram2022: { value: input.tokenProgram2022 ?? null, isWritable: false }, memoProgram: { value: input.memoProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -65,7 +63,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("payer", accounts.payer), getAccountMeta("inputTokenAccount", accounts.inputTokenAccount), getAccountMeta("inputTokenMint", accounts.inputTokenMint), getAccountMeta("tokenProgram", accounts.tokenProgram), getAccountMeta("tokenProgram2022", accounts.tokenProgram2022), getAccountMeta("memoProgram", accounts.memoProgram)], data: getSwapRouterBaseInInstructionDataEncoder().encode(args as SwapRouterBaseInInstructionDataArgs), programAddress } as SwapRouterBaseInInstruction<TProgramAddress, TAccountPayer, TAccountInputTokenAccount, TAccountInputTokenMint, TAccountTokenProgram, TAccountTokenProgram2022, TAccountMemoProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.payer), getAccountMeta(accounts.inputTokenAccount), getAccountMeta(accounts.inputTokenMint), getAccountMeta(accounts.tokenProgram), getAccountMeta(accounts.tokenProgram2022), getAccountMeta(accounts.memoProgram)], data: getSwapRouterBaseInInstructionDataEncoder().encode(args as SwapRouterBaseInInstructionDataArgs), programAddress } as SwapRouterBaseInInstruction<TProgramAddress, TAccountPayer, TAccountInputTokenAccount, TAccountInputTokenMint, TAccountTokenProgram, TAccountTokenProgram2022, TAccountMemoProgram>);
 }
 
 export type ParsedSwapRouterBaseInInstruction<TProgram extends string = typeof AMM_V3_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -81,7 +79,8 @@ data: SwapRouterBaseInInstructionData; };
 
 export function parseSwapRouterBaseInInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedSwapRouterBaseInInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 6) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 6 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

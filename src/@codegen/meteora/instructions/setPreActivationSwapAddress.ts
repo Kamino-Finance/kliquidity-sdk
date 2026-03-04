@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getAddressDecoder, getAddressEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getAddressDecoder, getAddressEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { LB_CLMM_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const SET_PRE_ACTIVATION_SWAP_ADDRESS_DISCRIMINATOR = new Uint8Array([57, 139, 47, 123, 216, 80, 223, 10]);
 
@@ -47,7 +45,7 @@ const programAddress = config?.programAddress ?? LB_CLMM_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { lbPair: { value: input.lbPair ?? null, isWritable: true }, creator: { value: input.creator ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -57,7 +55,7 @@ const args = { ...input,  };
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("lbPair", accounts.lbPair), getAccountMeta("creator", accounts.creator)], data: getSetPreActivationSwapAddressInstructionDataEncoder().encode(args as SetPreActivationSwapAddressInstructionDataArgs), programAddress } as SetPreActivationSwapAddressInstruction<TProgramAddress, TAccountLbPair, TAccountCreator>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.lbPair), getAccountMeta(accounts.creator)], data: getSetPreActivationSwapAddressInstructionDataEncoder().encode(args as SetPreActivationSwapAddressInstructionDataArgs), programAddress } as SetPreActivationSwapAddressInstruction<TProgramAddress, TAccountLbPair, TAccountCreator>);
 }
 
 export type ParsedSetPreActivationSwapAddressInstruction<TProgram extends string = typeof LB_CLMM_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -69,7 +67,8 @@ data: SetPreActivationSwapAddressInstructionData; };
 
 export function parseSetPreActivationSwapAddressInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedSetPreActivationSwapAddressInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 2) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 2 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

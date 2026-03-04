@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU8Decoder, getU8Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU8Decoder, getU8Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INITIALIZE_REWARD_V2_DISCRIMINATOR = new Uint8Array([91, 1, 77, 50, 235, 229, 133, 49]);
 
@@ -54,7 +52,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { rewardAuthority: { value: input.rewardAuthority ?? null, isWritable: false }, funder: { value: input.funder ?? null, isWritable: true }, whirlpool: { value: input.whirlpool ?? null, isWritable: true }, rewardMint: { value: input.rewardMint ?? null, isWritable: false }, rewardTokenBadge: { value: input.rewardTokenBadge ?? null, isWritable: false }, rewardVault: { value: input.rewardVault ?? null, isWritable: true }, rewardTokenProgram: { value: input.rewardTokenProgram ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -70,7 +68,7 @@ accounts.rent.value = 'SysvarRent111111111111111111111111111111111' as Address<'
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("rewardAuthority", accounts.rewardAuthority), getAccountMeta("funder", accounts.funder), getAccountMeta("whirlpool", accounts.whirlpool), getAccountMeta("rewardMint", accounts.rewardMint), getAccountMeta("rewardTokenBadge", accounts.rewardTokenBadge), getAccountMeta("rewardVault", accounts.rewardVault), getAccountMeta("rewardTokenProgram", accounts.rewardTokenProgram), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent)], data: getInitializeRewardV2InstructionDataEncoder().encode(args as InitializeRewardV2InstructionDataArgs), programAddress } as InitializeRewardV2Instruction<TProgramAddress, TAccountRewardAuthority, TAccountFunder, TAccountWhirlpool, TAccountRewardMint, TAccountRewardTokenBadge, TAccountRewardVault, TAccountRewardTokenProgram, TAccountSystemProgram, TAccountRent>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.rewardAuthority), getAccountMeta(accounts.funder), getAccountMeta(accounts.whirlpool), getAccountMeta(accounts.rewardMint), getAccountMeta(accounts.rewardTokenBadge), getAccountMeta(accounts.rewardVault), getAccountMeta(accounts.rewardTokenProgram), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent)], data: getInitializeRewardV2InstructionDataEncoder().encode(args as InitializeRewardV2InstructionDataArgs), programAddress } as InitializeRewardV2Instruction<TProgramAddress, TAccountRewardAuthority, TAccountFunder, TAccountWhirlpool, TAccountRewardMint, TAccountRewardTokenBadge, TAccountRewardVault, TAccountRewardTokenProgram, TAccountSystemProgram, TAccountRent>);
 }
 
 export type ParsedInitializeRewardV2Instruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -89,7 +87,8 @@ data: InitializeRewardV2InstructionData; };
 
 export function parseInitializeRewardV2Instruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedInitializeRewardV2Instruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 9) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 9 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

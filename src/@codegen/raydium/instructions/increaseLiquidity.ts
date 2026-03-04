@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { AMM_V3_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INCREASE_LIQUIDITY_DISCRIMINATOR = new Uint8Array([46, 156, 243, 118, 13, 205, 251, 178]);
 
@@ -59,7 +57,7 @@ const programAddress = config?.programAddress ?? AMM_V3_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { nftOwner: { value: input.nftOwner ?? null, isWritable: false }, nftAccount: { value: input.nftAccount ?? null, isWritable: false }, poolState: { value: input.poolState ?? null, isWritable: true }, protocolPosition: { value: input.protocolPosition ?? null, isWritable: true }, personalPosition: { value: input.personalPosition ?? null, isWritable: true }, tickArrayLower: { value: input.tickArrayLower ?? null, isWritable: true }, tickArrayUpper: { value: input.tickArrayUpper ?? null, isWritable: true }, tokenAccount0: { value: input.tokenAccount0 ?? null, isWritable: true }, tokenAccount1: { value: input.tokenAccount1 ?? null, isWritable: true }, tokenVault0: { value: input.tokenVault0 ?? null, isWritable: true }, tokenVault1: { value: input.tokenVault1 ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -72,7 +70,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("nftOwner", accounts.nftOwner), getAccountMeta("nftAccount", accounts.nftAccount), getAccountMeta("poolState", accounts.poolState), getAccountMeta("protocolPosition", accounts.protocolPosition), getAccountMeta("personalPosition", accounts.personalPosition), getAccountMeta("tickArrayLower", accounts.tickArrayLower), getAccountMeta("tickArrayUpper", accounts.tickArrayUpper), getAccountMeta("tokenAccount0", accounts.tokenAccount0), getAccountMeta("tokenAccount1", accounts.tokenAccount1), getAccountMeta("tokenVault0", accounts.tokenVault0), getAccountMeta("tokenVault1", accounts.tokenVault1), getAccountMeta("tokenProgram", accounts.tokenProgram)], data: getIncreaseLiquidityInstructionDataEncoder().encode(args as IncreaseLiquidityInstructionDataArgs), programAddress } as IncreaseLiquidityInstruction<TProgramAddress, TAccountNftOwner, TAccountNftAccount, TAccountPoolState, TAccountProtocolPosition, TAccountPersonalPosition, TAccountTickArrayLower, TAccountTickArrayUpper, TAccountTokenAccount0, TAccountTokenAccount1, TAccountTokenVault0, TAccountTokenVault1, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.nftOwner), getAccountMeta(accounts.nftAccount), getAccountMeta(accounts.poolState), getAccountMeta(accounts.protocolPosition), getAccountMeta(accounts.personalPosition), getAccountMeta(accounts.tickArrayLower), getAccountMeta(accounts.tickArrayUpper), getAccountMeta(accounts.tokenAccount0), getAccountMeta(accounts.tokenAccount1), getAccountMeta(accounts.tokenVault0), getAccountMeta(accounts.tokenVault1), getAccountMeta(accounts.tokenProgram)], data: getIncreaseLiquidityInstructionDataEncoder().encode(args as IncreaseLiquidityInstructionDataArgs), programAddress } as IncreaseLiquidityInstruction<TProgramAddress, TAccountNftOwner, TAccountNftAccount, TAccountPoolState, TAccountProtocolPosition, TAccountPersonalPosition, TAccountTickArrayLower, TAccountTickArrayUpper, TAccountTokenAccount0, TAccountTokenAccount1, TAccountTokenVault0, TAccountTokenVault1, TAccountTokenProgram>);
 }
 
 export type ParsedIncreaseLiquidityInstruction<TProgram extends string = typeof AMM_V3_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -94,7 +92,8 @@ data: IncreaseLiquidityInstructionData; };
 
 export function parseIncreaseLiquidityInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedIncreaseLiquidityInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 12) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 12 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

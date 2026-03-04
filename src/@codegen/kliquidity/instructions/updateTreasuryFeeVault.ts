@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const UPDATE_TREASURY_FEE_VAULT_DISCRIMINATOR = new Uint8Array([9, 241, 94, 91, 173, 74, 166, 119]);
 
@@ -54,7 +52,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { signer: { value: input.signer ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: true }, feeMint: { value: input.feeMint ?? null, isWritable: false }, treasuryFeeVault: { value: input.treasuryFeeVault ?? null, isWritable: true }, treasuryFeeVaultAuthority: { value: input.treasuryFeeVaultAuthority ?? null, isWritable: false }, tokenInfos: { value: input.tokenInfos ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -73,7 +71,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("signer", accounts.signer), getAccountMeta("globalConfig", accounts.globalConfig), getAccountMeta("feeMint", accounts.feeMint), getAccountMeta("treasuryFeeVault", accounts.treasuryFeeVault), getAccountMeta("treasuryFeeVaultAuthority", accounts.treasuryFeeVaultAuthority), getAccountMeta("tokenInfos", accounts.tokenInfos), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent), getAccountMeta("tokenProgram", accounts.tokenProgram)], data: getUpdateTreasuryFeeVaultInstructionDataEncoder().encode(args as UpdateTreasuryFeeVaultInstructionDataArgs), programAddress } as UpdateTreasuryFeeVaultInstruction<TProgramAddress, TAccountSigner, TAccountGlobalConfig, TAccountFeeMint, TAccountTreasuryFeeVault, TAccountTreasuryFeeVaultAuthority, TAccountTokenInfos, TAccountSystemProgram, TAccountRent, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.signer), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.feeMint), getAccountMeta(accounts.treasuryFeeVault), getAccountMeta(accounts.treasuryFeeVaultAuthority), getAccountMeta(accounts.tokenInfos), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent), getAccountMeta(accounts.tokenProgram)], data: getUpdateTreasuryFeeVaultInstructionDataEncoder().encode(args as UpdateTreasuryFeeVaultInstructionDataArgs), programAddress } as UpdateTreasuryFeeVaultInstruction<TProgramAddress, TAccountSigner, TAccountGlobalConfig, TAccountFeeMint, TAccountTreasuryFeeVault, TAccountTreasuryFeeVaultAuthority, TAccountTokenInfos, TAccountSystemProgram, TAccountRent, TAccountTokenProgram>);
 }
 
 export type ParsedUpdateTreasuryFeeVaultInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -92,7 +90,8 @@ data: UpdateTreasuryFeeVaultInstructionData; };
 
 export function parseUpdateTreasuryFeeVaultInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedUpdateTreasuryFeeVaultInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 9) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 9 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

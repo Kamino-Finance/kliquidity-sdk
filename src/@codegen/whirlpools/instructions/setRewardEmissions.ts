@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU8Decoder, getU8Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU8Decoder, getU8Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const SET_REWARD_EMISSIONS_DISCRIMINATOR = new Uint8Array([13, 197, 86, 168, 109, 176, 27, 244]);
 
@@ -49,7 +47,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { whirlpool: { value: input.whirlpool ?? null, isWritable: true }, rewardAuthority: { value: input.rewardAuthority ?? null, isWritable: false }, rewardVault: { value: input.rewardVault ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -59,7 +57,7 @@ const args = { ...input,  };
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("whirlpool", accounts.whirlpool), getAccountMeta("rewardAuthority", accounts.rewardAuthority), getAccountMeta("rewardVault", accounts.rewardVault)], data: getSetRewardEmissionsInstructionDataEncoder().encode(args as SetRewardEmissionsInstructionDataArgs), programAddress } as SetRewardEmissionsInstruction<TProgramAddress, TAccountWhirlpool, TAccountRewardAuthority, TAccountRewardVault>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.whirlpool), getAccountMeta(accounts.rewardAuthority), getAccountMeta(accounts.rewardVault)], data: getSetRewardEmissionsInstructionDataEncoder().encode(args as SetRewardEmissionsInstructionDataArgs), programAddress } as SetRewardEmissionsInstruction<TProgramAddress, TAccountWhirlpool, TAccountRewardAuthority, TAccountRewardVault>);
 }
 
 export type ParsedSetRewardEmissionsInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -72,7 +70,8 @@ data: SetRewardEmissionsInstructionData; };
 
 export function parseSetRewardEmissionsInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedSetRewardEmissionsInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 3 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

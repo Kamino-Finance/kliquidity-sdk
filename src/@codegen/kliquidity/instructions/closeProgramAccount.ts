@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const CLOSE_PROGRAM_ACCOUNT_DISCRIMINATOR = new Uint8Array([245, 14, 192, 211, 99, 42, 170, 187]);
 
@@ -49,7 +47,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: true }, program: { value: input.program ?? null, isWritable: false }, programData: { value: input.programData ?? null, isWritable: false }, closingAccount: { value: input.closingAccount ?? null, isWritable: true }, systemProgram: { value: input.systemProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -58,7 +56,7 @@ accounts.systemProgram.value = '11111111111111111111111111111111' as Address<'11
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("adminAuthority", accounts.adminAuthority), getAccountMeta("program", accounts.program), getAccountMeta("programData", accounts.programData), getAccountMeta("closingAccount", accounts.closingAccount), getAccountMeta("systemProgram", accounts.systemProgram)], data: getCloseProgramAccountInstructionDataEncoder().encode({}), programAddress } as CloseProgramAccountInstruction<TProgramAddress, TAccountAdminAuthority, TAccountProgram, TAccountProgramData, TAccountClosingAccount, TAccountSystemProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.program), getAccountMeta(accounts.programData), getAccountMeta(accounts.closingAccount), getAccountMeta(accounts.systemProgram)], data: getCloseProgramAccountInstructionDataEncoder().encode({}), programAddress } as CloseProgramAccountInstruction<TProgramAddress, TAccountAdminAuthority, TAccountProgram, TAccountProgramData, TAccountClosingAccount, TAccountSystemProgram>);
 }
 
 export type ParsedCloseProgramAccountInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -73,7 +71,8 @@ data: CloseProgramAccountInstructionData; };
 
 export function parseCloseProgramAccountInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedCloseProgramAccountInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 5) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 5 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

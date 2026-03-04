@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const CHECK_EXPECTED_VAULTS_BALANCES_DISCRIMINATOR = new Uint8Array([75, 151, 187, 125, 50, 4, 11, 71]);
 
@@ -49,7 +47,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { user: { value: input.user ?? null, isWritable: true }, tokenAAta: { value: input.tokenAAta ?? null, isWritable: false }, tokenBAta: { value: input.tokenBAta ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -59,7 +57,7 @@ const args = { ...input,  };
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("user", accounts.user), getAccountMeta("tokenAAta", accounts.tokenAAta), getAccountMeta("tokenBAta", accounts.tokenBAta)], data: getCheckExpectedVaultsBalancesInstructionDataEncoder().encode(args as CheckExpectedVaultsBalancesInstructionDataArgs), programAddress } as CheckExpectedVaultsBalancesInstruction<TProgramAddress, TAccountUser, TAccountTokenAAta, TAccountTokenBAta>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.user), getAccountMeta(accounts.tokenAAta), getAccountMeta(accounts.tokenBAta)], data: getCheckExpectedVaultsBalancesInstructionDataEncoder().encode(args as CheckExpectedVaultsBalancesInstructionDataArgs), programAddress } as CheckExpectedVaultsBalancesInstruction<TProgramAddress, TAccountUser, TAccountTokenAAta, TAccountTokenBAta>);
 }
 
 export type ParsedCheckExpectedVaultsBalancesInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -72,7 +70,8 @@ data: CheckExpectedVaultsBalancesInstructionData; };
 
 export function parseCheckExpectedVaultsBalancesInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedCheckExpectedVaultsBalancesInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 3 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

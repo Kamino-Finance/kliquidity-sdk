@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { LB_CLMM_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const MIGRATE_POSITION_DISCRIMINATOR = new Uint8Array([15, 132, 59, 50, 199, 6, 251, 46]);
 
@@ -54,7 +52,7 @@ const programAddress = config?.programAddress ?? LB_CLMM_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { positionV2: { value: input.positionV2 ?? null, isWritable: true }, positionV1: { value: input.positionV1 ?? null, isWritable: true }, lbPair: { value: input.lbPair ?? null, isWritable: false }, binArrayLower: { value: input.binArrayLower ?? null, isWritable: true }, binArrayUpper: { value: input.binArrayUpper ?? null, isWritable: true }, owner: { value: input.owner ?? null, isWritable: true }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rentReceiver: { value: input.rentReceiver ?? null, isWritable: true }, eventAuthority: { value: input.eventAuthority ?? null, isWritable: false }, program: { value: input.program ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -63,7 +61,7 @@ accounts.systemProgram.value = '11111111111111111111111111111111' as Address<'11
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("positionV2", accounts.positionV2), getAccountMeta("positionV1", accounts.positionV1), getAccountMeta("lbPair", accounts.lbPair), getAccountMeta("binArrayLower", accounts.binArrayLower), getAccountMeta("binArrayUpper", accounts.binArrayUpper), getAccountMeta("owner", accounts.owner), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rentReceiver", accounts.rentReceiver), getAccountMeta("eventAuthority", accounts.eventAuthority), getAccountMeta("program", accounts.program)], data: getMigratePositionInstructionDataEncoder().encode({}), programAddress } as MigratePositionInstruction<TProgramAddress, TAccountPositionV2, TAccountPositionV1, TAccountLbPair, TAccountBinArrayLower, TAccountBinArrayUpper, TAccountOwner, TAccountSystemProgram, TAccountRentReceiver, TAccountEventAuthority, TAccountProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.positionV2), getAccountMeta(accounts.positionV1), getAccountMeta(accounts.lbPair), getAccountMeta(accounts.binArrayLower), getAccountMeta(accounts.binArrayUpper), getAccountMeta(accounts.owner), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rentReceiver), getAccountMeta(accounts.eventAuthority), getAccountMeta(accounts.program)], data: getMigratePositionInstructionDataEncoder().encode({}), programAddress } as MigratePositionInstruction<TProgramAddress, TAccountPositionV2, TAccountPositionV1, TAccountLbPair, TAccountBinArrayLower, TAccountBinArrayUpper, TAccountOwner, TAccountSystemProgram, TAccountRentReceiver, TAccountEventAuthority, TAccountProgram>);
 }
 
 export type ParsedMigratePositionInstruction<TProgram extends string = typeof LB_CLMM_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -83,7 +81,8 @@ data: MigratePositionInstructionData; };
 
 export function parseMigratePositionInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedMigratePositionInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 10) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 10 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

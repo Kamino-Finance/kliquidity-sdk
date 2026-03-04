@@ -6,12 +6,10 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getArrayDecoder, getArrayEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type Codec, type Decoder, type Encoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getArrayDecoder, getArrayEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type Codec, type Decoder, type Encoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { LB_CLMM_PROGRAM_ADDRESS } from '../programs';
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 import { getCompressedBinDepositAmountDecoder, getCompressedBinDepositAmountEncoder, type CompressedBinDepositAmount, type CompressedBinDepositAmountArgs } from '../types';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
 
 export const ADD_LIQUIDITY_ONE_SIDE_PRECISE_DISCRIMINATOR = new Uint8Array([161, 194, 103, 84, 171, 71, 250, 154]);
 
@@ -59,7 +57,7 @@ const programAddress = config?.programAddress ?? LB_CLMM_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { position: { value: input.position ?? null, isWritable: true }, lbPair: { value: input.lbPair ?? null, isWritable: true }, binArrayBitmapExtension: { value: input.binArrayBitmapExtension ?? null, isWritable: true }, userToken: { value: input.userToken ?? null, isWritable: true }, reserve: { value: input.reserve ?? null, isWritable: true }, tokenMint: { value: input.tokenMint ?? null, isWritable: false }, binArrayLower: { value: input.binArrayLower ?? null, isWritable: true }, binArrayUpper: { value: input.binArrayUpper ?? null, isWritable: true }, sender: { value: input.sender ?? null, isWritable: false }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false }, eventAuthority: { value: input.eventAuthority ?? null, isWritable: false }, program: { value: input.program ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -72,7 +70,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("position", accounts.position), getAccountMeta("lbPair", accounts.lbPair), getAccountMeta("binArrayBitmapExtension", accounts.binArrayBitmapExtension), getAccountMeta("userToken", accounts.userToken), getAccountMeta("reserve", accounts.reserve), getAccountMeta("tokenMint", accounts.tokenMint), getAccountMeta("binArrayLower", accounts.binArrayLower), getAccountMeta("binArrayUpper", accounts.binArrayUpper), getAccountMeta("sender", accounts.sender), getAccountMeta("tokenProgram", accounts.tokenProgram), getAccountMeta("eventAuthority", accounts.eventAuthority), getAccountMeta("program", accounts.program)], data: getAddLiquidityOneSidePreciseInstructionDataEncoder().encode(args as AddLiquidityOneSidePreciseInstructionDataArgs), programAddress } as AddLiquidityOneSidePreciseInstruction<TProgramAddress, TAccountPosition, TAccountLbPair, TAccountBinArrayBitmapExtension, TAccountUserToken, TAccountReserve, TAccountTokenMint, TAccountBinArrayLower, TAccountBinArrayUpper, TAccountSender, TAccountTokenProgram, TAccountEventAuthority, TAccountProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.position), getAccountMeta(accounts.lbPair), getAccountMeta(accounts.binArrayBitmapExtension), getAccountMeta(accounts.userToken), getAccountMeta(accounts.reserve), getAccountMeta(accounts.tokenMint), getAccountMeta(accounts.binArrayLower), getAccountMeta(accounts.binArrayUpper), getAccountMeta(accounts.sender), getAccountMeta(accounts.tokenProgram), getAccountMeta(accounts.eventAuthority), getAccountMeta(accounts.program)], data: getAddLiquidityOneSidePreciseInstructionDataEncoder().encode(args as AddLiquidityOneSidePreciseInstructionDataArgs), programAddress } as AddLiquidityOneSidePreciseInstruction<TProgramAddress, TAccountPosition, TAccountLbPair, TAccountBinArrayBitmapExtension, TAccountUserToken, TAccountReserve, TAccountTokenMint, TAccountBinArrayLower, TAccountBinArrayUpper, TAccountSender, TAccountTokenProgram, TAccountEventAuthority, TAccountProgram>);
 }
 
 export type ParsedAddLiquidityOneSidePreciseInstruction<TProgram extends string = typeof LB_CLMM_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -94,7 +92,8 @@ data: AddLiquidityOneSidePreciseInstructionData; };
 
 export function parseAddLiquidityOneSidePreciseInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedAddLiquidityOneSidePreciseInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 12) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 12 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

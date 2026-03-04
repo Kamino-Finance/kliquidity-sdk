@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBooleanDecoder, getBooleanEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBooleanDecoder, getBooleanEncoder, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU128Decoder, getU128Encoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount } from '@solana/kit';
 import { AMM_V3_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const SWAP_DISCRIMINATOR = new Uint8Array([248, 198, 158, 145, 225, 117, 135, 200]);
 
@@ -58,7 +56,7 @@ const programAddress = config?.programAddress ?? AMM_V3_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { payer: { value: input.payer ?? null, isWritable: false }, ammConfig: { value: input.ammConfig ?? null, isWritable: false }, poolState: { value: input.poolState ?? null, isWritable: true }, inputTokenAccount: { value: input.inputTokenAccount ?? null, isWritable: true }, outputTokenAccount: { value: input.outputTokenAccount ?? null, isWritable: true }, inputVault: { value: input.inputVault ?? null, isWritable: true }, outputVault: { value: input.outputVault ?? null, isWritable: true }, observationState: { value: input.observationState ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false }, tickArray: { value: input.tickArray ?? null, isWritable: true } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -71,7 +69,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("payer", accounts.payer), getAccountMeta("ammConfig", accounts.ammConfig), getAccountMeta("poolState", accounts.poolState), getAccountMeta("inputTokenAccount", accounts.inputTokenAccount), getAccountMeta("outputTokenAccount", accounts.outputTokenAccount), getAccountMeta("inputVault", accounts.inputVault), getAccountMeta("outputVault", accounts.outputVault), getAccountMeta("observationState", accounts.observationState), getAccountMeta("tokenProgram", accounts.tokenProgram), getAccountMeta("tickArray", accounts.tickArray)], data: getSwapInstructionDataEncoder().encode(args as SwapInstructionDataArgs), programAddress } as SwapInstruction<TProgramAddress, TAccountPayer, TAccountAmmConfig, TAccountPoolState, TAccountInputTokenAccount, TAccountOutputTokenAccount, TAccountInputVault, TAccountOutputVault, TAccountObservationState, TAccountTokenProgram, TAccountTickArray>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.payer), getAccountMeta(accounts.ammConfig), getAccountMeta(accounts.poolState), getAccountMeta(accounts.inputTokenAccount), getAccountMeta(accounts.outputTokenAccount), getAccountMeta(accounts.inputVault), getAccountMeta(accounts.outputVault), getAccountMeta(accounts.observationState), getAccountMeta(accounts.tokenProgram), getAccountMeta(accounts.tickArray)], data: getSwapInstructionDataEncoder().encode(args as SwapInstructionDataArgs), programAddress } as SwapInstruction<TProgramAddress, TAccountPayer, TAccountAmmConfig, TAccountPoolState, TAccountInputTokenAccount, TAccountOutputTokenAccount, TAccountInputVault, TAccountOutputVault, TAccountObservationState, TAccountTokenProgram, TAccountTickArray>);
 }
 
 export type ParsedSwapInstruction<TProgram extends string = typeof AMM_V3_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -91,7 +89,8 @@ data: SwapInstructionData; };
 
 export function parseSwapInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedSwapInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 10) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 10 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

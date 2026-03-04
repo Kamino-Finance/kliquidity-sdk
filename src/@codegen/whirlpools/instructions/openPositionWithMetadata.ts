@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getI32Decoder, getI32Encoder, getStructDecoder, getStructEncoder, getU8Decoder, getU8Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getI32Decoder, getI32Encoder, getStructDecoder, getStructEncoder, getU8Decoder, getU8Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const OPEN_POSITION_WITH_METADATA_DISCRIMINATOR = new Uint8Array([242, 29, 134, 48, 58, 110, 14, 60]);
 
@@ -61,7 +59,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { funder: { value: input.funder ?? null, isWritable: true }, owner: { value: input.owner ?? null, isWritable: false }, position: { value: input.position ?? null, isWritable: true }, positionMint: { value: input.positionMint ?? null, isWritable: true }, positionMetadataAccount: { value: input.positionMetadataAccount ?? null, isWritable: true }, positionTokenAccount: { value: input.positionTokenAccount ?? null, isWritable: true }, whirlpool: { value: input.whirlpool ?? null, isWritable: false }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false }, associatedTokenProgram: { value: input.associatedTokenProgram ?? null, isWritable: false }, metadataProgram: { value: input.metadataProgram ?? null, isWritable: false }, metadataUpdateAuth: { value: input.metadataUpdateAuth ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -80,7 +78,7 @@ accounts.rent.value = 'SysvarRent111111111111111111111111111111111' as Address<'
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("funder", accounts.funder), getAccountMeta("owner", accounts.owner), getAccountMeta("position", accounts.position), getAccountMeta("positionMint", accounts.positionMint), getAccountMeta("positionMetadataAccount", accounts.positionMetadataAccount), getAccountMeta("positionTokenAccount", accounts.positionTokenAccount), getAccountMeta("whirlpool", accounts.whirlpool), getAccountMeta("tokenProgram", accounts.tokenProgram), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent), getAccountMeta("associatedTokenProgram", accounts.associatedTokenProgram), getAccountMeta("metadataProgram", accounts.metadataProgram), getAccountMeta("metadataUpdateAuth", accounts.metadataUpdateAuth)], data: getOpenPositionWithMetadataInstructionDataEncoder().encode(args as OpenPositionWithMetadataInstructionDataArgs), programAddress } as OpenPositionWithMetadataInstruction<TProgramAddress, TAccountFunder, TAccountOwner, TAccountPosition, TAccountPositionMint, TAccountPositionMetadataAccount, TAccountPositionTokenAccount, TAccountWhirlpool, TAccountTokenProgram, TAccountSystemProgram, TAccountRent, TAccountAssociatedTokenProgram, TAccountMetadataProgram, TAccountMetadataUpdateAuth>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.funder), getAccountMeta(accounts.owner), getAccountMeta(accounts.position), getAccountMeta(accounts.positionMint), getAccountMeta(accounts.positionMetadataAccount), getAccountMeta(accounts.positionTokenAccount), getAccountMeta(accounts.whirlpool), getAccountMeta(accounts.tokenProgram), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent), getAccountMeta(accounts.associatedTokenProgram), getAccountMeta(accounts.metadataProgram), getAccountMeta(accounts.metadataUpdateAuth)], data: getOpenPositionWithMetadataInstructionDataEncoder().encode(args as OpenPositionWithMetadataInstructionDataArgs), programAddress } as OpenPositionWithMetadataInstruction<TProgramAddress, TAccountFunder, TAccountOwner, TAccountPosition, TAccountPositionMint, TAccountPositionMetadataAccount, TAccountPositionTokenAccount, TAccountWhirlpool, TAccountTokenProgram, TAccountSystemProgram, TAccountRent, TAccountAssociatedTokenProgram, TAccountMetadataProgram, TAccountMetadataUpdateAuth>);
 }
 
 export type ParsedOpenPositionWithMetadataInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -103,7 +101,8 @@ data: OpenPositionWithMetadataInstructionData; };
 
 export function parseOpenPositionWithMetadataInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedOpenPositionWithMetadataInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 13) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 13 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

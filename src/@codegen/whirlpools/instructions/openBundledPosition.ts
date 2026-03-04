@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getI32Decoder, getI32Encoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getI32Decoder, getI32Encoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const OPEN_BUNDLED_POSITION_DISCRIMINATOR = new Uint8Array([169, 113, 126, 171, 213, 172, 212, 49]);
 
@@ -55,7 +53,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { bundledPosition: { value: input.bundledPosition ?? null, isWritable: true }, positionBundle: { value: input.positionBundle ?? null, isWritable: true }, positionBundleTokenAccount: { value: input.positionBundleTokenAccount ?? null, isWritable: false }, positionBundleAuthority: { value: input.positionBundleAuthority ?? null, isWritable: false }, whirlpool: { value: input.whirlpool ?? null, isWritable: false }, funder: { value: input.funder ?? null, isWritable: true }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -71,7 +69,7 @@ accounts.rent.value = 'SysvarRent111111111111111111111111111111111' as Address<'
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("bundledPosition", accounts.bundledPosition), getAccountMeta("positionBundle", accounts.positionBundle), getAccountMeta("positionBundleTokenAccount", accounts.positionBundleTokenAccount), getAccountMeta("positionBundleAuthority", accounts.positionBundleAuthority), getAccountMeta("whirlpool", accounts.whirlpool), getAccountMeta("funder", accounts.funder), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent)], data: getOpenBundledPositionInstructionDataEncoder().encode(args as OpenBundledPositionInstructionDataArgs), programAddress } as OpenBundledPositionInstruction<TProgramAddress, TAccountBundledPosition, TAccountPositionBundle, TAccountPositionBundleTokenAccount, TAccountPositionBundleAuthority, TAccountWhirlpool, TAccountFunder, TAccountSystemProgram, TAccountRent>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.bundledPosition), getAccountMeta(accounts.positionBundle), getAccountMeta(accounts.positionBundleTokenAccount), getAccountMeta(accounts.positionBundleAuthority), getAccountMeta(accounts.whirlpool), getAccountMeta(accounts.funder), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent)], data: getOpenBundledPositionInstructionDataEncoder().encode(args as OpenBundledPositionInstructionDataArgs), programAddress } as OpenBundledPositionInstruction<TProgramAddress, TAccountBundledPosition, TAccountPositionBundle, TAccountPositionBundleTokenAccount, TAccountPositionBundleAuthority, TAccountWhirlpool, TAccountFunder, TAccountSystemProgram, TAccountRent>);
 }
 
 export type ParsedOpenBundledPositionInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -89,7 +87,8 @@ data: OpenBundledPositionInstructionData; };
 
 export function parseOpenBundledPositionInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedOpenBundledPositionInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 8) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 8 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

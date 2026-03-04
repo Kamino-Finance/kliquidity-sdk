@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { WHIRLPOOL_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INITIALIZE_CONFIG_EXTENSION_DISCRIMINATOR = new Uint8Array([55, 9, 53, 9, 114, 57, 209, 52]);
 
@@ -49,7 +47,7 @@ const programAddress = config?.programAddress ?? WHIRLPOOL_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { config: { value: input.config ?? null, isWritable: false }, configExtension: { value: input.configExtension ?? null, isWritable: true }, funder: { value: input.funder ?? null, isWritable: true }, feeAuthority: { value: input.feeAuthority ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Resolve default values.
@@ -58,7 +56,7 @@ accounts.systemProgram.value = '11111111111111111111111111111111' as Address<'11
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("config", accounts.config), getAccountMeta("configExtension", accounts.configExtension), getAccountMeta("funder", accounts.funder), getAccountMeta("feeAuthority", accounts.feeAuthority), getAccountMeta("systemProgram", accounts.systemProgram)], data: getInitializeConfigExtensionInstructionDataEncoder().encode({}), programAddress } as InitializeConfigExtensionInstruction<TProgramAddress, TAccountConfig, TAccountConfigExtension, TAccountFunder, TAccountFeeAuthority, TAccountSystemProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.config), getAccountMeta(accounts.configExtension), getAccountMeta(accounts.funder), getAccountMeta(accounts.feeAuthority), getAccountMeta(accounts.systemProgram)], data: getInitializeConfigExtensionInstructionDataEncoder().encode({}), programAddress } as InitializeConfigExtensionInstruction<TProgramAddress, TAccountConfig, TAccountConfigExtension, TAccountFunder, TAccountFeeAuthority, TAccountSystemProgram>);
 }
 
 export type ParsedInitializeConfigExtensionInstruction<TProgram extends string = typeof WHIRLPOOL_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -73,7 +71,8 @@ data: InitializeConfigExtensionInstructionData; };
 
 export function parseInitializeConfigExtensionInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedInitializeConfigExtensionInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 5) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 5 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {

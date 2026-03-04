@@ -6,11 +6,9 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, SolanaError, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
-import { getAccountMetaFactory, type ResolvedInstructionAccount } from '../../_shims/programClientCore';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, getU64Decoder, getU64Encoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
-
-const SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS = 7340032 as const;
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INITIALIZE_STRATEGY_DISCRIMINATOR = new Uint8Array([208, 119, 144, 145, 178, 57, 105, 252]);
 
@@ -65,7 +63,7 @@ const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
 const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: false }, pool: { value: input.pool ?? null, isWritable: false }, tokenAMint: { value: input.tokenAMint ?? null, isWritable: false }, tokenBMint: { value: input.tokenBMint ?? null, isWritable: false }, tokenAVault: { value: input.tokenAVault ?? null, isWritable: true }, tokenBVault: { value: input.tokenBVault ?? null, isWritable: true }, baseVaultAuthority: { value: input.baseVaultAuthority ?? null, isWritable: true }, sharesMint: { value: input.sharesMint ?? null, isWritable: true }, sharesMintAuthority: { value: input.sharesMintAuthority ?? null, isWritable: true }, tokenInfos: { value: input.tokenInfos ?? null, isWritable: false }, systemProgram: { value: input.systemProgram ?? null, isWritable: false }, rent: { value: input.rent ?? null, isWritable: false }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false }, tokenATokenProgram: { value: input.tokenATokenProgram ?? null, isWritable: false }, tokenBTokenProgram: { value: input.tokenBTokenProgram ?? null, isWritable: false }, strategy: { value: input.strategy ?? null, isWritable: true } }
-const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
+const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 // Original args.
@@ -84,7 +82,7 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta("adminAuthority", accounts.adminAuthority), getAccountMeta("globalConfig", accounts.globalConfig), getAccountMeta("pool", accounts.pool), getAccountMeta("tokenAMint", accounts.tokenAMint), getAccountMeta("tokenBMint", accounts.tokenBMint), getAccountMeta("tokenAVault", accounts.tokenAVault), getAccountMeta("tokenBVault", accounts.tokenBVault), getAccountMeta("baseVaultAuthority", accounts.baseVaultAuthority), getAccountMeta("sharesMint", accounts.sharesMint), getAccountMeta("sharesMintAuthority", accounts.sharesMintAuthority), getAccountMeta("tokenInfos", accounts.tokenInfos), getAccountMeta("systemProgram", accounts.systemProgram), getAccountMeta("rent", accounts.rent), getAccountMeta("tokenProgram", accounts.tokenProgram), getAccountMeta("tokenATokenProgram", accounts.tokenATokenProgram), getAccountMeta("tokenBTokenProgram", accounts.tokenBTokenProgram), getAccountMeta("strategy", accounts.strategy)], data: getInitializeStrategyInstructionDataEncoder().encode(args as InitializeStrategyInstructionDataArgs), programAddress } as InitializeStrategyInstruction<TProgramAddress, TAccountAdminAuthority, TAccountGlobalConfig, TAccountPool, TAccountTokenAMint, TAccountTokenBMint, TAccountTokenAVault, TAccountTokenBVault, TAccountBaseVaultAuthority, TAccountSharesMint, TAccountSharesMintAuthority, TAccountTokenInfos, TAccountSystemProgram, TAccountRent, TAccountTokenProgram, TAccountTokenATokenProgram, TAccountTokenBTokenProgram, TAccountStrategy>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.pool), getAccountMeta(accounts.tokenAMint), getAccountMeta(accounts.tokenBMint), getAccountMeta(accounts.tokenAVault), getAccountMeta(accounts.tokenBVault), getAccountMeta(accounts.baseVaultAuthority), getAccountMeta(accounts.sharesMint), getAccountMeta(accounts.sharesMintAuthority), getAccountMeta(accounts.tokenInfos), getAccountMeta(accounts.systemProgram), getAccountMeta(accounts.rent), getAccountMeta(accounts.tokenProgram), getAccountMeta(accounts.tokenATokenProgram), getAccountMeta(accounts.tokenBTokenProgram), getAccountMeta(accounts.strategy)], data: getInitializeStrategyInstructionDataEncoder().encode(args as InitializeStrategyInstructionDataArgs), programAddress } as InitializeStrategyInstruction<TProgramAddress, TAccountAdminAuthority, TAccountGlobalConfig, TAccountPool, TAccountTokenAMint, TAccountTokenBMint, TAccountTokenAVault, TAccountTokenBVault, TAccountBaseVaultAuthority, TAccountSharesMint, TAccountSharesMintAuthority, TAccountTokenInfos, TAccountSystemProgram, TAccountRent, TAccountTokenProgram, TAccountTokenATokenProgram, TAccountTokenBTokenProgram, TAccountStrategy>);
 }
 
 export type ParsedInitializeStrategyInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -112,7 +110,8 @@ data: InitializeStrategyInstructionData; };
 
 export function parseInitializeStrategyInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedInitializeStrategyInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 17) {
-  throw new Error(`Program client error: ${JSON.stringify({ actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 17 })}`);
+  // TODO: Coded error.
+  throw new Error('Not enough accounts');
 }
 let accountIndex = 0;
 const getNextAccount = () => {
