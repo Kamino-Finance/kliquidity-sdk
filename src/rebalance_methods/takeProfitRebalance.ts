@@ -2,7 +2,6 @@ import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
 import { FullBPSDecimal } from '../utils/CreationParameters';
 import { Dex, readBigUint128LE } from '../utils';
-import { readU8 } from '../utils/bytes';
 import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { getPriceFromQ64Price } from '../utils/meteora';
@@ -97,29 +96,31 @@ export function readTakeProfitRebalanceParamsFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ) {
-  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
+  const buf = new Uint8Array(rebalanceRaw.params);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   const params: RebalanceFieldsDict = {};
 
   params['lowerRangePrice'] = SqrtPriceMath.sqrtPriceX64ToPrice(
-    toBN(readBigUint128LE(paramsBuffer, 0)),
+    toBN(readBigUint128LE(buf, 0)),
     tokenADecimals,
     tokenBDecimals
   );
   params['upperRangePrice'] = SqrtPriceMath.sqrtPriceX64ToPrice(
-    toBN(readBigUint128LE(paramsBuffer, 16)),
+    toBN(readBigUint128LE(buf, 16)),
     tokenADecimals,
     tokenBDecimals
   );
-  params['destinationToken'] = new Decimal(readU8(paramsBuffer, 32));
+  params['destinationToken'] = new Decimal(dv.getUint8(32));
 
   return params;
 }
 
 export function readTakeProfitRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  const stateBuffer = new Uint8Array(rebalanceRaw.state);
+  const buf = new Uint8Array(rebalanceRaw.state);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   const state: RebalanceFieldsDict = {};
 
-  state['step'] = new Decimal(readU8(stateBuffer, 0));
+  state['step'] = new Decimal(dv.getUint8(0));
 
   return state;
 }

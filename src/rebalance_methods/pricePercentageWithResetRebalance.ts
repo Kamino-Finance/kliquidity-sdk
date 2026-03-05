@@ -8,7 +8,6 @@ import {
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { Dex, readBigUint128LE } from '../utils';
-import { readU16LE } from '../utils/bytes';
 import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
 import { upsertManyRebalanceFieldInfos } from './utils';
 import { getPriceRangeFromPriceAndDiffBPS, getResetRangeFromPriceAndDiffBPS } from './math_utils';
@@ -145,30 +144,31 @@ export function getDefaultPricePercentageWithResetRebalanceFieldInfos(price: Dec
 export function readPricePercentageWithResetRebalanceParamsFromStrategy(
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
+  const buf = new Uint8Array(rebalanceRaw.params);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
 
   const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
-    value: new Decimal(readU16LE(paramsBuffer, 0)),
+    value: new Decimal(dv.getUint16(0, true)),
     enabled: true,
   };
   const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
-    value: new Decimal(readU16LE(paramsBuffer, 2)),
+    value: new Decimal(dv.getUint16(2, true)),
     enabled: true,
   };
   const resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetLowerRangeBps',
     type: 'number',
-    value: new Decimal(readU16LE(paramsBuffer, 4)),
+    value: new Decimal(dv.getUint16(4, true)),
     enabled: true,
   };
   const resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetUpperRangeBps',
     type: 'number',
-    value: new Decimal(readU16LE(paramsBuffer, 6)),
+    value: new Decimal(dv.getUint16(6, true)),
     enabled: true,
   };
 

@@ -1,7 +1,6 @@
 import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
 import { Dex, readPriceOption } from '../utils';
-import { readI8, readI32LE, readU8, readU16LE, readU32LE, readU64LE } from '../utils/bytes';
 import { priceToTickIndex, sqrtPriceToPrice as orcaSqrtPriceToPrice, tickIndexToPrice } from '@orca-so/whirlpools-core';
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
@@ -209,16 +208,17 @@ export function getDefaultAutodriftRebalanceFieldInfos(
 }
 
 export function readAutodriftRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldsDict {
-  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
+  const buf = new Uint8Array(rebalanceRaw.params);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   const params: RebalanceFieldsDict = {};
 
-  params['initDriftTicksPerEpoch'] = new Decimal(readU32LE(paramsBuffer, 0));
-  params['ticksBelowMid'] = new Decimal(readI32LE(paramsBuffer, 4));
-  params['ticksAboveMid'] = new Decimal(readI32LE(paramsBuffer, 8));
-  params['frontrunMultiplierBps'] = new Decimal(readU16LE(paramsBuffer, 12));
-  params['stakingRateASource'] = new Decimal(readU8(paramsBuffer, 14));
-  params['stakingRateBSource'] = new Decimal(readU8(paramsBuffer, 15));
-  params['initialDriftDirection'] = new Decimal(readU8(paramsBuffer, 16));
+  params['initDriftTicksPerEpoch'] = new Decimal(dv.getUint32(0, true));
+  params['ticksBelowMid'] = new Decimal(dv.getInt32(4, true));
+  params['ticksAboveMid'] = new Decimal(dv.getInt32(8, true));
+  params['frontrunMultiplierBps'] = new Decimal(dv.getUint16(12, true));
+  params['stakingRateASource'] = new Decimal(dv.getUint8(14));
+  params['stakingRateBSource'] = new Decimal(dv.getUint8(15));
+  params['initialDriftDirection'] = new Decimal(dv.getUint8(16));
 
   return params;
 }
@@ -226,22 +226,23 @@ export function readAutodriftRebalanceParamsFromStrategy(rebalanceRaw: Rebalance
 export function readRawAutodriftRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
   const stateBuffer = new Uint8Array(rebalanceRaw.state);
   const state: RebalanceFieldsDict = {};
+  const dv = new DataView(stateBuffer.buffer, stateBuffer.byteOffset, stateBuffer.byteLength);
 
   // prettier-ignore
   {
       let offset = 0;
       [offset, state['last_window_staking_rate_a']     ] = readPriceOption(stateBuffer, offset);
       [offset, state['last_window_staking_rate_b']     ] = readPriceOption(stateBuffer, offset);
-      [offset, state['last_window_epoch']              ] = [offset + 8, new Decimal(readU64LE(stateBuffer, offset).toString())];
-      [offset, state['last_window_theoretical_tick']   ] = [offset + 4, new Decimal(readI32LE(stateBuffer, offset))];
-      [offset, state['last_window_strat_mid_tick']     ] = [offset + 4, new Decimal(readI32LE(stateBuffer, offset))];
+      [offset, state['last_window_epoch']              ] = [offset + 8, new Decimal(dv.getBigUint64(offset, true).toString())];
+      [offset, state['last_window_theoretical_tick']   ] = [offset + 4, new Decimal(dv.getInt32(offset, true))];
+      [offset, state['last_window_strat_mid_tick']     ] = [offset + 4, new Decimal(dv.getInt32(offset, true))];
 
       [offset, state['current_window_staking_rate_a']  ] = readPriceOption(stateBuffer, offset);
       [offset, state['current_window_staking_rate_b']  ] = readPriceOption(stateBuffer, offset);
-      [offset, state['current_window_epoch']           ] = [offset + 8, new Decimal(readU64LE(stateBuffer, offset).toString())];
-      [offset, state['current_window_theoretical_tick']] = [offset + 4, new Decimal(readI32LE(stateBuffer, offset))];
-      [offset, state['current_window_strat_mid_tick']  ] = [offset + 4, new Decimal(readI32LE(stateBuffer, offset))];
-      [offset, state['autodrift_step']                 ] = [offset + 1, new Decimal(readI8(stateBuffer, offset))];
+      [offset, state['current_window_epoch']           ] = [offset + 8, new Decimal(dv.getBigUint64(offset, true).toString())];
+      [offset, state['current_window_theoretical_tick']] = [offset + 4, new Decimal(dv.getInt32(offset, true))];
+      [offset, state['current_window_strat_mid_tick']  ] = [offset + 4, new Decimal(dv.getInt32(offset, true))];
+      [offset, state['autodrift_step']                 ] = [offset + 1, new Decimal(dv.getInt8(offset))];
   }
 
   return state;

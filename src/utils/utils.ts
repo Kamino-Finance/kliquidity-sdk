@@ -1,14 +1,5 @@
 import { Address, Instruction, isSome, Option, TransactionSigner } from '@solana/kit';
-import {
-  readU8,
-  readU64LE,
-  writeU8,
-  writeU16LE,
-  writeI32LE,
-  writeU32LE,
-  writeU64LE as writeU64LEBytes,
-  write128LE,
-} from './bytes';
+import { readU128LE, writeU128LE } from './bytes';
 import Decimal from 'decimal.js';
 import {
   DriftDirection,
@@ -71,7 +62,8 @@ export function numberToReferencePriceType(num: number): ReferencePriceType {
 
 export function getStrategyConfigValue(value: Decimal): number[] {
   const buf = new Uint8Array(128);
-  writeU64LEBytes(buf, 0, BigInt(value.toString()));
+  const dv = new DataView(buf.buffer);
+  dv.setBigUint64(0, BigInt(value.toString()), true);
   return [...buf];
 }
 
@@ -82,49 +74,50 @@ export function buildStrategyRebalanceParams(
   tokenBDecimals?: number
 ): number[] {
   const buf = new Uint8Array(128);
+  const dv = new DataView(buf.buffer);
   if (rebalance_type === RebalanceType.Manual) {
     // Manual has no params
   } else if (rebalance_type === RebalanceType.PricePercentage) {
-    writeU16LE(buf, 0, params[0].toNumber());
-    writeU16LE(buf, 2, params[1].toNumber());
+    dv.setUint16(0, params[0].toNumber(), true);
+    dv.setUint16(2, params[1].toNumber(), true);
   } else if (rebalance_type === RebalanceType.PricePercentageWithReset) {
-    writeU16LE(buf, 0, params[0].toNumber());
-    writeU16LE(buf, 2, params[1].toNumber());
-    writeU16LE(buf, 4, params[2].toNumber());
-    writeU16LE(buf, 6, params[3].toNumber());
+    dv.setUint16(0, params[0].toNumber(), true);
+    dv.setUint16(2, params[1].toNumber(), true);
+    dv.setUint16(4, params[2].toNumber(), true);
+    dv.setUint16(6, params[3].toNumber(), true);
   } else if (rebalance_type === RebalanceType.Drift) {
-    writeI32LE(buf, 0, params[0].toNumber());
-    writeI32LE(buf, 4, params[1].toNumber());
-    writeI32LE(buf, 8, params[2].toNumber());
-    writeU64LEBytes(buf, 12, BigInt(params[3].toString()));
-    writeU8(buf, 20, params[4].toNumber());
+    dv.setInt32(0, params[0].toNumber(), true);
+    dv.setInt32(4, params[1].toNumber(), true);
+    dv.setInt32(8, params[2].toNumber(), true);
+    dv.setBigUint64(12, BigInt(params[3].toString()), true);
+    dv.setUint8(20, params[4].toNumber());
   } else if (rebalance_type === RebalanceType.TakeProfit) {
     // TODO: fix this for meteora
     const lowerPrice = SqrtPriceMath.priceToSqrtPriceX64(params[0], tokenADecimals!, tokenBDecimals!);
     const upperPrice = SqrtPriceMath.priceToSqrtPriceX64(params[1], tokenADecimals!, tokenBDecimals!);
-    write128LE(buf, 0, fromBN(lowerPrice));
-    write128LE(buf, 16, fromBN(upperPrice));
-    writeU8(buf, 32, params[2].toNumber());
+    writeU128LE(dv, 0, fromBN(lowerPrice));
+    writeU128LE(dv, 16, fromBN(upperPrice));
+    dv.setUint8(32, params[2].toNumber());
   } else if (rebalance_type === RebalanceType.PeriodicRebalance) {
-    writeU64LEBytes(buf, 0, BigInt(params[0].toString()));
-    writeU16LE(buf, 8, params[1].toNumber());
-    writeU16LE(buf, 10, params[2].toNumber());
+    dv.setBigUint64(0, BigInt(params[0].toString()), true);
+    dv.setUint16(8, params[1].toNumber(), true);
+    dv.setUint16(10, params[2].toNumber(), true);
   } else if (rebalance_type === RebalanceType.Expander) {
-    writeU16LE(buf, 0, params[0].toNumber());
-    writeU16LE(buf, 2, params[1].toNumber());
-    writeU16LE(buf, 4, params[2].toNumber());
-    writeU16LE(buf, 6, params[3].toNumber());
-    writeU16LE(buf, 8, params[4].toNumber());
-    writeU16LE(buf, 10, params[5].toNumber());
-    writeU8(buf, 12, params[6].toNumber());
+    dv.setUint16(0, params[0].toNumber(), true);
+    dv.setUint16(2, params[1].toNumber(), true);
+    dv.setUint16(4, params[2].toNumber(), true);
+    dv.setUint16(6, params[3].toNumber(), true);
+    dv.setUint16(8, params[4].toNumber(), true);
+    dv.setUint16(10, params[5].toNumber(), true);
+    dv.setUint8(12, params[6].toNumber());
   } else if (rebalance_type === RebalanceType.Autodrift) {
-    writeU32LE(buf, 0, params[0].toNumber());
-    writeI32LE(buf, 4, params[1].toNumber());
-    writeI32LE(buf, 8, params[2].toNumber());
-    writeU16LE(buf, 12, params[3].toNumber());
-    writeU8(buf, 14, params[4].toNumber());
-    writeU8(buf, 15, params[5].toNumber());
-    writeU8(buf, 16, params[6].toNumber());
+    dv.setUint32(0, params[0].toNumber(), true);
+    dv.setInt32(4, params[1].toNumber(), true);
+    dv.setInt32(8, params[2].toNumber(), true);
+    dv.setUint16(12, params[3].toNumber(), true);
+    dv.setUint8(14, params[4].toNumber());
+    dv.setUint8(15, params[5].toNumber());
+    dv.setUint8(16, params[6].toNumber());
   } else {
     throw 'Rebalance type not valid ' + rebalance_type;
   }
@@ -222,15 +215,17 @@ export function lamportsToNumberDecimal(amount: Decimal.Value, decimals: number)
 }
 
 export function readBigUint128LE(buf: Uint8Array, offset: number): bigint {
-  return readU64LE(buf, offset) + (readU64LE(buf, offset + 8) << 64n);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  return readU128LE(dv, offset);
 }
 
 export function readPriceOption(buf: Uint8Array, offset: number): [number, Decimal] {
-  if (readU8(buf, offset) == 0) {
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  if (dv.getUint8(offset) == 0) {
     return [offset + 1, new Decimal(0)];
   }
-  const value = readU64LE(buf, offset + 1);
-  const exp = readU64LE(buf, offset + 9);
+  const value = dv.getBigUint64(offset + 1, true);
+  const exp = dv.getBigUint64(offset + 9, true);
   return [offset + 17, new Decimal(value.toString()).div(new Decimal(10).pow(exp.toString()))];
 }
 
