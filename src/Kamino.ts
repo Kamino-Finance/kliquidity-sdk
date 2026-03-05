@@ -137,6 +137,7 @@ import {
   getIncreaseLiquidityQuote,
   defaultSlippagePercentageBPS,
 } from './utils';
+import { encodeUtf8, base64ToBytes } from './utils/bytes';
 import {
   getCheckExpectedVaultsBalancesInstruction,
   getCloseStrategyInstruction,
@@ -1305,7 +1306,7 @@ export class Kamino {
         .send()
     ).map((x) => {
       const res: StrategyWithAddress = {
-        strategy: getWhirlpoolStrategyDecoder().decode(new Uint8Array(Buffer.from(x.account.data[0], 'base64'))),
+        strategy: getWhirlpoolStrategyDecoder().decode(base64ToBytes(x.account.data[0])),
         address: x.pubkey,
       };
       return res;
@@ -1359,9 +1360,7 @@ export class Kamino {
         )}`
       );
     }
-    const decodedStrategy = getWhirlpoolStrategyDecoder().decode(
-      new Uint8Array(Buffer.from(matchingStrategies[0].account.data[0], 'base64'))
-    );
+    const decodedStrategy = getWhirlpoolStrategyDecoder().decode(base64ToBytes(matchingStrategies[0].account.data[0]));
     return {
       address: matchingStrategies[0].pubkey,
       strategy: decodedStrategy,
@@ -1596,8 +1595,8 @@ export class Kamino {
         this.logger.error(`Pool or position does not exist for strategy ${strategy.address.toString()}, skipping`);
         continue;
       }
-      const positionBuffer = Buffer.from(position.data);
-      const poolBuffer = Buffer.from(pool.data);
+      const positionBuffer = new Uint8Array(position.data);
+      const poolBuffer = new Uint8Array(pool.data);
 
       switch (Number(strategy.strategy.strategyDex)) {
         case dexToNumber('RAYDIUM'):
@@ -2152,8 +2151,8 @@ export class Kamino {
       if (!positionAcc) {
         throw Error(`Could not fetch Orca whirlpool position state with pubkey ${strategy.position.toString()}`);
       }
-      const whirlpool = getWhirlpoolDecoder().decode(new Uint8Array(Buffer.from(whirlpoolAcc.data[0], 'base64')));
-      const position = getOrcaPositionDecoder().decode(new Uint8Array(Buffer.from(positionAcc.data[0], 'base64')));
+      const whirlpool = getWhirlpoolDecoder().decode(base64ToBytes(whirlpoolAcc.data[0]));
+      const position = getOrcaPositionDecoder().decode(base64ToBytes(positionAcc.data[0]));
       return this.getOrcaTokensBalances(strategy, whirlpool, position, mode);
     } else if (Number(strategy.strategyDex) === dexToNumber('RAYDIUM')) {
       const [poolStateAcc, positionAcc] = (
@@ -2165,10 +2164,8 @@ export class Kamino {
       if (!positionAcc) {
         throw Error(`Could not fetch Raydium position state with pubkey ${strategy.position.toString()}`);
       }
-      const poolState = getPoolStateDecoder().decode(new Uint8Array(Buffer.from(poolStateAcc.data[0], 'base64')));
-      const position = getPersonalPositionStateDecoder().decode(
-        new Uint8Array(Buffer.from(positionAcc.data[0], 'base64'))
-      );
+      const poolState = getPoolStateDecoder().decode(base64ToBytes(poolStateAcc.data[0]));
+      const position = getPersonalPositionStateDecoder().decode(base64ToBytes(positionAcc.data[0]));
       return this.getRaydiumTokensBalances(strategy, poolState, position, mode);
     } else if (Number(strategy.strategyDex) === dexToNumber('METEORA')) {
       return this.getMeteoraTokensBalances(strategy);
@@ -2228,8 +2225,8 @@ export class Kamino {
     if (!positionAcc) {
       throw Error(`Could not fetch Orca whirlpool position state with pubkey ${strategy.position.toString()}`);
     }
-    const whirlpool = getWhirlpoolDecoder().decode(new Uint8Array(Buffer.from(whirlpoolAcc.data[0], 'base64')));
-    const position = getOrcaPositionDecoder().decode(new Uint8Array(Buffer.from(positionAcc.data[0], 'base64')));
+    const whirlpool = getWhirlpoolDecoder().decode(base64ToBytes(whirlpoolAcc.data[0]));
+    const position = getOrcaPositionDecoder().decode(base64ToBytes(positionAcc.data[0]));
 
     return this.getOrcaBalances(
       strategy,
@@ -2256,8 +2253,8 @@ export class Kamino {
     if (!positionAcc.exists) {
       throw Error(`Could not fetch Raydium position state with pubkey ${strategy.position}`);
     }
-    const poolState = getPoolStateDecoder().decode(new Uint8Array(Buffer.from(poolStateAcc.data)));
-    const position = getPersonalPositionStateDecoder().decode(new Uint8Array(Buffer.from(positionAcc.data)));
+    const poolState = getPoolStateDecoder().decode(new Uint8Array(new Uint8Array(poolStateAcc.data)));
+    const position = getPersonalPositionStateDecoder().decode(new Uint8Array(new Uint8Array(positionAcc.data)));
 
     return this.getRaydiumBalances(strategy, poolState, position, collateralInfos, scopePrices, disabledTokensPrices);
   };
@@ -2277,9 +2274,9 @@ export class Kamino {
       throw Error(`Could not fetch Meteora position state with pubkey ${strategy.position}`);
     }
 
-    const poolState = getLbPairDecoder().decode(new Uint8Array(Buffer.from(poolStateAcc.data[0], 'base64')));
+    const poolState = getLbPairDecoder().decode(base64ToBytes(poolStateAcc.data[0]));
     try {
-      const position = getPositionV2Decoder().decode(new Uint8Array(Buffer.from(positionAcc.data[0], 'base64')));
+      const position = getPositionV2Decoder().decode(base64ToBytes(positionAcc.data[0]));
       return this.getMeteoraBalances(strategy, poolState, position, collateralInfos, scopePrices, disabledTokensPrices);
     } catch (e) {
       return this.getMeteoraBalances(
@@ -2866,7 +2863,7 @@ export class Kamino {
 
     if (Number(dex) === dexToNumber('METEORA')) {
       const [key] = await getProgramDerivedAddress({
-        seeds: [Buffer.from('__event_authority')],
+        seeds: [encodeUtf8('__event_authority')],
         programAddress: this._meteoraService.getMeteoraProgramId(),
       });
       return some(key);
@@ -3031,7 +3028,7 @@ export class Kamino {
       }
 
       const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = await getProgramDerivedAddress({
-        seeds: [Buffer.from('pool_tick_array_bitmap_extension'), addressEncoder.encode(strategyState.strategy.pool)],
+        seeds: [encodeUtf8('pool_tick_array_bitmap_extension'), addressEncoder.encode(strategyState.strategy.pool)],
         programAddress: this._raydiumService.getRaydiumProgramId(),
       });
       withdrawIx = appendAccounts(withdrawIx, [
@@ -3186,15 +3183,15 @@ export class Kamino {
   private getTreasuryFeeVaultPDAs = async (tokenAMint: Address, tokenBMint: Address): Promise<TreasuryFeeVault> => {
     const [[treasuryFeeTokenAVault], [treasuryFeeTokenBVault], [treasuryFeeVaultAuthority]] = await Promise.all([
       getProgramDerivedAddress({
-        seeds: [Buffer.from('treasury_fee_vault'), addressEncoder.encode(tokenAMint)],
+        seeds: [encodeUtf8('treasury_fee_vault'), addressEncoder.encode(tokenAMint)],
         programAddress: this.getProgramID(),
       }),
       getProgramDerivedAddress({
-        seeds: [Buffer.from('treasury_fee_vault'), addressEncoder.encode(tokenBMint)],
+        seeds: [encodeUtf8('treasury_fee_vault'), addressEncoder.encode(tokenBMint)],
         programAddress: this.getProgramID(),
       }),
       getProgramDerivedAddress({
-        seeds: [Buffer.from('treasury_fee_vault_authority')],
+        seeds: [encodeUtf8('treasury_fee_vault_authority')],
         programAddress: this.getProgramID(),
       }),
     ]);
@@ -4385,7 +4382,7 @@ export class Kamino {
 
   getUserTopupVault = async (user: Address): Promise<Address> => {
     const [topupVault] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('topup_vault'), addressEncoder.encode(user)],
+      seeds: [encodeUtf8('topup_vault'), addressEncoder.encode(user)],
       programAddress: this.getProgramID(),
     });
     return topupVault;
@@ -4405,20 +4402,20 @@ export class Kamino {
     tokenMintB: Address
   ): Promise<StrategyProgramAddress> => {
     const [tokenAVault, tokenABump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('svault_a'), addressEncoder.encode(strategy)],
+      seeds: [encodeUtf8('svault_a'), addressEncoder.encode(strategy)],
       programAddress: this.getProgramID(),
     });
     const [tokenBVault, tokenBBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('svault_b'), addressEncoder.encode(strategy)],
+      seeds: [encodeUtf8('svault_b'), addressEncoder.encode(strategy)],
       programAddress: this.getProgramID(),
     });
     const [baseVaultAuthority, baseVaultAuthorityBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('authority'), addressEncoder.encode(tokenAVault), addressEncoder.encode(tokenBVault)],
+      seeds: [encodeUtf8('authority'), addressEncoder.encode(tokenAVault), addressEncoder.encode(tokenBVault)],
       programAddress: this.getProgramID(),
     });
     const [sharesMint, sharesMintBump] = await getProgramDerivedAddress({
       seeds: [
-        Buffer.from('shares'),
+        encodeUtf8('shares'),
         addressEncoder.encode(strategy),
         addressEncoder.encode(tokenMintA),
         addressEncoder.encode(tokenMintB),
@@ -4426,7 +4423,7 @@ export class Kamino {
       programAddress: this.getProgramID(),
     });
     const [sharesMintAuthority, sharesMintAuthorityBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('authority'), addressEncoder.encode(sharesMint)],
+      seeds: [encodeUtf8('authority'), addressEncoder.encode(sharesMint)],
       programAddress: this.getProgramID(),
     });
 
@@ -4589,7 +4586,7 @@ export class Kamino {
 
     if (Number(strategyState.strategyDex) === dexToNumber('RAYDIUM')) {
       const [poolTickArrayBitmap] = await getProgramDerivedAddress({
-        seeds: [Buffer.from('pool_tick_array_bitmap_extension'), addressEncoder.encode(strategyState.pool)],
+        seeds: [encodeUtf8('pool_tick_array_bitmap_extension'), addressEncoder.encode(strategyState.pool)],
         programAddress: this._raydiumService.getRaydiumProgramId(),
       });
 
@@ -4604,11 +4601,11 @@ export class Kamino {
    */
   getMetadataProgramAddressesOrca = async (positionMint: Address): Promise<MetadataProgramAddressesOrca> => {
     const [position, positionBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('position'), addressEncoder.encode(positionMint)],
+      seeds: [encodeUtf8('position'), addressEncoder.encode(positionMint)],
       programAddress: this._orcaService.getWhirlpoolProgramId(),
     });
     const [positionMetadata, positionMetadataBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('metadata'), addressEncoder.encode(METADATA_PROGRAM_ID), addressEncoder.encode(positionMint)],
+      seeds: [encodeUtf8('metadata'), addressEncoder.encode(METADATA_PROGRAM_ID), addressEncoder.encode(positionMint)],
       programAddress: METADATA_PROGRAM_ID,
     });
 
@@ -4634,12 +4631,12 @@ export class Kamino {
     );
 
     const [position, positionBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('position'), addressEncoder.encode(positionMint)],
+      seeds: [encodeUtf8('position'), addressEncoder.encode(positionMint)],
       programAddress: this._raydiumService.getRaydiumProgramId(),
     });
 
     const [positionMetadata, positionMetadataBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('metadata'), addressEncoder.encode(METADATA_PROGRAM_ID), addressEncoder.encode(positionMint)],
+      seeds: [encodeUtf8('metadata'), addressEncoder.encode(METADATA_PROGRAM_ID), addressEncoder.encode(positionMint)],
       programAddress: METADATA_PROGRAM_ID,
     });
 
@@ -4663,11 +4660,11 @@ export class Kamino {
     const endTickIndex = orcaGetTickArrayStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing);
 
     const [lowerTickPubkey, lowerTickBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(startTickIndex.toString())],
+      seeds: [encodeUtf8('tick_array'), addressEncoder.encode(whirlpool), encodeUtf8(startTickIndex.toString())],
       programAddress: this._orcaService.getWhirlpoolProgramId(),
     });
     const [upperTickPubkey, upperTickBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(endTickIndex.toString())],
+      seeds: [encodeUtf8('tick_array'), addressEncoder.encode(whirlpool), encodeUtf8(endTickIndex.toString())],
       programAddress: this._orcaService.getWhirlpoolProgramId(),
     });
     return {
@@ -4688,11 +4685,11 @@ export class Kamino {
     const endTickIndex = RaydiumTickUtils.getTickArrayStartIndexByTick(tickUpperIndex, poolState.tickSpacing);
 
     const [lowerTickPubkey, lowerTickBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('tick_array'), addressEncoder.encode(pool), i32ToBytes(startTickIndex)],
+      seeds: [encodeUtf8('tick_array'), addressEncoder.encode(pool), i32ToBytes(startTickIndex)],
       programAddress: this._raydiumService.getRaydiumProgramId(),
     });
     const [upperTickPubkey, upperTickBump] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('tick_array'), addressEncoder.encode(pool), i32ToBytes(endTickIndex)],
+      seeds: [encodeUtf8('tick_array'), addressEncoder.encode(pool), i32ToBytes(endTickIndex)],
       programAddress: this._raydiumService.getRaydiumProgramId(),
     });
     return {
@@ -5130,7 +5127,7 @@ export class Kamino {
       memoProgram: MEMO_PROGRAM_ID,
     };
     const [poolTickArrayBitmap] = await getProgramDerivedAddress({
-      seeds: [Buffer.from('pool_tick_array_bitmap_extension'), addressEncoder.encode(pool)],
+      seeds: [encodeUtf8('pool_tick_array_bitmap_extension'), addressEncoder.encode(pool)],
       programAddress: this._raydiumService.getRaydiumProgramId(),
     });
 
@@ -6812,7 +6809,7 @@ export class Kamino {
       if (!mint || !mintInfo || !accountInfo) continue;
 
       const [expectedMintAuthority] = await getProgramDerivedAddress({
-        seeds: [Buffer.from('authority'), addressEncoder.encode(mint)],
+        seeds: [encodeUtf8('authority'), addressEncoder.encode(mint)],
         programAddress: this.getProgramID(),
       });
 
@@ -7579,7 +7576,7 @@ export class Kamino {
    * @param owner
    */
   async getUserTermsSignatureState(owner: Address): Promise<TermsSignature | null> {
-    const pdaSeed = [Buffer.from('signature'), addressEncoder.encode(owner)];
+    const pdaSeed = [encodeUtf8('signature'), addressEncoder.encode(owner)];
     const [signatureStateKey, _signatureStateBump] = await getProgramDerivedAddress({
       seeds: pdaSeed,
       programAddress: this.getProgramID(),
@@ -7594,7 +7591,7 @@ export class Kamino {
    * @param signature
    */
   async getUserTermsSignatureIx(owner: TransactionSigner, signature: Uint8Array): Promise<Instruction> {
-    const pdaSeed = [Buffer.from('signature'), addressEncoder.encode(owner.address)];
+    const pdaSeed = [encodeUtf8('signature'), addressEncoder.encode(owner.address)];
     const [signatureStateKey] = await getProgramDerivedAddress({ seeds: pdaSeed, programAddress: this.getProgramID() });
     const args = {
       signature: signature,

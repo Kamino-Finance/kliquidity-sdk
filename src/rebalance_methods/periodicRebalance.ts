@@ -2,6 +2,7 @@ import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
+import { readU16LE, readU64LE } from '../utils/bytes';
 import { getPriceRangeFromPriceAndDiffBPS } from './math_utils';
 
 export const DEFAULT_LOWER_RANGE_PRICE_DIFF_BPS_PERIODIC_REBALANCE = new Decimal(500);
@@ -84,21 +85,21 @@ export function getDefaultPeriodicRebalanceFieldInfos(price: Decimal): Rebalance
 }
 
 export function readPeriodicRebalanceRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw) {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
   const params: RebalanceFieldsDict = {};
 
-  params['period'] = new Decimal(paramsBuffer.readBigUInt64LE(0).toString());
-  params['lowerRangeBps'] = new Decimal(paramsBuffer.readUInt16LE(8));
-  params['upperRangeBps'] = new Decimal(paramsBuffer.readUInt16LE(10));
+  params['period'] = new Decimal(readU64LE(paramsBuffer, 0).toString());
+  params['lowerRangeBps'] = new Decimal(readU16LE(paramsBuffer, 8));
+  params['upperRangeBps'] = new Decimal(readU16LE(paramsBuffer, 10));
 
   return params;
 }
 
 export function readPeriodicRebalanceRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
   const state: RebalanceFieldsDict = {};
 
-  state['lastRebalanceTimestamp'] = new Decimal(stateBuffer.readBigUInt64LE(0).toString());
+  state['lastRebalanceTimestamp'] = new Decimal(readU64LE(stateBuffer, 0).toString());
 
   return state;
 }

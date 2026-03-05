@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js';
 import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils/types';
 import { Dex } from '../utils';
+import { readI32LE, readU8, readU64LE } from '../utils/bytes';
 import { priceToTickIndex, sqrtPriceToPrice as orcaSqrtPriceToPrice, tickIndexToPrice } from '@orca-so/whirlpools-core';
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
@@ -178,25 +179,25 @@ export function getDefaultDriftRebalanceFieldInfos(
 }
 
 export function readDriftRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldsDict {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
   const params: RebalanceFieldsDict = {};
 
-  params['startMidTick'] = new Decimal(paramsBuffer.readInt32LE(0));
-  params['ticksBelowMid'] = new Decimal(paramsBuffer.readInt32LE(4));
-  params['ticksAboveMid'] = new Decimal(paramsBuffer.readInt32LE(8));
-  params['secondsPerTick'] = new Decimal(paramsBuffer.readBigUInt64LE(12).toString());
-  params['direction'] = new Decimal(paramsBuffer.readUint8(20));
+  params['startMidTick'] = new Decimal(readI32LE(paramsBuffer, 0));
+  params['ticksBelowMid'] = new Decimal(readI32LE(paramsBuffer, 4));
+  params['ticksAboveMid'] = new Decimal(readI32LE(paramsBuffer, 8));
+  params['secondsPerTick'] = new Decimal(readU64LE(paramsBuffer, 12).toString());
+  params['direction'] = new Decimal(readU8(paramsBuffer, 20));
 
   return params;
 }
 
 export function readRawDriftRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
   const state: RebalanceFieldsDict = {};
 
-  state['step'] = new Decimal(stateBuffer.readUInt8(0));
-  state['lastDriftTimestamp'] = new Decimal(stateBuffer.readBigUInt64LE(1).toString());
-  state['lastMidTick'] = new Decimal(stateBuffer.readInt32LE(9));
+  state['step'] = new Decimal(readU8(stateBuffer, 0));
+  state['lastDriftTimestamp'] = new Decimal(readU64LE(stateBuffer, 1).toString());
+  state['lastMidTick'] = new Decimal(readI32LE(stateBuffer, 9));
 
   return state;
 }
@@ -208,13 +209,13 @@ export function readDriftRebalanceStateFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ) {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
+  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
 
-  const lastMidTick = new Decimal(stateBuffer.readInt32LE(9));
+  const lastMidTick = new Decimal(readI32LE(stateBuffer, 9));
 
-  const ticksBelowMid = new Decimal(paramsBuffer.readInt32LE(4));
-  const ticksAboveMid = new Decimal(paramsBuffer.readInt32LE(8));
+  const ticksBelowMid = new Decimal(readI32LE(paramsBuffer, 4));
+  const ticksAboveMid = new Decimal(readI32LE(paramsBuffer, 8));
 
   const lowerTickIndex = lastMidTick.sub(ticksBelowMid);
   const upperTickIndex = lastMidTick.add(ticksAboveMid);

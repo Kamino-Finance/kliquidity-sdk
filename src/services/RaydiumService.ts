@@ -557,7 +557,7 @@ export class RaydiumService {
         feeConfig: undefined,
         address: toLegacyPublicKey(address),
         isInitialized: true,
-        tlvData: Buffer.from([]),
+        tlvData: Buffer.from([]), // Raydium SDK requires Buffer
         supply: data.data.supply,
         decimals: data.data.decimals,
         freezeAuthority: optionGetValueOrUndefined(data.data.freezeAuthority)

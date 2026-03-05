@@ -1,4 +1,5 @@
 import { address, Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from '@solana/kit';
+import { base64ToBytes } from '../utils/bytes';
 import Decimal from 'decimal.js';
 import axios from 'axios';
 import { type WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
@@ -60,7 +61,7 @@ export class MeteoraService {
     const pools: MeteoraPool[] = [];
     for (let i = 0; i < rawPools.length; i++) {
       try {
-        const compressedData = Buffer.from(rawPools[i].account.data[0], 'base64');
+        const compressedData = base64ToBytes(rawPools[i].account.data[0]);
         const decompressedData = decompress(compressedData);
 
         const lbPair = getLbPairDecoder().decode(new Uint8Array(decompressedData));

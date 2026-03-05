@@ -7,6 +7,7 @@ import {
   getProgramDerivedAddress,
   Rpc,
 } from '@solana/kit';
+import { encodeUtf8 } from './bytes';
 import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-derived-address';
 import { ONE_BN, U64_MAX_BI, ZERO_BN } from '../constants';
 import { Percentage } from './types';
@@ -64,7 +65,7 @@ export async function getTickArray(
   startTick: number
 ): Promise<ProgramDerivedAddress> {
   return await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpoolAddress), Buffer.from(startTick.toString())],
+    seeds: [encodeUtf8('tick_array'), addressEncoder.encode(whirlpoolAddress), encodeUtf8(startTick.toString())],
     programAddress: programId,
   });
 }
@@ -393,7 +394,7 @@ export async function getTickArrayPda(
   startIndex: number
 ): Promise<[Address, number]> {
   const pdaWithBump = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(poolAddress), Buffer.from(startIndex.toString())],
+    seeds: [encodeUtf8('tick_array'), addressEncoder.encode(poolAddress), encodeUtf8(startIndex.toString())],
     programAddress: programId,
   });
 

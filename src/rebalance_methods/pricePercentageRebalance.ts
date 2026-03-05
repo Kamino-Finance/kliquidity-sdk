@@ -4,6 +4,7 @@ import { DefaultLowerPercentageBPSDecimal, DefaultUpperPercentageBPSDecimal } fr
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { Dex, readBigUint128LE } from '../utils';
+import { readU16LE } from '../utils/bytes';
 import { upsertManyRebalanceFieldInfos } from './utils';
 import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
 import { getPriceRangeFromPriceAndDiffBPS } from './math_utils';
@@ -81,18 +82,18 @@ export function getDefaultPricePercentageRebalanceFieldInfos(price: Decimal): Re
 }
 
 export function readPricePercentageRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldInfo[] {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
 
   const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
-    value: new Decimal(paramsBuffer.readUint16LE(0)),
+    value: new Decimal(readU16LE(paramsBuffer, 0)),
     enabled: true,
   };
   const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
-    value: new Decimal(paramsBuffer.readUint16LE(2)),
+    value: new Decimal(readU16LE(paramsBuffer, 2)),
     enabled: true,
   };
 
@@ -100,7 +101,7 @@ export function readPricePercentageRebalanceParamsFromStrategy(rebalanceRaw: Reb
 }
 
 export function readRawPricePercentageRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldInfo[] {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
 
   const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
@@ -123,7 +124,7 @@ export function readPricePercentageRebalanceStateFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
 
   const lowerSqrtPriceX64 = readBigUint128LE(stateBuffer, 0).toString();
   const upperSqrtPriceX64 = readBigUint128LE(stateBuffer, 16).toString();

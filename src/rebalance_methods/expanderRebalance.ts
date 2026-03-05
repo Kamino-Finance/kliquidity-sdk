@@ -4,6 +4,7 @@ import { DefaultLowerPercentageBPSDecimal, DefaultUpperPercentageBPSDecimal } fr
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { Dex, readBigUint128LE } from '../utils';
+import { readU8, readU16LE } from '../utils/bytes';
 import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
 import { upsertManyRebalanceFieldInfos } from './utils';
 import { getPriceRangeFromPriceAndDiffBPS, getResetRangeFromPriceAndDiffBPS } from './math_utils';
@@ -162,30 +163,30 @@ export function getDefaultExpanderRebalanceFieldInfos(price: Decimal): Rebalance
 }
 
 export function readRawExpanderRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw) {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
   const params: RebalanceFieldsDict = {};
 
-  params['lowerRangeBps'] = new Decimal(paramsBuffer.readUInt16LE(0));
-  params['upperRangeBps'] = new Decimal(paramsBuffer.readUInt16LE(2));
-  params['lowerResetRatioBps'] = new Decimal(paramsBuffer.readUInt16LE(4));
-  params['upperResetRatioBps'] = new Decimal(paramsBuffer.readUInt16LE(6));
-  params['expansionBps'] = new Decimal(paramsBuffer.readUInt16LE(8));
-  params['maxNumberOfExpansions'] = new Decimal(paramsBuffer.readUInt16LE(10));
-  params['swapUnevenAllowed'] = new Decimal(paramsBuffer.readUInt8(12));
+  params['lowerRangeBps'] = new Decimal(readU16LE(paramsBuffer, 0));
+  params['upperRangeBps'] = new Decimal(readU16LE(paramsBuffer, 2));
+  params['lowerResetRatioBps'] = new Decimal(readU16LE(paramsBuffer, 4));
+  params['upperResetRatioBps'] = new Decimal(readU16LE(paramsBuffer, 6));
+  params['expansionBps'] = new Decimal(readU16LE(paramsBuffer, 8));
+  params['maxNumberOfExpansions'] = new Decimal(readU16LE(paramsBuffer, 10));
+  params['swapUnevenAllowed'] = new Decimal(readU8(paramsBuffer, 12));
 
   return params;
 }
 
 export function readExpanderRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldInfo[] {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
 
-  const lowerRangeBps = new Decimal(paramsBuffer.readUInt16LE(0));
-  const upperRangeBps = new Decimal(paramsBuffer.readUInt16LE(2));
-  const lowerResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(4));
-  const upperResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(6));
-  const expansionBps = new Decimal(paramsBuffer.readUInt16LE(8));
-  const maxNumberOfExpansions = new Decimal(paramsBuffer.readUInt16LE(10));
-  const swapUnevenAllowed = new Decimal(paramsBuffer.readUInt8(12));
+  const lowerRangeBps = new Decimal(readU16LE(paramsBuffer, 0));
+  const upperRangeBps = new Decimal(readU16LE(paramsBuffer, 2));
+  const lowerResetRatioBps = new Decimal(readU16LE(paramsBuffer, 4));
+  const upperResetRatioBps = new Decimal(readU16LE(paramsBuffer, 6));
+  const expansionBps = new Decimal(readU16LE(paramsBuffer, 8));
+  const maxNumberOfExpansions = new Decimal(readU16LE(paramsBuffer, 10));
+  const swapUnevenAllowed = new Decimal(readU8(paramsBuffer, 12));
 
   const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
@@ -242,11 +243,11 @@ export function readExpanderRebalanceParamsFromStrategy(rebalanceRaw: RebalanceR
 }
 
 export function readRawExpanderRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
   const state: RebalanceFieldsDict = {};
 
   state['initialPoolPrice'] = new Decimal(readBigUint128LE(stateBuffer, 0).toString());
-  state['expansionCount'] = new Decimal(stateBuffer.readUInt16LE(16));
+  state['expansionCount'] = new Decimal(readU16LE(stateBuffer, 16));
 
   return state;
 }
@@ -337,15 +338,15 @@ export function readExpanderRebalanceStateFromStrategy(
 }
 
 export function readExpanderRebalanceFieldInfosFromStrategy(price: Decimal, rebalanceRaw: RebalanceRaw) {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const paramsBuffer = new Uint8Array(rebalanceRaw.params);
 
-  const lowerRangeBps = new Decimal(paramsBuffer.readUInt16LE(0));
-  const upperRangeBps = new Decimal(paramsBuffer.readUInt16LE(2));
-  const lowerResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(4));
-  const upperResetRatioBps = new Decimal(paramsBuffer.readUInt16LE(6));
-  const expansionBps = new Decimal(paramsBuffer.readUInt16LE(8));
-  const maxNumberOfExpansions = new Decimal(paramsBuffer.readUInt16LE(10));
-  const swapUnevenAllowed = new Decimal(paramsBuffer.readUInt8(12));
+  const lowerRangeBps = new Decimal(readU16LE(paramsBuffer, 0));
+  const upperRangeBps = new Decimal(readU16LE(paramsBuffer, 2));
+  const lowerResetRatioBps = new Decimal(readU16LE(paramsBuffer, 4));
+  const upperResetRatioBps = new Decimal(readU16LE(paramsBuffer, 6));
+  const expansionBps = new Decimal(readU16LE(paramsBuffer, 8));
+  const maxNumberOfExpansions = new Decimal(readU16LE(paramsBuffer, 10));
+  const swapUnevenAllowed = new Decimal(readU8(paramsBuffer, 12));
 
   return getExpanderRebalanceFieldInfos(
     price,
