@@ -345,6 +345,11 @@ export const HUBBLE_SCOPE_FEED_ID = address('3NJYftD5sjVfxSnUdZ1wVML8f3aC6mp1CXC
 export const KAMINO_SCOPE_FEED_ID = address('3t4JZcueEzTbVP6kLxXrL3VpWx45jDer4eqysweBchNH');
 export const KSWAP_BASE_API = 'https://api.kamino.finance/kswap';
 
+/** Append extra account metas to a codama instruction without losing type safety */
+function appendAccounts<T extends Instruction>(ix: T, extra: { address: Address; role: AccountRole }[]): T {
+  return { ...ix, accounts: [...(ix.accounts || []), ...extra] } as T;
+}
+
 export class Kamino {
   private readonly _cluster: SolanaCluster;
   private readonly _rpc: Rpc<SolanaRpcApi>;
@@ -2960,86 +2965,71 @@ export class Kamino {
         throw new Error('Pool is not found');
       }
 
-      withdrawIx = {
-        ...withdrawIx,
-        accounts: withdrawIx.accounts?.concat([
+      withdrawIx = appendAccounts(withdrawIx, [
+        {
+          address: strategyState.strategy.raydiumProtocolPositionOrBaseVaultAuthority,
+          role: AccountRole.WRITABLE,
+        },
+      ]);
+      if (Number(strategyState.strategy.reward0Decimals) > 0) {
+        withdrawIx = appendAccounts(withdrawIx, [
           {
-            address: strategyState.strategy.raydiumProtocolPositionOrBaseVaultAuthority,
+            address: poolState.rewardInfos[0].tokenVault,
             role: AccountRole.WRITABLE,
           },
-        ]) as any,
-      };
-      if (Number(strategyState.strategy.reward0Decimals) > 0) {
-        withdrawIx = {
-          ...withdrawIx,
-          accounts: withdrawIx.accounts?.concat([
-            {
-              address: poolState.rewardInfos[0].tokenVault,
-              role: AccountRole.WRITABLE,
-            },
-            {
-              address: strategyState.strategy.reward0Vault,
-              role: AccountRole.WRITABLE,
-            },
-            {
-              address: poolState.rewardInfos[0].tokenMint,
-              role: AccountRole.WRITABLE,
-            },
-          ]) as any,
-        };
+          {
+            address: strategyState.strategy.reward0Vault,
+            role: AccountRole.WRITABLE,
+          },
+          {
+            address: poolState.rewardInfos[0].tokenMint,
+            role: AccountRole.WRITABLE,
+          },
+        ]);
       }
       if (Number(strategyState.strategy.reward1Decimals) > 0) {
-        withdrawIx = {
-          ...withdrawIx,
-          accounts: withdrawIx.accounts?.concat([
-            {
-              address: poolState.rewardInfos[1].tokenVault,
-              role: AccountRole.WRITABLE,
-            },
-            {
-              address: strategyState.strategy.reward1Vault,
-              role: AccountRole.WRITABLE,
-            },
-            {
-              address: poolState.rewardInfos[1].tokenMint,
-              role: AccountRole.WRITABLE,
-            },
-          ]) as any,
-        };
+        withdrawIx = appendAccounts(withdrawIx, [
+          {
+            address: poolState.rewardInfos[1].tokenVault,
+            role: AccountRole.WRITABLE,
+          },
+          {
+            address: strategyState.strategy.reward1Vault,
+            role: AccountRole.WRITABLE,
+          },
+          {
+            address: poolState.rewardInfos[1].tokenMint,
+            role: AccountRole.WRITABLE,
+          },
+        ]);
       }
       if (Number(strategyState.strategy.reward2Decimals) > 0) {
-        withdrawIx = {
-          ...withdrawIx,
-          accounts: withdrawIx.accounts?.concat([
-            {
-              address: poolState.rewardInfos[2].tokenVault,
-              role: AccountRole.WRITABLE,
-            },
-            {
-              address: strategyState.strategy.reward2Vault,
-              role: AccountRole.WRITABLE,
-            },
-            {
-              address: poolState.rewardInfos[2].tokenMint,
-              role: AccountRole.WRITABLE,
-            },
-          ]) as any,
-        };
+        withdrawIx = appendAccounts(withdrawIx, [
+          {
+            address: poolState.rewardInfos[2].tokenVault,
+            role: AccountRole.WRITABLE,
+          },
+          {
+            address: strategyState.strategy.reward2Vault,
+            role: AccountRole.WRITABLE,
+          },
+          {
+            address: poolState.rewardInfos[2].tokenMint,
+            role: AccountRole.WRITABLE,
+          },
+        ]);
       }
 
       const [poolTickArrayBitmap, _poolTickArrayBitmapBump] = await getProgramDerivedAddress({
         seeds: [Buffer.from('pool_tick_array_bitmap_extension'), addressEncoder.encode(strategyState.strategy.pool)],
         programAddress: this._raydiumService.getRaydiumProgramId(),
       });
-      withdrawIx = {
-        ...withdrawIx,
-        accounts: withdrawIx.accounts?.concat([
-          {
-            address: poolTickArrayBitmap,
-            role: AccountRole.WRITABLE,
-          },
-        ]) as any,
-      };
+      withdrawIx = appendAccounts(withdrawIx, [
+        {
+          address: poolTickArrayBitmap,
+          role: AccountRole.WRITABLE,
+        },
+      ]);
     }
 
     const res: WithdrawShares = { prerequisiteIxs: collectFeesAndRewardsIxns, withdrawIx };
@@ -4196,13 +4186,10 @@ export class Kamino {
       { ...strategyArgs, ...strategyAccounts },
       { programAddress: this.getProgramID() }
     );
-    ix = {
-      ...ix,
-      accounts: ix.accounts?.concat([
-        { address: config.scopePriceId, role: AccountRole.READONLY },
-        { address: config.scopeProgramId, role: AccountRole.READONLY },
-      ]) as any,
-    };
+    ix = appendAccounts(ix, [
+      { address: config.scopePriceId, role: AccountRole.READONLY },
+      { address: config.scopeProgramId, role: AccountRole.READONLY },
+    ]);
     return ix;
   };
 
@@ -4377,13 +4364,10 @@ export class Kamino {
     let ix = getCloseStrategyInstruction({ ...strategyAccounts }, { programAddress: this.getProgramID() });
 
     for (let i = 0; i < 6; i++) {
-      ix = {
-        ...ix,
-        accounts: ix.accounts?.concat([
-          { address: rewardMints[i], role: AccountRole.READONLY },
-          { address: rewardTokenPrograms[i], role: AccountRole.READONLY },
-        ]) as any,
-      };
+      ix = appendAccounts(ix, [
+        { address: rewardMints[i], role: AccountRole.READONLY },
+        { address: rewardTokenPrograms[i], role: AccountRole.READONLY },
+      ]);
     }
 
     return ix;
@@ -4586,13 +4570,10 @@ export class Kamino {
     for (const [decimals, mint] of pairs) {
       if (decimals > 0) {
         const tokenProgram = await this.getAccountOwner(mint);
-        ix = {
-          ...ix,
-          accounts: ix.accounts?.concat([
-            { address: mint, role: AccountRole.READONLY },
-            { address: tokenProgram, role: AccountRole.READONLY },
-          ]) as any,
-        };
+        ix = appendAccounts(ix, [
+          { address: mint, role: AccountRole.READONLY },
+          { address: tokenProgram, role: AccountRole.READONLY },
+        ]);
       }
     }
 
@@ -4602,10 +4583,7 @@ export class Kamino {
         programAddress: this._raydiumService.getRaydiumProgramId(),
       });
 
-      ix = {
-        ...ix,
-        accounts: ix.accounts?.concat([{ address: poolTickArrayBitmap, role: AccountRole.READONLY }]) as any,
-      };
+      ix = appendAccounts(ix, [{ address: poolTickArrayBitmap, role: AccountRole.READONLY }]);
     }
     return ix;
   };
@@ -5148,44 +5126,32 @@ export class Kamino {
 
     let ix = getOpenLiquidityPositionInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
 
-    ix = {
-      ...ix,
-      accounts: ix.accounts?.concat([
-        { address: protocolPosition, role: AccountRole.WRITABLE },
-        { address: oldProtocolPositionOrBaseVaultAuthority, role: AccountRole.WRITABLE },
-        { address: METADATA_PROGRAM_ID, role: AccountRole.READONLY },
-        { address: poolTickArrayBitmap, role: AccountRole.WRITABLE },
-      ]) as any,
-    };
+    ix = appendAccounts(ix, [
+      { address: protocolPosition, role: AccountRole.WRITABLE },
+      { address: oldProtocolPositionOrBaseVaultAuthority, role: AccountRole.WRITABLE },
+      { address: METADATA_PROGRAM_ID, role: AccountRole.READONLY },
+      { address: poolTickArrayBitmap, role: AccountRole.WRITABLE },
+    ]);
     if (strategyRewardOVault) {
-      ix = {
-        ...ix,
-        accounts: ix.accounts?.concat([
-          { address: poolState.rewardInfos[0].tokenVault, role: AccountRole.WRITABLE },
-          { address: strategyRewardOVault, role: AccountRole.WRITABLE },
-          { address: poolState.rewardInfos[0].tokenMint, role: AccountRole.READONLY },
-        ]) as any,
-      };
+      ix = appendAccounts(ix, [
+        { address: poolState.rewardInfos[0].tokenVault, role: AccountRole.WRITABLE },
+        { address: strategyRewardOVault, role: AccountRole.WRITABLE },
+        { address: poolState.rewardInfos[0].tokenMint, role: AccountRole.READONLY },
+      ]);
     }
     if (strategyReward1Vault) {
-      ix = {
-        ...ix,
-        accounts: ix.accounts?.concat([
-          { address: poolState.rewardInfos[1].tokenVault, role: AccountRole.WRITABLE },
-          { address: strategyReward1Vault, role: AccountRole.WRITABLE },
-          { address: poolState.rewardInfos[1].tokenMint, role: AccountRole.READONLY },
-        ]) as any,
-      };
+      ix = appendAccounts(ix, [
+        { address: poolState.rewardInfos[1].tokenVault, role: AccountRole.WRITABLE },
+        { address: strategyReward1Vault, role: AccountRole.WRITABLE },
+        { address: poolState.rewardInfos[1].tokenMint, role: AccountRole.READONLY },
+      ]);
     }
     if (strategyReward2Vault) {
-      ix = {
-        ...ix,
-        accounts: ix.accounts?.concat([
-          { address: poolState.rewardInfos[2].tokenVault, role: AccountRole.WRITABLE },
-          { address: strategyReward2Vault, role: AccountRole.WRITABLE },
-          { address: poolState.rewardInfos[2].tokenMint, role: AccountRole.READONLY },
-        ]) as any,
-      };
+      ix = appendAccounts(ix, [
+        { address: poolState.rewardInfos[2].tokenVault, role: AccountRole.WRITABLE },
+        { address: strategyReward2Vault, role: AccountRole.WRITABLE },
+        { address: poolState.rewardInfos[2].tokenMint, role: AccountRole.READONLY },
+      ]);
     }
 
     const accs = [...(ix.accounts || [])];
@@ -5393,31 +5359,22 @@ export class Kamino {
       }
 
       if (Number(strategyState.reward0Decimals) > 0) {
-        executiveWithdrawIx = {
-          ...executiveWithdrawIx,
-          accounts: executiveWithdrawIx.accounts?.concat([
-            { address: poolState.rewardInfos[0].tokenVault, role: AccountRole.WRITABLE },
-            { address: strategyState.reward0Vault, role: AccountRole.WRITABLE },
-          ]) as any,
-        };
+        executiveWithdrawIx = appendAccounts(executiveWithdrawIx, [
+          { address: poolState.rewardInfos[0].tokenVault, role: AccountRole.WRITABLE },
+          { address: strategyState.reward0Vault, role: AccountRole.WRITABLE },
+        ]);
       }
       if (Number(strategyState.reward1Decimals) > 0) {
-        executiveWithdrawIx = {
-          ...executiveWithdrawIx,
-          accounts: executiveWithdrawIx.accounts?.concat([
-            { address: poolState.rewardInfos[1].tokenVault, role: AccountRole.WRITABLE },
-            { address: strategyState.reward1Vault, role: AccountRole.WRITABLE },
-          ]) as any,
-        };
+        executiveWithdrawIx = appendAccounts(executiveWithdrawIx, [
+          { address: poolState.rewardInfos[1].tokenVault, role: AccountRole.WRITABLE },
+          { address: strategyState.reward1Vault, role: AccountRole.WRITABLE },
+        ]);
       }
       if (Number(strategyState.reward2Decimals) > 0) {
-        executiveWithdrawIx = {
-          ...executiveWithdrawIx,
-          accounts: executiveWithdrawIx.accounts?.concat([
-            { address: poolState.rewardInfos[2].tokenVault, role: AccountRole.WRITABLE },
-            { address: strategyState.reward2Vault, role: AccountRole.WRITABLE },
-          ]) as any,
-        };
+        executiveWithdrawIx = appendAccounts(executiveWithdrawIx, [
+          { address: poolState.rewardInfos[2].tokenVault, role: AccountRole.WRITABLE },
+          { address: strategyState.reward2Vault, role: AccountRole.WRITABLE },
+        ]);
       }
     }
 
@@ -5668,7 +5625,7 @@ export class Kamino {
 
     const value = buildStrategyRebalanceParams(processedRebalanceParams, rebalanceType, tokenADecimals, tokenBDecimals);
     const args = {
-      mode: StrategyConfigOption.UpdateRebalanceParams as number,
+      mode: StrategyConfigOption.UpdateRebalanceParams,
       value: new Uint8Array(value),
     };
 
@@ -5692,7 +5649,7 @@ export class Kamino {
   ): Promise<Instruction> => {
     const value = buildStrategyRebalanceParams(rebalanceParams, rebalanceType, tokenADecimals, tokenBDecimals);
     const args = {
-      mode: StrategyConfigOption.UpdateRebalanceParams as number,
+      mode: StrategyConfigOption.UpdateRebalanceParams,
       value: new Uint8Array(value),
     };
 
