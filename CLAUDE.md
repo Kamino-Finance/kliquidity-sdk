@@ -1,5 +1,5 @@
 1. Use `yarn`
-2. When new gotchas or things that took a lot of stpes figured out update learnings. Update learnings when stuck as well. 
+2. When new gotchas or things that took a lot of steps figured out update learnings. Update learnings when stuck as well. 
 3. Whatever you change test after that
 
 # Learnings
