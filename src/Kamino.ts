@@ -14,6 +14,9 @@ import {
   Instruction,
   isAddress,
   isSome,
+  none,
+  type Option,
+  some,
   JsonParsedTokenAccount,
   Rpc,
   Slot,
@@ -348,6 +351,13 @@ export const KSWAP_BASE_API = 'https://api.kamino.finance/kswap';
 /** Append extra account metas to a codama instruction without losing type safety */
 function appendAccounts<T extends Instruction>(ix: T, extra: { address: Address; role: AccountRole }[]): T {
   return { ...ix, accounts: [...(ix.accounts || []), ...extra] } as T;
+}
+
+/** Unwrap an Option<T> to T | undefined */
+function unwrapOption<T>(
+  opt: { readonly __option: 'Some'; readonly value: T } | { readonly __option: 'None' }
+): T | undefined {
+  return opt.__option === 'Some' ? opt.value : undefined;
 }
 
 export class Kamino {
@@ -2849,9 +2859,9 @@ export class Kamino {
 
   getMeteoraPoolByAddress = async (pool: Address) => unwrapAccount(await fetchMaybeLbPair(this._rpc, pool));
 
-  getEventAuthorityPDA = async (dex: bigint): Promise<Address | undefined> => {
+  getEventAuthorityPDA = async (dex: bigint): Promise<Option<Address>> => {
     if (Number(dex) === dexToNumber('ORCA') || Number(dex) === dexToNumber('RAYDIUM')) {
-      return undefined;
+      return none();
     }
 
     if (Number(dex) === dexToNumber('METEORA')) {
@@ -2859,7 +2869,7 @@ export class Kamino {
         seeds: [Buffer.from('__event_authority')],
         programAddress: this._meteoraService.getMeteoraProgramId(),
       });
-      return key;
+      return some(key);
     }
     throw new Error('Invalid dex');
   };
@@ -2882,7 +2892,7 @@ export class Kamino {
     }
     const strategyState = await this.getStrategyStateIfNotFetched(strategy);
 
-    const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategy.strategyDex);
+    const eventAuthority = unwrapOption(await this.getEventAuthorityPDA(strategyState.strategy.strategyDex));
     const { treasuryFeeTokenAVault, treasuryFeeTokenBVault } = await this.getTreasuryFeeVaultPDAs(
       strategyState.strategy.tokenAMint,
       strategyState.strategy.tokenBMint
@@ -4227,7 +4237,7 @@ export class Kamino {
     const { address: strategyPubkey, strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
     const collInfos = await this.getCollateralInfos();
 
-    const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
+    const eventAuthority = unwrapOption(await this.getEventAuthorityPDA(strategyState.strategyDex));
     const poolProgram = this.getDexProgramId(strategyState);
     let oldPositionOrBaseVaultAuthority = strategyState.baseVaultAuthority;
     let oldPositionMintOrBaseVaultAuthority = strategyState.baseVaultAuthority;
@@ -4473,7 +4483,7 @@ export class Kamino {
   ): Promise<Instruction> => {
     const { address: strategyPubkey, strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
 
-    const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
+    const eventAuthority = unwrapOption(await this.getEventAuthorityPDA(strategyState.strategyDex));
     const { treasuryFeeTokenAVault, treasuryFeeTokenBVault, treasuryFeeVaultAuthority } =
       await this.getTreasuryFeeVaultPDAs(strategyState.tokenAMint, strategyState.tokenBMint);
 
@@ -4789,7 +4799,7 @@ export class Kamino {
     if (!strategyState) {
       throw Error(`Could not fetch strategy state with pubkey ${strategy.toString()}`);
     }
-    const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
+    const eventAuthority = unwrapOption(await this.getEventAuthorityPDA(strategyState.strategyDex));
 
     if (Number(strategyState.strategyDex) === dexToNumber('ORCA')) {
       return this.openPositionOrca(
@@ -5304,7 +5314,7 @@ export class Kamino {
     action: ExecutiveWithdrawAction
   ): Promise<Instruction> => {
     const { address: strategyPubkey, strategy: strategyState } = await this.getStrategyStateIfNotFetched(strategy);
-    const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
+    const eventAuthority = unwrapOption(await this.getEventAuthorityPDA(strategyState.strategyDex));
 
     const globalConfig = await this.getGlobalConfigState(strategyState.globalConfig);
     if (globalConfig === null) {
@@ -5422,7 +5432,7 @@ export class Kamino {
     }
 
     const programId = this.getDexProgramId(strategyState);
-    const eventAuthority = await this.getEventAuthorityPDA(strategyState.strategyDex);
+    const eventAuthority = unwrapOption(await this.getEventAuthorityPDA(strategyState.strategyDex));
 
     const accounts = {
       position: strategyState.position,
@@ -5789,7 +5799,7 @@ export class Kamino {
     );
 
     const openPositionIxs: Instruction[] = [];
-    const eventAuthority = await this.getEventAuthorityPDA(BigInt(dexToNumber(dex)));
+    const eventAuthority = unwrapOption(await this.getEventAuthorityPDA(BigInt(dexToNumber(dex))));
     if (dex === 'ORCA') {
       const whirlpoolWithAddress = await this.getWhirlpoolStateIfNotFetched(pool);
       if (!whirlpoolWithAddress) {
