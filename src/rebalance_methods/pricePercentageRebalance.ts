@@ -81,18 +81,19 @@ export function getDefaultPricePercentageRebalanceFieldInfos(price: Decimal): Re
 }
 
 export function readPricePercentageRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldInfo[] {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const buf = new Uint8Array(rebalanceRaw.params);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
 
   const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
-    value: new Decimal(paramsBuffer.readUint16LE(0)),
+    value: new Decimal(dv.getUint16(0, true)),
     enabled: true,
   };
   const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
-    value: new Decimal(paramsBuffer.readUint16LE(2)),
+    value: new Decimal(dv.getUint16(2, true)),
     enabled: true,
   };
 
@@ -100,7 +101,7 @@ export function readPricePercentageRebalanceParamsFromStrategy(rebalanceRaw: Reb
 }
 
 export function readRawPricePercentageRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw): RebalanceFieldInfo[] {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
 
   const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'rangePriceLower',
@@ -123,7 +124,7 @@ export function readPricePercentageRebalanceStateFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
 
   const lowerSqrtPriceX64 = readBigUint128LE(stateBuffer, 0).toString();
   const upperSqrtPriceX64 = readBigUint128LE(stateBuffer, 16).toString();

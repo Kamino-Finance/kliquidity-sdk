@@ -7,11 +7,13 @@ import {
   getProgramDerivedAddress,
   Rpc,
 } from '@solana/kit';
+import { encodeUtf8 } from './bytes';
 import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-derived-address';
 import { ONE_BN, U64_MAX_BI, ZERO_BN } from '../constants';
 import { Percentage } from './types';
 import { DEFAULT_ADDRESS, IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
-import { TickArray, Whirlpool } from '../@codegen/whirlpools/accounts';
+import { fetchAllMaybeTickArray, type Whirlpool } from '../@codegen/whirlpools/accounts';
+import { unwrapAccounts } from './codamaHelpers';
 import {
   _MAX_TICK_INDEX,
   _MIN_TICK_INDEX,
@@ -63,7 +65,7 @@ export async function getTickArray(
   startTick: number
 ): Promise<ProgramDerivedAddress> {
   return await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpoolAddress), Buffer.from(startTick.toString())],
+    seeds: [encodeUtf8('tick_array'), addressEncoder.encode(whirlpoolAddress), encodeUtf8(startTick.toString())],
     programAddress: programId,
   });
 }
@@ -315,7 +317,7 @@ export async function getLiquidityDistribution(
     tickUpper,
     whirlpoolProgramId
   );
-  const tickArrays = await TickArray.fetchMultiple(rpc, tickArrayAddresses, whirlpoolProgramId);
+  const tickArrays = unwrapAccounts(await fetchAllMaybeTickArray(rpc, tickArrayAddresses));
 
   const currentLiquidity = new Decimal(poolData.liquidity.toString());
   let relativeLiquidity = currentLiquidity;
@@ -392,7 +394,7 @@ export async function getTickArrayPda(
   startIndex: number
 ): Promise<[Address, number]> {
   const pdaWithBump = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(poolAddress), Buffer.from(startIndex.toString())],
+    seeds: [encodeUtf8('tick_array'), addressEncoder.encode(poolAddress), encodeUtf8(startIndex.toString())],
     programAddress: programId,
   });
 

@@ -2,8 +2,9 @@ import { address, Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from '@solana
 import Decimal from 'decimal.js';
 import axios from 'axios';
 import { OrcaWhirlpoolsResponse, Whirlpool as WhirlpoolAPIResponse } from './OrcaWhirlpoolsResponse';
-import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
-import { Position } from '../@codegen/whirlpools/accounts';
+import { type WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
+import { fetchMaybePosition } from '../@codegen/whirlpools/accounts';
+import { unwrapAccount } from '../utils/codamaHelpers';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
 import {
   aprToApy,
@@ -18,7 +19,7 @@ import {
   LiquidityForPrice,
   ZERO,
 } from '../utils';
-import { PROGRAM_ID as WHIRLPOOLS_PROGRAM_ID } from '../@codegen/whirlpools/programId';
+import { WHIRLPOOL_PROGRAM_ADDRESS } from '../@codegen/whirlpools/programs';
 import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { KaminoPrices } from '../models';
 import { priceToTickIndex } from '@orca-so/whirlpools-core';
@@ -28,7 +29,7 @@ export class OrcaService {
   private readonly _whirlpoolProgramId: Address;
   private readonly _orcaApiUrl: string;
 
-  constructor(rpc: Rpc<SolanaRpcApi>, whirlpoolProgramId: Address = WHIRLPOOLS_PROGRAM_ID) {
+  constructor(rpc: Rpc<SolanaRpcApi>, whirlpoolProgramId: Address = WHIRLPOOL_PROGRAM_ADDRESS) {
     this._rpc = rpc;
     this._whirlpoolProgramId = whirlpoolProgramId;
     this._orcaApiUrl = `https://api.orca.so/v2/solana`;
@@ -177,7 +178,7 @@ export class OrcaService {
     collateralInfos: CollateralInfo[],
     prices: KaminoPrices
   ): Promise<WhirlpoolAprApy> {
-    const position = await Position.fetch(this._rpc, strategy.position);
+    const position = unwrapAccount(await fetchMaybePosition(this._rpc, strategy.position));
     if (!position) {
       throw new Error(`Position ${strategy.position.toString()} does not exist`);
     }
@@ -405,7 +406,7 @@ export class OrcaService {
 
   async getPositionsCountByPool(pool: Address): Promise<number> {
     const rawPositions = await this._rpc
-      .getProgramAccounts(WHIRLPOOLS_PROGRAM_ID, {
+      .getProgramAccounts(WHIRLPOOL_PROGRAM_ADDRESS, {
         commitment: 'confirmed',
         filters: [
           // account LAYOUT: https://github.com/orca-so/whirlpools/blob/main/programs/whirlpool/src/state/position.rs#L20

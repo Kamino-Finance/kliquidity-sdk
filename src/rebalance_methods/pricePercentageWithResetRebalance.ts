@@ -144,30 +144,31 @@ export function getDefaultPricePercentageWithResetRebalanceFieldInfos(price: Dec
 export function readPricePercentageWithResetRebalanceParamsFromStrategy(
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const buf = new Uint8Array(rebalanceRaw.params);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
 
   const lowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lowerRangeBps',
     type: 'number',
-    value: new Decimal(paramsBuffer.readUint16LE(0)),
+    value: new Decimal(dv.getUint16(0, true)),
     enabled: true,
   };
   const upperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'upperRangeBps',
     type: 'number',
-    value: new Decimal(paramsBuffer.readUint16LE(2)),
+    value: new Decimal(dv.getUint16(2, true)),
     enabled: true,
   };
   const resetLowerBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetLowerRangeBps',
     type: 'number',
-    value: new Decimal(paramsBuffer.readUint16LE(4)),
+    value: new Decimal(dv.getUint16(4, true)),
     enabled: true,
   };
   const resetUpperBpsRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'resetUpperRangeBps',
     type: 'number',
-    value: new Decimal(paramsBuffer.readUint16LE(6)),
+    value: new Decimal(dv.getUint16(6, true)),
     enabled: true,
   };
 
@@ -182,7 +183,7 @@ export function readPricePercentageWithResetRebalanceParamsFromStrategy(
 export function readRawPricePercentageWithResetRebalanceStateFromStrategy(
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
 
   const lowerRangeRebalanceFieldInfo: RebalanceFieldInfo = {
     label: 'lastRebalanceLowerResetPoolPrice',
@@ -205,7 +206,7 @@ export function readPricePercentageWithResetRebalanceStateFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ): RebalanceFieldInfo[] {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const stateBuffer = new Uint8Array(rebalanceRaw.state);
   const params = readPricePercentageWithResetRebalanceParamsFromStrategy(rebalanceRaw);
   const lowerRangeBps = new Decimal(params.find((param) => param.label == 'lowerRangeBps')?.value.toString()!);
   const upperRangeBps = new Decimal(params.find((param) => param.label == 'upperRangeBps')?.value!.toString()!);

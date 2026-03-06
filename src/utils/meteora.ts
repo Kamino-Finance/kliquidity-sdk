@@ -1,4 +1,5 @@
 import { Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/kit';
+import { encodeUtf8 } from './bytes';
 import Decimal from 'decimal.js';
 import { U64_MAX } from '../constants/numericalValues';
 import { BinArray } from '../@codegen/meteora/accounts';
@@ -100,7 +101,7 @@ export async function deriveBinArray(
     binArrayBytes = buf;
   }
   const pda = await getProgramDerivedAddress({
-    seeds: [Buffer.from('bin_array'), addressEncoder.encode(lbPair), binArrayBytes],
+    seeds: [encodeUtf8('bin_array'), addressEncoder.encode(lbPair), binArrayBytes],
     programAddress: programId,
   });
   return pda;

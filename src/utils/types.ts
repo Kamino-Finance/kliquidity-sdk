@@ -1,8 +1,8 @@
 import { address, Address, Instruction, TransactionMessage, TransactionSigner } from '@solana/kit';
-import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
+import type { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import { Dex, collToLamportsDecimal } from './utils';
 import Decimal from 'decimal.js';
-import { RebalanceTypeKind } from '../@codegen/kliquidity/types';
+import { RebalanceType } from '../@codegen/kliquidity/types';
 
 export const RAYDIUM_DEVNET_PROGRAM_ID = address('devi51mZmdwUJGU9hjN27vEz64Gps7uUefqxg27EAtH');
 
@@ -165,7 +165,7 @@ export function depositAmountsForSwapToLamports(
 }
 
 export interface RebalanceParams {
-  rebalanceType: RebalanceTypeKind;
+  rebalanceType: RebalanceType;
   lowerRangeBps?: Decimal;
   upperRangeBps?: Decimal;
   resetRangeLowerBps?: Decimal;
@@ -182,7 +182,7 @@ export interface RebalanceParams {
 }
 
 export interface RebalanceParamsAsPrices {
-  rebalanceType: RebalanceTypeKind;
+  rebalanceType: RebalanceType;
   rangePriceLower: Decimal;
   rangePriceUpper: Decimal;
   resetPriceLower?: Decimal;

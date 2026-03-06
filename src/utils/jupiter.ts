@@ -1,9 +1,10 @@
 import { Instruction } from '@jup-ag/api';
 import { AccountRole, address, Instruction as SolanaInstruction } from '@solana/kit';
+import { base64ToBytes } from './bytes';
 
 export function jupInstructionToSolanaInstruction(ix: Instruction): SolanaInstruction {
   return {
-    data: ix.data ? Buffer.from(ix.data, 'base64') : undefined,
+    data: ix.data ? base64ToBytes(ix.data) : undefined,
     programAddress: address(ix.programId),
     accounts: ix.accounts.map((k) => ({
       address: address(k.pubkey),

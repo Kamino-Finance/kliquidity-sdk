@@ -15,12 +15,17 @@ import {
   Signature,
   TransactionSigner,
 } from '@solana/kit';
-import { StrategyConfigOptionKind, UpdateCollateralInfoModeKind } from '../../src/@codegen/kliquidity/types';
+import { StrategyConfigOption, UpdateCollateralInfoMode } from '../../src/@codegen/kliquidity/types';
 import * as Instructions from '../../src/@codegen/kliquidity/instructions';
 import { getMintDecimals } from '../../src/utils';
 
 import Decimal from 'decimal.js';
-import { CollateralInfos, GlobalConfig, WhirlpoolStrategy } from '../../src/@codegen/kliquidity/accounts';
+import {
+  fetchMaybeWhirlpoolStrategy,
+  fetchMaybeGlobalConfig,
+  fetchMaybeCollateralInfos,
+} from '../../src/@codegen/kliquidity/accounts';
+import { unwrapAccount } from '../../src/utils/codamaHelpers';
 import {
   collToLamportsDecimal,
   DepositAmountsForSwap,
@@ -96,11 +101,11 @@ export function range(start: number, end: number, step: number): number[] {
 export async function updateStrategyConfig(
   env: Env,
   strategy: Address,
-  mode: StrategyConfigOptionKind,
+  mode: StrategyConfigOption,
   amount: Decimal,
   newAccount: Address = DEFAULT_PUBLIC_KEY
 ) {
-  const strategyState = await WhirlpoolStrategy.fetch(env.c.rpc, strategy, env.kliquidityProgramId);
+  const strategyState = unwrapAccount(await fetchMaybeWhirlpoolStrategy(env.c.rpc, strategy));
   if (strategyState == null) {
     throw new Error(`strategy ${strategy} doesn't exist`);
   }
@@ -116,7 +121,7 @@ export async function updateStrategyConfig(
   );
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateCapIx]);
-  console.log('Update Strategy Config ', mode.toJSON(), sig?.toString());
+  console.log('Update Strategy Config ', mode, sig?.toString());
 }
 
 export async function updateTreasuryFeeVault(
@@ -127,28 +132,26 @@ export async function updateTreasuryFeeVault(
   treasuryFeeTokenVault: Address,
   treasuryFeeVaultAuthority: Address
 ): Promise<string> {
-  const args: Instructions.UpdateTreasuryFeeVaultArgs = {
-    collateralId: collateralTokenToNumber(collateralToken),
-  };
-
-  const config = await GlobalConfig.fetch(env.c.rpc, globalConfig, env.kliquidityProgramId);
+  const config = unwrapAccount(await fetchMaybeGlobalConfig(env.c.rpc, globalConfig));
   if (!config) {
     throw new Error(`Error retrieving the config ${globalConfig.toString()}`);
   }
 
-  const accounts: Instructions.UpdateTreasuryFeeVaultAccounts = {
-    signer: env.admin,
-    globalConfig: globalConfig,
-    feeMint: tokenMint,
-    treasuryFeeVault: treasuryFeeTokenVault,
-    treasuryFeeVaultAuthority: treasuryFeeVaultAuthority,
-    tokenInfos: config.tokenInfos,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    rent: SYSVAR_RENT_ADDRESS,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-  };
-
-  const ix = Instructions.updateTreasuryFeeVault(args, accounts, undefined, env.kliquidityProgramId);
+  const ix = Instructions.getUpdateTreasuryFeeVaultInstruction(
+    {
+      signer: env.admin,
+      globalConfig: globalConfig,
+      feeMint: tokenMint,
+      treasuryFeeVault: treasuryFeeTokenVault,
+      treasuryFeeVaultAuthority: treasuryFeeVaultAuthority,
+      tokenInfos: config.tokenInfos,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+      rent: SYSVAR_RENT_ADDRESS,
+      tokenProgram: TOKEN_PROGRAM_ADDRESS,
+      collateralId: collateralTokenToNumber(collateralToken),
+    },
+    { programAddress: env.kliquidityProgramId }
+  );
   const hash = await sendAndConfirmTx(env.c, env.admin, [ix]);
   console.log('updateTreasuryFeeVault ix:', hash);
   if (!hash) {
@@ -171,7 +174,7 @@ export async function createUser(
     await sleep(1000);
   }
 
-  const whirlpoolStrategyState = await WhirlpoolStrategy.fetch(env.c.rpc, strategy, env.kliquidityProgramId);
+  const whirlpoolStrategyState = unwrapAccount(await fetchMaybeWhirlpoolStrategy(env.c.rpc, strategy));
   if (whirlpoolStrategyState == null) {
     throw new Error(`Strategy ${strategy.toString()} does not exist`);
   }
@@ -393,12 +396,12 @@ export async function updateCollateralInfo(
   env: Env,
   globalConfig: Address,
   collateralToken: CollateralToken | number,
-  mode: UpdateCollateralInfoModeKind,
+  mode: UpdateCollateralInfoMode,
   value: bigint | Address | Uint16Array | Uint8Array
 ): Promise<Signature> {
-  console.log('Mode ', mode.discriminator);
+  console.log('Mode ', mode);
   console.log('value', value);
-  const config: GlobalConfig | null = await GlobalConfig.fetch(env.c.rpc, globalConfig, env.kliquidityProgramId);
+  const config = unwrapAccount(await fetchMaybeGlobalConfig(env.c.rpc, globalConfig));
   if (config == null) {
     throw new Error(`Global config ${globalConfig} not found`);
   }
@@ -407,7 +410,7 @@ export async function updateCollateralInfo(
   if (typeof collateralToken == 'number') {
     collateralNumber = collateralToken;
   } else {
-    const collInfos = await CollateralInfos.fetch(env.c.rpc, config.tokenInfos, env.kliquidityProgramId);
+    const collInfos = unwrapAccount(await fetchMaybeCollateralInfos(env.c.rpc, config.tokenInfos));
     if (collInfos == null) {
       throw new Error('CollateralInfos config not found');
     }
@@ -416,25 +419,19 @@ export async function updateCollateralInfo(
   }
   const argValue = toCollateralInfoValue(value);
 
-  console.log(
-    `UpdateCollateralInfo`,
-    mode.toJSON(),
-    `for ${collateralToken} with value ${value} encoded as ${argValue}`
+  console.log(`UpdateCollateralInfo`, mode, `for ${collateralToken} with value ${value} encoded as ${argValue}`);
+
+  const ix = Instructions.getUpdateCollateralInfoInstruction(
+    {
+      adminAuthority: env.admin,
+      globalConfig,
+      tokenInfos: config.tokenInfos,
+      index: BigInt(collateralNumber),
+      mode: BigInt(mode),
+      value: new Uint8Array(argValue),
+    },
+    { programAddress: env.kliquidityProgramId }
   );
-
-  const args: Instructions.UpdateCollateralInfoArgs = {
-    index: BigInt(collateralNumber),
-    mode: BigInt(mode.discriminator),
-    value: argValue,
-  };
-
-  const accounts: Instructions.UpdateCollateralInfoAccounts = {
-    adminAuthority: env.admin,
-    globalConfig,
-    tokenInfos: config.tokenInfos,
-  };
-
-  const ix = Instructions.updateCollateralInfo(args, accounts, undefined, env.kliquidityProgramId);
   const sig = await sendAndConfirmTx(env.c, env.admin, [ix]);
   console.log('Update Collateral Info txn: ' + sig.toString());
   return sig;
