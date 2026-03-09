@@ -1532,7 +1532,6 @@ export class Kamino {
       ...this.oraclePricesEntriesToMap(await this.getAllOraclePrices(missingFeeds)),
     };
   };
-
   /**
    * Used only for testing
    * @param strategyFilters strategy filters or a list of strategy public keys
