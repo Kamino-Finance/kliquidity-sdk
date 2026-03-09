@@ -1387,7 +1387,9 @@ export class Kamino {
     const collateralInfos = scopePrices ? await this.getCollateralInfos() : undefined;
     const scopePricesMap = collateralInfos
       ? await this.getScopePricesMap(
-          this.strategyTokenScopeFeedsToArray(this.getAllScopePriceFeedsForStrategy(strategyState.strategy, collateralInfos)),
+          this.strategyTokenScopeFeedsToArray(
+            this.getAllScopePriceFeedsForStrategy(strategyState.strategy, collateralInfos)
+          ),
           scopePrices
         )
       : undefined;
@@ -1470,7 +1472,20 @@ export class Kamino {
   private isOraclePricesAccount = (
     scopePrices?: OraclePrices | Record<Address, OraclePrices> | [Address, OraclePrices][]
   ): scopePrices is OraclePrices => {
-    return !!scopePrices && !Array.isArray(scopePrices) && 'oracleMappings' in scopePrices && 'prices' in scopePrices;
+    if (scopePrices instanceof OraclePrices) {
+      return true;
+    }
+
+    if (!scopePrices || typeof scopePrices !== 'object' || Array.isArray(scopePrices)) {
+      return false;
+    }
+
+    const maybeOraclePrices = scopePrices as Partial<OraclePrices>;
+    return (
+      typeof maybeOraclePrices.oracleMappings === 'string' &&
+      isAddress(maybeOraclePrices.oracleMappings) &&
+      Array.isArray(maybeOraclePrices.prices)
+    );
   };
 
   private getUniqueScopeFeeds = (feeds: Address[]): Address[] => {
@@ -1478,13 +1493,10 @@ export class Kamino {
   };
 
   private oraclePricesEntriesToMap = (oraclePrices: [Address, OraclePrices][]): Record<Address, OraclePrices> => {
-    return oraclePrices.reduce(
-      (map: Record<Address, OraclePrices>, [feed, prices]) => {
-        map[feed] = prices;
-        return map;
-      },
-      {}
-    );
+    return oraclePrices.reduce((map: Record<Address, OraclePrices>, [feed, prices]) => {
+      map[feed] = prices;
+      return map;
+    }, {});
   };
 
   private getScopePricesMap = async (
@@ -1513,13 +1525,10 @@ export class Kamino {
     }
 
     if (this.isOraclePricesAccount(scopePrices)) {
-      return uniqueFeeds.reduce(
-        (map: Record<Address, OraclePrices>, feed) => {
-          map[feed] = scopePrices;
-          return map;
-        },
-        {}
-      );
+      return uniqueFeeds.reduce((map: Record<Address, OraclePrices>, feed) => {
+        map[feed] = scopePrices;
+        return map;
+      }, {});
     }
 
     const missingFeeds = uniqueFeeds.filter((feed) => !scopePrices[feed]);
@@ -3571,7 +3580,10 @@ export class Kamino {
       tokenATokenProgram: keyOrDefault(strategyState.strategy.tokenATokenProgram, TOKEN_PROGRAM_ADDRESS),
       tokenBTokenProgram: keyOrDefault(strategyState.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS),
     };
-    let depositIx = getDepositInstruction({ ...depositArgs, ...depositAccounts }, { programAddress: this.getProgramID() });
+    let depositIx = getDepositInstruction(
+      { ...depositArgs, ...depositAccounts },
+      { programAddress: this.getProgramID() }
+    );
     const rewardFeedAccounts = scopePricesFeeds.rewardsFeeds
       .filter((feed): feed is Address => feed !== undefined)
       .map((address) => ({ address, role: AccountRole.READONLY }));
@@ -4436,7 +4448,10 @@ export class Kamino {
       tokenBTokenProgram,
     };
 
-    return getInitializeStrategyInstruction({ ...strategyArgs, ...strategyAccounts }, { programAddress: this.getProgramID() });
+    return getInitializeStrategyInstruction(
+      { ...strategyArgs, ...strategyAccounts },
+      { programAddress: this.getProgramID() }
+    );
   };
 
   /**
