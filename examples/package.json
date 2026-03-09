@@ -1,25 +1,30 @@
 {
-  "name": "example-klend-sdk-client",
-  "description": "Example Typescript SDK client for interacting with the Kamino Lending (klend) protocol",
+  "name": "example-kliquidity-sdk-client",
+  "description": "Example Typescript SDK client for interacting with Kamino Liquidity (kliquidity)",
   "version": "1.0.0",
   "main": "dist/index.js",
   "author": "Kamino Finance",
   "homepage": "https://kamino.finance",
   "bugs": {
-    "url": "https://github.com/Kamino-Finance/klend-sdk/issues"
+    "url": "https://github.com/Kamino-Finance/kliquidity-sdk/issues"
   },
   "license": "MIT",
   "private": false,
   "scripts": {
     "lint:fix": "yarn prettier --write .",
-    "deposit-and-stake": "tsx example_deposit_and_stake.ts"
+    "read-strategy": "tsx example_read_strategy.ts",
+    "read-positions": "tsx example_read_positions.ts",
+    "strategy-apy": "tsx example_strategy_apy.ts",
+    "strategy-holders": "tsx example_strategy_holders.ts",
+    "deposit-and-stake": "tsx example_deposit_and_stake.ts",
+    "deposit-and-stake-noop-signer": "tsx example_deposit_and_stake_noop_signer.ts",
+    "unstake-and-withdraw": "tsx example_unstake_and_withdraw.ts"
   },
   "dependencies": {
     "@kamino-finance/kliquidity-sdk": "link:../",
-    "@kamino-finance/farms-sdk": "^2.3.4",
-    "@solana/compat": "^2.1.0",
-    "@solana/kit": "^2.1.0",
-    "@solana/web3.js": "^1.98.0"
+    "@kamino-finance/farms-sdk": "^3.2.11",
+    "@solana/compat": "^2.3.0",
+    "@solana/kit": "^2.3.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.6",

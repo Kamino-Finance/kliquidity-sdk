@@ -3230,6 +3230,32 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "resizeTokenInfos",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenInfos",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -4300,7 +4326,7 @@
                 {
                   "defined": "CollateralInfo"
                 },
-                256
+                303
               ]
             }
           }

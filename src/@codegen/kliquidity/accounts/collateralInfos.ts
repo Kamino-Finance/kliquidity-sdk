@@ -19,12 +19,12 @@ export type CollateralInfosArgs = { infos: Array<CollateralInfoArgs>;  };
 
 /** Gets the encoder for {@link CollateralInfosArgs} account data. */
 export function getCollateralInfosEncoder(): FixedSizeEncoder<CollateralInfosArgs> {
-    return transformEncoder(getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)], ['infos', getArrayEncoder(getCollateralInfoEncoder(), { size: 256 })]]), (value) => ({ ...value, discriminator: COLLATERAL_INFOS_DISCRIMINATOR }));
+    return transformEncoder(getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)], ['infos', getArrayEncoder(getCollateralInfoEncoder(), { size: 303 })]]), (value) => ({ ...value, discriminator: COLLATERAL_INFOS_DISCRIMINATOR }));
 }
 
 /** Gets the decoder for {@link CollateralInfos} account data. */
 export function getCollateralInfosDecoder(): FixedSizeDecoder<CollateralInfos> {
-    return getStructDecoder([['discriminator', fixDecoderSize(getBytesDecoder(), 8)], ['infos', getArrayDecoder(getCollateralInfoDecoder(), { size: 256 })]]);
+    return getStructDecoder([['discriminator', fixDecoderSize(getBytesDecoder(), 8)], ['infos', getArrayDecoder(getCollateralInfoDecoder(), { size: 303 })]]);
 }
 
 /** Gets the codec for {@link CollateralInfos} account data. */
@@ -77,5 +77,5 @@ export async function fetchAllMaybeCollateralInfos(
 }
 
 export function getCollateralInfosSize(): number {
-  return 55304;
+  return 65456;
 }
