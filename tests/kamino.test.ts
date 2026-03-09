@@ -2,9 +2,7 @@ import {
   address,
   Address,
   generateKeyPairSigner,
-  getAddressEncoder,
   Instruction,
-  isAddress,
   Signature,
   TransactionSigner,
 } from '@solana/kit';
@@ -113,9 +111,27 @@ describe('Kamino SDK Tests', () => {
     const collateralInfo = await setUpCollateralInfo(env, kamino);
     await sleep(1000);
 
-    await updateCollateralInfoForToken(env, 1, USDH_SCOPE_CHAIN_ID, globalConfig, 'USDH', BigInt(1), tokenAMint);
+    await updateCollateralInfoForToken(
+      env,
+      1,
+      USDH_SCOPE_CHAIN_ID,
+      globalConfig,
+      'USDH',
+      BigInt(1),
+      tokenAMint,
+      fixtures.scopePrices
+    );
 
-    await updateCollateralInfoForToken(env, 0, USDC_SCOPE_CHAIN_ID, globalConfig, 'USDC', BigInt(1), tokenBMint);
+    await updateCollateralInfoForToken(
+      env,
+      0,
+      USDC_SCOPE_CHAIN_ID,
+      globalConfig,
+      'USDC',
+      BigInt(1),
+      tokenBMint,
+      fixtures.scopePrices
+    );
 
     await sleep(100);
     fixtures.tokenInfos = collateralInfo;
@@ -1961,14 +1977,7 @@ export async function setUpGlobalConfig(
     BigInt(getGlobalConfigEncoder().fixedSize)
   );
 
-  const initializeGlobalConfigIx = Instructions.getInitializeGlobalConfigInstruction(
-    {
-      adminAuthority: env.admin,
-      globalConfig: globalConfig.address,
-      systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    },
-    { programAddress: kamino.getProgramID() }
-  );
+  const initializeGlobalConfigIx = kamino.initializeGlobalConfig(env.admin, globalConfig.address);
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [createGlobalConfigIx, initializeGlobalConfigIx]);
 
@@ -1993,7 +2002,7 @@ export async function setUpGlobalConfig(
     kamino,
     kamino.getGlobalConfig(),
     '0',
-    GlobalConfigOption.ScopePriceId,
+    GlobalConfigOption.AddScopePriceId,
     scopePrices.toString(),
     'key'
   );
@@ -2067,39 +2076,11 @@ export async function updateGlobalConfig(
   }
 
   const index = Number.parseInt(keyIndex);
-  const formatted_value = getGlobalConfigValue(value);
-
-  const updateConfigIx = Instructions.getUpdateGlobalConfigInstruction(
-    {
-      key: globalConfigOption,
-      index: index,
-      value: new Uint8Array(formatted_value),
-      adminAuthority: env.admin,
-      globalConfig: globalConfig,
-      systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    },
-    { programAddress: kamino.getProgramID() }
-  );
+  const updateConfigIx = kamino.updateGlobalConfig(env.admin, globalConfig, globalConfigOption, index, value);
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateConfigIx]);
 
   console.log('Update Global Config ', GlobalConfigOption[globalConfigOption], sig);
   return sig;
-}
-
-export function getGlobalConfigValue(value: Address | bigint | boolean): number[] {
-  let buffer: Buffer;
-  if (typeof value === 'string' && isAddress(value)) {
-    buffer = Buffer.from(getAddressEncoder().encode(value));
-  } else if (typeof value == 'boolean') {
-    buffer = Buffer.alloc(32);
-    value ? buffer.writeUInt8(1, 0) : buffer.writeUInt8(0, 0);
-  } else if (typeof value == 'bigint') {
-    buffer = Buffer.alloc(32);
-    buffer.writeBigUInt64LE(value); // Because we send 32 bytes and a u64 has 8 bytes, we write it in LE
-  } else {
-    throw Error('wrong type for value');
-  }
-  return [...buffer];
 }
 
 export async function updateCollateralInfoForToken(
@@ -2109,7 +2090,8 @@ export async function updateCollateralInfoForToken(
   globalConfig: Address,
   collateralToken: string,
   collInfoTwapId: bigint,
-  tokenMint: Address
+  tokenMint: Address,
+  scopePrices: Address
 ) {
   // Set Mint
   await updateCollateralInfo(env, globalConfig, collTokenIndex, UpdateCollateralInfoMode.CollateralId, tokenMint);
@@ -2122,6 +2104,9 @@ export async function updateCollateralInfoForToken(
     UpdateCollateralInfoMode.UpdateName,
     getCollInfoEncodedName(collateralToken)
   );
+
+  // Set Scope Prices Feed
+  await updateCollateralInfo(env, globalConfig, collTokenIndex, UpdateCollateralInfoMode.UpdateScopeFeed, scopePrices);
 
   // Set Twap
   await updateCollateralInfo(
