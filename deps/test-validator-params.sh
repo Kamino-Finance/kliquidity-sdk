@@ -19,6 +19,9 @@ function print_args {
   # scope
   echo "--clone 3NJYftD5sjVfxSnUdZ1wVML8f3aC6mp1CXCL6L7TnU8C" # oracle prices
   echo "--clone GMprgtqUv2G74GAFHhHhrH21n1cnnNZcPb6TAz5GhqU" # token metadatas
+  echo "--clone 3t4JZcueEzTbVP6kLxXrL3VpWx45jDer4eqysweBchNH" # klend feed oracle prices
+  echo "--clone 3wHxoHowen78mskgqKQmaYVQV8Mqd5PUFXja2xcfviSV" # klend feed token metadatas
+
 
   # options
   echo "--reset --quiet -u m"

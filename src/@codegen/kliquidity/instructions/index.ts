@@ -28,6 +28,7 @@ export * from './invest';
 export * from './openLiquidityPosition';
 export * from './orcaSwap';
 export * from './permisionlessWithdrawFromTreasury';
+export * from './resizeTokenInfos';
 export * from './signTerms';
 export * from './singleTokenDepositAndInvestWithMin';
 export * from './singleTokenDepositWithMin';
