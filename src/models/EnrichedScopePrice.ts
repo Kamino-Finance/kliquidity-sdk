@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js';
 import { OraclePrices } from '@kamino-finance/scope-sdk/dist/@codegen/scope/accounts/OraclePrices';
 import { CollateralInfo } from '../@codegen/kliquidity/types';
+import { Address } from '@solana/kit';
 
 export interface EnrichedScopePrice {
   /**
@@ -27,6 +28,6 @@ export interface KaminoPrices {
 export type MintToPriceMap = Record<string, EnrichedScopePrice>;
 
 export interface OraclePricesAndCollateralInfos {
-  oraclePrices: OraclePrices;
+  oraclePrices: [Address, OraclePrices][];
   collateralInfos: CollateralInfo[];
 }

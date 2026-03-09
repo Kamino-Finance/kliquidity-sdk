@@ -1,16 +1,20 @@
-import { AccountRole, address, Address, IInstruction } from '@solana/kit';
+import { AccountRole, address, Address, Instruction as SolanaInstruction } from '@solana/kit';
+import { base64ToBytes } from '../utils/bytes';
 import axios from 'axios';
 import Decimal from 'decimal.js';
-import { QuoteResponse, SwapInstructionsResponse, createJupiterApiClient, Instruction } from '@jup-ag/api';
+import {
+  QuoteResponse,
+  SwapInstructionsResponse as JupSwapInstructionsResponse,
+  createJupiterApiClient,
+  Instruction,
+} from '@jup-ag/api';
 
 const USDC_MINT = address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
 export const DEFAULT_JUP_API_ENDPOINT = 'https://lite-api.jup.ag';
 export const DEFAULT_JUP_SWAP_API = 'https://lite-api.jup.ag/swap/v1';
 
-const jupiterSwapApi = createJupiterApiClient({
-  basePath: DEFAULT_JUP_SWAP_API,
-});
+const jupiterSwapApi = createJupiterApiClient({ basePath: DEFAULT_JUP_SWAP_API });
 
 export type SwapTransactionsResponse = {
   setupTransaction: string | undefined;
@@ -18,12 +22,12 @@ export type SwapTransactionsResponse = {
   cleanupTransaction: string | undefined;
 };
 
-interface SwapIInstructionsResponse {
-  tokenLedgerInstruction?: IInstruction;
-  computeBudgetInstructions: Array<IInstruction>;
-  setupInstructions: Array<IInstruction>;
-  swapInstruction: IInstruction;
-  cleanupInstruction?: IInstruction;
+interface SwapInstructionsResponse {
+  tokenLedgerInstruction?: SolanaInstruction;
+  computeBudgetInstructions: Array<SolanaInstruction>;
+  setupInstructions: Array<SolanaInstruction>;
+  swapInstruction: SolanaInstruction;
+  cleanupInstruction?: SolanaInstruction;
   addressLookupTableAddresses: Array<Address>;
 }
 
@@ -38,7 +42,7 @@ export class JupService {
     asLegacyTransaction?: boolean,
     maxAccounts?: number,
     onlyDirectRoutes?: boolean
-  ): Promise<SwapIInstructionsResponse> => {
+  ): Promise<SwapInstructionsResponse> => {
     try {
       // https://lite-api.jup.ag/swap/v1/quote?inputMint=7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj&outputMint=mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So&amount=71101983&slippageBps=10&onlyDirectRoutes=false&asLegacyTransaction=false&maxAccounts=33
 
@@ -53,14 +57,10 @@ export class JupService {
       );
 
       const ixsResponse = await jupiterSwapApi.swapInstructionsPost({
-        swapRequest: {
-          quoteResponse: res,
-          userPublicKey: userAddress,
-          wrapAndUnwrapSol: false,
-        },
+        swapRequest: { quoteResponse: res, userPublicKey: userAddress, wrapAndUnwrapSol: false },
       });
 
-      const swapIxs: SwapIInstructionsResponse = {
+      const swapIxs: SwapInstructionsResponse = {
         tokenLedgerInstruction: ixsResponse.tokenLedgerInstruction
           ? transformResponseIx(ixsResponse.tokenLedgerInstruction)
           : undefined,
@@ -115,7 +115,7 @@ export class JupService {
     quote: QuoteResponse,
     wrapUnwrapSOL = true,
     asLegacyTransaction?: boolean
-  ): Promise<SwapInstructionsResponse> => {
+  ): Promise<JupSwapInstructionsResponse> => {
     try {
       return await jupiterSwapApi.swapInstructionsPost({
         swapRequest: {
@@ -136,11 +136,7 @@ export class JupService {
     outputMint: Address | string,
     jupEndpoint?: string
   ): Promise<number> => {
-    const params = {
-      ids: inputMint.toString(),
-      vsToken: outputMint.toString(),
-      vsAmount: 1,
-    };
+    const params = { ids: inputMint.toString(), vsToken: outputMint.toString(), vsAmount: 1 };
 
     // BONK token
     if (outputMint.toString() === 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263') {
@@ -148,8 +144,8 @@ export class JupService {
     }
 
     const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
-    const res = await axios.get(`${baseURL}/price/v2`, { params });
-    return res.data.data[inputMint.toString()].price;
+    const res = await axios.get(`${baseURL}/price/v3`, { params });
+    return res.data[inputMint.toString()].usdPrice;
   };
 
   static getPrices = async (
@@ -158,11 +154,7 @@ export class JupService {
     jupEndpoint?: string
   ): Promise<Map<Address, Decimal>> => {
     const mintsCommaSeparated = inputMints.map((mint) => mint.toString()).join(',');
-    const params = {
-      ids: mintsCommaSeparated,
-      vsToken: outputMint.toString(),
-      vsAmount: 1,
-    };
+    const params = { ids: mintsCommaSeparated, vsToken: outputMint.toString(), vsAmount: 1 };
 
     // BONK token
     if (outputMint.toString() === 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263') {
@@ -172,10 +164,10 @@ export class JupService {
     const baseURL = jupEndpoint || DEFAULT_JUP_API_ENDPOINT;
     const prices = new Map<Address, Decimal>();
     try {
-      const res = await axios.get(`${baseURL}/price/v2`, { params });
+      const res = await axios.get(`${baseURL}/price/v3`, { params });
       for (const mint of inputMints) {
         try {
-          prices.set(address(mint), new Decimal(res.data.data[mint.toString()].price));
+          prices.set(address(mint), new Decimal(res.data[mint.toString()].usdPrice));
         } catch (e) {
           prices.set(address(mint), new Decimal(0));
         }
@@ -196,9 +188,9 @@ export class JupService {
   };
 }
 
-export function transformResponseIx(ix: Instruction): IInstruction {
+export function transformResponseIx(ix: Instruction): SolanaInstruction {
   return {
-    data: ix.data ? Buffer.from(ix.data, 'base64') : undefined,
+    data: ix.data ? base64ToBytes(ix.data) : undefined,
     programAddress: address(ix.programId),
     accounts: ix.accounts.map((k) => ({
       address: address(k.pubkey),

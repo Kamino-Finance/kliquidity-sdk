@@ -7,7 +7,7 @@ import {
   getAddressEncoder,
   GetBalanceApi,
   GetTokenAccountBalanceApi,
-  IInstruction,
+  Instruction,
   isAddress,
   lamports,
   Lamports,
@@ -15,25 +15,26 @@ import {
   Signature,
   TransactionSigner,
 } from '@solana/kit';
-import * as anchor from '@coral-xyz/anchor';
-import { StrategyConfigOptionKind, UpdateCollateralInfoModeKind } from '../../src/@codegen/kliquidity/types';
+import { StrategyConfigOption, UpdateCollateralInfoMode } from '../../src/@codegen/kliquidity/types';
 import * as Instructions from '../../src/@codegen/kliquidity/instructions';
 import { getMintDecimals } from '../../src/utils';
 
 import Decimal from 'decimal.js';
-import { CollateralInfos, GlobalConfig, WhirlpoolStrategy } from '../../src/@codegen/kliquidity/accounts';
+import {
+  fetchMaybeWhirlpoolStrategy,
+  fetchMaybeGlobalConfig,
+  fetchMaybeCollateralInfos,
+} from '../../src/@codegen/kliquidity/accounts';
+import { unwrapAccount } from '../../src/utils/codamaHelpers';
 import {
   collToLamportsDecimal,
   DepositAmountsForSwap,
-  Dex,
   getAssociatedTokenAddress,
   getUpdateStrategyConfigIx,
   isSOLMint,
   sleep,
   ZERO,
 } from '../../src';
-import { getTickArrayPubkeysFromRangeRaydium } from './raydium_utils';
-import { getTickArrayPubkeysFromRangeOrca } from './orca_utils';
 import { collateralTokenToNumber, CollateralToken } from './token_utils';
 import { checkIfAccountExists } from '../../src/utils/transactions';
 import { FullBPS } from '../../src/utils/CreationParameters';
@@ -100,11 +101,11 @@ export function range(start: number, end: number, step: number): number[] {
 export async function updateStrategyConfig(
   env: Env,
   strategy: Address,
-  mode: StrategyConfigOptionKind,
+  mode: StrategyConfigOption,
   amount: Decimal,
   newAccount: Address = DEFAULT_PUBLIC_KEY
 ) {
-  const strategyState = await WhirlpoolStrategy.fetch(env.c.rpc, strategy, env.kliquidityProgramId);
+  const strategyState = unwrapAccount(await fetchMaybeWhirlpoolStrategy(env.c.rpc, strategy));
   if (strategyState == null) {
     throw new Error(`strategy ${strategy} doesn't exist`);
   }
@@ -120,7 +121,7 @@ export async function updateStrategyConfig(
   );
 
   const sig = await sendAndConfirmTx(env.c, env.admin, [updateCapIx]);
-  console.log('Update Strategy Config ', mode.toJSON(), sig?.toString());
+  console.log('Update Strategy Config ', mode, sig?.toString());
 }
 
 export async function updateTreasuryFeeVault(
@@ -131,50 +132,32 @@ export async function updateTreasuryFeeVault(
   treasuryFeeTokenVault: Address,
   treasuryFeeVaultAuthority: Address
 ): Promise<string> {
-  const args: Instructions.UpdateTreasuryFeeVaultArgs = {
-    collateralId: collateralTokenToNumber(collateralToken),
-  };
-
-  const config = await GlobalConfig.fetch(env.c.rpc, globalConfig, env.kliquidityProgramId);
+  const config = unwrapAccount(await fetchMaybeGlobalConfig(env.c.rpc, globalConfig));
   if (!config) {
     throw new Error(`Error retrieving the config ${globalConfig.toString()}`);
   }
 
-  const accounts: Instructions.UpdateTreasuryFeeVaultAccounts = {
-    signer: env.admin,
-    globalConfig: globalConfig,
-    feeMint: tokenMint,
-    treasuryFeeVault: treasuryFeeTokenVault,
-    treasuryFeeVaultAuthority: treasuryFeeVaultAuthority,
-    tokenInfos: config.tokenInfos,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    rent: SYSVAR_RENT_ADDRESS,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-  };
-
-  const ix = Instructions.updateTreasuryFeeVault(args, accounts, env.kliquidityProgramId);
+  const ix = Instructions.getUpdateTreasuryFeeVaultInstruction(
+    {
+      signer: env.admin,
+      globalConfig: globalConfig,
+      feeMint: tokenMint,
+      treasuryFeeVault: treasuryFeeTokenVault,
+      treasuryFeeVaultAuthority: treasuryFeeVaultAuthority,
+      tokenInfos: config.tokenInfos,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+      rent: SYSVAR_RENT_ADDRESS,
+      tokenProgram: TOKEN_PROGRAM_ADDRESS,
+      collateralId: collateralTokenToNumber(collateralToken),
+    },
+    { programAddress: env.kliquidityProgramId }
+  );
   const hash = await sendAndConfirmTx(env.c, env.admin, [ix]);
   console.log('updateTreasuryFeeVault ix:', hash);
   if (!hash) {
     throw new Error('Hash for updateTreasuryFeeVault tx not found');
   }
   return hash;
-}
-
-export async function getTickArrayPubkeysFromRange(
-  env: Env,
-  dex: Dex,
-  pool: Address,
-  tickLowerIndex: number,
-  tickUpperIndex: number
-): Promise<[Address, Address]> {
-  if (dex == 'ORCA') {
-    return getTickArrayPubkeysFromRangeOrca(env.c.rpc, pool, tickLowerIndex, tickUpperIndex);
-  } else if (dex == 'RAYDIUM') {
-    return getTickArrayPubkeysFromRangeRaydium(env, pool, tickLowerIndex, tickUpperIndex);
-  } else {
-    throw new Error('Invalid dex');
-  }
 }
 
 export async function createUser(
@@ -191,7 +174,7 @@ export async function createUser(
     await sleep(1000);
   }
 
-  const whirlpoolStrategyState = await WhirlpoolStrategy.fetch(env.c.rpc, strategy, env.kliquidityProgramId);
+  const whirlpoolStrategyState = unwrapAccount(await fetchMaybeWhirlpoolStrategy(env.c.rpc, strategy));
   if (whirlpoolStrategyState == null) {
     throw new Error(`Strategy ${strategy.toString()} does not exist`);
   }
@@ -253,7 +236,7 @@ export function getMintToIx(
   mint: Address,
   tokenAccount: Address,
   amount: number
-): IInstruction {
+): Instruction {
   return getMintToInstruction(
     {
       mint,
@@ -270,7 +253,7 @@ export function getBurnFromIx(
   mintPubkey: Address,
   tokenAccount: Address,
   amount: number
-): IInstruction {
+): Instruction {
   console.log(`burnFrom ${tokenAccount.toString()} mint ${mintPubkey.toString()} amount ${amount}`);
   return getBurnInstruction(
     {
@@ -314,7 +297,7 @@ export function createAtaInstruction(
   mint: Address,
   ata: Address,
   owner: Address = payer.address
-): IInstruction {
+): Instruction {
   return getCreateAssociatedTokenInstruction(
     {
       payer,
@@ -357,7 +340,7 @@ export async function createMintFromKeypair(env: Env, mint: TransactionSigner, d
   return mint.address;
 }
 
-async function createMintInstructions(env: Env, mint: TransactionSigner, decimals: number): Promise<IInstruction[]> {
+async function createMintInstructions(env: Env, mint: TransactionSigner, decimals: number): Promise<Instruction[]> {
   return [
     getCreateAccountInstruction({
       payer: env.admin,
@@ -413,12 +396,12 @@ export async function updateCollateralInfo(
   env: Env,
   globalConfig: Address,
   collateralToken: CollateralToken | number,
-  mode: UpdateCollateralInfoModeKind,
+  mode: UpdateCollateralInfoMode,
   value: bigint | Address | Uint16Array | Uint8Array
 ): Promise<Signature> {
-  console.log('Mode ', mode.discriminator);
+  console.log('Mode ', mode);
   console.log('value', value);
-  const config: GlobalConfig | null = await GlobalConfig.fetch(env.c.rpc, globalConfig, env.kliquidityProgramId);
+  const config = unwrapAccount(await fetchMaybeGlobalConfig(env.c.rpc, globalConfig));
   if (config == null) {
     throw new Error(`Global config ${globalConfig} not found`);
   }
@@ -427,7 +410,7 @@ export async function updateCollateralInfo(
   if (typeof collateralToken == 'number') {
     collateralNumber = collateralToken;
   } else {
-    const collInfos = await CollateralInfos.fetch(env.c.rpc, config.tokenInfos, env.kliquidityProgramId);
+    const collInfos = unwrapAccount(await fetchMaybeCollateralInfos(env.c.rpc, config.tokenInfos));
     if (collInfos == null) {
       throw new Error('CollateralInfos config not found');
     }
@@ -436,25 +419,19 @@ export async function updateCollateralInfo(
   }
   const argValue = toCollateralInfoValue(value);
 
-  console.log(
-    `UpdateCollateralInfo`,
-    mode.toJSON(),
-    `for ${collateralToken} with value ${value} encoded as ${argValue}`
+  console.log(`UpdateCollateralInfo`, mode, `for ${collateralToken} with value ${value} encoded as ${argValue}`);
+
+  const ix = Instructions.getUpdateCollateralInfoInstruction(
+    {
+      adminAuthority: env.admin,
+      globalConfig,
+      tokenInfos: config.tokenInfos,
+      index: BigInt(collateralNumber),
+      mode: BigInt(mode),
+      value: new Uint8Array(argValue),
+    },
+    { programAddress: env.kliquidityProgramId }
   );
-
-  const args: Instructions.UpdateCollateralInfoArgs = {
-    index: new anchor.BN(collateralNumber),
-    mode: new anchor.BN(mode.discriminator),
-    value: argValue,
-  };
-
-  const accounts: Instructions.UpdateCollateralInfoAccounts = {
-    adminAuthority: env.admin,
-    globalConfig,
-    tokenInfos: config.tokenInfos,
-  };
-
-  const ix = Instructions.updateCollateralInfo(args, accounts, env.kliquidityProgramId);
   const sig = await sendAndConfirmTx(env.c, env.admin, [ix]);
   console.log('Update Collateral Info txn: ' + sig.toString());
   return sig;
@@ -512,8 +489,8 @@ export async function getLocalSwapIxs(
   user: TransactionSigner,
   slippageBps: Decimal,
   mintAuthority: TransactionSigner = user
-): Promise<[IInstruction[], Address[]]> {
-  let swapIxs: IInstruction[] = [];
+): Promise<[Instruction[], Address[]]> {
+  let swapIxs: Instruction[] = [];
   if (input.tokenAToSwapAmount.lt(ZERO)) {
     swapIxs = await getSwapAToBWithSlippageBPSIxs(input, tokenAMint, tokenBMint, slippageBps, user, mintAuthority);
   } else {
@@ -529,7 +506,7 @@ async function getSwapAToBWithSlippageBPSIxs(
   slippageBps: Decimal,
   user: TransactionSigner,
   mintAuthority: TransactionSigner
-): Promise<IInstruction[]> {
+): Promise<Instruction[]> {
   // multiply the tokens to swap by -1 to get the positive sign because we represent as negative numbers what we have to sell
   const tokensToBurn = -input.tokenAToSwapAmount.toNumber();
 

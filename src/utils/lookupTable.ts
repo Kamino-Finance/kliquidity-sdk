@@ -1,4 +1,5 @@
 import { Address, Rpc, GetProgramAccountsApi, Account, GetMultipleAccountsApi, Base58EncodedBytes } from '@solana/kit';
+import { base64ToBytes } from './bytes';
 import { LUT_OWNER_KEY } from '../constants/pubkeys';
 import { SolanaCluster } from '@hubbleprotocol/hubble-config';
 import {
@@ -39,7 +40,7 @@ export async function getAllUserLookupTables(
     .send();
 
   return accountInfos.map((info) => {
-    const data = lutDecoder.decode(Buffer.from(info.account.data[0], 'base64'));
+    const data = lutDecoder.decode(base64ToBytes(info.account.data[0]));
     const acc: Account<AddressLookupTable> = {
       executable: info.account.executable,
       programAddress: info.account.owner,
@@ -64,7 +65,7 @@ export async function fetchMultipleLookupTableAccounts(
       throw new Error(`Could not get lookup table ${addresses[i]}`);
     }
     const address = addresses[i];
-    const data = lutDecoder.decode(Buffer.from(info.data[0], 'base64'));
+    const data = lutDecoder.decode(base64ToBytes(info.data[0]));
     const acc: Account<AddressLookupTable> = {
       executable: info.executable,
       programAddress: info.owner,

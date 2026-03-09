@@ -1,4 +1,3 @@
-import { BN } from '@coral-xyz/anchor';
 import {
   address,
   Address,
@@ -8,11 +7,13 @@ import {
   getProgramDerivedAddress,
   Rpc,
 } from '@solana/kit';
+import { encodeUtf8 } from './bytes';
 import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-derived-address';
-import { ONE_BN, U64_MAX, ZERO_BN } from '../constants';
+import { ONE_BN, U64_MAX_BI, ZERO_BN } from '../constants';
 import { Percentage } from './types';
 import { DEFAULT_ADDRESS, IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
-import { TickArray, Whirlpool } from '../@codegen/whirlpools/accounts';
+import { fetchAllMaybeTickArray, type Whirlpool } from '../@codegen/whirlpools/accounts';
+import { unwrapAccounts } from './codamaHelpers';
 import {
   _MAX_TICK_INDEX,
   _MIN_TICK_INDEX,
@@ -64,31 +65,41 @@ export async function getTickArray(
   startTick: number
 ): Promise<ProgramDerivedAddress> {
   return await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpoolAddress), Buffer.from(startTick.toString())],
+    seeds: [encodeUtf8('tick_array'), addressEncoder.encode(whirlpoolAddress), encodeUtf8(startTick.toString())],
     programAddress: programId,
   });
 }
 
-export function getTokenAFromLiquidity(liquidity: BN, sqrtPrice0X64: BN, sqrtPrice1X64: BN, roundUp: boolean) {
+export function getTokenAFromLiquidity(
+  liquidity: bigint,
+  sqrtPrice0X64: bigint,
+  sqrtPrice1X64: bigint,
+  roundUp: boolean
+): bigint {
   const [sqrtPriceLowerX64, sqrtPriceUpperX64] = orderSqrtPrice(sqrtPrice0X64, sqrtPrice1X64);
 
-  const numerator = liquidity.mul(sqrtPriceUpperX64.sub(sqrtPriceLowerX64)).shln(64);
-  const denominator = sqrtPriceUpperX64.mul(sqrtPriceLowerX64);
+  const numerator = (liquidity * (sqrtPriceUpperX64 - sqrtPriceLowerX64)) << 64n;
+  const denominator = sqrtPriceUpperX64 * sqrtPriceLowerX64;
   if (roundUp) {
     return divRoundUp(numerator, denominator);
   } else {
-    return numerator.div(denominator);
+    return numerator / denominator;
   }
 }
 
-export function getTokenBFromLiquidity(liquidity: BN, sqrtPrice0X64: BN, sqrtPrice1X64: BN, roundUp: boolean) {
+export function getTokenBFromLiquidity(
+  liquidity: bigint,
+  sqrtPrice0X64: bigint,
+  sqrtPrice1X64: bigint,
+  roundUp: boolean
+): bigint {
   const [sqrtPriceLowerX64, sqrtPriceUpperX64] = orderSqrtPrice(sqrtPrice0X64, sqrtPrice1X64);
 
-  const result = liquidity.mul(sqrtPriceUpperX64.sub(sqrtPriceLowerX64));
+  const result = liquidity * (sqrtPriceUpperX64 - sqrtPriceLowerX64);
   if (roundUp) {
     return shiftRightRoundUp(result);
   } else {
-    return result.shrn(64);
+    return result >> 64n;
   }
 }
 
@@ -109,7 +120,7 @@ export function getIncreaseLiquidityQuote(
     return increaseLiquidityQuote(
       param.liquidity,
       slippageToleranceBps,
-      BigInt(pool.sqrtPrice.toString()),
+      pool.sqrtPrice,
       tickLowerIndex,
       tickUpperIndex,
       transferFeeA,
@@ -119,7 +130,7 @@ export function getIncreaseLiquidityQuote(
     return increaseLiquidityQuoteA(
       param.tokenA,
       slippageToleranceBps,
-      BigInt(pool.sqrtPrice.toString()),
+      pool.sqrtPrice,
       tickLowerIndex,
       tickUpperIndex,
       transferFeeA,
@@ -129,7 +140,7 @@ export function getIncreaseLiquidityQuote(
     return increaseLiquidityQuoteB(
       param.tokenB,
       slippageToleranceBps,
-      BigInt(pool.sqrtPrice.toString()),
+      pool.sqrtPrice,
       tickLowerIndex,
       tickUpperIndex,
       transferFeeA,
@@ -138,38 +149,38 @@ export function getIncreaseLiquidityQuote(
   }
 }
 
-function orderSqrtPrice(sqrtPrice0X64: BN, sqrtPrice1X64: BN): [BN, BN] {
-  if (sqrtPrice0X64.lt(sqrtPrice1X64)) {
+function orderSqrtPrice(sqrtPrice0X64: bigint, sqrtPrice1X64: bigint): [bigint, bigint] {
+  if (sqrtPrice0X64 < sqrtPrice1X64) {
     return [sqrtPrice0X64, sqrtPrice1X64];
   } else {
     return [sqrtPrice1X64, sqrtPrice0X64];
   }
 }
 
-function shiftRightRoundUp(n: BN): BN {
-  let result = n.shrn(64);
+function shiftRightRoundUp(n: bigint): bigint {
+  let result = n >> 64n;
 
-  if (n.mod(new BN(U64_MAX)).gt(ZERO_BN)) {
-    result = result.add(ONE_BN);
+  if (n % U64_MAX_BI > ZERO_BN) {
+    result = result + ONE_BN;
   }
 
   return result;
 }
 
-function divRoundUp(n0: BN, n1: BN): BN {
-  const hasRemainder = !n0.mod(n1).eq(ZERO_BN);
+function divRoundUp(n0: bigint, n1: bigint): bigint {
+  const hasRemainder = n0 % n1 !== ZERO_BN;
   if (hasRemainder) {
-    return n0.div(n1).add(ONE_BN);
+    return n0 / n1 + ONE_BN;
   } else {
-    return n0.div(n1);
+    return n0 / n1;
   }
 }
 
-export function adjustForSlippage(n: BN, { numerator, denominator }: Percentage, adjustUp: boolean): BN {
+export function adjustForSlippage(n: bigint, { numerator, denominator }: Percentage, adjustUp: boolean): bigint {
   if (adjustUp) {
-    return n.mul(denominator.add(numerator)).div(denominator);
+    return (n * (denominator + numerator)) / denominator;
   } else {
-    return n.mul(denominator).div(denominator.add(numerator));
+    return (n * denominator) / (denominator + numerator);
   }
 }
 
@@ -203,11 +214,11 @@ export function estimateAprsForPriceRange(
   const { minTokenA, minTokenB } = getRemoveLiquidityQuote({
     positionAddress: DEFAULT_ADDRESS,
     tickCurrentIndex: pool.tickCurrentIndex,
-    sqrtPrice: new BN(pool.sqrtPrice.toString()),
+    sqrtPrice: BigInt(pool.sqrtPrice),
     tickLowerIndex,
     tickUpperIndex,
-    liquidity: new BN(pool.liquidity.toString()),
-    slippageTolerance: { numerator: ZERO_BN, denominator: new BN(FullBPS) },
+    liquidity: BigInt(pool.liquidity),
+    slippageTolerance: { numerator: ZERO_BN, denominator: BigInt(FullBPS) },
   });
   const tokenValueA = getTokenValue(minTokenA, pool.tokenA.decimals, tokenPriceA);
   const tokenValueB = getTokenValue(minTokenB, pool.tokenB.decimals, tokenPriceB);
@@ -227,7 +238,7 @@ export function estimateAprsForPriceRange(
   return { fee: feeApr, rewards };
 }
 
-function getTokenValue(tokenAmount: BN, decimals: number, tokenPrice: Decimal): Decimal {
+function getTokenValue(tokenAmount: bigint, decimals: number, tokenPrice: Decimal): Decimal {
   return tokenPrice.mul(new Decimal(tokenAmount.toString()).div(new Decimal(10).pow(decimals)));
 }
 
@@ -306,7 +317,7 @@ export async function getLiquidityDistribution(
     tickUpper,
     whirlpoolProgramId
   );
-  const tickArrays = await TickArray.fetchMultiple(rpc, tickArrayAddresses, whirlpoolProgramId);
+  const tickArrays = unwrapAccounts(await fetchAllMaybeTickArray(rpc, tickArrayAddresses));
 
   const currentLiquidity = new Decimal(poolData.liquidity.toString());
   let relativeLiquidity = currentLiquidity;
@@ -383,7 +394,7 @@ export async function getTickArrayPda(
   startIndex: number
 ): Promise<[Address, number]> {
   const pdaWithBump = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(poolAddress), Buffer.from(startIndex.toString())],
+    seeds: [encodeUtf8('tick_array'), addressEncoder.encode(poolAddress), encodeUtf8(startIndex.toString())],
     programAddress: programId,
   });
 
