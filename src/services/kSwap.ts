@@ -16,6 +16,10 @@ interface KSwapBatchPriceResponse {
 }
 
 export const getTokensPrices = async (apiBaseUrl: string, tokens: Address[]): Promise<Map<Address, Decimal>> => {
+  if (tokens.length === 0) {
+    return new Map<Address, Decimal>();
+  }
+
   const tokensParams = tokens.map((token) => `tokens=${encodeURIComponent(token)}`).join('&');
   const url = `${apiBaseUrl}/batch-token-prices?${tokensParams}`;
   const response = await fetch(url, {
