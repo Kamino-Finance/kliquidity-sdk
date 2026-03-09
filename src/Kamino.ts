@@ -66,7 +66,6 @@ import {
   KaminoPrices,
   KaminoStrategyWithShareMint,
   MintToPriceMap,
-  OraclePricesAndCollateralInfos,
   ShareData,
   ShareDataWithAddress,
   StrategyBalances,
@@ -457,6 +456,9 @@ export class Kamino {
   getDisabledTokensPrices = async (collateralInfos?: CollateralInfo[]): Promise<Map<Address, Decimal>> => {
     const collInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
     const disabledTokensMints = collInfos.filter((x) => x.disabled && x.mint !== DEFAULT_PUBLIC_KEY).map((x) => x.mint);
+    if (disabledTokensMints.length === 0) {
+      return new Map();
+    }
     return getTokensPrices(this._kSwapBaseAPI, disabledTokensMints);
   };
 
@@ -1379,9 +1381,16 @@ export class Kamino {
    */
   getStrategyShareData = async (
     strategy: Address | StrategyWithAddress,
-    scopePricesMap?: Record<Address, OraclePrices>
+    scopePrices?: OraclePrices | Record<Address, OraclePrices>
   ): Promise<ShareData> => {
     const strategyState = await this.getStrategyStateIfNotFetched(strategy);
+    const collateralInfos = scopePrices ? await this.getCollateralInfos() : undefined;
+    const scopePricesMap = collateralInfos
+      ? await this.getScopePricesMap(
+          this.strategyTokenScopeFeedsToArray(this.getAllScopePriceFeedsForStrategy(strategyState.strategy, collateralInfos)),
+          scopePrices
+        )
+      : undefined;
     const sharesFactor = Decimal.pow(10, strategyState.strategy.sharesMintDecimals.toString());
     const sharesIssued = new Decimal(strategyState.strategy.sharesIssued.toString());
     const balances = await this.getStrategyBalances(strategyState.strategy, scopePricesMap);
@@ -1456,6 +1465,72 @@ export class Kamino {
       }
     }
     return res;
+  };
+
+  private isOraclePricesAccount = (
+    scopePrices?: OraclePrices | Record<Address, OraclePrices> | [Address, OraclePrices][]
+  ): scopePrices is OraclePrices => {
+    return !!scopePrices && !Array.isArray(scopePrices) && 'oracleMappings' in scopePrices && 'prices' in scopePrices;
+  };
+
+  private getUniqueScopeFeeds = (feeds: Address[]): Address[] => {
+    return Array.from(new Set(feeds.filter((feed) => feed !== DEFAULT_PUBLIC_KEY)));
+  };
+
+  private oraclePricesEntriesToMap = (oraclePrices: [Address, OraclePrices][]): Record<Address, OraclePrices> => {
+    return oraclePrices.reduce(
+      (map: Record<Address, OraclePrices>, [feed, prices]) => {
+        map[feed] = prices;
+        return map;
+      },
+      {}
+    );
+  };
+
+  private getScopePricesMap = async (
+    feeds: Address[],
+    scopePrices?: OraclePrices | Record<Address, OraclePrices> | [Address, OraclePrices][]
+  ): Promise<Record<Address, OraclePrices>> => {
+    const uniqueFeeds = this.getUniqueScopeFeeds(feeds);
+    if (uniqueFeeds.length === 0) {
+      return {};
+    }
+
+    if (!scopePrices) {
+      return this.oraclePricesEntriesToMap(await this.getAllOraclePrices(uniqueFeeds));
+    }
+
+    if (Array.isArray(scopePrices)) {
+      const scopePricesMap = this.oraclePricesEntriesToMap(scopePrices);
+      const missingFeeds = uniqueFeeds.filter((feed) => !scopePricesMap[feed]);
+      if (missingFeeds.length === 0) {
+        return scopePricesMap;
+      }
+      return {
+        ...scopePricesMap,
+        ...this.oraclePricesEntriesToMap(await this.getAllOraclePrices(missingFeeds)),
+      };
+    }
+
+    if (this.isOraclePricesAccount(scopePrices)) {
+      return uniqueFeeds.reduce(
+        (map: Record<Address, OraclePrices>, feed) => {
+          map[feed] = scopePrices;
+          return map;
+        },
+        {}
+      );
+    }
+
+    const missingFeeds = uniqueFeeds.filter((feed) => !scopePrices[feed]);
+    if (missingFeeds.length === 0) {
+      return scopePrices;
+    }
+
+    return {
+      ...scopePrices,
+      ...this.oraclePricesEntriesToMap(await this.getAllOraclePrices(missingFeeds)),
+    };
   };
 
   /**
@@ -2399,7 +2474,7 @@ export class Kamino {
    * @param collateralInfos (optional) Kamino Collateral Infos
    */
   getAllPrices = async (
-    oraclePrices?: OraclePrices,
+    oraclePrices?: OraclePrices | Record<Address, OraclePrices> | [Address, OraclePrices][],
     collateralInfos?: CollateralInfo[],
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<KaminoPrices> => {
@@ -2408,12 +2483,11 @@ export class Kamino {
     const twaps: MintToPriceMap = {};
 
     const disabledTokens: Address[] = [];
-    const oraclePricesAndCollateralInfos = await this.getOraclePricesAndCollateralInfos(
-      oraclePrices ? [[HUBBLE_SCOPE_FEED_ID, oraclePrices]] : undefined,
-      collateralInfos,
-      true
+    const hubbleCollateralInfos = collateralInfos ? collateralInfos : await this.getCollateralInfos();
+    const allOraclePrices = await this.getScopePricesMap(
+      hubbleCollateralInfos.map((collateralInfo) => collateralInfo.scopeFeed),
+      oraclePrices
     );
-    const { oraclePrices: allOraclePrices, collateralInfos: hubbleCollateralInfos } = oraclePricesAndCollateralInfos;
     for (const collateralInfo of hubbleCollateralInfos) {
       if (
         collateralInfo.scopePriceChain &&
@@ -2421,8 +2495,15 @@ export class Kamino {
         collateralInfo.disabled === 0
       ) {
         const collInfoMintString = collateralInfo.mint.toString();
-        const hubbleOraclePrices = allOraclePrices?.find((x) => x[0] === HUBBLE_SCOPE_FEED_ID)?.[1];
-        const spotPrice = await this._scope.getPriceFromChain(collateralInfo.scopePriceChain, hubbleOraclePrices!);
+        const collateralOraclePrices = allOraclePrices[collateralInfo.scopeFeed];
+        if (!collateralOraclePrices) {
+          this.logger.warn(
+            `Could not find scope prices for feed ${collateralInfo.scopeFeed.toString()} and mint ${collateralInfo.mint.toString()}`
+          );
+          disabledTokens.push(collateralInfo.mint);
+          continue;
+        }
+        const spotPrice = await this._scope.getPriceFromChain(collateralInfo.scopePriceChain, collateralOraclePrices);
         spotPrices[collInfoMintString] = {
           price: spotPrice.price,
           name: getTokenNameFromCollateralInfo(collateralInfo),
@@ -2430,7 +2511,7 @@ export class Kamino {
 
         const filteredTwapChain = collateralInfo?.scopeTwapPriceChain?.filter((x) => x > 0);
         if (filteredTwapChain && Scope.isScopeChainValid(filteredTwapChain)) {
-          const twap = await this._scope.getPriceFromChain(filteredTwapChain, hubbleOraclePrices!);
+          const twap = await this._scope.getPriceFromChain(filteredTwapChain, collateralOraclePrices);
           twaps[collInfoMintString] = {
             price: twap.price,
             name: getTokenNameFromCollateralInfo(collateralInfo),
@@ -2447,7 +2528,9 @@ export class Kamino {
     try {
       const tokensPrices = disabledTokensPrices
         ? disabledTokensPrices
-        : await getTokensPrices(this._kSwapBaseAPI, disabledTokens);
+        : disabledTokens.length > 0
+          ? await getTokensPrices(this._kSwapBaseAPI, disabledTokens)
+          : new Map<Address, Decimal>();
       for (const [token, price] of tokensPrices) {
         const collInfo = hubbleCollateralInfos.find((x) => x.mint === token);
         if (!collInfo) {
@@ -2470,21 +2553,6 @@ export class Kamino {
     return { spot: spotPrices, twap: twaps };
   };
 
-  private async getOraclePricesAndCollateralInfos(
-    oraclePrices?: [Address, OraclePrices][],
-    collateralInfos?: CollateralInfo[],
-    readAllFeeds: boolean = false
-  ): Promise<OraclePricesAndCollateralInfos> {
-    if (!oraclePrices) {
-      const allFeeds = readAllFeeds ? [HUBBLE_SCOPE_FEED_ID, KAMINO_SCOPE_FEED_ID] : [HUBBLE_SCOPE_FEED_ID];
-      oraclePrices = await this.getAllOraclePrices(allFeeds);
-    }
-    if (!collateralInfos) {
-      collateralInfos = await this.getCollateralInfos();
-    }
-    return { oraclePrices, collateralInfos };
-  }
-
   /**
    * Get the prices of all tokens in the specified strategy, or null if the reward token does not exist
    * @param strategy
@@ -2494,7 +2562,7 @@ export class Kamino {
   getStrategyPrices = async (
     strategy: WhirlpoolStrategy,
     collateralInfos: CollateralInfo[],
-    scopePricesMap?: Record<Address, OraclePrices>,
+    scopePrices?: OraclePrices | Record<Address, OraclePrices>,
     disabledTokensPrices?: Map<Address, Decimal>
   ): Promise<StrategyPrices> => {
     const tokenA = collateralInfos[Number(strategy.tokenACollateralId)];
@@ -2503,18 +2571,10 @@ export class Kamino {
     const rewardToken1 = collateralInfos[Number(strategy.reward1CollateralId)];
     const rewardToken2 = collateralInfos[Number(strategy.reward2CollateralId)];
 
-    let pricesMap: Record<Address, OraclePrices>;
-    if (scopePricesMap) {
-      pricesMap = scopePricesMap;
-    } else {
-      const scopePrices = await this._scope.getMultipleOraclePrices(
-        this.strategyTokenScopeFeedsToArray(this.getAllScopePriceFeedsForStrategy(strategy, collateralInfos))
-      );
-      pricesMap = scopePrices.reduce((map: Record<Address, OraclePrices>, [address, price]) => {
-        map[address] = price;
-        return map;
-      }, {});
-    }
+    const pricesMap = await this.getScopePricesMap(
+      this.strategyTokenScopeFeedsToArray(this.getAllScopePriceFeedsForStrategy(strategy, collateralInfos)),
+      scopePrices
+    );
 
     let jupPrices: Map<Address, Decimal>;
     if (disabledTokensPrices) {
