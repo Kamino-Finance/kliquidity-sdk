@@ -1,9 +1,10 @@
 import { Instruction } from '@jup-ag/api';
-import { AccountRole, address, IInstruction } from '@solana/kit';
+import { AccountRole, address, Instruction as SolanaInstruction } from '@solana/kit';
+import { base64ToBytes } from './bytes';
 
-export function instructionToIInstruction(ix: Instruction): IInstruction {
+export function jupInstructionToSolanaInstruction(ix: Instruction): SolanaInstruction {
   return {
-    data: ix.data ? Buffer.from(ix.data, 'base64') : undefined,
+    data: ix.data ? base64ToBytes(ix.data) : undefined,
     programAddress: address(ix.programId),
     accounts: ix.accounts.map((k) => ({
       address: address(k.pubkey),
@@ -12,8 +13,8 @@ export function instructionToIInstruction(ix: Instruction): IInstruction {
   };
 }
 
-export function instructionsToIInstructions(ixs: Instruction[]): IInstruction[] {
-  return ixs.map((ix) => instructionToIInstruction(ix));
+export function jupInstructionsToSolanaInstructions(ixs: Instruction[]): SolanaInstruction[] {
+  return ixs.map((ix) => jupInstructionToSolanaInstruction(ix));
 }
 
 export function getAccountRole({ isSigner, isMut }: { isSigner: boolean; isMut: boolean }): AccountRole {

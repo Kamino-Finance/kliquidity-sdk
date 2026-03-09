@@ -1,6 +1,8 @@
 import { address, Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from '@solana/kit';
+import { base64ToBytes } from '../utils/bytes';
 import Decimal from 'decimal.js';
-import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
+import axios from 'axios';
+import { type WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import {
   aprToApy,
   GenericPoolInfo,
@@ -10,11 +12,15 @@ import {
   LiquidityDistribution,
   ZERO,
 } from '../utils';
-import { LbPair, PositionV2 } from '../@codegen/meteora/accounts';
+import { fetchMaybeLbPair, getLbPairDecoder, type LbPair } from '../@codegen/meteora/accounts';
+import { fetchMaybePositionV2, type PositionV2 } from '../@codegen/meteora/accounts';
+import { unwrapAccount } from '../utils/codamaHelpers';
 import { WhirlpoolAprApy } from './WhirlpoolAprApy';
-import { PROGRAM_ID as METEORA_PROGRAM_ID } from '../@codegen/meteora/programId';
+import { LB_CLMM_PROGRAM_ADDRESS } from '../@codegen/meteora/programs';
 import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
+import { decompress } from 'fzstd';
+import { MeteoraPoolAPI, MeteoraPoolsResponse } from './MeteoraPoolsResponse';
 
 export interface MeteoraPool {
   key: Address;
@@ -24,10 +30,12 @@ export interface MeteoraPool {
 export class MeteoraService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
   private readonly _meteoraProgramId: Address;
+  private readonly _meteoraApiUrl: string;
 
-  constructor(rpc: Rpc<SolanaRpcApi>, meteoraProgramId: Address = METEORA_PROGRAM_ID) {
+  constructor(rpc: Rpc<SolanaRpcApi>, meteoraProgramId: Address = LB_CLMM_PROGRAM_ADDRESS) {
     this._rpc = rpc;
     this._meteoraProgramId = meteoraProgramId;
+    this._meteoraApiUrl = 'https://dlmm-api.meteora.ag';
   }
 
   getMeteoraProgramId(): Address {
@@ -35,24 +43,28 @@ export class MeteoraService {
   }
 
   async getPool(poolAddress: Address): Promise<LbPair | null> {
-    return await LbPair.fetch(this._rpc, poolAddress);
+    return unwrapAccount(await fetchMaybeLbPair(this._rpc, poolAddress));
   }
 
   async getPosition(position: Address): Promise<PositionV2 | null> {
-    return await PositionV2.fetch(this._rpc, position);
+    return unwrapAccount(await fetchMaybePositionV2(this._rpc, position));
   }
 
   async getMeteoraPools(): Promise<MeteoraPool[]> {
     const rawPools = await this._rpc
-      .getProgramAccounts(METEORA_PROGRAM_ID, {
+      .getProgramAccounts(LB_CLMM_PROGRAM_ADDRESS, {
         commitment: 'confirmed',
         filters: [{ dataSize: 904n }],
+        encoding: 'base64+zstd',
       })
       .send();
     const pools: MeteoraPool[] = [];
     for (let i = 0; i < rawPools.length; i++) {
       try {
-        const lbPair = LbPair.decode(Buffer.from(rawPools[i].account.data));
+        const compressedData = base64ToBytes(rawPools[i].account.data[0]);
+        const decompressedData = decompress(compressedData);
+
+        const lbPair = getLbPairDecoder().decode(new Uint8Array(decompressedData));
         pools.push({ pool: lbPair, key: rawPools[i].pubkey });
       } catch (e) {
         console.log(e);
@@ -61,13 +73,73 @@ export class MeteoraService {
     return pools;
   }
 
+  // Fetch all Meteora pools from their API with pagination support
+  async getMeteoraPoolsFromAPI(tokens: Address[] = [], maxPages = 300, maxPageSize = 100): Promise<MeteoraPoolAPI[]> {
+    const allPoolsAPI: MeteoraPoolAPI[] = [];
+    let offset = 0;
+    let hasMore = true;
+    let pageCount = 0;
+
+    // First, fetch all pool data from the API
+    while (hasMore && pageCount < maxPages) {
+      pageCount++;
+      const url = new URL(`${this._meteoraApiUrl}/pair/all_with_pagination`);
+      url.searchParams.set('limit', maxPageSize.toString());
+      url.searchParams.set('offset', offset.toString());
+
+      // Add token filtering if provided
+      if (tokens.length === 1) {
+        url.searchParams.set('token', tokens[0]);
+      } else if (tokens.length === 2) {
+        url.searchParams.set('token_x', tokens[0]);
+        url.searchParams.set('token_y', tokens[1]);
+      }
+
+      const response = await axios.get<MeteoraPoolsResponse>(url.toString());
+      const data = response.data;
+
+      // Add pools from this page to our collection
+      // The Meteora API returns { pairs: [...pools...], total: number }
+      if (data.pairs && Array.isArray(data.pairs) && data.pairs.length > 0) {
+        allPoolsAPI.push(...data.pairs);
+        offset += data.pairs.length;
+      }
+
+      // Check if there are more pages
+      const responseLength = data.pairs ? data.pairs.length : 0;
+      if (responseLength < maxPageSize) {
+        hasMore = false;
+      }
+
+      // Check total if available
+      if (data.total && allPoolsAPI.length >= data.total) {
+        hasMore = false;
+      }
+
+      // Check pagination metadata if available
+      if (data.meta) {
+        if (data.meta.cursor && !data.meta.cursor.next) {
+          hasMore = false;
+        }
+        if (data.meta.total && allPoolsAPI.length >= data.meta.total) {
+          hasMore = false;
+        }
+      }
+    }
+
+    if (pageCount >= maxPages) {
+      throw new Error(`Reached maximum page limit (${maxPages}). There might be more pools available.`);
+    }
+    return allPoolsAPI;
+  }
+
   async getStrategyMeteoraPoolAprApy(strategy: WhirlpoolStrategy): Promise<WhirlpoolAprApy> {
     const position = await this.getPosition(strategy.position);
 
     const pool = await this.getPool(strategy.pool);
 
-    const decimalsX = strategy.tokenAMintDecimals.toNumber();
-    const decimalsY = strategy.tokenBMintDecimals.toNumber();
+    const decimalsX = Number(strategy.tokenAMintDecimals);
+    const decimalsY = Number(strategy.tokenBMintDecimals);
     let priceLower: Decimal = new Decimal(0);
     let priceUpper: Decimal = new Decimal(0);
     if (position && pool) {
@@ -254,12 +326,13 @@ export class MeteoraService {
 
   async getPositionsCountByPool(pool: Address): Promise<number> {
     const rawPositions = await this._rpc
-      .getProgramAccounts(METEORA_PROGRAM_ID, {
+      .getProgramAccounts(LB_CLMM_PROGRAM_ADDRESS, {
         commitment: 'confirmed',
         filters: [
           { dataSize: 8120n },
           { memcmp: { bytes: pool.toString() as Base58EncodedBytes, offset: 8n, encoding: 'base58' } },
         ],
+        encoding: 'base64+zstd',
       })
       .send();
 

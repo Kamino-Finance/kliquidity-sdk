@@ -1,14 +1,5 @@
 import { address, Address } from '@solana/kit';
-import {
-  Autodrift,
-  Drift,
-  Expander,
-  Manual,
-  PeriodicRebalance,
-  PricePercentage,
-  PricePercentageWithReset,
-  TakeProfit,
-} from '../@codegen/kliquidity/types/RebalanceType';
+import { RebalanceType } from '../@codegen/kliquidity/types';
 import Decimal from 'decimal.js';
 import { Dex } from './utils';
 
@@ -41,7 +32,7 @@ export interface RebalanceMethod {
 
 export const ManualRebalanceMethod: RebalanceMethod = {
   label: 'Fixed Range',
-  value: Manual.discriminator,
+  value: RebalanceType.Manual,
   enabled: true,
   descriptionShort: 'Market make with no rebalancing',
   description:
@@ -49,7 +40,7 @@ export const ManualRebalanceMethod: RebalanceMethod = {
 };
 export const PricePercentageRebalanceMethod: RebalanceMethod = {
   label: 'Tracker',
-  value: PricePercentage.discriminator,
+  value: RebalanceType.PricePercentage,
   enabled: true,
   descriptionShort: 'Maximize trading fee capture',
   description:
@@ -57,7 +48,7 @@ export const PricePercentageRebalanceMethod: RebalanceMethod = {
 };
 export const PricePercentageWithResetRangeRebalanceMethod: RebalanceMethod = {
   label: 'Price Percentage With Reset Range',
-  value: PricePercentageWithReset.discriminator,
+  value: RebalanceType.PricePercentageWithReset,
   enabled: false,
   // todo: provide a better description
   description:
@@ -65,35 +56,35 @@ export const PricePercentageWithResetRangeRebalanceMethod: RebalanceMethod = {
 };
 export const DriftRebalanceMethod: RebalanceMethod = {
   label: 'Drift',
-  value: Drift.discriminator,
+  value: RebalanceType.Drift,
   enabled: false,
   // todo: ask for a description
   description: 'Optimize your portfolio for maximum returns with Kamino’s Drift strategy.',
 };
 export const TakeProfitMethod: RebalanceMethod = {
   label: 'Take Profit',
-  value: TakeProfit.discriminator,
+  value: RebalanceType.TakeProfit,
   enabled: false,
   // todo: ask for a description
   description: 'Optimize your portfolio for maximum returns with Kamino’s Take Profit strategy.',
 };
 export const PeriodicRebalanceMethod: RebalanceMethod = {
   label: 'Periodic Rebalance',
-  value: PeriodicRebalance.discriminator,
+  value: RebalanceType.PeriodicRebalance,
   enabled: false,
   // todo: ask for a description
   description: 'Optimize your portfolio for maximum returns with Kamino’s Periodic Rebalance strategy.',
 };
 export const ExpanderMethod: RebalanceMethod = {
   label: 'Expander',
-  value: Expander.discriminator,
+  value: RebalanceType.Expander,
   enabled: false,
   // todo: ask for a description
   description: 'Optimize your portfolio for maximum returns with Kamino’s Expander strategy.',
 };
 export const AutodriftMethod: RebalanceMethod = {
   label: 'Autodrift',
-  value: Autodrift.discriminator,
+  value: RebalanceType.Autodrift,
   enabled: false,
   // todo: ask for a description
   description: 'Optimize your portfolio for maximum returns with Kamino’s Drift strategy.',

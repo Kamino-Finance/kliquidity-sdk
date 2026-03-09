@@ -84,21 +84,23 @@ export function getDefaultPeriodicRebalanceFieldInfos(price: Decimal): Rebalance
 }
 
 export function readPeriodicRebalanceRebalanceParamsFromStrategy(rebalanceRaw: RebalanceRaw) {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const buf = new Uint8Array(rebalanceRaw.params);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   const params: RebalanceFieldsDict = {};
 
-  params['period'] = new Decimal(paramsBuffer.readBigUInt64LE(0).toString());
-  params['lowerRangeBps'] = new Decimal(paramsBuffer.readUInt16LE(8));
-  params['upperRangeBps'] = new Decimal(paramsBuffer.readUInt16LE(10));
+  params['period'] = new Decimal(dv.getBigUint64(0, true).toString());
+  params['lowerRangeBps'] = new Decimal(dv.getUint16(8, true));
+  params['upperRangeBps'] = new Decimal(dv.getUint16(10, true));
 
   return params;
 }
 
 export function readPeriodicRebalanceRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const buf = new Uint8Array(rebalanceRaw.state);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   const state: RebalanceFieldsDict = {};
 
-  state['lastRebalanceTimestamp'] = new Decimal(stateBuffer.readBigUInt64LE(0).toString());
+  state['lastRebalanceTimestamp'] = new Decimal(dv.getBigUint64(0, true).toString());
 
   return state;
 }

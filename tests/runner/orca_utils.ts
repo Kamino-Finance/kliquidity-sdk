@@ -1,19 +1,16 @@
 import {
   Address,
-  IInstruction,
+  Instruction,
   TransactionSigner,
   generateKeyPairSigner,
   getProgramDerivedAddress,
   getAddressEncoder,
-  Rpc,
-  GetAccountInfoApi,
 } from '@solana/kit';
 import { DeployedPool, range } from './utils';
 import * as WhirlpoolInstructions from '../../src/@codegen/whirlpools/instructions';
 import * as anchor from '@coral-xyz/anchor';
-import { PROGRAM_ID_CLI as WHIRLPOOL_PROGRAM_ID } from '../../src/@codegen/whirlpools/programId';
+import { WHIRLPOOL_PROGRAM_ADDRESS as WHIRLPOOL_PROGRAM_ID } from '../../src/@codegen/whirlpools/programs';
 import { orderMints } from './raydium_utils';
-import { Whirlpool } from '../../src/@codegen/whirlpools/accounts';
 import { Env } from './env';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { sendAndConfirmTx } from './tx';
@@ -36,20 +33,15 @@ export async function initializeWhirlpool(
   const config = await generateKeyPairSigner();
 
   {
-    const initialiseConfigArgs: WhirlpoolInstructions.InitializeConfigArgs = {
+    const initializeIx = WhirlpoolInstructions.getInitializeConfigInstruction({
+      config: config,
+      funder: env.admin,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
       feeAuthority: env.admin.address,
       collectProtocolFeesAuthority: env.admin.address,
       rewardEmissionsSuperAuthority: env.admin.address,
       defaultProtocolFeeRate: 0,
-    };
-
-    const initialiseConfigAccounts: WhirlpoolInstructions.InitializeConfigAccounts = {
-      config: config,
-      funder: env.admin,
-      systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    };
-
-    const initializeIx = WhirlpoolInstructions.initializeConfig(initialiseConfigArgs, initialiseConfigAccounts);
+    });
     const sig = await sendAndConfirmTx(env.c, env.admin, [initializeIx]);
     console.log('InitializeConfig:', sig);
   }
@@ -64,20 +56,15 @@ export async function initializeWhirlpool(
   });
 
   {
-    const initialiseFeeTierArgs: WhirlpoolInstructions.InitializeFeeTierArgs = {
-      tickSpacing: tickSize,
-      defaultFeeRate: 0,
-    };
-
-    const initialiseFeeTierAccounts: WhirlpoolInstructions.InitializeFeeTierAccounts = {
+    const initializeIx = WhirlpoolInstructions.getInitializeFeeTierInstruction({
       config: config.address,
       feeTier: feeTierPk,
       funder: env.admin,
       feeAuthority: env.admin,
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    };
-
-    const initializeIx = WhirlpoolInstructions.initializeFeeTier(initialiseFeeTierArgs, initialiseFeeTierAccounts);
+      tickSpacing: tickSize,
+      defaultFeeRate: 0,
+    });
     const sig = await sendAndConfirmTx(env.c, env.admin, [initializeIx]);
     console.log('InitializeFeeTier:', sig);
   }
@@ -96,12 +83,8 @@ export async function initializeWhirlpool(
     const tokenBVault = await generateKeyPairSigner();
 
     const initialPrice = 1.0;
-    const initialisePoolArgs: WhirlpoolInstructions.InitializePoolV2Args = {
-      tickSpacing: tickSize,
-      initialSqrtPrice: new anchor.BN(priceToSqrtPrice(initialPrice, 6, 6).toString()),
-    };
 
-    const initializePoolAccounts: WhirlpoolInstructions.InitializePoolV2Accounts = {
+    const initializeIx = WhirlpoolInstructions.getInitializePoolV2Instruction({
       whirlpoolsConfig: config.address,
       tokenMintA: tokenMintA,
       tokenMintB: tokenMintB,
@@ -116,9 +99,9 @@ export async function initializeWhirlpool(
       tokenProgramB: TOKEN_PROGRAM_ADDRESS,
       systemProgram: SYSTEM_PROGRAM_ADDRESS,
       rent: SYSVAR_RENT_ADDRESS,
-    };
-
-    const initializeIx = WhirlpoolInstructions.initializePoolV2(initialisePoolArgs, initializePoolAccounts);
+      tickSpacing: tickSize,
+      initialSqrtPrice: BigInt(priceToSqrtPrice(initialPrice, 6, 6).toString()),
+    });
     const sig = await sendAndConfirmTx(env.c, env.admin, [initializeIx]);
     console.log('InitializePoolV2:', sig);
   }
@@ -165,9 +148,9 @@ export async function initTickArrayForTicks(
   ticks: number[],
   tickSpacing: number,
   programId: Address
-): Promise<IInstruction[]> {
+): Promise<Instruction[]> {
   const startTicks = ticks.map((tick) => orcaGetTickArrayStartTickIndex(tick, tickSpacing));
-  const tx: IInstruction[] = [];
+  const tx: Instruction[] = [];
   const initializedArrayTicks: number[] = [];
 
   for (let i = 0; i < startTicks.length; i++) {
@@ -187,19 +170,16 @@ export async function initTickArrayInstruction(
   whirlpool: Address,
   startTick: number,
   programId: Address
-): Promise<IInstruction> {
+): Promise<Instruction> {
   const [tickArrayPda] = await getTickArray(programId, whirlpool, startTick);
 
-  const initTickArrayArgs: WhirlpoolInstructions.InitializeTickArrayArgs = {
-    startTickIndex: startTick,
-  };
-  const initTickArrayAccounts: WhirlpoolInstructions.InitializeTickArrayAccounts = {
+  return WhirlpoolInstructions.getInitializeTickArrayInstruction({
     whirlpool: whirlpool,
     funder: signer,
     tickArray: tickArrayPda,
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
-  };
-  return WhirlpoolInstructions.initializeTickArray(initTickArrayArgs, initTickArrayAccounts);
+    startTickIndex: startTick,
+  });
 }
 
 async function getTickArray(
@@ -226,29 +206,4 @@ async function getTokenBadge(
     ],
     programAddress: programId,
   });
-}
-
-export async function getTickArrayPubkeysFromRangeOrca(
-  rpc: Rpc<GetAccountInfoApi>,
-  whirlpool: Address,
-  tickLowerIndex: number,
-  tickUpperIndex: number
-): Promise<[Address, Address]> {
-  const whirlpoolState = await Whirlpool.fetch(rpc, whirlpool);
-  if (whirlpoolState == null) {
-    throw new Error(`Raydium Pool ${whirlpool} doesn't exist`);
-  }
-
-  const startTickIndex = orcaGetTickArrayStartTickIndex(tickLowerIndex, whirlpoolState.tickSpacing);
-  const endTickIndex = orcaGetTickArrayStartTickIndex(tickUpperIndex, whirlpoolState.tickSpacing);
-
-  const [startTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(startTickIndex.toString())],
-    programAddress: WHIRLPOOL_PROGRAM_ID,
-  });
-  const [endTickIndexPk] = await getProgramDerivedAddress({
-    seeds: [Buffer.from('tick_array'), addressEncoder.encode(whirlpool), Buffer.from(endTickIndex.toString())],
-    programAddress: WHIRLPOOL_PROGRAM_ID,
-  });
-  return [startTickIndexPk, endTickIndexPk];
 }

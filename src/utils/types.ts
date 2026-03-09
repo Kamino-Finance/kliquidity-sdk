@@ -1,10 +1,8 @@
-import { BN } from '@coral-xyz/anchor';
-
-import { address, Address, IInstruction, TransactionMessage, TransactionSigner } from '@solana/kit';
-import { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
+import { address, Address, Instruction, TransactionMessage, TransactionSigner } from '@solana/kit';
+import type { WhirlpoolStrategy } from '../@codegen/kliquidity/accounts';
 import { Dex, collToLamportsDecimal } from './utils';
 import Decimal from 'decimal.js';
-import { RebalanceTypeKind } from '../@codegen/kliquidity/types';
+import { RebalanceType } from '../@codegen/kliquidity/types';
 
 export const RAYDIUM_DEVNET_PROGRAM_ID = address('devi51mZmdwUJGU9hjN27vEz64Gps7uUefqxg27EAtH');
 
@@ -45,7 +43,7 @@ export function strategyTypeToNumber(strategyType: StrategyType): number {
 }
 
 export function getStrategyTypeFromStrategy(strategy: WhirlpoolStrategy): StrategyType {
-  switch (strategy.strategyType.toNumber()) {
+  switch (Number(strategy.strategyType)) {
     case 0:
       return 'NON_PEGGED';
     case 1:
@@ -53,7 +51,7 @@ export function getStrategyTypeFromStrategy(strategy: WhirlpoolStrategy): Strate
     case 2:
       return 'STABLE';
     default:
-      throw new Error(`Unknown strategyType value ${strategy.strategyType.toNumber()}`);
+      throw new Error(`Unknown strategyType value ${Number(strategy.strategyType)}`);
   }
 }
 
@@ -167,7 +165,7 @@ export function depositAmountsForSwapToLamports(
 }
 
 export interface RebalanceParams {
-  rebalanceType: RebalanceTypeKind;
+  rebalanceType: RebalanceType;
   lowerRangeBps?: Decimal;
   upperRangeBps?: Decimal;
   resetRangeLowerBps?: Decimal;
@@ -184,7 +182,7 @@ export interface RebalanceParams {
 }
 
 export interface RebalanceParamsAsPrices {
-  rebalanceType: RebalanceTypeKind;
+  rebalanceType: RebalanceType;
   rangePriceLower: Decimal;
   rangePriceUpper: Decimal;
   resetPriceLower?: Decimal;
@@ -214,7 +212,7 @@ export interface SwapperIxBuilder {
     owner: TransactionSigner,
     slippage: Decimal,
     allKeys: Address[]
-  ): Promise<[IInstruction[], Address[]]>;
+  ): Promise<[Instruction[], Address[]]>;
 }
 
 export interface ProfiledFunctionExecution {
@@ -227,8 +225,8 @@ export function noopProfiledFunctionExecution(promise: Promise<any>): Promise<an
 
 export interface CreateAta {
   ata: Address;
-  createIxns: IInstruction[];
-  closeIxns: IInstruction[];
+  createIxns: Instruction[];
+  closeIxns: Instruction[];
 }
 
 export interface DeserializedVersionedTransaction {
@@ -237,7 +235,7 @@ export interface DeserializedVersionedTransaction {
 }
 
 export interface InstructionsWithLookupTables {
-  instructions: IInstruction[];
+  instructions: Instruction[];
   lookupTablesAddresses: Address[];
 }
 
@@ -269,16 +267,16 @@ export interface InputRebalanceFieldInfo {
 }
 
 export interface InitStrategyIxs {
-  initStrategyIx: IInstruction;
-  updateStrategyParamsIxs: IInstruction[];
-  updateRebalanceParamsIx: IInstruction;
-  openPositionIxs: IInstruction[];
+  initStrategyIx: Instruction;
+  updateStrategyParamsIxs: Instruction[];
+  updateRebalanceParamsIx: Instruction;
+  openPositionIxs: Instruction[];
 }
 
 export interface WithdrawShares {
-  prerequisiteIxs: IInstruction[];
-  withdrawIx: IInstruction;
-  closeSharesAtaIx?: IInstruction;
+  prerequisiteIxs: Instruction[];
+  withdrawIx: Instruction;
+  closeSharesAtaIx?: Instruction;
 }
 
 export interface MetadataProgramAddressesOrca {
@@ -304,13 +302,13 @@ export interface LowerAndUpperTickPubkeys {
   upperTickBump: number;
 }
 export interface WithdrawAllAndCloseIxns {
-  withdrawIxns: IInstruction[];
-  closeIxn: IInstruction;
+  withdrawIxns: Instruction[];
+  closeIxn: Instruction;
 }
 
 export interface InitPoolTickIfNeeded {
   tick: Address;
-  initTickIx: IInstruction | undefined;
+  initTickIx: Instruction | undefined;
 }
 
 export interface StrategyTokenScopeFeeds {
@@ -321,6 +319,6 @@ export interface StrategyTokenScopeFeeds {
 }
 
 export type Percentage = {
-  numerator: BN;
-  denominator: BN;
+  numerator: bigint;
+  denominator: bigint;
 };

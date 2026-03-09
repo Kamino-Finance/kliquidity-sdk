@@ -3,10 +3,10 @@ import { PositionRange, RebalanceFieldInfo, RebalanceFieldsDict } from '../utils
 import { FullBPSDecimal } from '../utils/CreationParameters';
 import { Dex, readBigUint128LE } from '../utils';
 import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
-import BN from 'bn.js';
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { getPriceFromQ64Price } from '../utils/meteora';
 import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
+import { toBN } from '../utils/raydiumBridge';
 
 export const DEFAULT_LOWER_RANGE_PRICE_DIFF_BPS = new Decimal(500);
 export const DEFAULT_UPPER_RANGE_PRICE_DIFF_BPS = new Decimal(500);
@@ -96,29 +96,31 @@ export function readTakeProfitRebalanceParamsFromStrategy(
   tokenBDecimals: number,
   rebalanceRaw: RebalanceRaw
 ) {
-  const paramsBuffer = Buffer.from(rebalanceRaw.params);
+  const buf = new Uint8Array(rebalanceRaw.params);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   const params: RebalanceFieldsDict = {};
 
   params['lowerRangePrice'] = SqrtPriceMath.sqrtPriceX64ToPrice(
-    new BN(readBigUint128LE(paramsBuffer, 0).toString()),
+    toBN(readBigUint128LE(buf, 0)),
     tokenADecimals,
     tokenBDecimals
   );
   params['upperRangePrice'] = SqrtPriceMath.sqrtPriceX64ToPrice(
-    new BN(readBigUint128LE(paramsBuffer, 16).toString()),
+    toBN(readBigUint128LE(buf, 16)),
     tokenADecimals,
     tokenBDecimals
   );
-  params['destinationToken'] = new Decimal(paramsBuffer.readUint8(32));
+  params['destinationToken'] = new Decimal(dv.getUint8(32));
 
   return params;
 }
 
 export function readTakeProfitRebalanceStateFromStrategy(rebalanceRaw: RebalanceRaw) {
-  const stateBuffer = Buffer.from(rebalanceRaw.state);
+  const buf = new Uint8Array(rebalanceRaw.state);
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   const state: RebalanceFieldsDict = {};
 
-  state['step'] = new Decimal(stateBuffer.readUInt8(0));
+  state['step'] = new Decimal(dv.getUint8(0));
 
   return state;
 }

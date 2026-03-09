@@ -1,9 +1,9 @@
 import { address, generateKeyPairSigner } from '@solana/kit';
 import { Kamino } from '../src';
 import { GlobalConfigMainnet } from './runner/utils';
-import { PROGRAM_ID as KLIQUIDITY_PROGRAM_ID } from '../src/@codegen/kliquidity/programId';
-import { PROGRAM_ID as WHIRLPOOL_PROGRAM_ID } from '../src/@codegen/whirlpools/programId';
-import { PROGRAM_ID as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programId';
+import { YVAULTS_PROGRAM_ADDRESS as KLIQUIDITY_PROGRAM_ID } from '../src/@codegen/kliquidity/programs';
+import { WHIRLPOOL_PROGRAM_ADDRESS as WHIRLPOOL_PROGRAM_ID } from '../src/@codegen/whirlpools/programs';
+import { AMM_V3_PROGRAM_ADDRESS as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programs';
 import { initEnv } from './runner/env';
 
 describe('Read APY Test', async () => {
@@ -24,7 +24,6 @@ describe('Read APY Test', async () => {
     const kamino = new Kamino(
       cluster,
       env.c.rpc,
-      env.legacyConnection,
       GlobalConfigMainnet,
       env.kliquidityProgramId,
       WHIRLPOOL_PROGRAM_ID,
