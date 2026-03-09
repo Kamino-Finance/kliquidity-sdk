@@ -311,6 +311,13 @@ export interface InitPoolTickIfNeeded {
   initTickIx: Instruction | undefined;
 }
 
+export interface StrategyTokenScopeFeeds {
+  tokenAFeed: Address;
+  tokenBFeed: Address;
+  rewardsFeeds: (Address | undefined)[];
+  kaminoRewardsFeeds: (Address | undefined)[];
+}
+
 export type Percentage = {
   numerator: bigint;
   denominator: bigint;

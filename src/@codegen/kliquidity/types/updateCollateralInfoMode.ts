@@ -8,7 +8,7 @@
 
 import { combineCodec, getEnumDecoder, getEnumEncoder, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder } from '@solana/kit';
 
-export enum UpdateCollateralInfoMode { CollateralId, LowerHeuristic, UpperHeuristic, ExpHeuristic, TwapDivergence, UpdateScopeTwap, UpdateScopeChain, UpdateName, UpdatePriceMaxAge, UpdateTwapMaxAge, UpdateDisabled, UpdateStakingRateChain, UpdateMaxIgnorableAmountAsReward };
+export enum UpdateCollateralInfoMode { CollateralId, LowerHeuristic, UpperHeuristic, ExpHeuristic, TwapDivergence, UpdateScopeTwap, UpdateScopeChain, UpdateName, UpdatePriceMaxAge, UpdateTwapMaxAge, UpdateDisabled, UpdateStakingRateChain, UpdateMaxIgnorableAmountAsReward, UpdateScopeFeed };
 
 export type UpdateCollateralInfoModeArgs = UpdateCollateralInfoMode;
 
