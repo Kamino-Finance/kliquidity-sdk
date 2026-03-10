@@ -3318,32 +3318,6 @@
       "args": []
     },
     {
-      "name": "tokenInfosInitScopeFeed",
-      "accounts": [
-        {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "globalConfig",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenInfos",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "scopeFeed",
-          "type": "publicKey"
-        }
-      ]
-    },
-    {
       "name": "deprecateCollateralInfo",
       "accounts": [
         {

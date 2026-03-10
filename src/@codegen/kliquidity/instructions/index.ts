@@ -34,7 +34,6 @@ export * from './signTerms';
 export * from './singleTokenDepositAndInvestWithMin';
 export * from './singleTokenDepositWithMin';
 export * from './swapRewards';
-export * from './tokenInfosInitScopeFeed';
 export * from './updateCollateralInfo';
 export * from './updateGlobalConfig';
 export * from './updateRewardMapping';
