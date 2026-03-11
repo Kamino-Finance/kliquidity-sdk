@@ -549,7 +549,7 @@ export class RaydiumService {
     const mintK: ReturnTypeFetchMultipleMintInfos = {};
     for (const { address, data } of mintInfosWithAddress) {
       if (!data) {
-        this._logger.error('invalid mint account', address.toString());
+        this._logger.error(`Invalid mint ${address}`);
         continue;
       }
       mintK[address] = {
