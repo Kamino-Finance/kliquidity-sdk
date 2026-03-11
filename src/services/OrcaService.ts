@@ -23,6 +23,7 @@ import { WHIRLPOOL_PROGRAM_ADDRESS } from '../@codegen/whirlpools/programs';
 import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { KaminoPrices } from '../models';
 import { priceToTickIndex } from '@orca-so/whirlpools-core';
+import { Logger } from '../utils/Logger';
 
 function toOptionalAddress(value: Base58EncodedBytes | string | undefined | null): Address | undefined {
   if (value === undefined || value === null) {
@@ -41,7 +42,12 @@ function setRequiredTokenPrice(tokensPrices: Map<Address, Decimal>, prices: Kami
   tokensPrices.set(mint, price);
 }
 
-function setOptionalTokenPrice(tokensPrices: Map<Address, Decimal>, prices: KaminoPrices, mint: Address | undefined): void {
+function setOptionalTokenPrice(
+  tokensPrices: Map<Address, Decimal>,
+  prices: KaminoPrices,
+  mint: Address | undefined,
+  logger: Logger
+): void {
   if (!mint) {
     return;
   }
@@ -50,7 +56,7 @@ function setOptionalTokenPrice(tokensPrices: Map<Address, Decimal>, prices: Kami
   if (price) {
     tokensPrices.set(mint, price);
   } else {
-    console.error(`Could not get optional token ${mint} price`);
+    logger.error(`Could not get optional token ${mint} price`);
   }
 }
 
@@ -62,11 +68,17 @@ export class OrcaService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
   private readonly _whirlpoolProgramId: Address;
   private readonly _orcaApiUrl: string;
+  private readonly _logger: Logger;
 
-  constructor(rpc: Rpc<SolanaRpcApi>, whirlpoolProgramId: Address = WHIRLPOOL_PROGRAM_ADDRESS) {
+  constructor(
+    rpc: Rpc<SolanaRpcApi>,
+    whirlpoolProgramId: Address = WHIRLPOOL_PROGRAM_ADDRESS,
+    logger: Logger = console
+  ) {
     this._rpc = rpc;
     this._whirlpoolProgramId = whirlpoolProgramId;
     this._orcaApiUrl = `https://api.orca.so/v2/solana`;
+    this._logger = logger;
   }
 
   getWhirlpoolProgramId(): Address {
@@ -115,13 +127,13 @@ export class OrcaService {
           hasMore = false;
         }
       } catch (error) {
-        console.error('Error fetching Orca whirlpools page:', error);
+        this._logger.error('Error fetching Orca whirlpools page:', error);
         throw error;
       }
     }
 
     if (pageCount >= maxPages) {
-      console.warn(`Reached maximum page limit (${maxPages}). There might be more whirlpools available.`);
+      this._logger.warn(`Reached maximum page limit (${maxPages}). There might be more whirlpools available.`);
     }
 
     return allWhirlpools;
@@ -152,9 +164,15 @@ export class OrcaService {
     const rewardMint = collateralInfos[rewardCollateralId]?.mint?.toString();
 
     const rewardDecimals =
-      rewardIndex === 0 ? Number(strategy.reward0Decimals) : rewardIndex === 1 ? Number(strategy.reward1Decimals) : Number(strategy.reward2Decimals);
+      rewardIndex === 0
+        ? Number(strategy.reward0Decimals)
+        : rewardIndex === 1
+          ? Number(strategy.reward1Decimals)
+          : Number(strategy.reward2Decimals);
     if (rewardDecimals !== 0 && !rewardMint) {
-      console.error(`Could not get strategy reward mint for reward index ${rewardIndex} and collateral id ${rewardCollateralId}`);
+      this._logger.error(
+        `Could not get strategy reward mint for reward index ${rewardIndex} and collateral id ${rewardCollateralId}`
+      );
     }
 
     return toOptionalAddress(rewardMint);
@@ -173,17 +191,17 @@ export class OrcaService {
     if (Number(strategy.reward0Decimals) !== 0 && reward0Mint) {
       rewardsDecimals.set(reward0Mint, Number(strategy.reward0Decimals));
     } else if (Number(strategy.reward0Decimals) !== 0) {
-      console.error(`Could not get Orca API reward mint for pool ${pool.address} at reward index 0`);
+      this._logger.error(`Could not get Orca API reward mint for pool ${pool.address} at reward index 0`);
     }
     if (Number(strategy.reward1Decimals) !== 0 && reward1Mint) {
       rewardsDecimals.set(reward1Mint, Number(strategy.reward1Decimals));
     } else if (Number(strategy.reward1Decimals) !== 0) {
-      console.error(`Could not get Orca API reward mint for pool ${pool.address} at reward index 1`);
+      this._logger.error(`Could not get Orca API reward mint for pool ${pool.address} at reward index 1`);
     }
     if (Number(strategy.reward2Decimals) !== 0 && reward2Mint) {
       rewardsDecimals.set(reward2Mint, Number(strategy.reward2Decimals));
     } else if (Number(strategy.reward2Decimals) !== 0) {
-      console.error(`Could not get Orca API reward mint for pool ${pool.address} at reward index 2`);
+      this._logger.error(`Could not get Orca API reward mint for pool ${pool.address} at reward index 2`);
     }
 
     return rewardsDecimals;
@@ -231,21 +249,21 @@ export class OrcaService {
       if (reward0Price) {
         tokensPrices.set(reward0, reward0Price.price);
       } else {
-        console.error(`Could not get strategy reward0 token ${reward0} price`);
+        this._logger.error(`Could not get strategy reward0 token ${reward0} price`);
       }
     }
     if (reward1Price !== null && reward1) {
       if (reward1Price) {
         tokensPrices.set(reward1, reward1Price.price);
       } else {
-        console.error(`Could not get strategy reward1 token ${reward1} price`);
+        this._logger.error(`Could not get strategy reward1 token ${reward1} price`);
       }
     }
     if (reward2Price !== null && reward2) {
       if (reward2Price) {
         tokensPrices.set(reward2, reward2Price.price);
       } else {
-        console.error(`Could not get strategy reward2 token ${reward2} price`);
+        this._logger.error(`Could not get strategy reward2 token ${reward2} price`);
       }
     }
 
@@ -256,9 +274,9 @@ export class OrcaService {
     const tokensPrices: Map<Address, Decimal> = new Map();
     setRequiredTokenPrice(tokensPrices, prices, address(pool.tokenMintA.toString()));
     setRequiredTokenPrice(tokensPrices, prices, address(pool.tokenMintB.toString()));
-    setOptionalTokenPrice(tokensPrices, prices, this.getPoolRewardMint(pool, 0));
-    setOptionalTokenPrice(tokensPrices, prices, this.getPoolRewardMint(pool, 1));
-    setOptionalTokenPrice(tokensPrices, prices, this.getPoolRewardMint(pool, 2));
+    setOptionalTokenPrice(tokensPrices, prices, this.getPoolRewardMint(pool, 0), this._logger);
+    setOptionalTokenPrice(tokensPrices, prices, this.getPoolRewardMint(pool, 1), this._logger);
+    setOptionalTokenPrice(tokensPrices, prices, this.getPoolRewardMint(pool, 2), this._logger);
 
     return tokensPrices;
   }

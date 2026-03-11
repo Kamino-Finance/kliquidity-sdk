@@ -413,16 +413,16 @@ export class Kamino {
       this._globalConfig = globalConfig ? globalConfig : fromLegacyPublicKey(this._config.kamino.globalConfig);
     }
 
+    this.logger = logger ? logger : console;
+
     this._scope = new Scope(cluster, rpc);
-    this._orcaService = new OrcaService(rpc, whirlpoolProgramId);
-    this._raydiumService = new RaydiumService(rpc, raydiumProgramId);
-    this._meteoraService = new MeteoraService(rpc, meteoraProgramId);
+    this._orcaService = new OrcaService(rpc, whirlpoolProgramId, this.logger);
+    this._raydiumService = new RaydiumService(rpc, raydiumProgramId, this.logger);
+    this._meteoraService = new MeteoraService(rpc, meteoraProgramId, this.logger);
 
     if (kSwapBaseAPI) {
       this._kSwapBaseAPI = kSwapBaseAPI;
     }
-
-    this.logger = logger ? logger : console;
   }
 
   getConnection = () => this._rpc;
@@ -459,7 +459,7 @@ export class Kamino {
     if (disabledTokensMints.length === 0) {
       return new Map();
     }
-    return getTokensPrices(this._kSwapBaseAPI, disabledTokensMints);
+    return getTokensPrices(this._kSwapBaseAPI, disabledTokensMints, this.logger);
   };
 
   getSupportedDexes = (): Dex[] => ['ORCA', 'RAYDIUM', 'METEORA'];
@@ -2537,7 +2537,7 @@ export class Kamino {
       const tokensPrices = disabledTokensPrices
         ? disabledTokensPrices
         : disabledTokens.length > 0
-          ? await getTokensPrices(this._kSwapBaseAPI, disabledTokens)
+          ? await getTokensPrices(this._kSwapBaseAPI, disabledTokens, this.logger)
           : new Map<Address, Decimal>();
       for (const [token, price] of tokensPrices) {
         const collInfo = hubbleCollateralInfos.find((x) => x.mint === token);
@@ -3901,7 +3901,9 @@ export class Kamino {
       const createWSolAtaIxns = await createWsolAtaIfMissing(
         this._rpc,
         new Decimal(lamportsToNumberDecimal(solToDeposit, DECIMALS_SOL)),
-        owner
+        owner,
+        'deposit',
+        this.logger
       );
 
       // if the wSOL ata is not created, expect to have 0 remaining after the deposit
@@ -3943,7 +3945,9 @@ export class Kamino {
       const createWSolAtaIxns = await createWsolAtaIfMissing(
         this._rpc,
         new Decimal(lamportsToNumberDecimal(solToDeposit, DECIMALS_SOL)),
-        owner
+        owner,
+        'deposit',
+        this.logger
       );
 
       const wSolAtaExists = await checkIfAccountExists(this._rpc, createWSolAtaIxns.ata);
@@ -4224,7 +4228,8 @@ export class Kamino {
             slippageBps.toNumber(),
             useOnlyLegacyTransaction,
             maxAccounts,
-            onlyDirectRoutes
+            onlyDirectRoutes,
+            this.logger
           ),
           'C-getBestRouteV6',
           []
@@ -4238,7 +4243,8 @@ export class Kamino {
             slippageBps.toNumber(),
             useOnlyLegacyTransaction,
             maxAccounts,
-            onlyDirectRoutes
+            onlyDirectRoutes,
+            this.logger
           ),
           'C-getBestRouteV6',
           []

@@ -2,6 +2,7 @@ import { AccountRole, address, Address, Instruction as SolanaInstruction } from 
 import { base64ToBytes } from '../utils/bytes';
 import axios from 'axios';
 import Decimal from 'decimal.js';
+import { Logger } from '../utils/Logger';
 import {
   QuoteResponse,
   SwapInstructionsResponse as JupSwapInstructionsResponse,
@@ -41,7 +42,8 @@ export class JupService {
     slippageBps: number,
     asLegacyTransaction?: boolean,
     maxAccounts?: number,
-    onlyDirectRoutes?: boolean
+    onlyDirectRoutes?: boolean,
+    logger: Logger = console
   ): Promise<SwapInstructionsResponse> => {
     try {
       // https://lite-api.jup.ag/swap/v1/quote?inputMint=7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj&outputMint=mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So&amount=71101983&slippageBps=10&onlyDirectRoutes=false&asLegacyTransaction=false&maxAccounts=33
@@ -75,7 +77,7 @@ export class JupService {
 
       return swapIxs;
     } catch (error) {
-      console.log('getBestRouteV6 error', error);
+      logger.error('getBestRouteV6 error', error);
       throw error;
     }
   };
@@ -88,7 +90,8 @@ export class JupService {
     asLegacyTransaction?: boolean,
     maxAccounts?: number,
     onlyDirectRoutes?: boolean,
-    jupEndpoint?: string
+    jupEndpoint?: string,
+    logger: Logger = console
   ): Promise<QuoteResponse> => {
     try {
       const params = {
@@ -105,7 +108,7 @@ export class JupService {
       const res = await axios.get(`${baseURL}/swap/v1/quote`, { params });
       return res.data as QuoteResponse;
     } catch (error) {
-      console.log('getBestRouteQuoteV6 error', error);
+      logger.error('getBestRouteQuoteV6 error', error);
       throw error;
     }
   };
@@ -114,7 +117,8 @@ export class JupService {
     userAddress: Address,
     quote: QuoteResponse,
     wrapUnwrapSOL = true,
-    asLegacyTransaction?: boolean
+    asLegacyTransaction?: boolean,
+    logger: Logger = console
   ): Promise<JupSwapInstructionsResponse> => {
     try {
       return await jupiterSwapApi.swapInstructionsPost({
@@ -126,7 +130,7 @@ export class JupService {
         },
       });
     } catch (error) {
-      console.log('getSwapTxFromQuote error', error);
+      logger.error('getSwapTxFromQuote error', error);
       throw error;
     }
   };

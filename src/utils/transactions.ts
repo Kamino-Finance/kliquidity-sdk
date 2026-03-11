@@ -24,6 +24,7 @@ import {
   getSyncNativeInstruction,
 } from '@solana-program/token-2022';
 import { getTransferSolInstruction } from '@solana-program/system';
+import { Logger } from './Logger';
 
 export const MAX_ACCOUNTS_PER_TRANSACTION = 64;
 
@@ -77,7 +78,8 @@ export const createWsolAtaIfMissing = async (
   rpc: Rpc<GetAccountInfoApi & GetTokenAccountBalanceApi>,
   amount: Decimal,
   owner: TransactionSigner,
-  method: 'deposit' | 'withdraw' = 'deposit'
+  method: 'deposit' | 'withdraw' = 'deposit',
+  logger: Logger = console
 ): Promise<CreateAta> => {
   const createIxns: Instruction[] = [];
   const closeIxns: Instruction[] = [];
@@ -101,7 +103,7 @@ export const createWsolAtaIfMissing = async (
       uiAmount = tokenBalance === null ? 0 : tokenBalance;
     }
   } catch (err) {
-    console.log('Err Token Balance', err);
+    logger.error('Err Token Balance', err);
   }
 
   if (solDeposit !== null && solDeposit > uiAmount && method === 'deposit') {

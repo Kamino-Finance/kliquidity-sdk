@@ -21,6 +21,7 @@ import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
 import { decompress } from 'fzstd';
 import { MeteoraPoolAPI, MeteoraPoolsResponse } from './MeteoraPoolsResponse';
+import { Logger } from '../utils/Logger';
 
 export interface MeteoraPool {
   key: Address;
@@ -31,11 +32,13 @@ export class MeteoraService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
   private readonly _meteoraProgramId: Address;
   private readonly _meteoraApiUrl: string;
+  private readonly _logger: Logger;
 
-  constructor(rpc: Rpc<SolanaRpcApi>, meteoraProgramId: Address = LB_CLMM_PROGRAM_ADDRESS) {
+  constructor(rpc: Rpc<SolanaRpcApi>, meteoraProgramId: Address = LB_CLMM_PROGRAM_ADDRESS, logger: Logger = console) {
     this._rpc = rpc;
     this._meteoraProgramId = meteoraProgramId;
     this._meteoraApiUrl = 'https://dlmm-api.meteora.ag';
+    this._logger = logger;
   }
 
   getMeteoraProgramId(): Address {
@@ -67,7 +70,7 @@ export class MeteoraService {
         const lbPair = getLbPairDecoder().decode(new Uint8Array(decompressedData));
         pools.push({ pool: lbPair, key: rawPools[i].pubkey });
       } catch (e) {
-        console.log(e);
+        this._logger.error(e);
       }
     }
     return pools;
