@@ -48,7 +48,7 @@ export const getTokensPrices = async (
         const price = new Decimal(tokenData.value);
         prices.set(token, price);
       } catch (error) {
-        logger.error(`Failed to parse price for token, setting to 0: ${token}: ${error}`);
+        logger.error(`Failed to parse price for token, setting to 0: ${token}:`, error);
         prices.set(token, new Decimal(0));
       }
     } else {

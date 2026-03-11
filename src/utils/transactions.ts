@@ -103,7 +103,7 @@ export const createWsolAtaIfMissing = async (
       uiAmount = tokenBalance === null ? 0 : tokenBalance;
     }
   } catch (err) {
-    logger.error('Err Token Balance', err);
+    logger.error('Err Token Balance:', err);
   }
 
   if (solDeposit !== null && solDeposit > uiAmount && method === 'deposit') {

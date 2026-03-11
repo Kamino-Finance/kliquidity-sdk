@@ -77,7 +77,7 @@ export class JupService {
 
       return swapIxs;
     } catch (error) {
-      logger.error('getBestRouteV6 error', error);
+      logger.error('getBestRouteV6 error:', error);
       throw error;
     }
   };
@@ -108,7 +108,7 @@ export class JupService {
       const res = await axios.get(`${baseURL}/swap/v1/quote`, { params });
       return res.data as QuoteResponse;
     } catch (error) {
-      logger.error('getBestRouteQuoteV6 error', error);
+      logger.error('getBestRouteQuoteV6 error:', error);
       throw error;
     }
   };
@@ -130,7 +130,7 @@ export class JupService {
         },
       });
     } catch (error) {
-      logger.error('getSwapTxFromQuote error', error);
+      logger.error('getSwapTxFromQuote error:', error);
       throw error;
     }
   };

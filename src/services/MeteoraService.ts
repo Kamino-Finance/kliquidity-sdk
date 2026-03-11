@@ -70,7 +70,7 @@ export class MeteoraService {
         const lbPair = getLbPairDecoder().decode(new Uint8Array(decompressedData));
         pools.push({ pool: lbPair, key: rawPools[i].pubkey });
       } catch (e) {
-        this._logger.error(`Error getting Meteora pools from chain ${e}`);
+        this._logger.error('Error getting Meteora pools from chain:', e);
       }
     }
     return pools;

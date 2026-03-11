@@ -2555,7 +2555,7 @@ export class Kamino {
         };
       }
     } catch (e) {
-      this.logger.error('Failed to get prices for disabled tokens from Jup', e);
+      this.logger.error('Failed to get prices for disabled tokens from Jup:', e);
     }
 
     return { spot: spotPrices, twap: twaps };
@@ -3052,7 +3052,7 @@ export class Kamino {
         keyOrDefault(strategyState.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS)
       ),
     ]);
-    this.logger.info('Shares ATA in withdraw: ', sharesAta.toString());
+    this.logger.info(`Shares ATA in withdraw: ${sharesAta.toString()}`);
 
     const sharesAmountInLamports = sharesAmount.mul(
       new Decimal(10).pow(strategyState.strategy.sharesMintDecimals.toString())
@@ -3669,8 +3669,8 @@ export class Kamino {
             onlyDirectRoutes
           );
 
-    this.logger.info('single sided deposit tokenA tokenAMinPostDepositBalance', tokenAMinPostDepositBalance);
-    this.logger.info('single sided deposit tokenA userTokenBalances.b', userTokenBalances.b);
+    this.logger.info(`single sided deposit tokenA tokenAMinPostDepositBalance ${tokenAMinPostDepositBalance}`);
+    this.logger.info(`single sided deposit tokenA userTokenBalances.b ${userTokenBalances.b}`);
     return await profiler(
       this.getSingleSidedDepositIxs(
         strategyWithAddress,
@@ -4284,7 +4284,7 @@ export class Kamino {
     profiledFunctionExecution: ProfiledFunctionExecution = noopProfiledFunctionExecution,
     onlyDirectRoutes?: boolean
   ): Promise<[Instruction[], Address[]]> => {
-    this.logger.info('getJupSwapIxsV6', JSON.stringify(input));
+    this.logger.info(`getJupSwapIxsV6 ${JSON.stringify(input)}`);
 
     let extraAccountsBuffer = 5;
 
@@ -4316,7 +4316,7 @@ export class Kamino {
         return result;
       } catch (error) {
         extraAccountsBuffer += 2;
-        this.logger.error(`getJupSwapIxs: ${error}`);
+        this.logger.error('getJupSwapIxs:', error);
       }
     }
 
@@ -4349,8 +4349,8 @@ export class Kamino {
 
     const expectedALamportsDecimal = collToLamportsDecimal(expectedABalance, Number(strategyState.tokenAMintDecimals));
     const expectedBLamportsDecimal = collToLamportsDecimal(expectedBBalance, Number(strategyState.tokenBMintDecimals));
-    this.logger.info('expectedALamportsDecimal ', expectedALamportsDecimal.toString());
-    this.logger.info('expectedBLamportsDecimal ', expectedBLamportsDecimal.toString());
+    this.logger.info(`expectedALamportsDecimal ${expectedALamportsDecimal.toString()}`);
+    this.logger.info(`expectedBLamportsDecimal ${expectedBLamportsDecimal.toString()}`);
     const expectedALamports = expectedALamportsDecimal.floor();
     const expectedBLamports = expectedBLamportsDecimal.floor();
 
