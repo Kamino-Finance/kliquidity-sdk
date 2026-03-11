@@ -23,16 +23,62 @@ import { WHIRLPOOL_PROGRAM_ADDRESS } from '../@codegen/whirlpools/programs';
 import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { KaminoPrices } from '../models';
 import { priceToTickIndex } from '@orca-so/whirlpools-core';
+import { Logger } from '../utils/Logger';
+
+function toOptionalAddress(value: Base58EncodedBytes | string | undefined | null): Address | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  return address(value.toString());
+}
+
+function setRequiredTokenPrice(tokensPrices: Map<Address, Decimal>, prices: KaminoPrices, mint: Address): void {
+  const price = prices.spot[mint]?.price;
+  if (!price) {
+    throw new Error(`Could not get token ${mint} price`);
+  }
+
+  tokensPrices.set(mint, price);
+}
+
+function setOptionalTokenPrice(
+  tokensPrices: Map<Address, Decimal>,
+  prices: KaminoPrices,
+  mint: Address | undefined,
+  logger: Logger
+): void {
+  if (!mint) {
+    return;
+  }
+
+  const price = prices.spot[mint]?.price;
+  if (price) {
+    tokensPrices.set(mint, price);
+  } else {
+    logger.error(`Could not get optional token ${mint} price`);
+  }
+}
+
+function sumAprComponents(feeApr: number, rewardsApr: number[]): Decimal {
+  return rewardsApr.reduce((totalApr, rewardApr) => totalApr.add(rewardApr), new Decimal(feeApr));
+}
 
 export class OrcaService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
   private readonly _whirlpoolProgramId: Address;
   private readonly _orcaApiUrl: string;
+  private readonly _logger: Logger;
 
-  constructor(rpc: Rpc<SolanaRpcApi>, whirlpoolProgramId: Address = WHIRLPOOL_PROGRAM_ADDRESS) {
+  constructor(
+    rpc: Rpc<SolanaRpcApi>,
+    whirlpoolProgramId: Address = WHIRLPOOL_PROGRAM_ADDRESS,
+    logger: Logger = console
+  ) {
     this._rpc = rpc;
     this._whirlpoolProgramId = whirlpoolProgramId;
     this._orcaApiUrl = `https://api.orca.so/v2/solana`;
+    this._logger = logger;
   }
 
   getWhirlpoolProgramId(): Address {
@@ -81,13 +127,13 @@ export class OrcaService {
           hasMore = false;
         }
       } catch (error) {
-        console.error('Error fetching Orca whirlpools page:', error);
+        this._logger.error('Error fetching Orca whirlpools page:', error);
         throw error;
       }
     }
 
     if (pageCount >= maxPages) {
-      console.warn(`Reached maximum page limit (${maxPages}). There might be more whirlpools available.`);
+      this._logger.warn(`Reached maximum page limit (${maxPages}). There might be more whirlpools available.`);
     }
 
     return allWhirlpools;
@@ -102,6 +148,63 @@ export class OrcaService {
     }
 
     return response.data;
+  }
+
+  private getStrategyRewardMint(
+    strategy: WhirlpoolStrategy,
+    collateralInfos: CollateralInfo[],
+    rewardIndex: 0 | 1 | 2
+  ): Address | undefined {
+    const rewardCollateralId =
+      rewardIndex === 0
+        ? Number(strategy.reward0CollateralId)
+        : rewardIndex === 1
+          ? Number(strategy.reward1CollateralId)
+          : Number(strategy.reward2CollateralId);
+    const rewardMint = collateralInfos[rewardCollateralId]?.mint?.toString();
+
+    const rewardDecimals =
+      rewardIndex === 0
+        ? Number(strategy.reward0Decimals)
+        : rewardIndex === 1
+          ? Number(strategy.reward1Decimals)
+          : Number(strategy.reward2Decimals);
+    if (rewardDecimals !== 0 && !rewardMint) {
+      this._logger.error(
+        `Could not get strategy reward mint for reward index ${rewardIndex} and collateral id ${rewardCollateralId}`
+      );
+    }
+
+    return toOptionalAddress(rewardMint);
+  }
+
+  private getPoolRewardMint(pool: WhirlpoolAPIResponse, rewardIndex: 0 | 1 | 2): Address | undefined {
+    return toOptionalAddress(pool.rewards?.[rewardIndex]?.mint?.toString());
+  }
+
+  private getRewardsDecimals(pool: WhirlpoolAPIResponse, strategy: WhirlpoolStrategy): Map<Address, number> {
+    const rewardsDecimals = new Map<Address, number>();
+    const reward0Mint = this.getPoolRewardMint(pool, 0);
+    const reward1Mint = this.getPoolRewardMint(pool, 1);
+    const reward2Mint = this.getPoolRewardMint(pool, 2);
+
+    if (Number(strategy.reward0Decimals) !== 0 && reward0Mint) {
+      rewardsDecimals.set(reward0Mint, Number(strategy.reward0Decimals));
+    } else if (Number(strategy.reward0Decimals) !== 0) {
+      this._logger.error(`Could not get Orca API reward mint for pool ${pool.address} at reward index 0`);
+    }
+    if (Number(strategy.reward1Decimals) !== 0 && reward1Mint) {
+      rewardsDecimals.set(reward1Mint, Number(strategy.reward1Decimals));
+    } else if (Number(strategy.reward1Decimals) !== 0) {
+      this._logger.error(`Could not get Orca API reward mint for pool ${pool.address} at reward index 1`);
+    }
+    if (Number(strategy.reward2Decimals) !== 0 && reward2Mint) {
+      rewardsDecimals.set(reward2Mint, Number(strategy.reward2Decimals));
+    } else if (Number(strategy.reward2Decimals) !== 0) {
+      this._logger.error(`Could not get Orca API reward mint for pool ${pool.address} at reward index 2`);
+    }
+
+    return rewardsDecimals;
   }
 
   /**
@@ -127,25 +230,41 @@ export class OrcaService {
 
     const aPrice = prices.spot[tokenA.mint.toString()];
     const bPrice = prices.spot[tokenB.mint.toString()];
-    const reward0Price = Number(strategy.reward0Decimals) !== 0 ? prices.spot[rewardToken0.mint.toString()] : null;
-    const reward1Price = Number(strategy.reward1Decimals) !== 0 ? prices.spot[rewardToken1.mint.toString()] : null;
-    const reward2Price = Number(strategy.reward2Decimals) !== 0 ? prices.spot[rewardToken2.mint.toString()] : null;
+    const reward0Price =
+      Number(strategy.reward0Decimals) !== 0 && rewardToken0 ? prices.spot[rewardToken0.mint.toString()] : null;
+    const reward1Price =
+      Number(strategy.reward1Decimals) !== 0 && rewardToken1 ? prices.spot[rewardToken1.mint.toString()] : null;
+    const reward2Price =
+      Number(strategy.reward2Decimals) !== 0 && rewardToken2 ? prices.spot[rewardToken2.mint.toString()] : null;
 
-    const [mintA, mintB] = [address(strategy.tokenAMint.toString()), address(strategy.tokenBMint.toString())];
-    const reward0 = address(collateralInfos[Number(strategy.reward0CollateralId)]?.mint?.toString());
-    const reward1 = address(collateralInfos[Number(strategy.reward1CollateralId)]?.mint?.toString());
-    const reward2 = address(collateralInfos[Number(strategy.reward2CollateralId)]?.mint?.toString());
+    const mintA = address(strategy.tokenAMint.toString());
+    const mintB = address(strategy.tokenBMint.toString());
+    const reward0 = this.getStrategyRewardMint(strategy, collateralInfos, 0);
+    const reward1 = this.getStrategyRewardMint(strategy, collateralInfos, 1);
+    const reward2 = this.getStrategyRewardMint(strategy, collateralInfos, 2);
 
     tokensPrices.set(mintA, aPrice.price);
     tokensPrices.set(mintB, bPrice.price);
-    if (reward0Price !== null) {
-      tokensPrices.set(reward0, reward0Price.price);
+    if (reward0Price !== null && reward0) {
+      if (reward0Price) {
+        tokensPrices.set(reward0, reward0Price.price);
+      } else {
+        this._logger.error(`Could not get strategy reward0 token ${reward0} price`);
+      }
     }
-    if (reward1Price !== null) {
-      tokensPrices.set(reward1, reward1Price.price);
+    if (reward1Price !== null && reward1) {
+      if (reward1Price) {
+        tokensPrices.set(reward1, reward1Price.price);
+      } else {
+        this._logger.error(`Could not get strategy reward1 token ${reward1} price`);
+      }
     }
-    if (reward2Price !== null) {
-      tokensPrices.set(reward2, reward2Price.price);
+    if (reward2Price !== null && reward2) {
+      if (reward2Price) {
+        tokensPrices.set(reward2, reward2Price.price);
+      } else {
+        this._logger.error(`Could not get strategy reward2 token ${reward2} price`);
+      }
     }
 
     return tokensPrices;
@@ -153,22 +272,11 @@ export class OrcaService {
 
   private getPoolTokensPrices(pool: WhirlpoolAPIResponse, prices: KaminoPrices): Map<Address, Decimal> {
     const tokensPrices: Map<Address, Decimal> = new Map();
-    const tokens = [
-      address(pool.tokenMintA.toString()),
-      address(pool.tokenMintB.toString()),
-      address(pool.rewards[0]?.mint.toString()),
-      address(pool.rewards[1]?.mint.toString()),
-      address(pool.rewards[2]?.mint.toString()),
-    ];
-    for (const mint of tokens) {
-      if (mint) {
-        const price = prices.spot[mint]?.price;
-        if (!price) {
-          throw new Error(`Could not get token ${mint} price`);
-        }
-        tokensPrices.set(mint, price);
-      }
-    }
+    setRequiredTokenPrice(tokensPrices, prices, address(pool.tokenMintA.toString()));
+    setRequiredTokenPrice(tokensPrices, prices, address(pool.tokenMintB.toString()));
+    setOptionalTokenPrice(tokensPrices, prices, this.getPoolRewardMint(pool, 0), this._logger);
+    setOptionalTokenPrice(tokensPrices, prices, this.getPoolRewardMint(pool, 1), this._logger);
+    setOptionalTokenPrice(tokensPrices, prices, this.getPoolRewardMint(pool, 2), this._logger);
 
     return tokensPrices;
   }
@@ -210,20 +318,11 @@ export class OrcaService {
     }
 
     const lpFeeRate = new Decimal(pool.feeRate);
-    const volume24hUsd = pool.stats['24h']?.volume ?? new Decimal(0);
+    const volume24hUsd = pool.stats?.['24h']?.volume ?? new Decimal(0);
     const fee24Usd = new Decimal(volume24hUsd).mul(lpFeeRate).toNumber();
     const tokensPrices = this.getTokenPrices(strategy, prices, collateralInfos);
 
-    const rewardsDecimals = new Map<Address, number>();
-    if (Number(strategy.reward0Decimals) !== 0) {
-      rewardsDecimals.set(address(pool.rewards[0]?.mint), Number(strategy.reward0Decimals));
-    }
-    if (Number(strategy.reward1Decimals) !== 0) {
-      rewardsDecimals.set(address(pool.rewards[1]?.mint), Number(strategy.reward1Decimals));
-    }
-    if (Number(strategy.reward2Decimals) !== 0) {
-      rewardsDecimals.set(address(pool.rewards[2]?.mint), Number(strategy.reward2Decimals));
-    }
+    const rewardsDecimals = this.getRewardsDecimals(pool, strategy);
     const apr = estimateAprsForPriceRange(
       pool,
       tokensPrices,
@@ -233,10 +332,7 @@ export class OrcaService {
       rewardsDecimals
     );
 
-    let totalApr = new Decimal(apr.fee);
-    for (const reward of apr.rewards) {
-      totalApr = totalApr.add(reward);
-    }
+    const totalApr = sumAprComponents(apr.fee, apr.rewards);
     const feeApr = new Decimal(apr.fee);
     const rewardsApr = apr.rewards.map((r) => new Decimal(r));
     return {
@@ -343,7 +439,7 @@ export class OrcaService {
     }
 
     const lpFeeRate = pool.feeRate;
-    const volume24hUsd = pool?.stats?.['24h']?.volume ?? new Decimal(0);
+    const volume24hUsd = pool.stats?.['24h']?.volume ?? new Decimal(0);
     const fee24Usd = new Decimal(volume24hUsd).mul(lpFeeRate).toNumber();
     const tokensPrices = this.getPoolTokensPrices(pool, prices);
 
@@ -365,7 +461,7 @@ export class OrcaService {
       rewardsDecimals
     );
 
-    const totalApr = new Decimal(apr.fee).add(apr.rewards[0]).add(apr.rewards[1]).add(apr.rewards[2]);
+    const totalApr = sumAprComponents(apr.fee, apr.rewards);
     const feeApr = new Decimal(apr.fee);
     const rewardsApr = apr.rewards.map((r) => new Decimal(r));
     return {

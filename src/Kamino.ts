@@ -413,16 +413,16 @@ export class Kamino {
       this._globalConfig = globalConfig ? globalConfig : fromLegacyPublicKey(this._config.kamino.globalConfig);
     }
 
+    this.logger = logger ? logger : console;
+
     this._scope = new Scope(cluster, rpc);
-    this._orcaService = new OrcaService(rpc, whirlpoolProgramId);
-    this._raydiumService = new RaydiumService(rpc, raydiumProgramId);
-    this._meteoraService = new MeteoraService(rpc, meteoraProgramId);
+    this._orcaService = new OrcaService(rpc, whirlpoolProgramId, this.logger);
+    this._raydiumService = new RaydiumService(rpc, raydiumProgramId, this.logger);
+    this._meteoraService = new MeteoraService(rpc, meteoraProgramId, this.logger);
 
     if (kSwapBaseAPI) {
       this._kSwapBaseAPI = kSwapBaseAPI;
     }
-
-    this.logger = logger ? logger : console;
   }
 
   getConnection = () => this._rpc;
@@ -459,7 +459,7 @@ export class Kamino {
     if (disabledTokensMints.length === 0) {
       return new Map();
     }
-    return getTokensPrices(this._kSwapBaseAPI, disabledTokensMints);
+    return getTokensPrices(this._kSwapBaseAPI, disabledTokensMints, this.logger);
   };
 
   getSupportedDexes = (): Dex[] => ['ORCA', 'RAYDIUM', 'METEORA'];
@@ -2537,7 +2537,7 @@ export class Kamino {
       const tokensPrices = disabledTokensPrices
         ? disabledTokensPrices
         : disabledTokens.length > 0
-          ? await getTokensPrices(this._kSwapBaseAPI, disabledTokens)
+          ? await getTokensPrices(this._kSwapBaseAPI, disabledTokens, this.logger)
           : new Map<Address, Decimal>();
       for (const [token, price] of tokensPrices) {
         const collInfo = hubbleCollateralInfos.find((x) => x.mint === token);
@@ -2555,7 +2555,7 @@ export class Kamino {
         };
       }
     } catch (e) {
-      this.logger.error('Failed to get prices for disabled tokens from Jup', e);
+      this.logger.error('Failed to get prices for disabled tokens from Jup:', e);
     }
 
     return { spot: spotPrices, twap: twaps };
@@ -3052,7 +3052,7 @@ export class Kamino {
         keyOrDefault(strategyState.strategy.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS)
       ),
     ]);
-    this.logger.info('Shares ATA in withdraw: ', sharesAta.toString());
+    this.logger.info(`Shares ATA in withdraw: ${sharesAta.toString()}`);
 
     const sharesAmountInLamports = sharesAmount.mul(
       new Decimal(10).pow(strategyState.strategy.sharesMintDecimals.toString())
@@ -3669,8 +3669,8 @@ export class Kamino {
             onlyDirectRoutes
           );
 
-    this.logger.info('single sided deposit tokenA tokenAMinPostDepositBalance', tokenAMinPostDepositBalance);
-    this.logger.info('single sided deposit tokenA userTokenBalances.b', userTokenBalances.b);
+    this.logger.info(`single sided deposit tokenA tokenAMinPostDepositBalance ${tokenAMinPostDepositBalance}`);
+    this.logger.info(`single sided deposit tokenA userTokenBalances.b ${userTokenBalances.b}`);
     return await profiler(
       this.getSingleSidedDepositIxs(
         strategyWithAddress,
@@ -3901,7 +3901,9 @@ export class Kamino {
       const createWSolAtaIxns = await createWsolAtaIfMissing(
         this._rpc,
         new Decimal(lamportsToNumberDecimal(solToDeposit, DECIMALS_SOL)),
-        owner
+        owner,
+        'deposit',
+        this.logger
       );
 
       // if the wSOL ata is not created, expect to have 0 remaining after the deposit
@@ -3943,7 +3945,9 @@ export class Kamino {
       const createWSolAtaIxns = await createWsolAtaIfMissing(
         this._rpc,
         new Decimal(lamportsToNumberDecimal(solToDeposit, DECIMALS_SOL)),
-        owner
+        owner,
+        'deposit',
+        this.logger
       );
 
       const wSolAtaExists = await checkIfAccountExists(this._rpc, createWSolAtaIxns.ata);
@@ -4224,7 +4228,8 @@ export class Kamino {
             slippageBps.toNumber(),
             useOnlyLegacyTransaction,
             maxAccounts,
-            onlyDirectRoutes
+            onlyDirectRoutes,
+            this.logger
           ),
           'C-getBestRouteV6',
           []
@@ -4238,7 +4243,8 @@ export class Kamino {
             slippageBps.toNumber(),
             useOnlyLegacyTransaction,
             maxAccounts,
-            onlyDirectRoutes
+            onlyDirectRoutes,
+            this.logger
           ),
           'C-getBestRouteV6',
           []
@@ -4278,7 +4284,7 @@ export class Kamino {
     profiledFunctionExecution: ProfiledFunctionExecution = noopProfiledFunctionExecution,
     onlyDirectRoutes?: boolean
   ): Promise<[Instruction[], Address[]]> => {
-    this.logger.info('getJupSwapIxsV6', JSON.stringify(input));
+    this.logger.info(`getJupSwapIxsV6 ${JSON.stringify(input)}`);
 
     let extraAccountsBuffer = 5;
 
@@ -4310,7 +4316,7 @@ export class Kamino {
         return result;
       } catch (error) {
         extraAccountsBuffer += 2;
-        this.logger.error(`getJupSwapIxs: ${error}`);
+        this.logger.error('getJupSwapIxs:', error);
       }
     }
 
@@ -4343,8 +4349,8 @@ export class Kamino {
 
     const expectedALamportsDecimal = collToLamportsDecimal(expectedABalance, Number(strategyState.tokenAMintDecimals));
     const expectedBLamportsDecimal = collToLamportsDecimal(expectedBBalance, Number(strategyState.tokenBMintDecimals));
-    this.logger.info('expectedALamportsDecimal ', expectedALamportsDecimal.toString());
-    this.logger.info('expectedBLamportsDecimal ', expectedBLamportsDecimal.toString());
+    this.logger.info(`expectedALamportsDecimal ${expectedALamportsDecimal.toString()}`);
+    this.logger.info(`expectedBLamportsDecimal ${expectedBLamportsDecimal.toString()}`);
     const expectedALamports = expectedALamportsDecimal.floor();
     const expectedBLamports = expectedBLamportsDecimal.floor();
 

@@ -157,8 +157,58 @@ export function getPriceLowerUpper(
   return { priceLower, priceUpper };
 }
 
+// Collateral names come back as Uint8Array on-chain, but can degrade into plain arrays
+// or keyed objects after JSON serialization through caches or APIs.
+function normalizeFixedBytes(value: unknown): number[] {
+  if (value == null) {
+    return [];
+  }
+
+  if (typeof value === 'string') {
+    return Array.from(value, (char) => char.charCodeAt(0));
+  }
+
+  if (value instanceof Uint8Array) {
+    return Array.from(value);
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return Array.from(new Uint8Array(value));
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    return Array.from(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => Number(item)).filter((item) => Number.isFinite(item));
+  }
+
+  if (typeof value === 'object') {
+    const record = value as { data?: unknown; [key: string]: unknown };
+
+    if (Array.isArray(record.data)) {
+      return record.data.map((item) => Number(item)).filter((item) => Number.isFinite(item));
+    }
+
+    return Object.entries(record)
+      .filter(([key]) => /^\d+$/.test(key))
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .map(([, item]) => Number(item))
+      .filter((item) => Number.isFinite(item));
+  }
+
+  return [];
+}
+
+// Decode the fixed-width on-chain token name and stay resilient to JSON-round-tripped byte shapes.
 export function getTokenNameFromCollateralInfo(collateralInfo: CollateralInfo) {
-  return String.fromCharCode(...collateralInfo.name.filter((x) => x > 0));
+  const name =
+    typeof collateralInfo.name === 'string'
+      ? collateralInfo.name
+      : String.fromCharCode(...normalizeFixedBytes(collateralInfo.name));
+
+  return name.replace(/\0/g, '');
 }
 
 export const isSOLMint = (mint: Address): boolean => {
