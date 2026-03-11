@@ -195,9 +195,9 @@ export class RaydiumService {
     };
 
     const { apr, feeApr, rewardsApr } = PoolUtils.estimateAprsForPriceRangeMultiplier(params);
-    const totalApr = new Decimal(apr).div(100);
-    const fee = new Decimal(feeApr).div(100);
-    const rewards = rewardsApr.map((reward: number) => new Decimal(reward).div(100));
+    const totalApr = new Decimal(apr ?? 0).div(100);
+    const fee = new Decimal(feeApr ?? 0).div(100);
+    const rewards = (rewardsApr ?? []).map((reward: number) => new Decimal(reward).div(100));
 
     return {
       totalApr,
@@ -281,9 +281,9 @@ export class RaydiumService {
     };
 
     const { apr, feeApr, rewardsApr } = PoolUtils.estimateAprsForPriceRangeMultiplier(params);
-    const totalApr = new Decimal(apr).div(100);
-    const fee = new Decimal(feeApr).div(100);
-    const rewards = rewardsApr.map((reward: number) => new Decimal(reward).div(100));
+    const totalApr = new Decimal(apr ?? 0).div(100);
+    const fee = new Decimal(feeApr ?? 0).div(100);
+    const rewards = (rewardsApr ?? []).map((reward: number) => new Decimal(reward).div(100));
 
     return {
       totalApr,
