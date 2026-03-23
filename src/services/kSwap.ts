@@ -1,5 +1,6 @@
 import Decimal from 'decimal.js';
 import { Address } from '@solana/kit';
+import { Logger } from '../utils/Logger';
 
 interface KSwapTokenPriceData {
   isScaledUiToken: boolean;
@@ -15,7 +16,11 @@ interface KSwapBatchPriceResponse {
   data: { [key: string]: KSwapTokenPriceData | null };
 }
 
-export const getTokensPrices = async (apiBaseUrl: string, tokens: Address[]): Promise<Map<Address, Decimal>> => {
+export const getTokensPrices = async (
+  apiBaseUrl: string,
+  tokens: Address[],
+  logger: Logger = console
+): Promise<Map<Address, Decimal>> => {
   if (tokens.length === 0) {
     return new Map<Address, Decimal>();
   }
@@ -29,7 +34,7 @@ export const getTokensPrices = async (apiBaseUrl: string, tokens: Address[]): Pr
     },
   });
   if (!response.ok) {
-    console.error(`Failed to fetch tokens batch price: ${response.statusText}`);
+    logger.error(`Failed to fetch tokens batch price: ${response.statusText}`);
     return new Map<Address, Decimal>();
   }
 
@@ -43,11 +48,11 @@ export const getTokensPrices = async (apiBaseUrl: string, tokens: Address[]): Pr
         const price = new Decimal(tokenData.value);
         prices.set(token, price);
       } catch (error) {
-        console.error(`Failed to parse price for token, setting to 0: ${token}: ${error}`);
+        logger.error(`Failed to parse price for token, setting to 0: ${token}:`, error);
         prices.set(token, new Decimal(0));
       }
     } else {
-      console.warn(`No price data available for token ${token}, setting to 0`);
+      logger.warn(`No price data available for token ${token}, setting to 0`);
       prices.set(token, new Decimal(0));
     }
   }

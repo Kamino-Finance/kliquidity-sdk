@@ -57,14 +57,17 @@ import { fromLegacyPublicKey } from '@solana/compat';
 import { toBN } from '../utils/raydiumBridge';
 import { fetchAllMint, Mint } from '@solana-program/token-2022';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
+import { Logger } from '../utils/Logger';
 
 export class RaydiumService {
   private readonly _rpc: Rpc<SolanaRpcApi>;
   private readonly _raydiumProgramId: Address;
+  private readonly _logger: Logger;
 
-  constructor(rpc: Rpc<SolanaRpcApi>, raydiumProgramId: Address = AMM_V3_PROGRAM_ADDRESS) {
+  constructor(rpc: Rpc<SolanaRpcApi>, raydiumProgramId: Address = AMM_V3_PROGRAM_ADDRESS, logger: Logger = console) {
     this._rpc = rpc;
     this._raydiumProgramId = raydiumProgramId;
+    this._logger = logger;
   }
 
   getRaydiumProgramId(): Address {
@@ -195,9 +198,9 @@ export class RaydiumService {
     };
 
     const { apr, feeApr, rewardsApr } = PoolUtils.estimateAprsForPriceRangeMultiplier(params);
-    const totalApr = new Decimal(apr).div(100);
-    const fee = new Decimal(feeApr).div(100);
-    const rewards = rewardsApr.map((reward: number) => new Decimal(reward).div(100));
+    const totalApr = new Decimal(apr ?? 0).div(100);
+    const fee = new Decimal(feeApr ?? 0).div(100);
+    const rewards = (rewardsApr ?? []).map((reward: number) => new Decimal(reward).div(100));
 
     return {
       totalApr,
@@ -281,9 +284,9 @@ export class RaydiumService {
     };
 
     const { apr, feeApr, rewardsApr } = PoolUtils.estimateAprsForPriceRangeMultiplier(params);
-    const totalApr = new Decimal(apr).div(100);
-    const fee = new Decimal(feeApr).div(100);
-    const rewards = rewardsApr.map((reward: number) => new Decimal(reward).div(100));
+    const totalApr = new Decimal(apr ?? 0).div(100);
+    const fee = new Decimal(feeApr ?? 0).div(100);
+    const rewards = (rewardsApr ?? []).map((reward: number) => new Decimal(reward).div(100));
 
     return {
       totalApr,
@@ -546,7 +549,7 @@ export class RaydiumService {
     const mintK: ReturnTypeFetchMultipleMintInfos = {};
     for (const { address, data } of mintInfosWithAddress) {
       if (!data) {
-        console.log('invalid mint account', address.toString());
+        this._logger.error(`Invalid mint ${address}`);
         continue;
       }
       mintK[address] = {
