@@ -79,7 +79,7 @@ import { sendAndConfirmTx } from './utils/tx';
     console.log('sharesToUnstake', sharesToUnstake.toString());
     const shareLamportsToUnstake = collToLamportsDecimal(
       sharesToUnstake,
-      strategyState.strategy.sharesMintDecimals.toNumber()
+      Number(strategyState.strategy.sharesMintDecimals)
     );
     console.log('shareLamportsToUnstake', shareLamportsToUnstake.toString());
     const unstakeIxs = await getFarmUnstakeAndWithdrawIxs(
@@ -98,6 +98,7 @@ import { sendAndConfirmTx } from './utils/tx';
     tx.push(withdrawIx.closeSharesAtaIx);
   }
 
+  // Existing strategies expose strategyLookupTable; new ones must create it with setupStrategyLookupTable(..., slot).
   const signature = await sendAndConfirmTx(
     { rpc: kamino.getConnection(), wsRpc: getWsConnection() },
     keypair,

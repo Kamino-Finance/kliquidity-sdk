@@ -6817,13 +6817,16 @@ export class Kamino {
     }
   };
 
-  getInitLookupTableIx = async (authority: TransactionSigner, slot?: Slot): Promise<[Instruction, Address]> => {
-    let recentSlot: Slot;
-    if (slot) {
-      recentSlot = slot;
-    } else {
-      recentSlot = await this._rpc.getSlot({ commitment: 'finalized' }).send();
+  /**
+   * Build the instruction that creates a strategy lookup table.
+   * Pass a fresh finalized slot for each new lookup table you create because the PDA depends on authority + slot.
+   */
+  getInitLookupTableIx = async (authority: TransactionSigner, slot: Slot): Promise<[Instruction, Address]> => {
+    if (slot === undefined) {
+      throw new Error('slot is required');
     }
+
+    const recentSlot = slot;
 
     const pda = await findAddressLookupTablePda({ authority: authority.address, recentSlot });
     const createLookupTableIx = getCreateLookupTableInstruction({
@@ -6899,16 +6902,24 @@ export class Kamino {
     return lut;
   };
 
+  /**
+   * Build the instructions required to create and attach a strategy lookup table.
+   * The caller must provide the finalized slot used for the lookup table PDA derivation.
+   */
   setupStrategyLookupTable = async (
     authority: TransactionSigner,
     strategy: Address | StrategyWithAddress,
-    slot?: Slot
+    slot: Slot
   ): Promise<{
     lookupTable: Address;
     createLookupTableIx: Instruction;
     populateLookupTableIxs: Instruction[];
     updateStrategyLookupTableIx: Instruction;
   }> => {
+    if (slot === undefined) {
+      throw new Error('slot is required');
+    }
+
     const [createLookupTableIx, lookupTable] = await this.getInitLookupTableIx(authority, slot);
     const populateLookupTableIxs = await this.getPopulateLookupTableIxs(authority, lookupTable, strategy);
 

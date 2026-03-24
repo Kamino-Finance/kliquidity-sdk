@@ -49,6 +49,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     kliquidityProgramId: KLIQUIDITY_PROGRAM_ID,
     raydiumProgramId: RAYDIUM_PROGRAM_ID,
   });
+  const fetchLookupTableSlot = async () => env.c.rpc.getSlot({ commitment: 'finalized' }).send();
 
   it.skip('build manual strategy Orca SOL-USDC', async () => {
     const kamino = new Kamino(
@@ -101,8 +102,9 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer, newStrategy.address);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const recentSlot = await fetchLookupTableSlot();
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.address, recentSlot);
     await sendAndConfirmTx(env.c, signer, [
       strategyLookupTable.createLookupTableIx,
       ...strategyLookupTable.populateLookupTableIxs,
@@ -254,8 +256,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer, newStrategy.address);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot()
+    );
 
     for (const ix of updateRewardMappingIxs) {
       txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable]);
@@ -460,8 +467,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer, newStrategy.address);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot()
+    );
 
     for (const ix of updateRewardMappingIxs) {
       txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable]);
@@ -700,8 +712,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer, newStrategy.address);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot()
+    );
 
     for (const ix of updateRewardMappingIxs) {
       txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable]);
@@ -898,8 +915,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer, newStrategy.address);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot()
+    );
 
     for (const ix of updateRewardMappingIxs) {
       txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable]);
@@ -1093,8 +1115,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer, newStrategy.address);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot()
+    );
 
     for (const ix of updateRewardMappingIxs) {
       txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable]);
@@ -1402,8 +1429,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer, newStrategy.address);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot()
+    );
 
     for (const ix of updateRewardMappingIxs) {
       txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable]);
@@ -1626,8 +1658,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer, newStrategy.address);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot()
+    );
 
     for (const ix of updateRewardMappingIxs) {
       txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable]);
@@ -1734,8 +1771,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const updateRewardMappingIxs = await kamino.getUpdateRewardsIxs(signer, newStrategy.address);
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot()
+    );
 
     for (const ix of updateRewardMappingIxs) {
       txHash = await sendAndConfirmTx(env.c, signer, [ix[0]], [], [strategyLookupTable]);

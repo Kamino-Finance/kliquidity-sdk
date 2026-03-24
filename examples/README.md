@@ -74,3 +74,12 @@ Unstake shares from a farm and withdraw tokens from a strategy.
 ```bash
 yarn unstake-and-withdraw
 ```
+
+### Strategy lookup table setup
+
+If you create a new strategy, create its lookup table before opening positions or sending larger transactions. Fetch a fresh finalized slot and pass it explicitly:
+
+```typescript
+const slot = await kamino.getConnection().getSlot({ commitment: 'finalized' }).send();
+const lookupTableSetup = await kamino.setupStrategyLookupTable(signer, strategyAddress, slot);
+```

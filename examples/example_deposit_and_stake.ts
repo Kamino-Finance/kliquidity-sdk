@@ -71,7 +71,8 @@ import { sendAndConfirmTx } from './utils/tx';
   });
   tx.push(closeAtaIx);
 
-  // send the transaction using strategy's LUT so it fit in a single transaction
+  // send the transaction using the strategy's existing LUT so it fits in a single transaction
+  // if you just created the strategy, first call kamino.setupStrategyLookupTable(..., finalizedSlot)
   // Use custom function that allows noop signer for construction but real signer for signing
 
   const signature = await sendAndConfirmTx(
