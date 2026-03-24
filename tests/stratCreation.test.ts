@@ -31,7 +31,7 @@ import { DEFAULT_PUBLIC_KEY, STAGING_GLOBAL_CONFIG, STAGING_KAMINO_PROGRAM_ID } 
 import { LB_CLMM_PROGRAM_ADDRESS as METEORA_PROGRAM_ID } from '../src/@codegen/meteora/programs';
 import { sendAndConfirmTx } from './runner/tx';
 import { initEnv } from './runner/env';
-import { setupStrategyLookupTable } from './runner/lut';
+import { fetchLookupTableSlot, setupStrategyLookupTable } from './runner/lut';
 
 describe.skip('Kamino strategy creation SDK Tests', async () => {
   const cluster = 'mainnet-beta';
@@ -703,8 +703,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,
@@ -759,8 +764,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,
@@ -815,8 +825,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,
@@ -870,8 +885,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,
@@ -924,8 +944,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,
@@ -979,8 +1004,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,
@@ -1033,8 +1063,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,
@@ -1181,8 +1216,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,
@@ -1258,8 +1298,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,
@@ -1344,8 +1389,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     const txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     // const setupStratTx = await kamino.getTransactionV2Message(
     //   signer.address,
@@ -1407,8 +1457,13 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     let txHash = await sendAndConfirmTx(env.c, signer, ixs);
     console.log('create strategy tx hash', txHash);
 
-    // set up lookup table for strategy
-    const strategyLookupTable = await setupStrategyLookupTable(env, kamino, newStrategy.address);
+    // set up lookup table for strategy with a fresh finalized slot
+    const strategyLookupTable = await setupStrategyLookupTable(
+      env,
+      kamino,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
 
     txHash = await sendAndConfirmTx(
       env.c,

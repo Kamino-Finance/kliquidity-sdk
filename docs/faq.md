@@ -50,9 +50,13 @@ Yes, use `singleSidedDepositTokenA()` or `singleSidedDepositTokenB()`. The SDK h
 
 **Q: How do I handle the strategy lookup table?**
 
-Kamino strategies use Solana Address Lookup Tables to keep transactions small. When sending transactions, include `strategy.strategyLookupTable` as a lookup table address:
+Kamino strategies use Solana Address Lookup Tables to keep transactions small. Existing strategies expose the lookup table on the strategy state, and new lookup tables must be created with an explicit finalized slot:
 
 ```typescript
-// The lookup table address is on the strategy object
+// Existing strategies expose the lookup table on the strategy object.
 const lut = strategyState.strategy.strategyLookupTable;
+
+// For a newly created strategy, fetch a fresh finalized slot and pass it explicitly.
+const slot = await kamino.getConnection().getSlot({ commitment: 'finalized' }).send();
+const lookupTableSetup = await kamino.setupStrategyLookupTable(signer, strategyAddress, slot);
 ```

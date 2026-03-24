@@ -39,7 +39,7 @@ import { WHIRLPOOL_PROGRAM_ADDRESS as WHIRLPOOL_PROGRAM_ID } from '../src/@codeg
 import { AMM_V3_PROGRAM_ADDRESS as RAYDIUM_PROGRAM_ID } from '../src/@codegen/raydium/programs';
 import { createWsolAtaIfMissing } from '../src/utils/transactions';
 import { getMintDecimals } from '../src/utils';
-import { setupStrategyLookupTable } from './runner/lut';
+import { fetchLookupTableSlot, setupStrategyLookupTable } from './runner/lut';
 import { Env, initEnv } from './runner/env';
 import { getGlobalConfigEncoder, getCollateralInfosEncoder } from '../src/@codegen/kliquidity/accounts';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
@@ -239,8 +239,8 @@ describe('Kamino SDK Tests', () => {
       new Decimal(1)
     );
 
-    await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address);
-    await setupStrategyLookupTable(env, kamino, newRaydiumStrategy.address);
+    await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address, await fetchLookupTableSlot(env));
+    await setupStrategyLookupTable(env, kamino, newRaydiumStrategy.address, await fetchLookupTableSlot(env));
 
     await openPosition(env, kamino, env.admin, newOrcaStrategy.address, lowerPrice, upperPrice);
     console.log('orca position opened');
@@ -1104,8 +1104,8 @@ describe('Kamino SDK Tests', () => {
     const raydiumTxHash = await sendAndConfirmTx(env.c, env.admin, createRaydiumTx);
     console.log('create new Raydium strategy tx hash', raydiumTxHash);
 
-    // setup strategy lookup table
-    await setupStrategyLookupTable(env, kamino, newRaydiumStrategy.address);
+    // setup strategy lookup table with a fresh finalized slot
+    await setupStrategyLookupTable(env, kamino, newRaydiumStrategy.address, await fetchLookupTableSlot(env));
     await sleep(1000);
     await openPosition(env, kamino, env.admin, newRaydiumStrategy.address, new Decimal(0.97), new Decimal(1.03));
 
@@ -1772,8 +1772,8 @@ describe('Kamino SDK Tests', () => {
     );
     txStrategyCreate.push(orcaStrategyIx);
     await sendAndConfirmTx(env.c, env.admin, txStrategyCreate);
-    // setup strategy lookup table
-    await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address);
+    // setup strategy lookup table with a fresh finalized slot
+    await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address, await fetchLookupTableSlot(env));
     await sleep(1000);
     await openPosition(env, kamino, env.admin, newOrcaStrategy.address, new Decimal(0.97), new Decimal(1.03));
     const strategyState = (await kamino.getStrategyByAddress(newOrcaStrategy.address))!;
@@ -1834,8 +1834,8 @@ describe('Kamino SDK Tests', () => {
     );
     const strategyState = (await kamino.getStrategyByAddress(newOrcaStrategy.address))!;
 
-    // Create lookup table and open new position
-    await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address);
+    // Create lookup table with a fresh finalized slot and open new position
+    await setupStrategyLookupTable(env, kamino, newOrcaStrategy.address, await fetchLookupTableSlot(env));
     await sleep(1000);
     await openPosition(env, kamino, env.admin, newOrcaStrategy.address, new Decimal(0.97), new Decimal(1.03));
 
