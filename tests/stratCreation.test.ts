@@ -31,7 +31,7 @@ import { DEFAULT_PUBLIC_KEY, STAGING_GLOBAL_CONFIG, STAGING_KAMINO_PROGRAM_ID } 
 import { LB_CLMM_PROGRAM_ADDRESS as METEORA_PROGRAM_ID } from '../src/@codegen/meteora/programs';
 import { sendAndConfirmTx } from './runner/tx';
 import { initEnv } from './runner/env';
-import { setupStrategyLookupTable } from './runner/lut';
+import { fetchLookupTableSlot, setupStrategyLookupTable } from './runner/lut';
 
 describe.skip('Kamino strategy creation SDK Tests', async () => {
   const cluster = 'mainnet-beta';
@@ -49,7 +49,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     kliquidityProgramId: KLIQUIDITY_PROGRAM_ID,
     raydiumProgramId: RAYDIUM_PROGRAM_ID,
   });
-  const fetchLookupTableSlot = async () => env.c.rpc.getSlot({ commitment: 'finalized' }).send();
 
   it.skip('read raydium clmm APY', async () => {
     const kamino = new Kamino(
@@ -709,7 +708,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(
@@ -770,7 +769,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(
@@ -831,7 +830,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(
@@ -891,7 +890,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(
@@ -950,7 +949,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(
@@ -1010,7 +1009,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(
@@ -1069,7 +1068,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(
@@ -1222,7 +1221,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(
@@ -1304,7 +1303,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(
@@ -1395,7 +1394,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     // const setupStratTx = await kamino.getTransactionV2Message(
@@ -1463,7 +1462,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     txHash = await sendAndConfirmTx(

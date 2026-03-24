@@ -6822,18 +6822,12 @@ export class Kamino {
    * Pass a fresh finalized slot for each new lookup table you create because the PDA depends on authority + slot.
    */
   getInitLookupTableIx = async (authority: TransactionSigner, slot: Slot): Promise<[Instruction, Address]> => {
-    if (slot === undefined) {
-      throw new Error('slot is required');
-    }
-
-    const recentSlot = slot;
-
-    const pda = await findAddressLookupTablePda({ authority: authority.address, recentSlot });
+    const pda = await findAddressLookupTablePda({ authority: authority.address, recentSlot: slot });
     const createLookupTableIx = getCreateLookupTableInstruction({
       authority: authority,
       payer: authority,
       address: pda,
-      recentSlot: recentSlot,
+      recentSlot: slot,
     });
     return [createLookupTableIx, pda[0]];
   };
@@ -6916,10 +6910,6 @@ export class Kamino {
     populateLookupTableIxs: Instruction[];
     updateStrategyLookupTableIx: Instruction;
   }> => {
-    if (slot === undefined) {
-      throw new Error('slot is required');
-    }
-
     const [createLookupTableIx, lookupTable] = await this.getInitLookupTableIx(authority, slot);
     const populateLookupTableIxs = await this.getPopulateLookupTableIxs(authority, lookupTable, strategy);
 

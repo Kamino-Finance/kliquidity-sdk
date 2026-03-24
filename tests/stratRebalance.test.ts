@@ -30,7 +30,7 @@ import {
 import { getMintDecimals } from '../src/utils';
 import { initEnv } from './runner/env';
 import { sendAndConfirmTx } from './runner/tx';
-import { setupStrategyLookupTable } from './runner/lut';
+import { fetchLookupTableSlot, setupStrategyLookupTable } from './runner/lut';
 import { priceToTickIndex } from '@orca-so/whirlpools-core';
 
 describe.skip('Kamino strategy creation SDK Tests', async () => {
@@ -49,7 +49,6 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     kliquidityProgramId: KLIQUIDITY_PROGRAM_ID,
     raydiumProgramId: RAYDIUM_PROGRAM_ID,
   });
-  const fetchLookupTableSlot = async () => env.c.rpc.getSlot({ commitment: 'finalized' }).send();
 
   it.skip('build manual strategy Orca SOL-USDC', async () => {
     const kamino = new Kamino(
@@ -103,8 +102,11 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
     console.log('updateRewardMappingIxs', updateRewardMappingIxs.length);
 
     // set up lookup table for strategy with a fresh finalized slot
-    const recentSlot = await fetchLookupTableSlot();
-    const strategyLookupTable = await kamino.setupStrategyLookupTable(signer, newStrategy.address, recentSlot);
+    const strategyLookupTable = await kamino.setupStrategyLookupTable(
+      signer,
+      newStrategy.address,
+      await fetchLookupTableSlot(env)
+    );
     await sendAndConfirmTx(env.c, signer, [
       strategyLookupTable.createLookupTableIx,
       ...strategyLookupTable.populateLookupTableIxs,
@@ -261,7 +263,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     for (const ix of updateRewardMappingIxs) {
@@ -472,7 +474,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     for (const ix of updateRewardMappingIxs) {
@@ -717,7 +719,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     for (const ix of updateRewardMappingIxs) {
@@ -920,7 +922,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     for (const ix of updateRewardMappingIxs) {
@@ -1120,7 +1122,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     for (const ix of updateRewardMappingIxs) {
@@ -1434,7 +1436,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     for (const ix of updateRewardMappingIxs) {
@@ -1663,7 +1665,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     for (const ix of updateRewardMappingIxs) {
@@ -1776,7 +1778,7 @@ describe.skip('Kamino strategy creation SDK Tests', async () => {
       env,
       kamino,
       newStrategy.address,
-      await fetchLookupTableSlot()
+      await fetchLookupTableSlot(env)
     );
 
     for (const ix of updateRewardMappingIxs) {
