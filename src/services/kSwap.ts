@@ -17,6 +17,58 @@ interface KSwapBatchPriceResponse {
 }
 
 const BATCH_TOKEN_PRICES_LIMIT = 100;
+const BATCH_TOKEN_PRICES_MAX_URL_LENGTH = 2000;
+const BATCH_TOKEN_PRICES_PATH = 'batch-token-prices';
+
+const getBatchTokenPricesUrl = (apiBaseUrl: string, tokens: Address[]): string => {
+  const tokensParams = new URLSearchParams();
+  for (const token of tokens) {
+    tokensParams.append('tokens', token);
+  }
+
+  return `${apiBaseUrl}/${BATCH_TOKEN_PRICES_PATH}?${tokensParams.toString()}`;
+};
+
+const getTokensPriceBatches = (apiBaseUrl: string, tokens: Address[]): Address[][] => {
+  const batches: Address[][] = [];
+  let batch: Address[] = [];
+
+  for (const token of tokens) {
+    const nextBatch = [...batch, token];
+    const nextBatchUrl = getBatchTokenPricesUrl(apiBaseUrl, nextBatch);
+    if (nextBatch.length <= BATCH_TOKEN_PRICES_LIMIT && nextBatchUrl.length <= BATCH_TOKEN_PRICES_MAX_URL_LENGTH) {
+      batch = nextBatch;
+      continue;
+    }
+
+    if (batch.length > 0) {
+      batches.push(batch);
+    }
+
+    const singleTokenUrl = getBatchTokenPricesUrl(apiBaseUrl, [token]);
+    if (singleTokenUrl.length > BATCH_TOKEN_PRICES_MAX_URL_LENGTH) {
+      throw new Error(
+        `KSwap token price URL length ${singleTokenUrl.length} exceeds limit ${BATCH_TOKEN_PRICES_MAX_URL_LENGTH} for a single token: ${singleTokenUrl}`
+      );
+    }
+
+    batch = [token];
+  }
+
+  if (batch.length > 0) {
+    batches.push(batch);
+  }
+
+  return batches;
+};
+
+const getResponseBodyForLog = async (response: Response): Promise<string> => {
+  try {
+    return await response.text();
+  } catch (error) {
+    return `Failed to read response body: ${error instanceof Error ? error.message : String(error)}`;
+  }
+};
 
 export const getTokensPrices = async (
   apiBaseUrl: string,
@@ -27,27 +79,38 @@ export const getTokensPrices = async (
     return new Map<Address, Decimal>();
   }
 
-  const batches: Address[][] = [];
-  for (let i = 0; i < tokens.length; i += BATCH_TOKEN_PRICES_LIMIT) {
-    batches.push(tokens.slice(i, i + BATCH_TOKEN_PRICES_LIMIT));
-  }
+  const batches = getTokensPriceBatches(apiBaseUrl, tokens);
 
   const results = await Promise.all(
     batches.map(async (batch) => {
-      const tokensParams = batch.map((token) => `tokens=${encodeURIComponent(token)}`).join('&');
-      const url = `${apiBaseUrl}/batch-token-prices?${tokensParams}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        logger.error(`Failed to fetch tokens batch price: ${response.statusText}`);
+      const url = getBatchTokenPricesUrl(apiBaseUrl, batch);
+      let response: Response;
+      try {
+        response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (error) {
+        logger.error(`Failed to fetch tokens batch price. URL: ${url}.`, error);
         return { batch, data: null };
       }
-      const data = (await response.json()) as KSwapBatchPriceResponse;
-      return { batch, data };
+
+      const responseBody = await getResponseBodyForLog(response);
+      if (!response.ok) {
+        logger.error(
+          `Failed to fetch tokens batch price: ${response.status} ${response.statusText}. URL: ${url}. Response body: ${responseBody}`
+        );
+        return { batch, data: null };
+      }
+      try {
+        const data = JSON.parse(responseBody) as KSwapBatchPriceResponse;
+        return { batch, data };
+      } catch (error) {
+        logger.error(`Failed to parse tokens batch price response. URL: ${url}. Response body: ${responseBody}`, error);
+        return { batch, data: null };
+      }
     })
   );
 
