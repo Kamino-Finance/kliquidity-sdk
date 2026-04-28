@@ -19,25 +19,39 @@ interface KSwapBatchPriceResponse {
 const BATCH_TOKEN_PRICES_LIMIT = 100;
 const BATCH_TOKEN_PRICES_MAX_URL_LENGTH = 2000;
 const BATCH_TOKEN_PRICES_PATH = 'batch-token-prices';
+const BATCH_TOKEN_PRICES_QUERY_KEY = 'tokens';
+
+const getBatchTokenPricesBaseUrl = (apiBaseUrl: string): string =>
+  `${apiBaseUrl.replace(/\/+$/, '')}/${BATCH_TOKEN_PRICES_PATH}`;
 
 const getBatchTokenPricesUrl = (apiBaseUrl: string, tokens: Address[]): string => {
   const tokensParams = new URLSearchParams();
   for (const token of tokens) {
-    tokensParams.append('tokens', token);
+    tokensParams.append(BATCH_TOKEN_PRICES_QUERY_KEY, token);
   }
 
-  return `${apiBaseUrl}/${BATCH_TOKEN_PRICES_PATH}?${tokensParams.toString()}`;
+  return `${getBatchTokenPricesBaseUrl(apiBaseUrl)}?${tokensParams.toString()}`;
+};
+
+const getTokenQueryParamLength = (token: Address): number => {
+  const tokenParam = new URLSearchParams();
+  tokenParam.append(BATCH_TOKEN_PRICES_QUERY_KEY, token);
+  return tokenParam.toString().length;
 };
 
 const getTokensPriceBatches = (apiBaseUrl: string, tokens: Address[]): Address[][] => {
+  const baseUrlLength = `${getBatchTokenPricesBaseUrl(apiBaseUrl)}?`.length;
   const batches: Address[][] = [];
   let batch: Address[] = [];
+  let batchUrlLength = baseUrlLength;
 
   for (const token of tokens) {
-    const nextBatch = [...batch, token];
-    const nextBatchUrl = getBatchTokenPricesUrl(apiBaseUrl, nextBatch);
-    if (nextBatch.length <= BATCH_TOKEN_PRICES_LIMIT && nextBatchUrl.length <= BATCH_TOKEN_PRICES_MAX_URL_LENGTH) {
-      batch = nextBatch;
+    const tokenParamLength = getTokenQueryParamLength(token);
+    const separatorLength = batch.length === 0 ? 0 : 1;
+    const nextBatchUrlLength = batchUrlLength + separatorLength + tokenParamLength;
+    if (batch.length < BATCH_TOKEN_PRICES_LIMIT && nextBatchUrlLength <= BATCH_TOKEN_PRICES_MAX_URL_LENGTH) {
+      batch.push(token);
+      batchUrlLength = nextBatchUrlLength;
       continue;
     }
 
@@ -53,6 +67,7 @@ const getTokensPriceBatches = (apiBaseUrl: string, tokens: Address[]): Address[]
     }
 
     batch = [token];
+    batchUrlLength = baseUrlLength + tokenParamLength;
   }
 
   if (batch.length > 0) {
@@ -106,6 +121,10 @@ export const getTokensPrices = async (
       }
       try {
         const data = JSON.parse(responseBody) as KSwapBatchPriceResponse;
+        if (data.success === false || !data.data) {
+          logger.error(`Unexpected tokens batch price response. URL: ${url}. Response body: ${responseBody}`);
+          return { batch, data: null };
+        }
         return { batch, data };
       } catch (error) {
         logger.error(`Failed to parse tokens batch price response. URL: ${url}. Response body: ${responseBody}`, error);

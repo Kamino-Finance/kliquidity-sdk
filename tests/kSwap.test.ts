@@ -75,6 +75,27 @@ describe('KSwap token prices service', () => {
     expect(errorMessages[0]).to.contain('request URI too long');
   });
 
+  it('logs unexpected successful response bodies with the URL', async () => {
+    const token = tokenAt(0);
+    const errorMessages: string[] = [];
+    const logger: Logger = {
+      ...quietLogger,
+      error: (message: string) => {
+        errorMessages.push(message);
+      },
+    };
+
+    globalThis.fetch = (async () => {
+      return new Response(JSON.stringify({ success: false }), { status: 200 });
+    }) as typeof fetch;
+
+    await getTokensPrices('https://api.kamino.finance/kswap', [token], logger);
+
+    expect(errorMessages[0]).to.contain('Unexpected tokens batch price response');
+    expect(errorMessages[0]).to.contain(`https://api.kamino.finance/kswap/batch-token-prices?tokens=${token}`);
+    expect(errorMessages[0]).to.contain('{"success":false}');
+  });
+
   it('logs the URL when fetch fails before a response is returned', async () => {
     const token = tokenAt(0);
     const errorMessages: string[] = [];
