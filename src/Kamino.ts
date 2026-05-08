@@ -3587,8 +3587,11 @@ export class Kamino {
     const rewardFeedAccounts = scopePricesFeeds.rewardsFeeds
       .filter((feed): feed is Address => feed !== undefined)
       .map((address) => ({ address, role: AccountRole.READONLY }));
-    if (rewardFeedAccounts.length > 0) {
-      depositIx = appendAccounts(depositIx, rewardFeedAccounts);
+    const kaminoRewardFeedAccounts = scopePricesFeeds.kaminoRewardsFeeds
+      .filter((feed): feed is Address => feed !== undefined)
+      .map((address) => ({ address, role: AccountRole.READONLY }));
+    if (rewardFeedAccounts.length > 0 || kaminoRewardFeedAccounts.length > 0) {
+      depositIx = appendAccounts(depositIx, [...rewardFeedAccounts, ...kaminoRewardFeedAccounts]);
     }
     return depositIx;
   };
