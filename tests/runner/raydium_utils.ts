@@ -3,7 +3,7 @@ import { Address, generateKeyPairSigner, getAddressEncoder, getProgramDerivedAdd
 import * as RaydiumInstructions from '../../src/@codegen/raydium/instructions';
 import { accountExist, DeployedPool } from './utils';
 import Decimal from 'decimal.js';
-import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
+import { RaydiumSqrtPriceMath as SqrtPriceMath } from '../../src/utils/raydiumSdkCompat';
 import { getCreateAccountInstruction, SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { SYSVAR_RENT_ADDRESS } from '@solana/sysvars';
 import { sendAndConfirmTx } from './tx';

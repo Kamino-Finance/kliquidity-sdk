@@ -6,7 +6,7 @@ import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { RebalanceTypeLabelName } from './consts';
 import { upsertManyRebalanceFieldInfos } from './utils';
 import { getPriceOfBinByBinIdWithDecimals } from '../utils/meteora';
-import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
+import { RaydiumSqrtPriceMath as SqrtPriceMath } from '../utils/raydiumSdkCompat';
 
 export const DEFAULT_TICKS_BELOW_MID = new Decimal(10);
 export const DEFAULT_TICKS_ABOVE_MID = new Decimal(10);

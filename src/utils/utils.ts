@@ -13,7 +13,7 @@ import { RebalanceFieldInfo, RebalanceFieldsDict } from './types';
 import { fromBN, toBN } from './raydiumBridge';
 import { PoolPriceReferenceType, TwapPriceReferenceType } from './priceReferenceTypes';
 import { U64_MAX } from '../constants/numericalValues';
-import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib/raydium/clmm/utils/math';
+import { RaydiumSqrtPriceMath as SqrtPriceMath } from './raydiumSdkCompat';
 import { DEFAULT_PUBLIC_KEY } from '../constants/pubkeys';
 import { SYSTEM_PROGRAM_ADDRESS } from '@solana-program/system';
 import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
