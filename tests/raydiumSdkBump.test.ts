@@ -12,6 +12,8 @@ import BN from 'bn.js';
 import Decimal from 'decimal.js';
 import { RaydiumService } from '../src/services/RaydiumService';
 import {
+  getPdaProtocolPositionAddress,
+  i32ToBytes,
   RaydiumLiquidityMath,
   RaydiumSqrtPriceMath,
   RaydiumTickMath,
@@ -331,5 +333,20 @@ describe('Raydium SDK bump compatibility', () => {
 
     expect(amounts.amountA.toString()).to.equal('598174');
     expect(amounts.amountB.toString()).to.equal('598174');
+  });
+
+  it('keeps Raydium PDA tick indexes encoded as signed big-endian bytes', () => {
+    expect(Array.from(i32ToBytes(480))).to.deep.equal([0, 0, 1, 224]);
+    expect(Array.from(i32ToBytes(-480))).to.deep.equal([255, 255, 254, 32]);
+
+    const { publicKey, nonce } = getPdaProtocolPositionAddress(
+      new PublicKey(AMM_V3_PROGRAM_ADDRESS.toString()),
+      key(9),
+      -120,
+      120
+    );
+
+    expect(publicKey.toBase58()).to.equal('CABgxMExCkWFVPZZCYvQYPX96wrjcq6XZhUkBRtGuwG8');
+    expect(nonce).to.equal(255);
   });
 });

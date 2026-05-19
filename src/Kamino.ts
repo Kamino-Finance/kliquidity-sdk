@@ -313,8 +313,9 @@ import {
 } from './@codegen/meteora/accounts';
 import LbPairWithAddress from './models/LbPairWithAddress';
 import { getInitializeBinArrayInstruction } from './@codegen/meteora/instructions';
-import { getPdaProtocolPositionAddress, i32ToBytes } from '@raydium-io/raydium-sdk-v2/lib';
 import {
+  getPdaProtocolPositionAddress,
+  i32ToBytes,
   RaydiumLiquidityMath,
   RaydiumSqrtPriceMath,
   RaydiumTickMath,

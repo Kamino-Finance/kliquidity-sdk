@@ -1,4 +1,5 @@
 import { LiquidityMathUtil, PersonalPositionLayout, TickArrayUtil, TickUtil } from '@raydium-io/raydium-sdk-v2/lib';
+import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import Decimal from 'decimal.js';
 
@@ -12,6 +13,31 @@ export type RaydiumPersonalPositionInfo = ReturnType<typeof PersonalPositionLayo
 
 export function decodeRaydiumPersonalPosition(data: Buffer): RaydiumPersonalPositionInfo {
   return PersonalPositionLayout.decode(data);
+}
+
+export function i32ToBytes(num: number): Uint8Array {
+  const arr = new ArrayBuffer(4);
+  new DataView(arr).setInt32(0, num, false);
+  return new Uint8Array(arr);
+}
+
+export function getPdaProtocolPositionAddress(
+  programId: PublicKey,
+  poolId: PublicKey,
+  tickLower: number,
+  tickUpper: number
+): { publicKey: PublicKey; nonce: number } {
+  const [publicKey, nonce] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('position', 'utf8'),
+      poolId.toBuffer(),
+      Buffer.from(i32ToBytes(tickLower)),
+      Buffer.from(i32ToBytes(tickUpper)),
+    ],
+    programId
+  );
+
+  return { publicKey, nonce };
 }
 
 export class RaydiumSqrtPriceMath {
