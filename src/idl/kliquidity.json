@@ -1182,7 +1182,7 @@
       "name": "invest",
       "accounts": [
         {
-          "name": "payer",
+          "name": "actionsAuthority",
           "isMut": true,
           "isSigner": true
         },
@@ -1298,174 +1298,6 @@
         },
         {
           "name": "tokenInfos",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "poolProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructionSysvarAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "depositAndInvest",
-      "accounts": [
-        {
-          "name": "user",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "strategy",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "globalConfig",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false,
-          "docs": ["check that the pool is owned either by orca or by raydium"]
-        },
-        {
-          "name": "position",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "raydiumProtocolPositionOrBaseVaultAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "positionTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenBVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTokenVaultA",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTokenVaultB",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tickArrayLower",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tickArrayUpper",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "baseVaultAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenBAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenBMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "userSharesAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "sharesMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "sharesMintAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "scopePricesA",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "scopePricesB",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenInfos",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram2022",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenATokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenBTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "memoProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -1488,12 +1320,8 @@
       ],
       "args": [
         {
-          "name": "tokenMaxA",
-          "type": "u64"
-        },
-        {
-          "name": "tokenMaxB",
-          "type": "u64"
+          "name": "referencePriceTick",
+          "type": "i32"
         }
       ]
     },
@@ -2157,183 +1985,6 @@
         },
         {
           "name": "tokenBAtaBalance",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "singleTokenDepositAndInvestWithMin",
-      "accounts": [
-        {
-          "name": "user",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "strategy",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "globalConfig",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false,
-          "docs": ["check that the pool is owned either by orca or by raydium"]
-        },
-        {
-          "name": "position",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "raydiumProtocolPositionOrBaseVaultAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "positionTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenBVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTokenVaultA",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTokenVaultB",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tickArrayLower",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tickArrayUpper",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "baseVaultAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenBAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenBMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "userSharesAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "sharesMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "sharesMintAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "scopePricesA",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "scopePricesB",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenInfos",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram2022",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenATokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenBTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "memoProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "poolProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructionSysvarAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true
-        }
-      ],
-      "args": [
-        {
-          "name": "tokenAMinPostDepositBalance",
-          "type": "u64"
-        },
-        {
-          "name": "tokenBMinPostDepositBalance",
           "type": "u64"
         }
       ]
@@ -4194,19 +3845,25 @@
             "type": "publicKey"
           },
           {
+            "name": "maxDeviationFromRefPriceOnInvestBps",
+            "type": "u32"
+          },
+          {
             "name": "padding3",
+            "type": "u32"
+          },
+          {
+            "name": "lastInvestSlot",
             "type": "u64"
           },
           {
             "name": "padding4",
-            "type": {
-              "array": ["u128", 13]
-            }
+            "type": "u64"
           },
           {
             "name": "padding5",
             "type": {
-              "array": ["u128", 32]
+              "array": ["u128", 12]
             }
           },
           {
@@ -4217,6 +3874,12 @@
           },
           {
             "name": "padding7",
+            "type": {
+              "array": ["u128", 32]
+            }
+          },
+          {
+            "name": "padding8",
             "type": {
               "array": ["u128", 32]
             }
@@ -4332,9 +3995,25 @@
             }
           },
           {
+            "name": "maxDeviationFromRefPriceOnInvestBps",
+            "type": "u32"
+          },
+          {
+            "name": "padding1",
+            "type": "u32"
+          },
+          {
+            "name": "investCooldownSlots",
+            "type": "u64"
+          },
+          {
+            "name": "minInvestTriggerValueUsd",
+            "type": "u64"
+          },
+          {
             "name": "padding",
             "type": {
-              "array": ["u64", 1971]
+              "array": ["u64", 1968]
             }
           }
         ]
@@ -5262,6 +4941,15 @@
           },
           {
             "name": "AddScopePriceId"
+          },
+          {
+            "name": "MaxDeviationFromRefPriceOnInvestBps"
+          },
+          {
+            "name": "InvestCooldownSlots"
+          },
+          {
+            "name": "MinInvestTriggerValueUsd"
           }
         ]
       }
@@ -5426,6 +5114,9 @@
           },
           {
             "name": "UpdatePendingStrategyAdmin"
+          },
+          {
+            "name": "UpdateMaxDeviationFromRefPriceOnInvestBps"
           }
         ]
       }
@@ -6910,6 +6601,21 @@
       "code": 6163,
       "name": "CouldNotCalculatePriceTwap",
       "msg": "Could not calculate get_price_usd_unchecked()"
+    },
+    {
+      "code": 6164,
+      "name": "ReferencePriceTooFarFromPoolPrice",
+      "msg": "Reference price is too far from the current pool price"
+    },
+    {
+      "code": 6165,
+      "name": "InvestCooldownNotElapsed",
+      "msg": "Invest cooldown has not elapsed"
+    },
+    {
+      "code": 6166,
+      "name": "InvestAmountBelowMinimum",
+      "msg": "Uninvested value is below the minimum invest trigger"
     }
   ]
 }
