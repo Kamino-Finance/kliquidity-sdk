@@ -425,10 +425,10 @@
     "@solana-program/token-2022" "^0.4.0"
     "@solana/sysvars" "^2.1.0"
 
-"@raydium-io/raydium-sdk-v2@^0.1.126-alpha":
-  version "0.1.126-alpha"
-  resolved "https://registry.yarnpkg.com/@raydium-io/raydium-sdk-v2/-/raydium-sdk-v2-0.1.126-alpha.tgz#ea05a198a031840a5f916261cfff4b12edf1d666"
-  integrity sha512-wpCb1rDvlENO+nfdjC1QVh6P4ImzgF/uhApw5194ycU1i8OSJrb0iZc1Egy5chafcn4i3gY2B1ivMdEeaNsSzA==
+"@raydium-io/raydium-sdk-v2@^0.2.47-alpha":
+  version "0.2.47-alpha"
+  resolved "https://registry.yarnpkg.com/@raydium-io/raydium-sdk-v2/-/raydium-sdk-v2-0.2.47-alpha.tgz#b2a4573b8df5121181ca62f2d293b9af0cd126ce"
+  integrity sha512-lpucvI5MZ/2FygFaK+TcXyIPg8ErD/Ch6YsSBPZQ0LnXCXaWnJjr21c72zP+zuT0K9H0XVOfxAlensCFrZal1g==
   dependencies:
     "@solana/buffer-layout" "^4.0.1"
     "@solana/spl-token" "^0.4.8"
@@ -436,8 +436,11 @@
     axios "^1.1.3"
     big.js "^6.2.1"
     bn.js "^5.2.1"
+    bs58 "^6.0.0"
     dayjs "^1.11.5"
+    decimal.js "^10.4.2"
     decimal.js-light "^2.5.1"
+    js-sha256 "^0.11.1"
     jsonfile "^6.1.0"
     lodash "^4.17.21"
     toformat "^2.0.0"
@@ -1923,7 +1926,7 @@ decimal.js-light@^2.5.1:
   resolved "https://registry.yarnpkg.com/decimal.js-light/-/decimal.js-light-2.5.1.tgz#134fd32508f19e208f4fb2f8dac0d2626a867934"
   integrity sha512-qIMFpTMZmny+MMIitAB6D7iVPEorVw6YQRWkvarTkT4tBeSLLiHzcwj6q0MmYSFCiVpiqPJTJEYIrpcPzVEIvg==
 
-decimal.js@^10.3.1, decimal.js@^10.5.0:
+decimal.js@^10.3.1, decimal.js@^10.4.2, decimal.js@^10.5.0:
   version "10.6.0"
   resolved "https://registry.yarnpkg.com/decimal.js/-/decimal.js-10.6.0.tgz#e649a43e3ab953a72192ff5983865e509f37ed9a"
   integrity sha512-YpgQiITW3JXGntzdUmyUR1V812Hn8T1YVXhCu+wO3OpS4eU9l4YdD3qjyiKdV6mvV29zapkMeD390UVEf2lkUg==
@@ -3116,6 +3119,11 @@ joi@^17.13.3:
     "@sideway/address" "^4.1.5"
     "@sideway/formula" "^3.0.1"
     "@sideway/pinpoint" "^2.0.0"
+
+js-sha256@^0.11.1:
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/js-sha256/-/js-sha256-0.11.1.tgz#712262e8fc9569d6f7f6eea72c0d8e5ccc7c976c"
+  integrity sha512-o6WSo/LUvY2uC4j7mO50a2ms7E/EAdbP0swigLV+nzHKTTaYnaLIWJ02VdXrsJX0vGedDESQnLsOekr94ryfjg==
 
 "js-tokens@^3.0.0 || ^4.0.0":
   version "4.0.0"
