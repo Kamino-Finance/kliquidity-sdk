@@ -8,7 +8,7 @@
 
 import { combineCodec, getEnumDecoder, getEnumEncoder, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder } from '@solana/kit';
 
-export enum GlobalConfigOption { EmergencyMode, BlockDeposit, BlockInvest, BlockWithdraw, BlockCollectFees, BlockCollectRewards, BlockSwapRewards, BlockSwapUnevenVaults, WithdrawalFeeBps, DeprecatedSwapDiscountBps, ActionsAuthority, DeprecatedTreasuryFeeVaults, AdminAuthority, BlockEmergencySwap, BlockLocalAdmin, UpdateTokenInfos, ScopeProgramId, UpdateScopePriceId, MinPerformanceFeeBps, MinSwapUnevenSlippageToleranceBps, MinReferencePriceSlippageToleranceBps, ActionsAfterRebalanceDelaySeconds, TreasuryFeeVaultReceiver, AddScopePriceId };
+export enum GlobalConfigOption { EmergencyMode, BlockDeposit, BlockInvest, BlockWithdraw, BlockCollectFees, BlockCollectRewards, BlockSwapRewards, BlockSwapUnevenVaults, WithdrawalFeeBps, DeprecatedSwapDiscountBps, ActionsAuthority, DeprecatedTreasuryFeeVaults, AdminAuthority, BlockEmergencySwap, BlockLocalAdmin, UpdateTokenInfos, ScopeProgramId, UpdateScopePriceId, MinPerformanceFeeBps, MinSwapUnevenSlippageToleranceBps, MinReferencePriceSlippageToleranceBps, ActionsAfterRebalanceDelaySeconds, TreasuryFeeVaultReceiver, AddScopePriceId, MaxDeviationFromRefPriceOnInvestBps, InvestCooldownSlots, MinInvestTriggerValueUsd };
 
 export type GlobalConfigOptionArgs = GlobalConfigOption;
 

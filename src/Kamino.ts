@@ -146,7 +146,6 @@ import {
   getExecutiveWithdrawInstruction,
   getInitializeGlobalConfigInstruction,
   getInitializeStrategyInstruction,
-  getInvestInstruction,
   getOpenLiquidityPositionInstruction,
   getSignTermsInstruction,
   getSingleTokenDepositWithMinInstruction,
@@ -5711,82 +5710,6 @@ export class Kamino {
   };
 
   /**
-   * Get a transaction to invest funds from the Kamino vaults and put them into the DEX pool as liquidity.
-   * @param strategy strategy pubkey or object
-   * @param payer transaction payer
-   */
-  invest = async (strategy: Address | StrategyWithAddress, payer: TransactionSigner): Promise<Instruction> => {
-    const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
-    if (!strategyWithAddress || !strategyWithAddress.strategy) {
-      throw Error(`Could not fetch strategy state with pubkey ${strategy.toString()}`);
-    }
-
-    const strategyState = strategyWithAddress.strategy;
-    const globalConfig = await this.getGlobalConfigState(strategyState.globalConfig);
-    if (!globalConfig) {
-      throw Error(`Could not fetch global config with pubkey ${strategyState.globalConfig.toString()}`);
-    }
-    const collateralInfos = await this.getCollateralInfos();
-    if (!collateralInfos) {
-      throw Error(`Could not fetch collateral infos with pubkey ${globalConfig.tokenInfos.toString()}`);
-    }
-    const scopePricesFeeds = this.getAllScopePriceFeedsForStrategy(strategyState, collateralInfos);
-
-    const programId = this.getDexProgramId(strategyState);
-    const eventAuthority = unwrapOption(await this.getEventAuthorityPDA(strategyState.strategyDex));
-
-    const accounts = {
-      position: strategyState.position,
-      positionTokenAccount: strategyState.positionTokenAccount,
-      pool: strategyState.pool,
-      tokenAVault: strategyState.tokenAVault,
-      tokenBVault: strategyState.tokenBVault,
-      baseVaultAuthority: strategyState.baseVaultAuthority,
-      payer,
-      strategy: strategyWithAddress.address,
-      globalConfig: strategyState.globalConfig,
-      poolTokenVaultA: strategyState.poolTokenVaultA,
-      poolTokenVaultB: strategyState.poolTokenVaultB,
-      tickArrayLower: strategyState.tickArrayLower,
-      tickArrayUpper: strategyState.tickArrayUpper,
-      scopePricesA: scopePricesFeeds.tokenAFeed,
-      scopePricesB: scopePricesFeeds.tokenBFeed,
-      raydiumProtocolPositionOrBaseVaultAuthority: strategyState.raydiumProtocolPositionOrBaseVaultAuthority,
-      tokenInfos: globalConfig.tokenInfos,
-      poolProgram: programId,
-      instructionSysvarAccount: SYSVAR_INSTRUCTIONS_ADDRESS,
-      tokenAMint: strategyState.tokenAMint,
-      tokenBMint: strategyState.tokenBMint,
-      eventAuthority,
-      tokenATokenProgram: keyOrDefault(strategyState.tokenATokenProgram, TOKEN_PROGRAM_ADDRESS),
-      tokenBTokenProgram: keyOrDefault(strategyState.tokenBTokenProgram, TOKEN_PROGRAM_ADDRESS),
-      memoProgram: MEMO_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
-      tokenProgram2022: TOKEN_2022_PROGRAM_ADDRESS,
-    };
-
-    return getInvestInstruction({ ...accounts }, { programAddress: this.getProgramID() });
-  };
-
-  /**
-   * Get a list of instructions to collect the pending fees and invest them into the Kamino strategy's position.
-   * @param strategy strategy pubkey or object
-   * @param payer transaction payer
-   */
-  compound = async (strategy: Address | StrategyWithAddress, payer: TransactionSigner): Promise<Instruction[]> => {
-    // fetch here so the underlying instructions won't need to fetch
-    const strategyWithAddress = await this.getStrategyStateIfNotFetched(strategy);
-    if (!strategyWithAddress) {
-      throw Error(`Could not fetch strategy state with pubkey ${strategy.toString()}`);
-    }
-
-    const collectFeesAndRewardsIx = this.collectFeesAndRewards(strategyWithAddress, payer);
-    const investIx = this.invest(strategy, payer);
-
-    return Promise.all([collectFeesAndRewardsIx, investIx]);
-  };
-
-  /**
    * Get a the pending fees in lamports of a strategy.
    * @param strategy strategy pubkey or object
    */
@@ -7013,7 +6936,7 @@ export class Kamino {
    * @param newPosition new liquidity position account pubkey
    * @param priceLower new position's lower price of the range
    * @param priceUpper new position's upper price of the range
-   * @returns list of transactions to rebalance (executive withdraw, collect fees/rewards, open new position, invest)
+   * @returns list of transactions to rebalance (executive withdraw, collect fees/rewards, open new position)
    */
   rebalance = async (
     admin: TransactionSigner,

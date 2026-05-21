@@ -1070,13 +1070,6 @@ describe('Kamino SDK Tests', () => {
       );
       console.log('open position tx hash', myHash);
     }
-
-    {
-      const invextIx = await kamino.invest(fixtures.newRaydiumStrategy, env.admin);
-      const tx = [createComputeUnitLimitIx(1000000), invextIx];
-      const sig = await sendAndConfirmTx(env.c, env.admin, tx);
-      expect(sig).not.to.be.null;
-    }
   });
 
   it('should rebalance a new Raydium strategy without liquidity', async () => {
