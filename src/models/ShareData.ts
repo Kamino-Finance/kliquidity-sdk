@@ -6,6 +6,7 @@ import PriceData from './PriceData';
 
 export type ShareData = {
   balance: StrategyBalances;
+  // Price of 1 share in USD. 0 if the price cannot be calculated.
   price: Decimal;
 };
 
