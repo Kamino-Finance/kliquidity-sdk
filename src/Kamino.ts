@@ -364,6 +364,16 @@ function unwrapOption<T>(
   return opt.__option === 'Some' ? opt.value : undefined;
 }
 
+function yieldToEventLoop(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof setImmediate !== 'undefined') {
+      setImmediate(resolve);
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
 export class Kamino {
   private readonly _cluster: SolanaCluster;
   private readonly _rpc: Rpc<SolanaRpcApi>;
@@ -1250,7 +1260,9 @@ export class Kamino {
     return result;
   };
 
-  getAllStrategiesWithFilters = async (strategyFilters: StrategiesFilters): Promise<Array<StrategyWithAddress>> => {
+  private buildStrategiesGpaFilters(
+    strategyFilters: StrategiesFilters
+  ): (GetProgramAccountsDatasizeFilter | GetProgramAccountsMemcmpFilter)[] {
     const filters: (GetProgramAccountsDatasizeFilter | GetProgramAccountsMemcmpFilter)[] = [];
     filters.push({
       dataSize: BigInt(getWhirlpoolStrategySize()),
@@ -1303,20 +1315,52 @@ export class Kamino {
       });
     }
 
-    return (
-      await this._rpc
-        .getProgramAccounts(this.getProgramID(), {
-          filters,
-          encoding: 'base64',
-        })
-        .send()
-    ).map((x) => {
-      const res: StrategyWithAddress = {
+    return filters;
+  }
+
+  /**
+   * Streaming variant of {@link getAllStrategiesWithFilters}. Decodes one
+   * strategy at a time and yields control to the event loop every
+   * `yieldEvery` items (default 100) via `setImmediate` (or `setTimeout(0)`
+   * outside Node) so other I/O can make progress while ~5600 strategies
+   * decode.
+   *
+   * @param strategyFilters
+   * @param options.yieldEvery decode this many strategies before yielding to
+   *        the event loop. Default 100. Set to `Infinity` to never yield.
+   */
+  async *getAllStrategiesWithFiltersStream(
+    strategyFilters: StrategiesFilters,
+    options?: { yieldEvery?: number }
+  ): AsyncGenerator<StrategyWithAddress, void, void> {
+    const yieldEvery = options?.yieldEvery ?? 100;
+    const filters = this.buildStrategiesGpaFilters(strategyFilters);
+
+    const accounts = await this._rpc
+      .getProgramAccounts(this.getProgramID(), {
+        filters,
+        encoding: 'base64',
+      })
+      .send();
+
+    for (let i = 0; i < accounts.length; i++) {
+      const x = accounts[i];
+      yield {
         strategy: getWhirlpoolStrategyDecoder().decode(base64ToBytes(x.account.data[0])),
         address: x.pubkey,
       };
-      return res;
-    });
+      if ((i + 1) % yieldEvery === 0 && i + 1 < accounts.length) {
+        await yieldToEventLoop();
+      }
+    }
+  }
+
+  getAllStrategiesWithFilters = async (strategyFilters: StrategiesFilters): Promise<Array<StrategyWithAddress>> => {
+    const result: StrategyWithAddress[] = [];
+    for await (const item of this.getAllStrategiesWithFiltersStream(strategyFilters)) {
+      result.push(item);
+    }
+    return result;
   };
 
   /**
