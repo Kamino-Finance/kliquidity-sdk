@@ -160,6 +160,23 @@ describe('Raydium SDK bump compatibility', () => {
     expect(pool.currentPrice).to.be.closeTo(1.23, 0.000000000001);
   });
 
+  it('throws when the Raydium pool account does not exist', async () => {
+    const rpc = {
+      getAccountInfo: () => ({
+        send: async () => ({ value: null }),
+      }),
+    };
+    const service = new RaydiumService(rpc as any);
+
+    const error = await service.getRpcClmmPoolInfo(poolAddress).then(
+      () => undefined,
+      (e) => e
+    );
+
+    expect(error).to.be.an('error');
+    expect((error as Error).message).to.equal(`Raydium pool state ${poolAddress} does not exist`);
+  });
+
   it('fetches CLMM config accounts through configId and preserves new fee fields', async () => {
     const encodedPool = encodePoolLayout();
     const decodedPool = PoolInfoLayout.decode(encodedPool);

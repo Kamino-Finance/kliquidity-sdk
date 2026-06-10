@@ -15,6 +15,12 @@ export function decodeRaydiumPersonalPosition(data: Buffer): RaydiumPersonalPosi
   return PersonalPositionLayout.decode(data);
 }
 
+// Big-endian on purpose: the on-chain CLMM program derives both protocol-position and
+// tick-array PDAs with tick_index.to_be_bytes(), and all existing mainnet
+// ProtocolPositionState accounts live at BE-derived addresses. raydium-sdk-v2 >= 0.2.x
+// switched its own getPdaProtocolPositionAddress to little-endian, which only works for
+// Raydium because the program now treats protocol_position as a deprecated unchecked
+// account — but we store and read this address, so we must keep the BE derivation.
 export function i32ToBytes(num: number): Uint8Array {
   const arr = new ArrayBuffer(4);
   new DataView(arr).setInt32(0, num, false);

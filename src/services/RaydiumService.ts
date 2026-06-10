@@ -501,6 +501,9 @@ export class RaydiumService {
 
       const ammConfigKey = cur.clmmPoolRpcInfo.configId.toBase58();
       const ammConfigData = clmmConfigs[ammConfigKey];
+      if (!ammConfigData) {
+        throw new Error(`Raydium AMM config ${ammConfigKey} not found for pool ${cur.address.toString()}`);
+      }
       const mintAKey = cur.clmmPoolRpcInfo.mintA.toBase58();
       const mintBKey = cur.clmmPoolRpcInfo.mintB.toBase58();
 
@@ -679,7 +682,6 @@ export type RaydiumPoolStatsSource = {
   week?: RaydiumCountStatsSource;
   month?: RaydiumCountStatsSource;
   tvl?: number;
-  price?: number;
 };
 
 export async function getPdaExBitmapAccount(programId: Address, poolId: Address): Promise<ProgramDerivedAddress> {
