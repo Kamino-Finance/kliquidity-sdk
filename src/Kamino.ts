@@ -22,8 +22,8 @@ import {
   Slot,
   SolanaRpcApi,
   TransactionSigner,
+  getBase58Decoder,
 } from '@solana/kit';
-import bs58 from 'bs58';
 import {
   type GlobalConfig,
   type TermsSignature,
@@ -81,7 +81,7 @@ import {
   TreasuryFeeVault,
 } from './models';
 import { Scope } from '@kamino-finance/scope-sdk';
-import { OraclePrices } from '@kamino-finance/scope-sdk/dist/@codegen/scope/accounts/OraclePrices';
+import type { OraclePrices } from '@kamino-finance/scope-sdk/dist/@codegen/scope/accounts/oraclePrices';
 import {
   batchFetch,
   buildStrategyRebalanceParams,
@@ -347,6 +347,7 @@ import { getTokensPrices } from './services/kSwap';
 import { Logger } from './utils/Logger';
 
 const addressEncoder = getAddressEncoder();
+const base58Decoder = getBase58Decoder();
 
 export const HUBBLE_SCOPE_FEED_ID = address('3NJYftD5sjVfxSnUdZ1wVML8f3aC6mp1CXCL6L7TnU8C');
 export const KAMINO_SCOPE_FEED_ID = address('3t4JZcueEzTbVP6kLxXrL3VpWx45jDer4eqysweBchNH');
@@ -1270,7 +1271,7 @@ export class Kamino {
     filters.push({
       memcmp: {
         offset: 0n,
-        bytes: bs58.encode(WHIRLPOOL_STRATEGY_DISCRIMINATOR) as Base58EncodedBytes,
+        bytes: base58Decoder.decode(WHIRLPOOL_STRATEGY_DISCRIMINATOR) as Base58EncodedBytes,
         encoding: 'base58',
       },
     });
@@ -1381,7 +1382,7 @@ export class Kamino {
       {
         memcmp: {
           offset: 0n,
-          bytes: bs58.encode(WHIRLPOOL_STRATEGY_DISCRIMINATOR) as Base58EncodedBytes,
+          bytes: base58Decoder.decode(WHIRLPOOL_STRATEGY_DISCRIMINATOR) as Base58EncodedBytes,
           encoding: 'base58',
         },
       },
@@ -1515,10 +1516,6 @@ export class Kamino {
   private isOraclePricesAccount = (
     scopePrices?: OraclePrices | Record<Address, OraclePrices> | [Address, OraclePrices][]
   ): scopePrices is OraclePrices => {
-    if (scopePrices instanceof OraclePrices) {
-      return true;
-    }
-
     if (!scopePrices || typeof scopePrices !== 'object' || Array.isArray(scopePrices)) {
       return false;
     }

@@ -3,6 +3,7 @@ import {
   AddressesByLookupTableAddress,
   addSignersToTransactionMessage,
   appendTransactionMessageInstructions,
+  assertIsTransactionWithBlockhashLifetime,
   Blockhash,
   compressTransactionMessageUsingAddressLookupTables,
   createTransactionMessage,
@@ -54,6 +55,8 @@ export async function sendAndConfirmTx(
     (tx) => addSignersToTransactionMessage(signers, tx),
     (tx) => signTransactionMessageWithSigners(tx)
   );
+
+  assertIsTransactionWithBlockhashLifetime(tx);
 
   const sig = getSignatureFromTransaction(tx);
 

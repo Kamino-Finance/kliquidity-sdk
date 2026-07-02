@@ -4,12 +4,13 @@ import {
   AddressesByLookupTableAddress,
   addSignersToTransactionMessage,
   appendTransactionMessageInstructions,
+  assertIsTransactionWithBlockhashLifetime,
   Blockhash,
   compressTransactionMessageUsingAddressLookupTables,
   createTransactionMessage,
   GetLatestBlockhashApi,
   getSignatureFromTransaction,
-  IAccountSignerMeta,
+  AccountSignerMeta,
   Instruction,
   pipe,
   Rpc,
@@ -62,6 +63,8 @@ export async function sendAndConfirmTx(
     (tx) => addSignersToTransactionMessage(signers, tx),
     (tx) => signTransactionMessageWithSigners(tx)
   );
+
+  assertIsTransactionWithBlockhashLifetime(tx);
 
   const sig = getSignatureFromTransaction(tx);
 
@@ -116,14 +119,14 @@ export function replaceSigner(
   ixs.forEach((ix) => {
     const accounts = ix.accounts?.map((account) => {
       if (account.role === AccountRole.WRITABLE_SIGNER && account.address === signerToBeReplaced.address) {
-        const signerAccount: IAccountSignerMeta = {
+        const signerAccount: AccountSignerMeta = {
           ...account,
           signer: newSigner,
           role: AccountRole.WRITABLE_SIGNER,
         };
         return signerAccount;
       } else if (account.role === AccountRole.READONLY_SIGNER && account.address === signerToBeReplaced.address) {
-        const signerAccount: IAccountSignerMeta = {
+        const signerAccount: AccountSignerMeta = {
           ...account,
           signer: newSigner,
           role: AccountRole.READONLY_SIGNER,

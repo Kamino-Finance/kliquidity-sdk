@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { OraclePrices } from '@kamino-finance/scope-sdk/dist/@codegen/scope/accounts/OraclePrices';
+import type { OraclePrices } from '@kamino-finance/scope-sdk/dist/@codegen/scope/accounts/oraclePrices';
 import { CollateralInfo } from '../@codegen/kliquidity/types';
 import { Address } from '@solana/kit';
 
