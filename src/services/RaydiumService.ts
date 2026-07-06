@@ -39,20 +39,25 @@ import { AMM_V3_PROGRAM_ADDRESS } from '../@codegen/raydium/programs';
 import { priceToTickIndexWithRounding } from '../utils/raydium';
 import {
   ApiV3PoolInfoConcentratedItem,
+  ApiV3PoolInfoCountItem,
   ClmmConfigLayout,
-  ClmmRpcData,
+  ClmmParsedRpcData,
   ComputeClmmPoolInfo,
+  DynamicFeeInfo,
+  getCollectFeeOnDescription,
+  PersonalPositionLayout,
   POOL_TICK_ARRAY_BITMAP_SEED,
   PoolInfoLayout,
   PoolUtils,
-  PositionInfoLayout,
   ReturnTypeFetchExBitmaps,
   ReturnTypeFetchMultipleMintInfos,
-  ReturnTypeGetTickPrice,
-  SqrtPriceMath,
   TickArrayBitmapExtensionLayout,
-  TickMath,
 } from '@raydium-io/raydium-sdk-v2/lib';
+import {
+  RaydiumSqrtPriceMath as SqrtPriceMath,
+  RaydiumTickMath as TickMath,
+  ReturnTypeGetTickPrice,
+} from '../utils/raydiumSdkCompat';
 import { fromLegacyPublicKey } from '@solana/compat';
 import { toBN } from '../utils/raydiumBridge';
 import { fetchAllMint, Mint } from '@solana-program/token-2022';
@@ -78,8 +83,29 @@ export class RaydiumService {
     return (await axios.get<RaydiumPoolsResponse>(`https://api.kamino.finance/v2/raydium/ammPools`)).data;
   }
 
-  async getRaydiumPoolInfo(poolPubkey: Address): Promise<ApiV3PoolInfoConcentratedItem> {
-    return this.getPoolInfoFromRpc(poolPubkey.toString());
+  async getRaydiumPoolInfo(
+    poolPubkey: Address,
+    poolStats?: RaydiumPoolStatsSource
+  ): Promise<ApiV3PoolInfoConcentratedItem> {
+    const stats = poolStats ?? (await this.getRaydiumApiPoolInfo(poolPubkey.toString()));
+    return this.getPoolInfoFromRpc(poolPubkey.toString(), stats);
+  }
+
+  async getRaydiumApiPoolInfo(poolId: string): Promise<ApiV3PoolInfoConcentratedItem | undefined> {
+    try {
+      const response = await axios.get<RaydiumApiPoolInfoResponse>(`https://api-v3.raydium.io/pools/info/ids`, {
+        params: { ids: poolId },
+      });
+      const poolList = Array.isArray(response.data) ? response.data : response.data.data;
+      const poolInfo = poolList?.find((pool) => pool.id === poolId);
+      if (poolInfo?.type !== 'Concentrated') {
+        return undefined;
+      }
+      return poolInfo;
+    } catch (error) {
+      this._logger.warn(`Could not fetch Raydium API pool stats for ${poolId}`, error);
+      return undefined;
+    }
   }
 
   async getRaydiumPoolLiquidityDistribution(
@@ -184,7 +210,7 @@ export class RaydiumService {
       };
     }
 
-    const raydiumPoolInfo = await this.getRaydiumPoolInfo(strategy.pool);
+    const raydiumPoolInfo = await this.getRaydiumPoolInfo(strategy.pool, raydiumPool);
     const params: {
       poolInfo: ApiV3PoolInfoConcentratedItem;
       aprType: 'day' | 'week' | 'month';
@@ -270,7 +296,7 @@ export class RaydiumService {
       };
     }
 
-    const poolInfo = await this.getRaydiumPoolInfo(poolPubkey);
+    const poolInfo = await this.getRaydiumPoolInfo(poolPubkey, raydiumPool);
     const params: {
       poolInfo: ApiV3PoolInfoConcentratedItem;
       aprType: 'day' | 'week' | 'month';
@@ -339,11 +365,11 @@ export class RaydiumService {
       .getProgramAccounts(this._raydiumProgramId, {
         commitment: 'confirmed',
         filters: [
-          { dataSize: BigInt(PositionInfoLayout.span) },
+          { dataSize: BigInt(PersonalPositionLayout.span) },
           {
             memcmp: {
               bytes: pool.toString() as Base58EncodedBytes,
-              offset: BigInt(PositionInfoLayout.offsetOf('poolId')),
+              offset: BigInt(PersonalPositionLayout.offsetOf('poolId')),
               encoding: 'base58',
             },
           },
@@ -369,7 +395,7 @@ export class RaydiumService {
       : { tick, price: new Decimal(1).div(tickPrice), tickSqrtPriceX64 };
   }
 
-  async getRpcClmmPoolInfo(poolId: string): Promise<ClmmRpcData> {
+  async getRpcClmmPoolInfo(poolId: string): Promise<ClmmParsedRpcData> {
     const poolAccountInfo = await this._rpc
       .getAccountInfo(address(poolId), { commitment: 'confirmed', encoding: 'base64' })
       .send();
@@ -377,19 +403,14 @@ export class RaydiumService {
       throw Error(`Raydium pool state ${poolId} does not exist`);
     }
 
-    const poolState = unwrapAccount(await fetchMaybePoolState(this._rpc, address(poolId)));
-    if (!poolState) {
-      throw Error(`Raydium pool state ${poolId} does not exist`);
-    }
-
     const rpc = PoolInfoLayout.decode(Buffer.from(poolAccountInfo.value.data[0], 'base64'));
     const currentPrice = SqrtPriceMath.sqrtPriceX64ToPrice(
-      toBN(poolState.sqrtPriceX64),
-      poolState.mintDecimals0,
-      poolState.mintDecimals1
+      rpc.sqrtPriceX64,
+      rpc.mintDecimalsA,
+      rpc.mintDecimalsB
     ).toNumber();
 
-    const data: ClmmRpcData = {
+    const data: ClmmParsedRpcData = {
       ...rpc,
       currentPrice,
       programId: toLegacyPublicKey(this._raydiumProgramId),
@@ -439,7 +460,7 @@ export class RaydiumService {
     }
 
     // Fetch amm configs
-    const configSet = Array.from(new Set(poolList.map((p) => p.clmmPoolRpcInfo.ammConfig.toBase58())));
+    const configSet = Array.from(new Set(poolList.map((p) => p.clmmPoolRpcInfo.configId.toBase58())));
     const configRes = await this._rpc
       .getMultipleAccounts(
         configSet.map((s) => address(s)),
@@ -478,16 +499,20 @@ export class RaydiumService {
       const cur = poolList[i];
       const pda = await getPdaExBitmapAccount(fromLegacyPublicKey(cur.clmmPoolRpcInfo.programId), cur.address);
 
-      const ammConfigKey = cur.clmmPoolRpcInfo.ammConfig.toBase58();
+      const ammConfigKey = cur.clmmPoolRpcInfo.configId.toBase58();
       const ammConfigData = clmmConfigs[ammConfigKey];
+      if (!ammConfigData) {
+        throw new Error(`Raydium AMM config ${ammConfigKey} not found for pool ${cur.address.toString()}`);
+      }
       const mintAKey = cur.clmmPoolRpcInfo.mintA.toBase58();
       const mintBKey = cur.clmmPoolRpcInfo.mintB.toBase58();
 
       result[cur.address.toString()] = {
         ...rpcDataMap[cur.address.toString()],
+        accInfo: rpcDataMap[cur.address.toString()],
         id: toLegacyPublicKey(cur.address),
         version: 6,
-        programId: fromLegacyPublicKey(cur.clmmPoolRpcInfo.programId),
+        programId: cur.clmmPoolRpcInfo.programId,
         mintA: {
           chainId: 101,
           address: mintAKey,
@@ -513,11 +538,11 @@ export class RaydiumService {
         ammConfig: {
           ...ammConfigData,
           id: toLegacyPublicKey(address(ammConfigKey)),
-          fundFeeRate: 0,
+          fundFeeRate: ammConfigData.fundFeeRate,
           description: '',
           defaultRange: 0,
           defaultRangePoint: [],
-          fundOwner: '',
+          fundOwner: ammConfigData.fundOwner.toBase58(),
         },
         currentPrice: new Decimal(cur.clmmPoolRpcInfo.currentPrice),
         exBitmapAccount: toLegacyPublicKey(pda[0]),
@@ -580,7 +605,7 @@ export class RaydiumService {
     return computeClmmPoolInfo;
   }
 
-  async getPoolInfoFromRpc(poolId: string): Promise<ApiV3PoolInfoConcentratedItem> {
+  async getPoolInfoFromRpc(poolId: string, poolStats?: RaydiumPoolStatsSource): Promise<ApiV3PoolInfoConcentratedItem> {
     const rpcData = await this.getRpcClmmPoolInfo(poolId);
 
     const poolInfoWithAddress = {
@@ -589,7 +614,7 @@ export class RaydiumService {
     };
     const computeClmmPoolInfo = await this.getComputeClmmPoolInfo(poolInfoWithAddress);
 
-    const poolInfo = this.clmmComputeInfoToApiInfo(computeClmmPoolInfo);
+    const poolInfo = this.clmmComputeInfoToApiInfo(computeClmmPoolInfo, poolStats);
 
     poolInfo.mintAmountA = await getTokenAccountBalanceLamports(this._rpc, fromLegacyPublicKey(rpcData.vaultA));
     poolInfo.mintAmountB = await getTokenAccountBalanceLamports(this._rpc, fromLegacyPublicKey(rpcData.vaultB));
@@ -597,7 +622,13 @@ export class RaydiumService {
     return poolInfo;
   }
 
-  clmmComputeInfoToApiInfo(pool: ComputeClmmPoolInfo): ApiV3PoolInfoConcentratedItem {
+  clmmComputeInfoToApiInfo(
+    pool: ComputeClmmPoolInfo,
+    poolStats?: RaydiumPoolStatsSource
+  ): ApiV3PoolInfoConcentratedItem {
+    const hasDynamicFee = DynamicFeeInfo.getDynamicFeeInfo({ poolInfo: pool.accInfo }) !== undefined;
+    const countStats = normalizeRaydiumPoolStats(poolStats);
+
     return {
       ...pool,
       type: 'Concentrated',
@@ -610,17 +641,21 @@ export class RaydiumService {
       mintAmountB: 0,
       feeRate: pool.ammConfig.tradeFeeRate,
       openTime: pool.startTime.toString(),
-      tvl: 0,
+      tvl: Number(poolStats?.tvl ?? 0),
 
-      day: mockRewardData,
-      week: mockRewardData,
-      month: mockRewardData,
+      day: countStats.day,
+      week: countStats.week,
+      month: countStats.month,
       pooltype: [],
 
       farmUpcomingCount: 0,
       farmOngoingCount: 0,
       farmFinishedCount: 0,
       burnPercent: 0,
+      feeOn: getCollectFeeOnDescription(pool.accInfo.feeOn),
+      hasDynamicFee,
+      launchMigratePool: false,
+      tips: [],
       config: {
         ...pool.ammConfig,
         id: pool.ammConfig.id.toString(),
@@ -633,8 +668,21 @@ export class RaydiumService {
 
 export interface ClmmRpcDataWithAddress {
   address: Address;
-  clmmPoolRpcInfo: ClmmRpcData;
+  clmmPoolRpcInfo: ClmmParsedRpcData;
 }
+
+type RaydiumApiPoolInfoResponse = { data?: ApiV3PoolInfoConcentratedItem[] } | ApiV3PoolInfoConcentratedItem[];
+
+type RaydiumCountStatsSource = Partial<Omit<ApiV3PoolInfoCountItem, 'rewardApr'>> & {
+  rewardApr?: unknown;
+};
+
+export type RaydiumPoolStatsSource = {
+  day?: RaydiumCountStatsSource;
+  week?: RaydiumCountStatsSource;
+  month?: RaydiumCountStatsSource;
+  tvl?: number;
+};
 
 export async function getPdaExBitmapAccount(programId: Address, poolId: Address): Promise<ProgramDerivedAddress> {
   const addressEncoder = getAddressEncoder();
@@ -644,7 +692,49 @@ export async function getPdaExBitmapAccount(programId: Address, poolId: Address)
   });
 }
 
-const mockRewardData = {
+function normalizeRaydiumPoolStats(poolStats?: RaydiumPoolStatsSource): {
+  day: ApiV3PoolInfoCountItem;
+  week: ApiV3PoolInfoCountItem;
+  month: ApiV3PoolInfoCountItem;
+} {
+  return {
+    day: normalizeRaydiumCountStats(poolStats?.day),
+    week: normalizeRaydiumCountStats(poolStats?.week),
+    month: normalizeRaydiumCountStats(poolStats?.month),
+  };
+}
+
+function normalizeRaydiumCountStats(stats?: RaydiumCountStatsSource): ApiV3PoolInfoCountItem {
+  return {
+    ...emptyRaydiumCountStats,
+    volume: Number(stats?.volume ?? emptyRaydiumCountStats.volume),
+    volumeQuote: Number(stats?.volumeQuote ?? emptyRaydiumCountStats.volumeQuote),
+    volumeFee: Number(stats?.volumeFee ?? emptyRaydiumCountStats.volumeFee),
+    apr: Number(stats?.apr ?? emptyRaydiumCountStats.apr),
+    feeApr: Number(stats?.feeApr ?? emptyRaydiumCountStats.feeApr),
+    priceMin: Number(stats?.priceMin ?? emptyRaydiumCountStats.priceMin),
+    priceMax: Number(stats?.priceMax ?? emptyRaydiumCountStats.priceMax),
+    rewardApr: normalizeRewardApr(stats?.rewardApr),
+  };
+}
+
+function normalizeRewardApr(rewardApr: unknown): number[] {
+  if (Array.isArray(rewardApr)) {
+    return rewardApr.map((value) => Number(value));
+  }
+
+  if (rewardApr && typeof rewardApr === 'object') {
+    const keyedRewardApr = rewardApr as Record<string, unknown>;
+    return ['A', 'B', 'C']
+      .map((key) => keyedRewardApr[key])
+      .filter((value) => value !== undefined)
+      .map((value) => Number(value));
+  }
+
+  return [];
+}
+
+const emptyRaydiumCountStats: ApiV3PoolInfoCountItem = {
   volume: 0,
   volumeQuote: 0,
   volumeFee: 0,

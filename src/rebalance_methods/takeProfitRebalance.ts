@@ -5,7 +5,7 @@ import { Dex, readBigUint128LE } from '../utils';
 import { sqrtPriceToPrice as orcaSqrtPriceToPrice } from '@orca-so/whirlpools-core';
 import { RebalanceRaw } from '../@codegen/kliquidity/types';
 import { getPriceFromQ64Price } from '../utils/meteora';
-import { SqrtPriceMath } from '@raydium-io/raydium-sdk-v2/lib';
+import { RaydiumSqrtPriceMath as SqrtPriceMath } from '../utils/raydiumSdkCompat';
 import { toBN } from '../utils/raydiumBridge';
 
 export const DEFAULT_LOWER_RANGE_PRICE_DIFF_BPS = new Decimal(500);

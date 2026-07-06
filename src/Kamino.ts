@@ -315,11 +315,11 @@ import { getInitializeBinArrayInstruction } from './@codegen/meteora/instruction
 import {
   getPdaProtocolPositionAddress,
   i32ToBytes,
-  LiquidityMath as RaydiumLiquidityMath,
-  SqrtPriceMath as RaydiumSqrtPriceMath,
-  TickMath as RaydiumTickMath,
-  TickUtils as RaydiumTickUtils,
-} from '@raydium-io/raydium-sdk-v2/lib';
+  RaydiumLiquidityMath,
+  RaydiumSqrtPriceMath,
+  RaydiumTickMath,
+  RaydiumTickUtils,
+} from './utils/raydiumSdkCompat';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   fetchAllMint,
