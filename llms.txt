@@ -38,7 +38,3 @@
 ## Utils
 
 - [utils/](https://github.com/Kamino-Finance/kliquidity-sdk/tree/master/src/utils): Transaction building, token helpers, DEX-specific math, type definitions
-
-## Tests
-
-- [tests/kamino.test.ts](https://github.com/Kamino-Finance/kliquidity-sdk/blob/master/tests/kamino.test.ts): Usage examples for reads, deposits, withdrawals, single-sided deposits

@@ -8,7 +8,7 @@
   "bugs": {
     "url": "https://github.com/Kamino-Finance/kliquidity-sdk/issues"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "private": false,
   "scripts": {
     "lint:fix": "yarn prettier --write .",

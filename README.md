@@ -67,27 +67,3 @@ Copy the new `idl` from the kamino-liquidity program to `src/kamino-client/idl.j
 ```bash
 yarn codegen:kliquidity
 ```
-
-### Setup localnet
-
-Ensure `deps` contains the correct `.so` you want to test against. Either build it from the main repo or dump it from mainnet:
-
-```bash
-yarn start-validator
-```
-
-### Run tests
-
-```bash
-yarn start-validator-and-test
-# Or, if the local validator is already running:
-yarn test
-```
-
-### Sync with smart contracts
-
-```bash
-yarn
-solana program dump 6LtLpnUFNByNXLyCoK9wA2MykKAmQNZKBdY8s47dehDc -u m deps/kamino.so
-yarn codegen
-```

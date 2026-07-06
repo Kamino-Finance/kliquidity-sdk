@@ -27,18 +27,16 @@
     "dist",
     "src/**/*.ts"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "rm -rf dist/; yarn tsc",
-    "build:test": "yarn tsc --project ./tests/tsconfig.json",
-    "test": "yarn build:test && yarn ts-mocha tests/**/*.test.ts --exit",
     "watch": "tsc --watch",
     "lint": "yarn prettier --check .; yarn eslint .",
     "lint:fix": "yarn prettier --write .; yarn eslint . --fix",
-    "codegen": "node scripts/codegen.js",
-    "start-validator": "solana-test-validator $(./deps/test-validator-params.sh)",
-    "start-validator-and-test": "yarn start-server-and-test 'yarn start-validator' http://127.0.0.1:8899/health test",
-    "dump-programs": "./deps/dump-from-mainnet.sh"
+    "codegen": "node scripts/codegen.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
