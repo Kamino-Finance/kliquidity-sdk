@@ -6,7 +6,7 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
+import { combineCodec, fixDecoderSize, fixEncoderSize, getBytesDecoder, getBytesEncoder, getStructDecoder, getStructEncoder, transformEncoder, type AccountMeta, type AccountSignerMeta, type Address, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder, type Instruction, type InstructionWithAccounts, type InstructionWithData, type ReadonlyAccount, type ReadonlyUint8Array, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/kit';
 import { YVAULTS_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
@@ -14,8 +14,8 @@ export const UPDATE_STRATEGY_ADMIN_DISCRIMINATOR = new Uint8Array([13, 227, 164,
 
 export function getUpdateStrategyAdminDiscriminatorBytes() { return fixEncoderSize(getBytesEncoder(), 8).encode(UPDATE_STRATEGY_ADMIN_DISCRIMINATOR); }
 
-export type UpdateStrategyAdminInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountPendingAdmin extends string | AccountMeta<string> = string, TAccountStrategy extends string | AccountMeta<string> = string, TRemainingAccounts extends readonly AccountMeta<string>[] = []> =
-Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array> & InstructionWithAccounts<[TAccountPendingAdmin extends string ? WritableSignerAccount<TAccountPendingAdmin> & AccountSignerMeta<TAccountPendingAdmin> : TAccountPendingAdmin, TAccountStrategy extends string ? WritableAccount<TAccountStrategy> : TAccountStrategy, ...TRemainingAccounts]>;
+export type UpdateStrategyAdminInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountPendingAdmin extends string | AccountMeta<string> = string, TAccountStrategy extends string | AccountMeta<string> = string, TAccountGlobalConfig extends string | AccountMeta<string> = string, TRemainingAccounts extends readonly AccountMeta<string>[] = []> =
+Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array> & InstructionWithAccounts<[TAccountPendingAdmin extends string ? WritableSignerAccount<TAccountPendingAdmin> & AccountSignerMeta<TAccountPendingAdmin> : TAccountPendingAdmin, TAccountStrategy extends string ? WritableAccount<TAccountStrategy> : TAccountStrategy, TAccountGlobalConfig extends string ? ReadonlyAccount<TAccountGlobalConfig> : TAccountGlobalConfig, ...TRemainingAccounts]>;
 
 export type UpdateStrategyAdminInstructionData = { discriminator: ReadonlyUint8Array;  };
 
@@ -33,35 +33,37 @@ export function getUpdateStrategyAdminInstructionDataCodec(): FixedSizeCodec<Upd
     return combineCodec(getUpdateStrategyAdminInstructionDataEncoder(), getUpdateStrategyAdminInstructionDataDecoder());
 }
 
-export type UpdateStrategyAdminInput<TAccountPendingAdmin extends string = string, TAccountStrategy extends string = string> =  {
+export type UpdateStrategyAdminInput<TAccountPendingAdmin extends string = string, TAccountStrategy extends string = string, TAccountGlobalConfig extends string = string> =  {
   pendingAdmin: TransactionSigner<TAccountPendingAdmin>;
 strategy: Address<TAccountStrategy>;
+globalConfig: Address<TAccountGlobalConfig>;
 }
 
-export function getUpdateStrategyAdminInstruction<TAccountPendingAdmin extends string, TAccountStrategy extends string, TProgramAddress extends Address = typeof YVAULTS_PROGRAM_ADDRESS>(input: UpdateStrategyAdminInput<TAccountPendingAdmin, TAccountStrategy>, config?: { programAddress?: TProgramAddress } ): UpdateStrategyAdminInstruction<TProgramAddress, TAccountPendingAdmin, TAccountStrategy> {
+export function getUpdateStrategyAdminInstruction<TAccountPendingAdmin extends string, TAccountStrategy extends string, TAccountGlobalConfig extends string, TProgramAddress extends Address = typeof YVAULTS_PROGRAM_ADDRESS>(input: UpdateStrategyAdminInput<TAccountPendingAdmin, TAccountStrategy, TAccountGlobalConfig>, config?: { programAddress?: TProgramAddress } ): UpdateStrategyAdminInstruction<TProgramAddress, TAccountPendingAdmin, TAccountStrategy, TAccountGlobalConfig> {
   // Program address.
 const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
-const originalAccounts = { pendingAdmin: { value: input.pendingAdmin ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true } }
+const originalAccounts = { pendingAdmin: { value: input.pendingAdmin ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: false } }
 const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta(accounts.pendingAdmin), getAccountMeta(accounts.strategy)], data: getUpdateStrategyAdminInstructionDataEncoder().encode({}), programAddress } as UpdateStrategyAdminInstruction<TProgramAddress, TAccountPendingAdmin, TAccountStrategy>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.pendingAdmin), getAccountMeta(accounts.strategy), getAccountMeta(accounts.globalConfig)], data: getUpdateStrategyAdminInstructionDataEncoder().encode({}), programAddress } as UpdateStrategyAdminInstruction<TProgramAddress, TAccountPendingAdmin, TAccountStrategy, TAccountGlobalConfig>);
 }
 
 export type ParsedUpdateStrategyAdminInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
 accounts: {
 pendingAdmin: TAccountMetas[0];
 strategy: TAccountMetas[1];
+globalConfig: TAccountMetas[2];
 };
 data: UpdateStrategyAdminInstructionData; };
 
 export function parseUpdateStrategyAdminInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedUpdateStrategyAdminInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 2) {
+  if (instruction.accounts.length < 3) {
   // TODO: Coded error.
   throw new Error('Not enough accounts');
 }
@@ -71,5 +73,5 @@ const getNextAccount = () => {
   accountIndex += 1;
   return accountMeta;
 }
-  return { programAddress: instruction.programAddress, accounts: { pendingAdmin: getNextAccount(), strategy: getNextAccount() }, data: getUpdateStrategyAdminInstructionDataDecoder().decode(instruction.data) };
+  return { programAddress: instruction.programAddress, accounts: { pendingAdmin: getNextAccount(), strategy: getNextAccount(), globalConfig: getNextAccount() }, data: getUpdateStrategyAdminInstructionDataDecoder().decode(instruction.data) };
 }

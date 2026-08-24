@@ -14,8 +14,8 @@ export const ADD_KAMINO_REWARDS_DISCRIMINATOR = new Uint8Array([174, 174, 142, 1
 
 export function getAddKaminoRewardsDiscriminatorBytes() { return fixEncoderSize(getBytesEncoder(), 8).encode(ADD_KAMINO_REWARDS_DISCRIMINATOR); }
 
-export type AddKaminoRewardsInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountAdminAuthority extends string | AccountMeta<string> = string, TAccountStrategy extends string | AccountMeta<string> = string, TAccountRewardMint extends string | AccountMeta<string> = string, TAccountRewardVault extends string | AccountMeta<string> = string, TAccountBaseVaultAuthority extends string | AccountMeta<string> = string, TAccountRewardAta extends string | AccountMeta<string> = string, TAccountTokenProgram extends string | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", TRemainingAccounts extends readonly AccountMeta<string>[] = []> =
-Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array> & InstructionWithAccounts<[TAccountAdminAuthority extends string ? WritableSignerAccount<TAccountAdminAuthority> & AccountSignerMeta<TAccountAdminAuthority> : TAccountAdminAuthority, TAccountStrategy extends string ? WritableAccount<TAccountStrategy> : TAccountStrategy, TAccountRewardMint extends string ? ReadonlyAccount<TAccountRewardMint> : TAccountRewardMint, TAccountRewardVault extends string ? WritableAccount<TAccountRewardVault> : TAccountRewardVault, TAccountBaseVaultAuthority extends string ? WritableAccount<TAccountBaseVaultAuthority> : TAccountBaseVaultAuthority, TAccountRewardAta extends string ? WritableAccount<TAccountRewardAta> : TAccountRewardAta, TAccountTokenProgram extends string ? ReadonlyAccount<TAccountTokenProgram> : TAccountTokenProgram, ...TRemainingAccounts]>;
+export type AddKaminoRewardsInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountAdminAuthority extends string | AccountMeta<string> = string, TAccountStrategy extends string | AccountMeta<string> = string, TAccountGlobalConfig extends string | AccountMeta<string> = string, TAccountRewardMint extends string | AccountMeta<string> = string, TAccountRewardVault extends string | AccountMeta<string> = string, TAccountBaseVaultAuthority extends string | AccountMeta<string> = string, TAccountRewardAta extends string | AccountMeta<string> = string, TAccountTokenProgram extends string | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", TRemainingAccounts extends readonly AccountMeta<string>[] = []> =
+Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array> & InstructionWithAccounts<[TAccountAdminAuthority extends string ? WritableSignerAccount<TAccountAdminAuthority> & AccountSignerMeta<TAccountAdminAuthority> : TAccountAdminAuthority, TAccountStrategy extends string ? WritableAccount<TAccountStrategy> : TAccountStrategy, TAccountGlobalConfig extends string ? ReadonlyAccount<TAccountGlobalConfig> : TAccountGlobalConfig, TAccountRewardMint extends string ? ReadonlyAccount<TAccountRewardMint> : TAccountRewardMint, TAccountRewardVault extends string ? WritableAccount<TAccountRewardVault> : TAccountRewardVault, TAccountBaseVaultAuthority extends string ? WritableAccount<TAccountBaseVaultAuthority> : TAccountBaseVaultAuthority, TAccountRewardAta extends string ? WritableAccount<TAccountRewardAta> : TAccountRewardAta, TAccountTokenProgram extends string ? ReadonlyAccount<TAccountTokenProgram> : TAccountTokenProgram, ...TRemainingAccounts]>;
 
 export type AddKaminoRewardsInstructionData = { discriminator: ReadonlyUint8Array; kaminoRewardIndex: bigint; amount: bigint;  };
 
@@ -33,9 +33,10 @@ export function getAddKaminoRewardsInstructionDataCodec(): FixedSizeCodec<AddKam
     return combineCodec(getAddKaminoRewardsInstructionDataEncoder(), getAddKaminoRewardsInstructionDataDecoder());
 }
 
-export type AddKaminoRewardsInput<TAccountAdminAuthority extends string = string, TAccountStrategy extends string = string, TAccountRewardMint extends string = string, TAccountRewardVault extends string = string, TAccountBaseVaultAuthority extends string = string, TAccountRewardAta extends string = string, TAccountTokenProgram extends string = string> =  {
+export type AddKaminoRewardsInput<TAccountAdminAuthority extends string = string, TAccountStrategy extends string = string, TAccountGlobalConfig extends string = string, TAccountRewardMint extends string = string, TAccountRewardVault extends string = string, TAccountBaseVaultAuthority extends string = string, TAccountRewardAta extends string = string, TAccountTokenProgram extends string = string> =  {
   adminAuthority: TransactionSigner<TAccountAdminAuthority>;
 strategy: Address<TAccountStrategy>;
+globalConfig: Address<TAccountGlobalConfig>;
 rewardMint: Address<TAccountRewardMint>;
 rewardVault: Address<TAccountRewardVault>;
 baseVaultAuthority: Address<TAccountBaseVaultAuthority>;
@@ -45,12 +46,12 @@ kaminoRewardIndex: AddKaminoRewardsInstructionDataArgs["kaminoRewardIndex"];
 amount: AddKaminoRewardsInstructionDataArgs["amount"];
 }
 
-export function getAddKaminoRewardsInstruction<TAccountAdminAuthority extends string, TAccountStrategy extends string, TAccountRewardMint extends string, TAccountRewardVault extends string, TAccountBaseVaultAuthority extends string, TAccountRewardAta extends string, TAccountTokenProgram extends string, TProgramAddress extends Address = typeof YVAULTS_PROGRAM_ADDRESS>(input: AddKaminoRewardsInput<TAccountAdminAuthority, TAccountStrategy, TAccountRewardMint, TAccountRewardVault, TAccountBaseVaultAuthority, TAccountRewardAta, TAccountTokenProgram>, config?: { programAddress?: TProgramAddress } ): AddKaminoRewardsInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountRewardMint, TAccountRewardVault, TAccountBaseVaultAuthority, TAccountRewardAta, TAccountTokenProgram> {
+export function getAddKaminoRewardsInstruction<TAccountAdminAuthority extends string, TAccountStrategy extends string, TAccountGlobalConfig extends string, TAccountRewardMint extends string, TAccountRewardVault extends string, TAccountBaseVaultAuthority extends string, TAccountRewardAta extends string, TAccountTokenProgram extends string, TProgramAddress extends Address = typeof YVAULTS_PROGRAM_ADDRESS>(input: AddKaminoRewardsInput<TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountRewardMint, TAccountRewardVault, TAccountBaseVaultAuthority, TAccountRewardAta, TAccountTokenProgram>, config?: { programAddress?: TProgramAddress } ): AddKaminoRewardsInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountRewardMint, TAccountRewardVault, TAccountBaseVaultAuthority, TAccountRewardAta, TAccountTokenProgram> {
   // Program address.
 const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
-const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true }, rewardMint: { value: input.rewardMint ?? null, isWritable: false }, rewardVault: { value: input.rewardVault ?? null, isWritable: true }, baseVaultAuthority: { value: input.baseVaultAuthority ?? null, isWritable: true }, rewardAta: { value: input.rewardAta ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
+const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: false }, rewardMint: { value: input.rewardMint ?? null, isWritable: false }, rewardVault: { value: input.rewardVault ?? null, isWritable: true }, baseVaultAuthority: { value: input.baseVaultAuthority ?? null, isWritable: true }, rewardAta: { value: input.rewardAta ?? null, isWritable: true }, tokenProgram: { value: input.tokenProgram ?? null, isWritable: false } }
 const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
@@ -64,23 +65,24 @@ accounts.tokenProgram.value = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as A
 }
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.strategy), getAccountMeta(accounts.rewardMint), getAccountMeta(accounts.rewardVault), getAccountMeta(accounts.baseVaultAuthority), getAccountMeta(accounts.rewardAta), getAccountMeta(accounts.tokenProgram)], data: getAddKaminoRewardsInstructionDataEncoder().encode(args as AddKaminoRewardsInstructionDataArgs), programAddress } as AddKaminoRewardsInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountRewardMint, TAccountRewardVault, TAccountBaseVaultAuthority, TAccountRewardAta, TAccountTokenProgram>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.strategy), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.rewardMint), getAccountMeta(accounts.rewardVault), getAccountMeta(accounts.baseVaultAuthority), getAccountMeta(accounts.rewardAta), getAccountMeta(accounts.tokenProgram)], data: getAddKaminoRewardsInstructionDataEncoder().encode(args as AddKaminoRewardsInstructionDataArgs), programAddress } as AddKaminoRewardsInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountRewardMint, TAccountRewardVault, TAccountBaseVaultAuthority, TAccountRewardAta, TAccountTokenProgram>);
 }
 
 export type ParsedAddKaminoRewardsInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
 accounts: {
 adminAuthority: TAccountMetas[0];
 strategy: TAccountMetas[1];
-rewardMint: TAccountMetas[2];
-rewardVault: TAccountMetas[3];
-baseVaultAuthority: TAccountMetas[4];
-rewardAta: TAccountMetas[5];
-tokenProgram: TAccountMetas[6];
+globalConfig: TAccountMetas[2];
+rewardMint: TAccountMetas[3];
+rewardVault: TAccountMetas[4];
+baseVaultAuthority: TAccountMetas[5];
+rewardAta: TAccountMetas[6];
+tokenProgram: TAccountMetas[7];
 };
 data: AddKaminoRewardsInstructionData; };
 
 export function parseAddKaminoRewardsInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedAddKaminoRewardsInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 7) {
+  if (instruction.accounts.length < 8) {
   // TODO: Coded error.
   throw new Error('Not enough accounts');
 }
@@ -90,5 +92,5 @@ const getNextAccount = () => {
   accountIndex += 1;
   return accountMeta;
 }
-  return { programAddress: instruction.programAddress, accounts: { adminAuthority: getNextAccount(), strategy: getNextAccount(), rewardMint: getNextAccount(), rewardVault: getNextAccount(), baseVaultAuthority: getNextAccount(), rewardAta: getNextAccount(), tokenProgram: getNextAccount() }, data: getAddKaminoRewardsInstructionDataDecoder().decode(instruction.data) };
+  return { programAddress: instruction.programAddress, accounts: { adminAuthority: getNextAccount(), strategy: getNextAccount(), globalConfig: getNextAccount(), rewardMint: getNextAccount(), rewardVault: getNextAccount(), baseVaultAuthority: getNextAccount(), rewardAta: getNextAccount(), tokenProgram: getNextAccount() }, data: getAddKaminoRewardsInstructionDataDecoder().decode(instruction.data) };
 }

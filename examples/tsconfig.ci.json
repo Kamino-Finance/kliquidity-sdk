@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@kamino-finance/kliquidity-sdk": ["../src"]
+    }
+  }
+}

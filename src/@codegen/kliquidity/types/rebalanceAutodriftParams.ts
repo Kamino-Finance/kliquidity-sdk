@@ -6,19 +6,19 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { combineCodec, getI32Decoder, getI32Encoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, getU32Decoder, getU32Encoder, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder } from '@solana/kit';
+import { combineCodec, getI32Decoder, getI32Encoder, getStructDecoder, getStructEncoder, getU16Decoder, getU16Encoder, getU32Decoder, getU32Encoder, getU8Decoder, getU8Encoder, type FixedSizeCodec, type FixedSizeDecoder, type FixedSizeEncoder } from '@solana/kit';
 import { getDriftDirectionDecoder, getDriftDirectionEncoder, getStakingRateSourceDecoder, getStakingRateSourceEncoder, type DriftDirection, type DriftDirectionArgs, type StakingRateSource, type StakingRateSourceArgs } from '.';
 
-export type RebalanceAutodriftParams = { initDriftTicksPerEpoch: number; ticksBelowMid: number; ticksAboveMid: number; frontrunMultiplierBps: number; stakingRateASource: StakingRateSource; stakingRateBSource: StakingRateSource; initDriftDirection: DriftDirection;  };
+export type RebalanceAutodriftParams = { initDriftTicksPerEpoch: number; ticksBelowMid: number; ticksAboveMid: number; frontrunMultiplierBps: number; stakingRateASource: StakingRateSource; stakingRateBSource: StakingRateSource; initDriftDirection: DriftDirection; enforceInitialDriftDirection: number; maxTicksPerRebalance: number;  };
 
-export type RebalanceAutodriftParamsArgs = { initDriftTicksPerEpoch: number; ticksBelowMid: number; ticksAboveMid: number; frontrunMultiplierBps: number; stakingRateASource: StakingRateSourceArgs; stakingRateBSource: StakingRateSourceArgs; initDriftDirection: DriftDirectionArgs;  };
+export type RebalanceAutodriftParamsArgs = { initDriftTicksPerEpoch: number; ticksBelowMid: number; ticksAboveMid: number; frontrunMultiplierBps: number; stakingRateASource: StakingRateSourceArgs; stakingRateBSource: StakingRateSourceArgs; initDriftDirection: DriftDirectionArgs; enforceInitialDriftDirection: number; maxTicksPerRebalance: number;  };
 
 export function getRebalanceAutodriftParamsEncoder(): FixedSizeEncoder<RebalanceAutodriftParamsArgs> {
-    return getStructEncoder([['initDriftTicksPerEpoch', getU32Encoder()], ['ticksBelowMid', getI32Encoder()], ['ticksAboveMid', getI32Encoder()], ['frontrunMultiplierBps', getU16Encoder()], ['stakingRateASource', getStakingRateSourceEncoder()], ['stakingRateBSource', getStakingRateSourceEncoder()], ['initDriftDirection', getDriftDirectionEncoder()]]);
+    return getStructEncoder([['initDriftTicksPerEpoch', getU32Encoder()], ['ticksBelowMid', getI32Encoder()], ['ticksAboveMid', getI32Encoder()], ['frontrunMultiplierBps', getU16Encoder()], ['stakingRateASource', getStakingRateSourceEncoder()], ['stakingRateBSource', getStakingRateSourceEncoder()], ['initDriftDirection', getDriftDirectionEncoder()], ['enforceInitialDriftDirection', getU8Encoder()], ['maxTicksPerRebalance', getU32Encoder()]]);
 }
 
 export function getRebalanceAutodriftParamsDecoder(): FixedSizeDecoder<RebalanceAutodriftParams> {
-    return getStructDecoder([['initDriftTicksPerEpoch', getU32Decoder()], ['ticksBelowMid', getI32Decoder()], ['ticksAboveMid', getI32Decoder()], ['frontrunMultiplierBps', getU16Decoder()], ['stakingRateASource', getStakingRateSourceDecoder()], ['stakingRateBSource', getStakingRateSourceDecoder()], ['initDriftDirection', getDriftDirectionDecoder()]]);
+    return getStructDecoder([['initDriftTicksPerEpoch', getU32Decoder()], ['ticksBelowMid', getI32Decoder()], ['ticksAboveMid', getI32Decoder()], ['frontrunMultiplierBps', getU16Decoder()], ['stakingRateASource', getStakingRateSourceDecoder()], ['stakingRateBSource', getStakingRateSourceDecoder()], ['initDriftDirection', getDriftDirectionDecoder()], ['enforceInitialDriftDirection', getU8Decoder()], ['maxTicksPerRebalance', getU32Decoder()]]);
 }
 
 export function getRebalanceAutodriftParamsCodec(): FixedSizeCodec<RebalanceAutodriftParamsArgs, RebalanceAutodriftParams> {

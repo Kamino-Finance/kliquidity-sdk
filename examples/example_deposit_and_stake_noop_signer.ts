@@ -1,15 +1,5 @@
 import Decimal from 'decimal.js';
-import {
-  Address,
-  address,
-  generateKeyPairSigner,
-  KeyPairSigner,
-  SignatureDictionary,
-  Transaction,
-  TransactionPartialSigner,
-  TransactionPartialSignerConfig,
-  TransactionSigner,
-} from '@solana/kit';
+import { address, createNoopSigner, generateKeyPairSigner, KeyPairSigner } from '@solana/kit';
 import {
   createAssociatedTokenAccountInstruction,
   createComputeUnitLimitIx,
@@ -29,7 +19,7 @@ import { sendAndConfirmTx } from './utils/tx';
   // Create a new keypair for the user (in real world this is the wallet of the user who deposits into the strategy)
   // to read from file you can use getKeypair()
   const keypairSigner: KeyPairSigner = await generateKeyPairSigner();
-  const noop = noopSigner(keypairSigner.address);
+  const noop = createNoopSigner(keypairSigner.address);
   // the strategy to deposit into
   const strategyWithFarm = address('BLP7UHUg1yNry94Qk3sM8pAfEyDhTZirwFghw9DoBjn7');
   // the amounts to deposit, in tokens
@@ -100,17 +90,3 @@ import { sendAndConfirmTx } from './utils/tx';
 })().catch(async (e) => {
   console.error(e);
 });
-
-export function noopSigner(address: Address): TransactionSigner {
-  const signer: TransactionPartialSigner = {
-    address,
-    async signTransactions(
-      _transactions: readonly Transaction[],
-      _config?: TransactionPartialSignerConfig
-    ): Promise<readonly SignatureDictionary[]> {
-      // Return an array of empty SignatureDictionary objects — one per transaction
-      return [];
-    },
-  };
-  return signer;
-}

@@ -11,7 +11,8 @@
   "license": "Apache-2.0",
   "private": false,
   "scripts": {
-    "lint:fix": "yarn prettier --write .",
+    "build": "rm -rf dist/; tsc",
+    "build:ci": "rm -rf dist/; tsc --project tsconfig.ci.json",
     "read-strategy": "tsx example_read_strategy.ts",
     "read-positions": "tsx example_read_positions.ts",
     "strategy-apy": "tsx example_strategy_apy.ts",
@@ -22,10 +23,10 @@
   },
   "dependencies": {
     "@kamino-finance/kliquidity-sdk": "link:../",
-    "@kamino-finance/farms-sdk": "^3.2.11",
-    "@solana/compat": "^7.0.0",
+    "@kamino-finance/farms-sdk": "^4.0.0",
     "@solana/kit": "^7.0.0",
-    "@solana/transactions": "^7.0.0"
+    "@solana-program/address-lookup-table": "^0.13.0",
+    "@solana-program/token": "^0.15.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.6",

@@ -14,8 +14,8 @@ export const CHANGE_POOL_DISCRIMINATOR = new Uint8Array([141, 221, 123, 235, 35,
 
 export function getChangePoolDiscriminatorBytes() { return fixEncoderSize(getBytesEncoder(), 8).encode(CHANGE_POOL_DISCRIMINATOR); }
 
-export type ChangePoolInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountAdminAuthority extends string | AccountMeta<string> = string, TAccountStrategy extends string | AccountMeta<string> = string, TAccountOldPosition extends string | AccountMeta<string> = string, TAccountBaseVaultAuthority extends string | AccountMeta<string> = string, TAccountNewPool extends string | AccountMeta<string> = string, TAccountStrategyRewardVault0OrBaseVaultAuthority extends string | AccountMeta<string> = string, TAccountStrategyRewardVault1OrBaseVaultAuthority extends string | AccountMeta<string> = string, TAccountStrategyRewardVault2OrBaseVaultAuthority extends string | AccountMeta<string> = string, TRemainingAccounts extends readonly AccountMeta<string>[] = []> =
-Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array> & InstructionWithAccounts<[TAccountAdminAuthority extends string ? WritableSignerAccount<TAccountAdminAuthority> & AccountSignerMeta<TAccountAdminAuthority> : TAccountAdminAuthority, TAccountStrategy extends string ? WritableAccount<TAccountStrategy> : TAccountStrategy, TAccountOldPosition extends string ? ReadonlyAccount<TAccountOldPosition> : TAccountOldPosition, TAccountBaseVaultAuthority extends string ? ReadonlyAccount<TAccountBaseVaultAuthority> : TAccountBaseVaultAuthority, TAccountNewPool extends string ? ReadonlyAccount<TAccountNewPool> : TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority extends string ? ReadonlyAccount<TAccountStrategyRewardVault0OrBaseVaultAuthority> : TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority extends string ? ReadonlyAccount<TAccountStrategyRewardVault1OrBaseVaultAuthority> : TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority extends string ? ReadonlyAccount<TAccountStrategyRewardVault2OrBaseVaultAuthority> : TAccountStrategyRewardVault2OrBaseVaultAuthority, ...TRemainingAccounts]>;
+export type ChangePoolInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountAdminAuthority extends string | AccountMeta<string> = string, TAccountStrategy extends string | AccountMeta<string> = string, TAccountGlobalConfig extends string | AccountMeta<string> = string, TAccountOldPosition extends string | AccountMeta<string> = string, TAccountBaseVaultAuthority extends string | AccountMeta<string> = string, TAccountNewPool extends string | AccountMeta<string> = string, TAccountStrategyRewardVault0OrBaseVaultAuthority extends string | AccountMeta<string> = string, TAccountStrategyRewardVault1OrBaseVaultAuthority extends string | AccountMeta<string> = string, TAccountStrategyRewardVault2OrBaseVaultAuthority extends string | AccountMeta<string> = string, TRemainingAccounts extends readonly AccountMeta<string>[] = []> =
+Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array> & InstructionWithAccounts<[TAccountAdminAuthority extends string ? WritableSignerAccount<TAccountAdminAuthority> & AccountSignerMeta<TAccountAdminAuthority> : TAccountAdminAuthority, TAccountStrategy extends string ? WritableAccount<TAccountStrategy> : TAccountStrategy, TAccountGlobalConfig extends string ? ReadonlyAccount<TAccountGlobalConfig> : TAccountGlobalConfig, TAccountOldPosition extends string ? ReadonlyAccount<TAccountOldPosition> : TAccountOldPosition, TAccountBaseVaultAuthority extends string ? ReadonlyAccount<TAccountBaseVaultAuthority> : TAccountBaseVaultAuthority, TAccountNewPool extends string ? ReadonlyAccount<TAccountNewPool> : TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority extends string ? ReadonlyAccount<TAccountStrategyRewardVault0OrBaseVaultAuthority> : TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority extends string ? ReadonlyAccount<TAccountStrategyRewardVault1OrBaseVaultAuthority> : TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority extends string ? ReadonlyAccount<TAccountStrategyRewardVault2OrBaseVaultAuthority> : TAccountStrategyRewardVault2OrBaseVaultAuthority, ...TRemainingAccounts]>;
 
 export type ChangePoolInstructionData = { discriminator: ReadonlyUint8Array;  };
 
@@ -33,9 +33,10 @@ export function getChangePoolInstructionDataCodec(): FixedSizeCodec<ChangePoolIn
     return combineCodec(getChangePoolInstructionDataEncoder(), getChangePoolInstructionDataDecoder());
 }
 
-export type ChangePoolInput<TAccountAdminAuthority extends string = string, TAccountStrategy extends string = string, TAccountOldPosition extends string = string, TAccountBaseVaultAuthority extends string = string, TAccountNewPool extends string = string, TAccountStrategyRewardVault0OrBaseVaultAuthority extends string = string, TAccountStrategyRewardVault1OrBaseVaultAuthority extends string = string, TAccountStrategyRewardVault2OrBaseVaultAuthority extends string = string> =  {
+export type ChangePoolInput<TAccountAdminAuthority extends string = string, TAccountStrategy extends string = string, TAccountGlobalConfig extends string = string, TAccountOldPosition extends string = string, TAccountBaseVaultAuthority extends string = string, TAccountNewPool extends string = string, TAccountStrategyRewardVault0OrBaseVaultAuthority extends string = string, TAccountStrategyRewardVault1OrBaseVaultAuthority extends string = string, TAccountStrategyRewardVault2OrBaseVaultAuthority extends string = string> =  {
   adminAuthority: TransactionSigner<TAccountAdminAuthority>;
 strategy: Address<TAccountStrategy>;
+globalConfig: Address<TAccountGlobalConfig>;
 oldPosition: Address<TAccountOldPosition>;
 baseVaultAuthority: Address<TAccountBaseVaultAuthority>;
 newPool: Address<TAccountNewPool>;
@@ -44,36 +45,37 @@ strategyRewardVault1OrBaseVaultAuthority: Address<TAccountStrategyRewardVault1Or
 strategyRewardVault2OrBaseVaultAuthority: Address<TAccountStrategyRewardVault2OrBaseVaultAuthority>;
 }
 
-export function getChangePoolInstruction<TAccountAdminAuthority extends string, TAccountStrategy extends string, TAccountOldPosition extends string, TAccountBaseVaultAuthority extends string, TAccountNewPool extends string, TAccountStrategyRewardVault0OrBaseVaultAuthority extends string, TAccountStrategyRewardVault1OrBaseVaultAuthority extends string, TAccountStrategyRewardVault2OrBaseVaultAuthority extends string, TProgramAddress extends Address = typeof YVAULTS_PROGRAM_ADDRESS>(input: ChangePoolInput<TAccountAdminAuthority, TAccountStrategy, TAccountOldPosition, TAccountBaseVaultAuthority, TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority>, config?: { programAddress?: TProgramAddress } ): ChangePoolInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountOldPosition, TAccountBaseVaultAuthority, TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority> {
+export function getChangePoolInstruction<TAccountAdminAuthority extends string, TAccountStrategy extends string, TAccountGlobalConfig extends string, TAccountOldPosition extends string, TAccountBaseVaultAuthority extends string, TAccountNewPool extends string, TAccountStrategyRewardVault0OrBaseVaultAuthority extends string, TAccountStrategyRewardVault1OrBaseVaultAuthority extends string, TAccountStrategyRewardVault2OrBaseVaultAuthority extends string, TProgramAddress extends Address = typeof YVAULTS_PROGRAM_ADDRESS>(input: ChangePoolInput<TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountOldPosition, TAccountBaseVaultAuthority, TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority>, config?: { programAddress?: TProgramAddress } ): ChangePoolInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountOldPosition, TAccountBaseVaultAuthority, TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority> {
   // Program address.
 const programAddress = config?.programAddress ?? YVAULTS_PROGRAM_ADDRESS;
 
  // Original accounts.
-const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true }, oldPosition: { value: input.oldPosition ?? null, isWritable: false }, baseVaultAuthority: { value: input.baseVaultAuthority ?? null, isWritable: false }, newPool: { value: input.newPool ?? null, isWritable: false }, strategyRewardVault0OrBaseVaultAuthority: { value: input.strategyRewardVault0OrBaseVaultAuthority ?? null, isWritable: false }, strategyRewardVault1OrBaseVaultAuthority: { value: input.strategyRewardVault1OrBaseVaultAuthority ?? null, isWritable: false }, strategyRewardVault2OrBaseVaultAuthority: { value: input.strategyRewardVault2OrBaseVaultAuthority ?? null, isWritable: false } }
+const originalAccounts = { adminAuthority: { value: input.adminAuthority ?? null, isWritable: true }, strategy: { value: input.strategy ?? null, isWritable: true }, globalConfig: { value: input.globalConfig ?? null, isWritable: false }, oldPosition: { value: input.oldPosition ?? null, isWritable: false }, baseVaultAuthority: { value: input.baseVaultAuthority ?? null, isWritable: false }, newPool: { value: input.newPool ?? null, isWritable: false }, strategyRewardVault0OrBaseVaultAuthority: { value: input.strategyRewardVault0OrBaseVaultAuthority ?? null, isWritable: false }, strategyRewardVault1OrBaseVaultAuthority: { value: input.strategyRewardVault1OrBaseVaultAuthority ?? null, isWritable: false }, strategyRewardVault2OrBaseVaultAuthority: { value: input.strategyRewardVault2OrBaseVaultAuthority ?? null, isWritable: false } }
 const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
 
 
 
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
-return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.strategy), getAccountMeta(accounts.oldPosition), getAccountMeta(accounts.baseVaultAuthority), getAccountMeta(accounts.newPool), getAccountMeta(accounts.strategyRewardVault0OrBaseVaultAuthority), getAccountMeta(accounts.strategyRewardVault1OrBaseVaultAuthority), getAccountMeta(accounts.strategyRewardVault2OrBaseVaultAuthority)], data: getChangePoolInstructionDataEncoder().encode({}), programAddress } as ChangePoolInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountOldPosition, TAccountBaseVaultAuthority, TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority>);
+return Object.freeze({ accounts: [getAccountMeta(accounts.adminAuthority), getAccountMeta(accounts.strategy), getAccountMeta(accounts.globalConfig), getAccountMeta(accounts.oldPosition), getAccountMeta(accounts.baseVaultAuthority), getAccountMeta(accounts.newPool), getAccountMeta(accounts.strategyRewardVault0OrBaseVaultAuthority), getAccountMeta(accounts.strategyRewardVault1OrBaseVaultAuthority), getAccountMeta(accounts.strategyRewardVault2OrBaseVaultAuthority)], data: getChangePoolInstructionDataEncoder().encode({}), programAddress } as ChangePoolInstruction<TProgramAddress, TAccountAdminAuthority, TAccountStrategy, TAccountGlobalConfig, TAccountOldPosition, TAccountBaseVaultAuthority, TAccountNewPool, TAccountStrategyRewardVault0OrBaseVaultAuthority, TAccountStrategyRewardVault1OrBaseVaultAuthority, TAccountStrategyRewardVault2OrBaseVaultAuthority>);
 }
 
 export type ParsedChangePoolInstruction<TProgram extends string = typeof YVAULTS_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
 accounts: {
 adminAuthority: TAccountMetas[0];
 strategy: TAccountMetas[1];
-oldPosition: TAccountMetas[2];
-baseVaultAuthority: TAccountMetas[3];
-newPool: TAccountMetas[4];
-strategyRewardVault0OrBaseVaultAuthority: TAccountMetas[5];
-strategyRewardVault1OrBaseVaultAuthority: TAccountMetas[6];
-strategyRewardVault2OrBaseVaultAuthority: TAccountMetas[7];
+globalConfig: TAccountMetas[2];
+oldPosition: TAccountMetas[3];
+baseVaultAuthority: TAccountMetas[4];
+newPool: TAccountMetas[5];
+strategyRewardVault0OrBaseVaultAuthority: TAccountMetas[6];
+strategyRewardVault1OrBaseVaultAuthority: TAccountMetas[7];
+strategyRewardVault2OrBaseVaultAuthority: TAccountMetas[8];
 };
 data: ChangePoolInstructionData; };
 
 export function parseChangePoolInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedChangePoolInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 8) {
+  if (instruction.accounts.length < 9) {
   // TODO: Coded error.
   throw new Error('Not enough accounts');
 }
@@ -83,5 +85,5 @@ const getNextAccount = () => {
   accountIndex += 1;
   return accountMeta;
 }
-  return { programAddress: instruction.programAddress, accounts: { adminAuthority: getNextAccount(), strategy: getNextAccount(), oldPosition: getNextAccount(), baseVaultAuthority: getNextAccount(), newPool: getNextAccount(), strategyRewardVault0OrBaseVaultAuthority: getNextAccount(), strategyRewardVault1OrBaseVaultAuthority: getNextAccount(), strategyRewardVault2OrBaseVaultAuthority: getNextAccount() }, data: getChangePoolInstructionDataDecoder().decode(instruction.data) };
+  return { programAddress: instruction.programAddress, accounts: { adminAuthority: getNextAccount(), strategy: getNextAccount(), globalConfig: getNextAccount(), oldPosition: getNextAccount(), baseVaultAuthority: getNextAccount(), newPool: getNextAccount(), strategyRewardVault0OrBaseVaultAuthority: getNextAccount(), strategyRewardVault1OrBaseVaultAuthority: getNextAccount(), strategyRewardVault2OrBaseVaultAuthority: getNextAccount() }, data: getChangePoolInstructionDataDecoder().decode(instruction.data) };
 }

@@ -4,6 +4,8 @@ import { Address, Instruction, none, Rpc, SolanaRpcApi, TransactionSigner } from
 import {
   Farms,
   FarmState,
+  fetchFarmState,
+  fetchUserState,
   getUserStatePDA,
   lamportsToCollDecimal,
   scaleDownWads,
@@ -52,7 +54,7 @@ export async function getFarmStakeIxs(
   farmAddress: Address,
   fetchedFarmState?: FarmState
 ): Promise<Instruction[]> {
-  const farmState = fetchedFarmState ? fetchedFarmState : await FarmState.fetch(connection, farmAddress);
+  const farmState = fetchedFarmState ? fetchedFarmState : (await fetchFarmState(connection, farmAddress)).data;
   if (!farmState) {
     throw new Error(`Farm state not found for ${farmAddress}`);
   }
@@ -80,7 +82,7 @@ export async function getStakedTokens(
   fetchedFarmState?: FarmState,
   fetchedUserState?: UserState
 ): Promise<Decimal> {
-  const farmState = fetchedFarmState ? fetchedFarmState : await FarmState.fetch(connection, farmAddress);
+  const farmState = fetchedFarmState ? fetchedFarmState : (await fetchFarmState(connection, farmAddress)).data;
   if (!farmState) {
     throw new Error(`Farm state not found for ${farmAddress}`);
   }
@@ -90,7 +92,7 @@ export async function getStakedTokens(
     const farmClient = new Farms(connection);
 
     const userStateAddress = await getUserStatePDA(farmClient.getProgramID(), farmAddress, user);
-    const userStateFromChain = await UserState.fetch(connection, userStateAddress);
+    const userStateFromChain = (await fetchUserState(connection, userStateAddress)).data;
     if (!userStateFromChain) {
       return new Decimal(0);
     }
@@ -99,7 +101,7 @@ export async function getStakedTokens(
 
   return lamportsToCollDecimal(
     new Decimal(scaleDownWads(userState.activeStakeScaled)),
-    farmState.token.decimals.toNumber()
+    Number(farmState.token.decimals)
   );
 }
 
@@ -111,7 +113,7 @@ export async function getFarmUnstakeAndWithdrawIxs(
   fetchedFarmState?: FarmState,
   fetchedUserState?: UserState
 ): Promise<Instruction[]> {
-  const farmState = fetchedFarmState ? fetchedFarmState : await FarmState.fetch(connection, farmAddress);
+  const farmState = fetchedFarmState ? fetchedFarmState : (await fetchFarmState(connection, farmAddress)).data;
   if (!farmState) {
     throw new Error(`Farm state not found for ${farmAddress}`);
   }
@@ -120,7 +122,7 @@ export async function getFarmUnstakeAndWithdrawIxs(
 
   const userStateAddress = await getUserStatePDA(farmClient.getProgramID(), farmAddress, user.address);
 
-  const userState = fetchedUserState ? fetchedUserState : await UserState.fetch(connection, userStateAddress);
+  const userState = fetchedUserState ? fetchedUserState : (await fetchUserState(connection, userStateAddress)).data;
 
   if (!userState) {
     return [];

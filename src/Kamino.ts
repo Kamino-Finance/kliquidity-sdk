@@ -340,7 +340,7 @@ import {
   getExtendLookupTableInstruction,
 } from '@solana-program/address-lookup-table';
 import { fetchMultipleLookupTableAccounts } from './utils/lookupTable';
-import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } from '@solana/rpc-types';
+import type { AccountInfoBase, AccountInfoWithJsonData, AccountInfoWithPubkey } from '@solana/kit';
 import { toLegacyPublicKey } from './utils/compat';
 import { IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';
 import { getTokensPrices } from './services/kSwap';
@@ -4638,6 +4638,7 @@ export class Kamino {
     const strategyAccounts = {
       adminAuthority: admin,
       strategy: strategyPubkey,
+      globalConfig: strategyState.globalConfig,
       oldPositionOrBaseVaultAuthority,
       oldPositionMintOrBaseVaultAuthority,
       oldPositionTokenAccountOrBaseVaultAuthority,

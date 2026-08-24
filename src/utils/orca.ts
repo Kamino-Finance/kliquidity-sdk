@@ -8,7 +8,7 @@ import {
   Rpc,
 } from '@solana/kit';
 import { encodeUtf8 } from './bytes';
-import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-derived-address';
+import { ProgramDerivedAddress } from '@solana/kit';
 import { ONE_BN, U64_MAX_BI, ZERO_BN } from '../constants';
 import { Percentage } from './types';
 import { DEFAULT_ADDRESS, IncreaseLiquidityQuoteParam } from '@orca-so/whirlpools';

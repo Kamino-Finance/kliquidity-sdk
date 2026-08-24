@@ -1,10 +1,9 @@
-import { Address, getAddressEncoder, getProgramDerivedAddress } from '@solana/kit';
+import { Address, getAddressEncoder, getProgramDerivedAddress, ProgramDerivedAddress } from '@solana/kit';
 import { encodeUtf8 } from './bytes';
 import Decimal from 'decimal.js';
 import { U64_MAX } from '../constants/numericalValues';
 import { BinArray } from '../@codegen/meteora/accounts';
 import { Bin } from '../@codegen/meteora/types';
-import { ProgramDerivedAddress } from '@solana/addresses/dist/types/program-derived-address';
 
 const BASIS_POINT_MAX = 10000;
 const MAX_BIN_ARRAY_SIZE = 70;

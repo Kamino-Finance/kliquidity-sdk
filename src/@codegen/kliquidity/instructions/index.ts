@@ -6,6 +6,7 @@
  * @see https://github.com/codama-idl/codama
  */
 
+export * from './acceptGlobalConfigOwnership';
 export * from './addKaminoRewards';
 export * from './changePool';
 export * from './checkExpectedVaultsBalances';
@@ -13,11 +14,14 @@ export * from './closeProgramAccount';
 export * from './closeStrategy';
 export * from './collectFeesAndRewards';
 export * from './deposit';
+export * from './depositAndInvest';
 export * from './deprecateCollateralInfo';
+export * from './deprecateStrategy';
 export * from './emergencySwap';
 export * from './executiveWithdraw';
 export * from './flashSwapUnevenVaultsEnd';
 export * from './flashSwapUnevenVaultsStart';
+export * from './getKtokenPrice';
 export * from './initializeCollateralInfo';
 export * from './initializeGlobalConfig';
 export * from './initializeKaminoReward';
@@ -28,8 +32,10 @@ export * from './invest';
 export * from './openLiquidityPosition';
 export * from './orcaSwap';
 export * from './permisionlessWithdrawFromTreasury';
+export * from './resetStrategyPadding';
 export * from './resizeTokenInfos';
 export * from './signTerms';
+export * from './singleTokenDepositAndInvestWithMin';
 export * from './singleTokenDepositWithMin';
 export * from './swapRewards';
 export * from './updateCollateralInfo';

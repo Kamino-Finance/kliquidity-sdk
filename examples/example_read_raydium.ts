@@ -6,10 +6,10 @@ import {
   createRpc,
   createSolanaRpcApi,
   DEFAULT_RPC_CONFIG,
+  isAddress,
   Rpc,
   SolanaRpcApi,
 } from '@solana/kit';
-import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import Decimal from 'decimal.js';
 import { RaydiumService } from '../src/services/RaydiumService';
@@ -100,7 +100,7 @@ function serialize(value: unknown): unknown {
   if (typeof value === 'bigint') return value.toString();
   if (BN.isBN(value)) return value.toString();
   if (value instanceof Decimal) return value.toString();
-  if (value instanceof PublicKey) return value.toBase58();
+  if (typeof value === 'string' && isAddress(value)) return value.toString();
   if (Buffer.isBuffer(value)) return { type: 'Buffer', length: value.length, base64: value.toString('base64') };
   if (Array.isArray(value)) return value.map(serialize);
   if (typeof value === 'object') {
