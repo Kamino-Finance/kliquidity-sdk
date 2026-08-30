@@ -5,3 +5,5 @@ export * from './math';
 export * from './types';
 export * from './orca';
 export * from './compat';
+export * from './strategyAcceptsDeposit';
+export * from './depositPriceDeviation';

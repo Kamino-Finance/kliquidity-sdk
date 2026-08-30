@@ -85,10 +85,12 @@ import type { OraclePrices } from '@kamino-finance/scope-sdk/dist/@codegen/scope
 import {
   batchFetch,
   buildStrategyRebalanceParams,
+  checkStrategyAcceptsDeposit as checkStrategyAcceptsDepositFromState,
   collToLamportsDecimal,
   createAssociatedTokenAccountInstruction,
   DECIMALS_SOL,
   DepositAmountsForSwap,
+  DepositCheckResult,
   Dex,
   dexToNumber,
   GenericPoolInfo,
@@ -117,6 +119,7 @@ import {
   numberToRebalanceType,
   numberToReferencePriceType,
   PerformanceFees,
+  PrefetchedDepositCheckState,
   PositionRange,
   PriceReferenceType,
   ProfiledFunctionExecution,
@@ -1445,6 +1448,61 @@ export class Kamino {
     } else {
       return { price: balances.computedHoldings.totalSum.div(sharesIssued).mul(sharesFactor), balance: balances };
     }
+  };
+
+  /**
+   * Check whether the strategy accepts a deposit right now, and read the states it needs.
+   *
+   * This is the entry point for a frontend: disable the deposit button on `acceptsDeposit === false`
+   * and show `message`. It runs every deposit condition, so a caller keeps working when new ones
+   * are added. Call the individual condition functions only when you need their raw numbers.
+   *
+   * Every field of `prefetchedState` is optional. Pass the states the caller already holds to
+   * avoid the matching RPC calls; only the missing ones are read from the chain.
+   * @param strategy
+   * @param prefetchedState states the caller already holds
+   */
+  checkStrategyAcceptsDeposit = async (
+    strategy: Address | StrategyWithAddress,
+    prefetchedState: PrefetchedDepositCheckState = {}
+  ): Promise<DepositCheckResult> => {
+    const { strategy: strategyState, address: strategyAddress } = await this.getStrategyStateIfNotFetched(strategy);
+
+    const globalConfig = prefetchedState.globalConfig ?? (await this.getGlobalConfigState(strategyState.globalConfig));
+    if (!globalConfig) {
+      throw Error(`Could not fetch global config with pubkey ${strategyState.globalConfig.toString()}`);
+    }
+
+    let oraclePriceA = prefetchedState.oraclePriceA ?? prefetchedState.balances?.prices.aPrice ?? undefined;
+    let oraclePriceB = prefetchedState.oraclePriceB ?? prefetchedState.balances?.prices.bPrice ?? undefined;
+    if (!oraclePriceA || !oraclePriceB) {
+      const collateralInfos =
+        prefetchedState.collateralInfos ?? (await this.getCollateralInfo(globalConfig.tokenInfos));
+      const strategyPrices = await this.getStrategyPrices(strategyState, collateralInfos);
+      oraclePriceA = oraclePriceA ?? strategyPrices.aPrice ?? undefined;
+      oraclePriceB = oraclePriceB ?? strategyPrices.bPrice ?? undefined;
+    }
+    if (!oraclePriceA || !oraclePriceB) {
+      throw Error(`Could not read the oracle prices of strategy ${strategyAddress.toString()}`);
+    }
+
+    const poolPrice =
+      prefetchedState.poolPrice ??
+      prefetchedState.balances?.prices.poolPrice ??
+      (await this.getPoolPrice(
+        numberToDex(Number(strategyState.strategyDex)),
+        strategyState.pool,
+        Number(strategyState.tokenAMintDecimals),
+        Number(strategyState.tokenBMintDecimals)
+      ));
+
+    return checkStrategyAcceptsDepositFromState({
+      strategy: strategyState,
+      globalConfig,
+      poolPrice,
+      oraclePriceA,
+      oraclePriceB,
+    });
   };
 
   /**
