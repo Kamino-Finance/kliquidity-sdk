@@ -7,3 +7,4 @@ export * from './orca';
 export * from './compat';
 export * from './strategyAcceptsDeposit';
 export * from './depositPriceDeviation';
+export * from './transactionVersion';

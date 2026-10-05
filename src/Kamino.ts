@@ -1,7 +1,9 @@
 import { getConfigByCluster, HubbleConfig, SolanaCluster } from '@hubbleprotocol/hubble-config';
 import {
   Account,
+  AccountMeta,
   AccountRole,
+  AccountSignerMeta,
   address,
   Address,
   Base58EncodedBytes,
@@ -2765,21 +2767,18 @@ export class Kamino {
   };
 
   /**
-   * Get all token accounts for the specified wallet
+   * Get all token accounts for the specified wallet, of both the SPL Token and the Token-2022 program
    */
   getAllTokenAccounts = async (
     wallet: Address
   ): Promise<AccountInfoWithPubkey<AccountInfoBase & AccountInfoWithJsonData>[]> => {
     //how to get all token accounts for specific wallet: https://spl.solana.com/token#finding-all-token-accounts-for-a-wallet
-    return this._rpc
-      .getProgramAccounts(TOKEN_PROGRAM_ADDRESS, {
-        filters: [
-          { dataSize: 165n },
-          { memcmp: { offset: 32n, bytes: wallet.toString() as Base58EncodedBytes, encoding: 'base58' } },
-        ],
-        encoding: 'jsonParsed',
-      })
-      .send();
+    const responses = await Promise.all(
+      [TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS].map((programId) =>
+        this._rpc.getTokenAccountsByOwner(wallet, { programId }, { encoding: 'jsonParsed' }).send()
+      )
+    );
+    return responses.flatMap(({ value }) => value);
   };
 
   /**
@@ -5367,13 +5366,12 @@ export class Kamino {
 
     const ix = getOpenLiquidityPositionInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
 
-    const accs = [...(ix.accounts || [])];
+    const accs: (AccountMeta | AccountSignerMeta)[] = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === positionMint.address);
     if (accountIndex >= 0) {
       accs[accountIndex] = {
         ...accs[accountIndex],
         role: AccountRole.WRITABLE_SIGNER,
-        // @ts-ignore
         signer: positionMint,
       };
     }
@@ -5543,13 +5541,12 @@ export class Kamino {
       ]);
     }
 
-    const accs = [...(ix.accounts || [])];
+    const accs: (AccountMeta | AccountSignerMeta)[] = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === positionMint.address);
     if (accountIndex >= 0) {
       accs[accountIndex] = {
         ...accs[accountIndex],
         role: AccountRole.WRITABLE_SIGNER,
-        // @ts-ignore
         signer: positionMint,
       };
     }
@@ -5675,13 +5672,12 @@ export class Kamino {
 
     const ix = getOpenLiquidityPositionInstruction({ ...args, ...accounts }, { programAddress: this.getProgramID() });
 
-    const accs = [...(ix.accounts || [])];
+    const accs: (AccountMeta | AccountSignerMeta)[] = [...(ix.accounts || [])];
     const accountIndex = accs.findIndex((acc) => acc.address === position.address);
     if (accountIndex >= 0) {
       accs[accountIndex] = {
         ...accs[accountIndex],
         role: AccountRole.WRITABLE_SIGNER,
-        // @ts-ignore
         signer: position,
       };
     }
@@ -7084,8 +7080,11 @@ export class Kamino {
     wallet: Address,
     strategyFilters: StrategiesFilters = { strategyCreationStatus: 'LIVE' }
   ): Promise<KaminoPosition[]> => {
-    const [userTokenAccounts, liveStrategies] = await Promise.all([
-      this.getAllTokenAccounts(wallet),
+    // Strategy share mints belong to the SPL Token program.
+    const [{ value: userTokenAccounts }, liveStrategies] = await Promise.all([
+      this._rpc
+        .getTokenAccountsByOwner(wallet, { programId: TOKEN_PROGRAM_ADDRESS }, { encoding: 'jsonParsed' })
+        .send(),
       this.getAllStrategiesWithFilters(strategyFilters),
     ]);
     const positions: KaminoPosition[] = [];

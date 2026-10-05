@@ -24,9 +24,9 @@
   "dependencies": {
     "@kamino-finance/kliquidity-sdk": "link:../",
     "@kamino-finance/farms-sdk": "^4.0.0",
-    "@solana/kit": "^7.0.0",
-    "@solana-program/address-lookup-table": "^0.13.0",
-    "@solana-program/token": "^0.15.0"
+    "@solana/kit": "8.3.0",
+    "@solana-program/address-lookup-table": "^0.14.1",
+    "@solana-program/token": "^0.16.1"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.6",

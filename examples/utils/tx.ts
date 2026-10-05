@@ -25,6 +25,7 @@ import {
   TransactionSigner,
 } from '@solana/kit';
 import { fetchAllAddressLookupTable } from '@solana-program/address-lookup-table';
+import { MAX_SUPPORTED_TRANSACTION_VERSION } from '@kamino-finance/kliquidity-sdk';
 
 export type ConnectionPool = {
   rpc: Rpc<SolanaRpcApi>;
@@ -80,7 +81,11 @@ export async function sendAndConfirmTx(
     let tx;
     try {
       tx = await rpc
-        .getTransaction(sig, { maxSupportedTransactionVersion: 0, commitment: 'confirmed', encoding: 'json' })
+        .getTransaction(sig, {
+          maxSupportedTransactionVersion: MAX_SUPPORTED_TRANSACTION_VERSION,
+          commitment: 'confirmed',
+          encoding: 'json',
+        })
         .send();
     } catch (e2) {
       console.error('Error fetching transaction logs:', e2);
